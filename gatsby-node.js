@@ -4,6 +4,8 @@
  * See: https://www.gatsbyjs.com/docs/reference/config-files/gatsby-node/
  */
 
+const path = require("path")
+
 /**
  * @type {import('gatsby').GatsbyNode['createPages']}
  */
@@ -14,5 +16,21 @@ exports.createPages = async ({ actions }) => {
     component: require.resolve("./src/templates/using-dsg.js"),
     context: {},
     defer: true,
+  })
+}
+
+// Setup Import Alias
+exports.onCreateWebpackConfig = ({ getConfig, actions }) => {
+  const output = getConfig().output || {}
+
+  actions.setWebpackConfig({
+    output,
+    resolve: {
+      alias: {
+        components: path.resolve(__dirname, "src/components"),
+        utils: path.resolve(__dirname, "src/utils"),
+        hooks: path.resolve(__dirname, "src/hooks"),
+      },
+    },
   })
 }
