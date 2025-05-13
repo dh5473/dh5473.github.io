@@ -15,6 +15,7 @@ module.exports = {
     siteUrl: `https://dh5473.github.io/`,
   },
   plugins: [
+    // TypeScript 지원
     {
       resolve: 'gatsby-plugin-typescript',
       options: {
@@ -22,48 +23,72 @@ module.exports = {
         allExtensions: true,
       },
     },
-    {
-      resolve: 'gatsby-plugin-canonical-urls',
-      options: {
-        siteUrl: 'https://dh5473.github.io/',
-        stripQueryString: true,
-      },
-    },
-    `gatsby-plugin-react-helmet`,
-    `gatsby-plugin-image`,
-    `gatsby-transformer-sharp`,
-    `gatsby-plugin-sharp`,
+
+    // 기본 플러그인
     `gatsby-plugin-emotion`,
+    `gatsby-plugin-react-helmet`,
+
+    // 파일 시스템
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        name: `images`,
-        path: `${__dirname}/src/images`,
+        name: `contents`,
+        path: `${__dirname}/contents`,
       },
     },
-    // 마크다운 파일을 위한 소스 구성 (필요시 주석 해제)
-    // {
-    //   resolve: `gatsby-source-filesystem`,
-    //   options: {
-    //     name: `contents`,
-    //     path: `${__dirname}/contents`,
-    //   },
-    // },
-    // 마크다운 처리를 위한 플러그인 (필요시 주석 해제)
-    // `gatsby-transformer-remark`,
-    // PWA 기능 (필요시 주석 해제)
-    // {
-    //   resolve: `gatsby-plugin-manifest`,
-    //   options: {
-    //     name: `gatsby-starter-default`,
-    //     short_name: `starter`,
-    //     start_url: `/`,
-    //     background_color: `#663399`,
-    //     theme_color: `#663399`,
-    //     display: `minimal-ui`,
-    //     icon: `src/images/gatsby-icon.png`,
-    //   },
-    // },
-    // `gatsby-plugin-offline`,
+
+    // 이미지 처리
+    `gatsby-plugin-image`,
+    `gatsby-transformer-sharp`,
+    `gatsby-plugin-sharp`,
+
+    // 마크다운 변환
+    {
+      resolve: `gatsby-transformer-remark`,
+      options: {
+        plugins: [
+          // 스마트 문장 부호
+          {
+            resolve: 'gatsby-remark-smartypants',
+            options: {
+              dashes: 'oldschool',
+            },
+          },
+
+          // 코드 하이라이팅
+          {
+            resolve: 'gatsby-remark-prismjs',
+            options: {
+              classPrefix: 'language-',
+            },
+          },
+
+          // 이미지 최적화
+          {
+            resolve: 'gatsby-remark-images',
+            options: {
+              maxWidth: 768,
+              quality: 100,
+              withWebp: true,
+            },
+          },
+
+          // 파일 복사
+          {
+            resolve: 'gatsby-remark-copy-linked-files',
+            options: {},
+          },
+
+          // 외부 링크
+          {
+            resolve: 'gatsby-remark-external-links',
+            options: {
+              target: '_blank',
+              rel: 'nofollow',
+            },
+          },
+        ],
+      },
+    },
   ],
 }
