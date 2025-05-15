@@ -80,10 +80,7 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
         selectedCategory={selectedCategory}
         categoryList={categoryList}
       />
-      <PostList
-        selectedCategory={selectedCategory}
-        posts={edges}
-      />
+      <PostList selectedCategory={selectedCategory} posts={edges} />
       <Footer />
     </Container>
   )
@@ -94,11 +91,14 @@ export default IndexPage
 export const getPostList = graphql`
   query getPostList {
     allMarkdownRemark(
-      sort: { fields: [frontmatter___date, frontmatter___title], order: DESC }
+      sort: [{ frontmatter: { date: DESC } }, { frontmatter: { title: ASC } }]
     ) {
       edges {
         node {
           id
+          fields {
+            slug
+          }
           frontmatter {
             title
             summary

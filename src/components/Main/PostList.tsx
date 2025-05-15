@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useMemo } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import styled from '@emotion/styled'
 import PostItem from 'components/Main/PostItem'
 import { PostListItemType } from 'types/PostItem.types'
@@ -23,30 +23,50 @@ const PostListWrapper = styled.div`
   }
 `
 
+const POSTS_PER_PAGE = 10
+
 const PostList: FunctionComponent<PostListProps> = function ({
   selectedCategory,
   posts,
 }) {
-  const postListData = useMemo(
-    () =>
-      posts.filter(
-        ({
-          node: {
-            frontmatter: { categories },
-          },
-        }: PostListItemType) =>
-          selectedCategory !== 'All'
-            ? categories.includes(selectedCategory)
-            : true,
-      ),
-    [selectedCategory],
-  )
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const startIdx = (currentPage - 1) * POSTS_PER_PAGE
+  const endIdx = startIdx + POSTS_PER_PAGE
+  const paginatedPosts = posts.slice(startIdx, endIdx)
+
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE)
+
   return (
-    <PostListWrapper>
-      {postListData.map(({ node: { id, frontmatter } }: PostListItemType) => (
-        <PostItem {...frontmatter} link="https://www.google.co.kr/" key={id} />
-      ))}
-    </PostListWrapper>
+    <>
+      <PostListWrapper>
+        {paginatedPosts.map(
+          ({
+            node: {
+              id,
+              fields: { slug },
+              frontmatter,
+            },
+          }: PostListItemType) => (
+            <PostItem {...frontmatter} link={slug} key={id} />
+          ),
+        )}
+      </PostListWrapper>
+      <div style={{ textAlign: 'center', margin: '20px 0' }}>
+        {Array.from({ length: totalPages }, (_, idx) => (
+          <button
+            key={idx + 1}
+            onClick={() => setCurrentPage(idx + 1)}
+            style={{
+              margin: '0 5px',
+              fontWeight: currentPage === idx + 1 ? 'bold' : 'normal',
+            }}
+          >
+            {idx + 1}
+          </button>
+        ))}
+      </div>
+    </>
   )
 }
 
