@@ -31,3 +31,57 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
     })
   }
 }
+
+// Generate Post Page Through Markdown Data
+exports.createPages = async ({ actions, graphql, reporter }) => {
+  const { createPage } = actions
+
+  // Get All Markdown Data For Paging
+  const queryAllMarkdownData = await graphql(`
+    {
+      allMarkdownRemark(
+        sort: [{ frontmatter: { date: DESC } }, { frontmatter: { title: ASC } }]
+      ) {
+        edges {
+          node {
+            fields {
+              slug
+            }
+          }
+        }
+      }
+    }
+  `)
+
+  // Handling Graphql Query Error
+  if (queryAllMarkdownData.errors) {
+    reporter.panicOnBuild('Error while running GraphQL query.')
+    return
+  }
+
+  // Import Post Template Component
+  const PostTemplateComponent = path.resolve(
+    __dirname,
+    'src/templates/postTemplate.tsx',
+  )
+
+  // Page Generating Function
+  const generatePostPage = ({
+    node: {
+      fields: { slug },
+    },
+  }) => {
+    const pageOptions = {
+      path: slug,
+      component: PostTemplateComponent,
+      context: {
+        slug,
+      },
+    }
+
+    createPage(pageOptions)
+  }
+
+  // Generate Post Page And Passing Slug Props For Query
+  queryAllMarkdownData.data.allMarkdownRemark.edges.forEach(generatePostPage)
+}
