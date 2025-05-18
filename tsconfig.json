@@ -114,6 +114,6 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true
   },
-  "include": ["src/**/*.tsx"],
+  "include": ["src/**/*.tsx", "src/types/PostItem.types.ts"],
   "exclude": ["node_modules"]
 }
