@@ -26,7 +26,9 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
   return (
     <Template>
       <PostHead
-        {...frontmatter}
+        title={frontmatter.title}
+        date={frontmatter.date}
+        categories={frontmatter.categories}
         thumbnail={frontmatter.thumbnail.childImageSharp.gatsbyImageData}
       />
       <PostContent html={html} />
