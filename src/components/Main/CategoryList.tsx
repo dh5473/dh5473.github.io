@@ -14,58 +14,88 @@ type GatsbyLinkProps = {
 
 export type CategoryListProps = {
   selectedCategory: string
-  categoryList: {
-    [key: string]: number
-  }
 }
 
-const CategoryListWrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  width: 768px;
-  margin: 100px auto 0;
+const CategoryWrapper = styled.div`
+  border-bottom: 1px solid #f1f3f4;
+  margin-bottom: 32px;
 
   @media (max-width: 768px) {
-    width: 100%;
-    margin-top: 50px;
-    padding: 0 20px;
+    margin-bottom: 24px;
   }
 `
 
-const CategoryItem = styled(({ active, ...props }: GatsbyLinkProps) => (
+const CategoryContainer = styled.div`
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  @media (max-width: 768px) {
+    gap: 0;
+  }
+`
+
+const CategoryTab = styled(({ active, ...props }: GatsbyLinkProps) => (
   <Link {...props} />
 ))`
-  margin-right: 20px;
-  padding: 5px 0;
-  font-size: 18px;
-  font-weight: ${({ active }) => (active ? '800' : '400')};
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid transparent;
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ active }) => (active ? '#1a1a1a' : '#9ca3af')};
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  position: relative;
 
-  &:last-of-type {
-    margin-right: 0;
+  ${({ active }) =>
+    active &&
+    `
+    border-bottom-color: #3182f6;
+    color: #1a1a1a;
+  `}
+
+  &:hover {
+    color: ${({ active }) => (active ? '#1a1a1a' : '#6b7280')};
   }
 
   @media (max-width: 768px) {
+    padding: 12px 16px;
     font-size: 15px;
   }
 `
 
 const CategoryList: FunctionComponent<CategoryListProps> = function ({
   selectedCategory,
-  categoryList,
 }) {
+  const categories = [
+    { key: 'All', name: '전체' },
+    { key: 'Development', name: '개발' },
+    { key: 'ML', name: 'ML' },
+  ]
+
   return (
-    <CategoryListWrapper>
-      {Object.entries(categoryList).map(([name, count]) => (
-        <CategoryItem
-          to={`/?category=${name}`}
-          active={name === selectedCategory}
-          key={name}
-        >
-          #{name}({count})
-        </CategoryItem>
-      ))}
-    </CategoryListWrapper>
+    <CategoryWrapper>
+      <CategoryContainer>
+        {categories.map(category => (
+          <CategoryTab
+            to={`/?category=${category.key}`}
+            active={category.key === selectedCategory}
+            key={category.key}
+          >
+            {category.name}
+          </CategoryTab>
+        ))}
+      </CategoryContainer>
+    </CategoryWrapper>
   )
 }
 
