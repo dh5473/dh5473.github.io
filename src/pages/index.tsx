@@ -97,6 +97,105 @@ const MainContent = styled.main`
   }
 `
 
+const ContentLayout = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 48px;
+  margin-top: 32px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  @media (max-width: 768px) {
+    gap: 24px;
+  }
+`
+
+const MainSection = styled.section`
+  min-width: 0;
+`
+
+const Sidebar = styled.aside`
+  @media (max-width: 1024px) {
+    order: -1;
+  }
+`
+
+const SidebarSection = styled.div`
+  margin-bottom: 48px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 32px;
+  }
+`
+
+const SidebarTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #3182f6;
+`
+
+const PopularPostItem = styled.div`
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f3f4;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`
+
+const PopularPostTitle = styled.h4`
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`
+
+const SeriesItem = styled.div`
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`
+
+const SeriesTitle = styled.h4`
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+`
+
+const SeriesDescription = styled.p`
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+`
+
+const SeriesCount = styled.span`
+  font-size: 11px;
+  color: #3182f6;
+  font-weight: 500;
+`
+
 const HeroSection = styled.section`
   padding: 80px 0;
   text-align: center;
@@ -145,6 +244,11 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [selectedCategory])
 
+  // 인기 글 임시 데이터 (실제로는 조회수나 좋아요 수를 기반으로 가져와야 함)
+  const popularPosts = edges.slice(0, 3).map(({ node }) => ({
+    title: node.frontmatter.title,
+  }))
+
   return (
     <Template>
       <Container>
@@ -167,7 +271,40 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
           <CategoryList selectedCategory={selectedCategory} />
 
-          <PostList selectedCategory={selectedCategory} posts={edges} />
+          <ContentLayout>
+            <MainSection>
+              <PostList selectedCategory={selectedCategory} posts={edges} />
+            </MainSection>
+
+            <Sidebar>
+              <SidebarSection>
+                <SidebarTitle>인기있는 글</SidebarTitle>
+                {popularPosts.map((post, index) => (
+                  <PopularPostItem key={index}>
+                    <PopularPostTitle>{post.title}</PopularPostTitle>
+                  </PopularPostItem>
+                ))}
+              </SidebarSection>
+
+              <SidebarSection>
+                <SidebarTitle>아티클 시리즈</SidebarTitle>
+                <SeriesItem>
+                  <SeriesTitle>React 심화 학습</SeriesTitle>
+                  <SeriesDescription>
+                    React의 고급 기능과 패턴을 다루는 시리즈
+                  </SeriesDescription>
+                  <SeriesCount>아티클 5</SeriesCount>
+                </SeriesItem>
+                <SeriesItem>
+                  <SeriesTitle>개발자 성장기</SeriesTitle>
+                  <SeriesDescription>
+                    개발자로서의 경험과 성장 과정을 기록한 시리즈
+                  </SeriesDescription>
+                  <SeriesCount>아티클 3</SeriesCount>
+                </SeriesItem>
+              </SidebarSection>
+            </Sidebar>
+          </ContentLayout>
         </MainContent>
       </Container>
     </Template>

@@ -14,12 +14,15 @@ const PostItemWrapper = styled(Link)`
   border-bottom: 1px solid #f1f3f4;
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  border-radius: 12px;
 
   &:hover {
     background: #fafbfc;
     margin: 0 -24px;
     padding: 32px 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
 
   &:last-child {
@@ -32,6 +35,7 @@ const PostItemWrapper = styled(Link)`
     &:hover {
       margin: 0 -16px;
       padding: 24px 16px;
+      transform: translateY(-1px);
     }
   }
 `
@@ -58,6 +62,11 @@ const PostTitle = styled.h2`
   line-height: 1.4;
   color: #1a1a1a;
   margin: 0 0 8px 0;
+  transition: color 0.3s ease;
+
+  ${PostItemWrapper}:hover & {
+    color: #3182f6;
+  }
 
   @media (max-width: 768px) {
     font-size: 18px;
@@ -111,6 +120,11 @@ const PostThumbnail = styled.div`
   height: 120px;
   border-radius: 8px;
   overflow: hidden;
+  transition: transform 0.3s ease;
+
+  ${PostItemWrapper}:hover & {
+    transform: scale(1.05);
+  }
 
   @media (max-width: 768px) {
     width: 100%;
@@ -122,6 +136,11 @@ const ThumbnailImage = styled(GatsbyImage)`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+
+  ${PostItemWrapper}:hover & {
+    transform: scale(1.1);
+  }
 `
 
 // TODO: 카테고리 태그는 토스 블로그에서 포스트 리스트에 표시되지 않음
