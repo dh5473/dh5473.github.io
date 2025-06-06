@@ -6,14 +6,28 @@ import { graphql } from 'gatsby'
 import { PostListItemType } from 'types/PostItem.types'
 import queryString, { ParsedQuery } from 'query-string'
 import Template from 'components/Common/Template'
+import { IGatsbyImageData } from 'gatsby-plugin-image'
 
 type IndexPageProps = {
   location: {
     search: string
   }
   data: {
+    site: {
+      siteMetadata: {
+        title: string
+        description: string
+        siteUrl: string
+      }
+    }
     allMarkdownRemark: {
       edges: PostListItemType[]
+    }
+    file: {
+      childImageSharp: {
+        gatsbyImageData: IGatsbyImageData
+      }
+      publicURL: string
     }
   }
 }
@@ -231,7 +245,14 @@ const HeroSubtitle = styled.p`
 const IndexPage: FunctionComponent<IndexPageProps> = function ({
   location: { search },
   data: {
+    site: {
+      siteMetadata: { title, description, siteUrl },
+    },
     allMarkdownRemark: { edges },
+    file: {
+      childImageSharp: { gatsbyImageData },
+      publicURL,
+    },
   },
 }) {
   const parsed: ParsedQuery<string> = queryString.parse(search)
@@ -250,7 +271,12 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
   }))
 
   return (
-    <Template>
+    <Template
+      title={title}
+      description={description}
+      url={siteUrl}
+      image={publicURL}
+    >
       <Container>
         <Header>
           <HeaderContent>
@@ -315,6 +341,13 @@ export default IndexPage
 
 export const getPostList = graphql`
   query getPostList {
+    site {
+      siteMetadata {
+        title
+        description
+        siteUrl
+      }
+    }
     allMarkdownRemark(
       sort: [{ frontmatter: { date: DESC } }, { frontmatter: { title: ASC } }]
     ) {
@@ -337,6 +370,12 @@ export const getPostList = graphql`
           }
         }
       }
+    }
+    file(name: { eq: "profile-image" }) {
+      childImageSharp {
+        gatsbyImageData(width: 120, height: 120)
+      }
+      publicURL
     }
   }
 `
