@@ -8,28 +8,59 @@ import CommentWidget from 'components/Post/CommentWidget'
 
 type PostTemplateProps = {
   data: {
+    site: {
+      siteMetadata: {
+        title: string
+        description: string
+        siteUrl: string
+      }
+    }
     allMarkdownRemark: {
       edges: PostPageItemType[]
     }
+  }
+  location: {
+    href: string
   }
 }
 
 const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
   data: {
+    site: {
+      siteMetadata: { title: siteTitle, description: siteDescription, siteUrl },
+    },
     allMarkdownRemark: { edges },
   },
+  location: { href },
 }) {
   const {
-    node: { html, frontmatter },
+    node: {
+      html,
+      frontmatter: {
+        title,
+        summary,
+        date,
+        category,
+        thumbnail: {
+          childImageSharp: { gatsbyImageData },
+          publicURL,
+        },
+      },
+    },
   } = edges[0]
 
   return (
-    <Template>
+    <Template
+      title={`${title} | ${siteTitle}`}
+      description={summary}
+      url={href}
+      image={publicURL}
+    >
       <PostHead
-        title={frontmatter.title}
-        date={frontmatter.date}
-        category={frontmatter.category}
-        thumbnail={frontmatter.thumbnail.childImageSharp.gatsbyImageData}
+        title={title}
+        date={date}
+        category={category}
+        thumbnail={gatsbyImageData}
       />
       <PostContent html={html} />
       <CommentWidget />
@@ -41,6 +72,13 @@ export default PostTemplate
 
 export const queryMarkdownDataBySlug = graphql`
   query queryMarkdownDataBySlug($slug: String) {
+    site {
+      siteMetadata {
+        title
+        description
+        siteUrl
+      }
+    }
     allMarkdownRemark(filter: { fields: { slug: { eq: $slug } } }) {
       edges {
         node {
@@ -54,6 +92,7 @@ export const queryMarkdownDataBySlug = graphql`
               childImageSharp {
                 gatsbyImageData
               }
+              publicURL
             }
           }
         }
