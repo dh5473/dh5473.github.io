@@ -107,5 +107,17 @@ module.exports = {
         ],
       },
     },
+
+    // Canonical URLs
+    {
+      resolve: 'gatsby-plugin-canonical-urls',
+      options: {
+        siteUrl: 'https://dh5473.github.io/',
+        stripQueryString: true,
+      },
+    },
+
+    // Sitemap
+    'gatsby-plugin-sitemap',
   ],
 }
