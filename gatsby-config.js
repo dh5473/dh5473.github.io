@@ -119,5 +119,13 @@ module.exports = {
 
     // Sitemap
     'gatsby-plugin-sitemap',
+
+    // robots.txt
+    {
+      resolve: 'gatsby-plugin-robots-txt',
+      options: {
+        policy: [{ userAgent: '*', allow: '/' }],
+      },
+    },
   ],
 }
