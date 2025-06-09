@@ -23,12 +23,6 @@ type IndexPageProps = {
     allMarkdownRemark: {
       edges: PostListItemType[]
     }
-    file: {
-      childImageSharp: {
-        gatsbyImageData: IGatsbyImageData
-      }
-      publicURL: string
-    }
   }
 }
 
@@ -80,7 +74,7 @@ const HeaderButtons = styled.div`
   }
 `
 
-const HireButton = styled.button`
+const GitHubButton = styled.a`
   background: #3182f6;
   border: none;
   border-radius: 8px;
@@ -90,6 +84,8 @@ const HireButton = styled.button`
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
 
   &:hover {
     background: #2563eb;
@@ -211,11 +207,26 @@ const SeriesCount = styled.span`
 `
 
 const HeroSection = styled.section`
-  padding: 80px 0;
-  text-align: center;
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
 
   @media (max-width: 768px) {
-    padding: 60px 0;
+    padding: 24px 0;
+  }
+`
+
+const HeroImage = styled.img`
+  width: 100%;
+  max-width: 1200px;
+  height: 300px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    height: 250px;
+    border-radius: 12px;
   }
 `
 
@@ -249,10 +260,6 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       siteMetadata: { title, description, siteUrl },
     },
     allMarkdownRemark: { edges },
-    file: {
-      childImageSharp: { gatsbyImageData },
-      publicURL,
-    },
   },
 }) {
   const parsed: ParsedQuery<string> = queryString.parse(search)
@@ -275,24 +282,29 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       title={title}
       description={description}
       url={siteUrl}
-      image={publicURL}
+      image="/hero-image.jpg"
     >
       <Container>
         <Header>
           <HeaderContent>
             <Logo>
-              <span>dev</span>.blog
+              <span>don</span>tech
             </Logo>
             <HeaderButtons>
-              <HireButton>문의하기</HireButton>
+              <GitHubButton
+                href="https://github.com/dh5473"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub
+              </GitHubButton>
             </HeaderButtons>
           </HeaderContent>
         </Header>
 
         <MainContent>
           <HeroSection>
-            <HeroTitle>개발자의 성장 이야기</HeroTitle>
-            <HeroSubtitle>배우고 경험하는 모든 것을 기록합니다</HeroSubtitle>
+            <HeroImage src="/hero-image.jpg" alt="Hero Image" />
           </HeroSection>
 
           <CategoryList selectedCategory={selectedCategory} />
@@ -315,18 +327,11 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
               <SidebarSection>
                 <SidebarTitle>아티클 시리즈</SidebarTitle>
                 <SeriesItem>
-                  <SeriesTitle>React 심화 학습</SeriesTitle>
+                  <SeriesTitle>Python</SeriesTitle>
                   <SeriesDescription>
-                    React의 고급 기능과 패턴을 다루는 시리즈
+                    Python의 고급 기능과 패턴을 다루는 시리즈
                   </SeriesDescription>
-                  <SeriesCount>아티클 5</SeriesCount>
-                </SeriesItem>
-                <SeriesItem>
-                  <SeriesTitle>개발자 성장기</SeriesTitle>
-                  <SeriesDescription>
-                    개발자로서의 경험과 성장 과정을 기록한 시리즈
-                  </SeriesDescription>
-                  <SeriesCount>아티클 3</SeriesCount>
+                  <SeriesCount>아티클 4</SeriesCount>
                 </SeriesItem>
               </SidebarSection>
             </Sidebar>
@@ -370,12 +375,6 @@ export const getPostList = graphql`
           }
         }
       }
-    }
-    file(name: { eq: "profile-image" }) {
-      childImageSharp {
-        gatsbyImageData(width: 120, height: 120)
-      }
-      publicURL
     }
   }
 `
