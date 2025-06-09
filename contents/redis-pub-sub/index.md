@@ -1,7 +1,7 @@
 ---
 date: '2025-06-06'
 title: 'Redis Pub/Sub 활용하기'
-category: 'Development'
+category: 'Dev'
 summary: 'Redis의 Pub/Sub 패턴을 활용한 실시간 메시징 시스템 구축 방법과 실제 사용 사례를 알아보자.'
 thumbnail: './redis-pub-sub-background.png'
 ---

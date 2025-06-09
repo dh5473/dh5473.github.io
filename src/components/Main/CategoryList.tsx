@@ -78,7 +78,7 @@ const CategoryList: FunctionComponent<CategoryListProps> = function ({
 }) {
   const categories = [
     { key: 'All', name: '전체' },
-    { key: 'Development', name: '개발' },
+    { key: 'Dev', name: 'Dev' },
     { key: 'ML', name: 'ML' },
   ]
 
