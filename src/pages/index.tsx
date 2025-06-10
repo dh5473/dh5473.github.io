@@ -6,7 +6,6 @@ import { graphql } from 'gatsby'
 import { PostListItemType } from 'types/PostItem.types'
 import queryString, { ParsedQuery } from 'query-string'
 import Template from 'components/Common/Template'
-import { IGatsbyImageData } from 'gatsby-plugin-image'
 
 type IndexPageProps = {
   location: {

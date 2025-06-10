@@ -15,6 +15,24 @@ module.exports = {
     siteUrl: `https://dh5473.github.io/`,
   },
   plugins: [
+    // Google Analytics 4
+    {
+      resolve: `gatsby-plugin-google-gtag`,
+      options: {
+        trackingIds: [process.env.GATSBY_GA_TRACKING_ID],
+        gtagConfig: {
+          anonymize_ip: true,
+        },
+        pluginConfig: {
+          head: true,
+          respectDNT: true,
+          exclude: ['/preview/**', '/do-not-track/me/too/'],
+        },
+      },
+      // 환경변수가 없으면 플러그인 비활성화
+      ...(process.env.GATSBY_GA_TRACKING_ID ? {} : { disable: true }),
+    },
+
     // TypeScript 지원
     {
       resolve: 'gatsby-plugin-typescript',
