@@ -2,10 +2,11 @@ import React, { FunctionComponent, useEffect } from 'react'
 import styled from '@emotion/styled'
 import CategoryList from 'components/Main/CategoryList'
 import PostList from 'components/Main/PostList'
-import { graphql } from 'gatsby'
+import { graphql, navigate } from 'gatsby'
 import { PostListItemType } from 'types/PostItem.types'
 import queryString, { ParsedQuery } from 'query-string'
 import Template from 'components/Common/Template'
+import { getAllSeries, isPostInSeries } from 'utils/seriesData'
 
 type IndexPageProps = {
   location: {
@@ -174,14 +175,23 @@ const PopularPostTitle = styled.h4`
   overflow: hidden;
 `
 
-const SeriesItem = styled.div`
+const SeriesItem = styled.div<{ isActive?: boolean }>`
   padding: 16px;
-  background: #f8f9fa;
+  background: ${props => (props.isActive ? '#e8f2ff' : '#f8f9fa')};
+  border: 2px solid ${props => (props.isActive ? '#3182f6' : 'transparent')};
   border-radius: 8px;
   margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
 
   &:last-child {
     margin-bottom: 0;
+  }
+
+  &:hover {
+    background: ${props => (props.isActive ? '#d6e9ff' : '#e9ecef')};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `
 
@@ -203,6 +213,37 @@ const SeriesCount = styled.span`
   font-size: 11px;
   color: #3182f6;
   font-weight: 500;
+`
+
+const SeriesFilterInfo = styled.div`
+  background: #e8f2ff;
+  border: 1px solid #3182f6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const SeriesFilterText = styled.span`
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 500;
+`
+
+const SeriesFilterClear = styled.button`
+  background: none;
+  border: none;
+  color: #3182f6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `
 
 const HeroSection = styled.section`
@@ -267,14 +308,46 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       ? 'All'
       : parsed.category
 
+  const selectedSeries: string | null =
+    typeof parsed.series === 'string' ? parsed.series : null
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [selectedCategory])
+  }, [selectedCategory, selectedSeries])
+
+  // 시리즈 클릭 핸들러
+  const handleSeriesClick = (seriesId: string) => {
+    const currentParams = queryString.parse(search)
+    const newParams = {
+      ...currentParams,
+      series: selectedSeries === seriesId ? undefined : seriesId,
+      category: 'All', 
+    }
+
+    const newSearch = queryString.stringify(newParams, {
+      skipNull: true,
+      skipEmptyString: true,
+    })
+    navigate(`/?${newSearch}`)
+  }
 
   // 인기 글 임시 데이터 (실제로는 조회수나 좋아요 수를 기반으로 가져와야 함)
   const popularPosts = edges.slice(0, 3).map(({ node }) => ({
     title: node.frontmatter.title,
   }))
+
+  // 시리즈 데이터 가져오기
+  const seriesList = getAllSeries()
+  const currentSeries = selectedSeries
+    ? seriesList.find(s => s.id === selectedSeries)
+    : null
+
+  // 시리즈 필터링된 글 목록
+  const filteredPosts = selectedSeries
+    ? edges.filter(({ node }) =>
+        isPostInSeries(node.fields.slug, selectedSeries),
+      )
+    : edges
 
   return (
     <Template
@@ -310,7 +383,22 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
           <ContentLayout>
             <MainSection>
-              <PostList selectedCategory={selectedCategory} posts={edges} />
+              {currentSeries && (
+                <SeriesFilterInfo>
+                  <SeriesFilterText>
+                    "{currentSeries.title}" 시리즈의 글을 보고 있습니다
+                  </SeriesFilterText>
+                  <SeriesFilterClear
+                    onClick={() => handleSeriesClick(selectedSeries!)}
+                  >
+                    전체 글 보기
+                  </SeriesFilterClear>
+                </SeriesFilterInfo>
+              )}
+              <PostList
+                selectedCategory={selectedCategory}
+                posts={filteredPosts}
+              />
             </MainSection>
 
             <Sidebar>
@@ -325,13 +413,17 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
               <SidebarSection>
                 <SidebarTitle>아티클 시리즈</SidebarTitle>
-                <SeriesItem>
-                  <SeriesTitle>Python</SeriesTitle>
-                  <SeriesDescription>
-                    Python의 고급 기능과 패턴을 다루는 시리즈
-                  </SeriesDescription>
-                  <SeriesCount>아티클 4</SeriesCount>
-                </SeriesItem>
+                {seriesList.map(series => (
+                  <SeriesItem
+                    key={series.id}
+                    isActive={selectedSeries === series.id}
+                    onClick={() => handleSeriesClick(series.id)}
+                  >
+                    <SeriesTitle>{series.title}</SeriesTitle>
+                    <SeriesDescription>{series.description}</SeriesDescription>
+                    <SeriesCount>아티클 {series.postCount}</SeriesCount>
+                  </SeriesItem>
+                ))}
               </SidebarSection>
             </Sidebar>
           </ContentLayout>

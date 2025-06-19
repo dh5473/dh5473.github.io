@@ -29,3 +29,11 @@ export type PostPageItemType = {
     frontmatter: PostFrontmatterType
   }
 }
+
+export interface SeriesInfo {
+  id: string
+  title: string
+  description: string
+  postCount: number
+  color?: string
+}
