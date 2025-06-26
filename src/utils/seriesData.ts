@@ -11,6 +11,13 @@ export const seriesData: SeriesInfo[] = [
     postCount: 4,
     color: '#3776ab',
   },
+  {
+    id: 'fastapi-series',
+    title: 'FastAPI',
+    description: 'FastAPI 파헤치기',
+    postCount: 1,
+    color: '#099889',
+  },
 ]
 
 // Python 시리즈에 속하는 포스트들의 slug 패턴
@@ -21,6 +28,7 @@ export const seriesPostPatterns = {
     '/python-series/global-interpreter-lock/',
     '/python-series/synchronize-thread/',
   ],
+  'fastapi-series': ['/fastapi-series/why-fastapi/'],
 }
 
 // 포스트가 특정 시리즈에 속하는지 확인
