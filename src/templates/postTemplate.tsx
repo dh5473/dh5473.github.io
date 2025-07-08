@@ -55,6 +55,9 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       description={summary}
       url={href}
       image={publicURL}
+      type="article"
+      datePublished={date}
+      category={category}
     >
       <PostHead
         title={title}

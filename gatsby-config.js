@@ -58,15 +58,16 @@ module.exports = {
       resolve: `gatsby-plugin-sharp`,
       options: {
         defaults: {
-          formats: ['auto', 'webp'],
-          quality: 100,
+          formats: ['auto', 'webp', 'avif'],
+          quality: 85,
           placeholder: 'blurred',
+          backgroundColor: 'transparent',
+          breakpoints: [750, 1080, 1366, 1920],
         },
       },
     },
     `gatsby-transformer-sharp`,
     `gatsby-plugin-image`,
-    `gatsby-plugin-sharp`,
 
     // 마크다운 변환
     {
@@ -94,8 +95,13 @@ module.exports = {
             resolve: 'gatsby-remark-images',
             options: {
               maxWidth: 768,
-              quality: 100,
+              quality: 85,
               withWebp: true,
+              withAvif: true,
+              loading: 'lazy',
+              linkImagesToOriginal: false,
+              backgroundColor: 'transparent',
+              disableBgImageOnAlpha: true,
             },
           },
 

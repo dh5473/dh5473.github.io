@@ -54,10 +54,11 @@ const HeaderContent = styled.div`
   }
 `
 
-const Logo = styled.div`
+const Logo = styled.h1`
   font-size: 20px;
   font-weight: 700;
   color: #1a1a1a;
+  margin: 0;
 
   span {
     color: #3182f6;
@@ -145,7 +146,7 @@ const SidebarSection = styled.div`
   }
 `
 
-const SidebarTitle = styled.h3`
+const SidebarTitle = styled.h2`
   font-size: 18px;
   font-weight: 700;
   color: #1a1a1a;
@@ -163,7 +164,7 @@ const PopularPostItem = styled.div`
   }
 `
 
-const PopularPostTitle = styled.h4`
+const PopularPostTitle = styled.h3`
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
@@ -195,7 +196,7 @@ const SeriesItem = styled.div<{ isActive?: boolean }>`
   }
 `
 
-const SeriesTitle = styled.h4`
+const SeriesTitle = styled.h3`
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
@@ -270,29 +271,6 @@ const HeroImage = styled.img`
   }
 `
 
-const HeroTitle = styled.h1`
-  font-size: 48px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 16px 0;
-  line-height: 1.2;
-
-  @media (max-width: 768px) {
-    font-size: 32px;
-  }
-`
-
-const HeroSubtitle = styled.p`
-  font-size: 20px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-
-  @media (max-width: 768px) {
-    font-size: 16px;
-  }
-`
-
 const IndexPage: FunctionComponent<IndexPageProps> = function ({
   location: { search },
   data: {
@@ -321,7 +299,7 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     const newParams = {
       ...currentParams,
       series: selectedSeries === seriesId ? undefined : seriesId,
-      category: 'All', 
+      category: 'All',
     }
 
     const newSearch = queryString.stringify(newParams, {
@@ -403,15 +381,6 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
             <Sidebar>
               <SidebarSection>
-                <SidebarTitle>인기있는 글</SidebarTitle>
-                {popularPosts.map((post, index) => (
-                  <PopularPostItem key={index}>
-                    <PopularPostTitle>{post.title}</PopularPostTitle>
-                  </PopularPostItem>
-                ))}
-              </SidebarSection>
-
-              <SidebarSection>
                 <SidebarTitle>아티클 시리즈</SidebarTitle>
                 {seriesList.map(series => (
                   <SeriesItem
@@ -423,6 +392,14 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
                     <SeriesDescription>{series.description}</SeriesDescription>
                     <SeriesCount>아티클 {series.postCount}</SeriesCount>
                   </SeriesItem>
+                ))}
+              </SidebarSection>
+              <SidebarSection>
+                <SidebarTitle>인기있는 글</SidebarTitle>
+                {popularPosts.map((post, index) => (
+                  <PopularPostItem key={index}>
+                    <PopularPostTitle>{post.title}</PopularPostTitle>
+                  </PopularPostItem>
                 ))}
               </SidebarSection>
             </Sidebar>

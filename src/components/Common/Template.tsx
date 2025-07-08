@@ -2,6 +2,7 @@ import React, { FunctionComponent, ReactNode } from 'react'
 import styled from '@emotion/styled'
 import GlobalStyle from 'components/Common/GlobalStyle'
 import Footer from 'components/Common/Footer'
+import StructuredData from 'components/Common/StructuredData'
 import { Helmet } from 'react-helmet'
 
 type TemplateProps = {
@@ -10,6 +11,11 @@ type TemplateProps = {
   url: string
   image: string
   children: ReactNode
+  type?: 'website' | 'article'
+  author?: string
+  datePublished?: string
+  dateModified?: string
+  category?: string
 }
 
 const Container = styled.main`
@@ -24,6 +30,11 @@ const Template: FunctionComponent<TemplateProps> = function ({
   url,
   image,
   children,
+  type = 'website',
+  author = 'Donhyeok',
+  datePublished,
+  dateModified,
+  category,
 }) {
   return (
     <Container>
@@ -34,6 +45,9 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta httpEquiv="Content-Type" content="text/html;charset=UTF-8" />
 
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="alternate icon" href="/favicon.ico" />
+
         <meta property="og:type" content="website" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
@@ -41,10 +55,11 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta property="og:url" content={url} />
         <meta property="og:site_name" content={title} />
 
-        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={image} />
+        <meta name="twitter:image:alt" content={title} />
         <meta name="twitter:site" content="@dh5473" />
         <meta name="twitter:creator" content="@dh5473" />
 
@@ -59,6 +74,18 @@ const Template: FunctionComponent<TemplateProps> = function ({
 
         <html lang="ko" />
       </Helmet>
+
+      <StructuredData
+        type={type}
+        title={title}
+        description={description}
+        url={url}
+        image={image}
+        author={author}
+        datePublished={datePublished}
+        dateModified={dateModified}
+        category={category}
+      />
 
       <GlobalStyle />
       {children}

@@ -43,7 +43,7 @@ const PrevPageIcon = styled.div`
   }
 `
 
-const Title = styled.div`
+const Title = styled.h1`
   display: -webkit-box;
   overflow: hidden;
   overflow-wrap: break-word;
@@ -54,6 +54,8 @@ const Title = styled.div`
   -webkit-box-orient: vertical;
   font-size: 45px;
   font-weight: 800;
+  margin: 0;
+  margin-top: auto;
 
   @media (max-width: 768px) {
     font-size: 30px;
