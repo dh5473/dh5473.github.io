@@ -83,7 +83,13 @@ const PostHeadInfo: FunctionComponent<PostHeadInfoProps> = function ({
   date,
   category,
 }) {
-  const goBackPage = () => window.history.back()
+  const goBackPage = () => {
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      window.location.href = '/'
+    }
+  }
 
   return (
     <PostHeadInfoWrapper>
