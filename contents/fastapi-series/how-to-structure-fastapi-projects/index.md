@@ -224,8 +224,6 @@ fastapi-project
 │   ├── engine/             # 비즈니스 로직 엔진
 │   │   └── engine.py
 │   ├── utils/              # 전역 유틸리티
-│   │   ├── jsonutil.py
-│   │   └── regexutil.py
 │   ├── server.py           # FastAPI 앱 초기화
 │   ├── settings.py         # 전역 설정
 │   ├── schemas.py          # 전역 스키마
