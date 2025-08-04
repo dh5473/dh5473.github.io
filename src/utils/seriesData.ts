@@ -15,7 +15,7 @@ export const seriesData: SeriesInfo[] = [
     id: 'fastapi-series',
     title: 'FastAPI',
     description: 'FastAPI 파헤치기',
-    postCount: 3,
+    postCount: 4,
     color: '#099889',
   },
 ]
@@ -32,6 +32,7 @@ export const seriesPostPatterns = {
     '/fastapi-series/why-fastapi/',
     '/fastapi-series/how-to-structure-fastapi-projects/',
     '/fastapi-series/dependency-injection/',
+    '/fastapi-series/dependency-injector/',
   ],
 }
 
