@@ -1,6 +1,6 @@
 ---
 date: '2025-08-24'
-title: '써보면 절대 후회하지 않는 파이썬 uv 사용법'
+title: '써보면 절대 후회하지 않을 파이썬 uv 사용법'
 category: 'Dev'
 summary: '혜성처럼 등장한 python 패키지 관리 툴 uv. 다른 도구들 대비 뛰어난 편의성과 성능을 가지고 있는 uv에 대해 알아봅니다.'
 thumbnail: './uv-logo.png'
