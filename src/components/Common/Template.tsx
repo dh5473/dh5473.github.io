@@ -48,12 +48,12 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="alternate icon" href="/favicon.ico" />
 
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content={type} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
         <meta property="og:url" content={url} />
-        <meta property="og:site_name" content={title} />
+        <meta property="og:site_name" content="Donhyeok's Blog" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
@@ -71,8 +71,6 @@ const Template: FunctionComponent<TemplateProps> = function ({
           name="naver-site-verification"
           content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"
         />
-
-        <html lang="ko" />
       </Helmet>
 
       <StructuredData

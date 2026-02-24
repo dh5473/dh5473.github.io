@@ -10,7 +10,7 @@
 module.exports = {
   siteMetadata: {
     title: `Donhyeok's Blog`,
-    description: `Donhyeok's Blog`,
+    description: `Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그`,
     author: `Donhyeok`,
     siteUrl: `https://dh5473.github.io/`,
   },
@@ -116,7 +116,7 @@ module.exports = {
             resolve: 'gatsby-remark-external-links',
             options: {
               target: '_blank',
-              rel: 'nofollow',
+              rel: 'noopener noreferrer',
             },
           },
         ],
@@ -133,7 +133,56 @@ module.exports = {
     },
 
     // Sitemap
-    'gatsby-plugin-sitemap',
+    {
+      resolve: 'gatsby-plugin-sitemap',
+      options: {
+        query: `
+          {
+            site {
+              siteMetadata {
+                siteUrl
+              }
+            }
+            allSitePage {
+              nodes {
+                path
+              }
+            }
+            allMarkdownRemark {
+              nodes {
+                fields {
+                  slug
+                }
+                frontmatter {
+                  date
+                }
+              }
+            }
+          }
+        `,
+        resolvePages: ({
+          allSitePage: { nodes: allPages },
+          allMarkdownRemark: { nodes: allPosts },
+        }) => {
+          const postDateMap = allPosts.reduce((acc, post) => {
+            acc[post.fields.slug] = post.frontmatter.date
+            return acc
+          }, {})
+
+          return allPages.map(page => ({
+            ...page,
+            lastmod: postDateMap[page.path] || null,
+          }))
+        },
+        serialize: ({ path, lastmod }) => ({
+          url: path,
+          lastmod: lastmod || undefined,
+          changefreq: path === '/' ? 'daily' : 'weekly',
+          priority: path === '/' ? 1.0 : 0.7,
+        }),
+        excludes: ['/info/', '/404/', '/404.html', '/dev-404-page/'],
+      },
+    },
 
     // robots.txt
     {

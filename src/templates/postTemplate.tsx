@@ -1,10 +1,10 @@
 import { graphql } from 'gatsby'
 import React, { FunctionComponent } from 'react'
-import { PostPageItemType } from 'types/PostItem.types'
 import Template from 'components/Common/Template'
 import PostHead from 'components/Post/PostHead'
 import PostContent from 'components/Post/PostContent'
 import CommentWidget from 'components/Post/CommentWidget'
+import { IGatsbyImageData } from 'gatsby-plugin-image'
 
 type PostTemplateProps = {
   data: {
@@ -16,30 +16,48 @@ type PostTemplateProps = {
       }
     }
     allMarkdownRemark: {
-      edges: PostPageItemType[]
+      edges: {
+        node: {
+          html: string
+          fields: {
+            slug: string
+          }
+          frontmatter: {
+            title: string
+            summary: string
+            date: string
+            rawDate: string
+            category: string
+            thumbnail: {
+              childImageSharp: {
+                gatsbyImageData: IGatsbyImageData
+              }
+              publicURL: string
+            }
+          }
+        }
+      }[]
     }
-  }
-  location: {
-    href: string
   }
 }
 
 const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
   data: {
     site: {
-      siteMetadata: { title: siteTitle, description: siteDescription, siteUrl },
+      siteMetadata: { title: siteTitle, siteUrl },
     },
     allMarkdownRemark: { edges },
   },
-  location: { href },
 }) {
   const {
     node: {
       html,
+      fields: { slug },
       frontmatter: {
         title,
         summary,
         date,
+        rawDate,
         category,
         thumbnail: {
           childImageSharp: { gatsbyImageData },
@@ -49,14 +67,18 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     },
   } = edges[0]
 
+  const baseUrl = siteUrl.replace(/\/$/, '')
+  const pageUrl = `${baseUrl}${slug}`
+  const absoluteImage = `${baseUrl}${publicURL}`
+
   return (
     <Template
       title={`${title} | ${siteTitle}`}
       description={summary}
-      url={href}
-      image={publicURL}
+      url={pageUrl}
+      image={absoluteImage}
       type="article"
-      datePublished={date}
+      datePublished={rawDate}
       category={category}
     >
       <PostHead
@@ -86,10 +108,14 @@ export const queryMarkdownDataBySlug = graphql`
       edges {
         node {
           html
+          fields {
+            slug
+          }
           frontmatter {
             title
             summary
             date(formatString: "YYYY.MM.DD.")
+            rawDate: date
             category
             thumbnail {
               childImageSharp {

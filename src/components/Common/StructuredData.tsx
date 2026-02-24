@@ -28,7 +28,7 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: "Donhyeok's Blog",
-    description: "Donhyeok's 개발 블로그",
+    description: 'Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그',
     url: 'https://dh5473.github.io/',
     author: {
       '@type': 'Person',
