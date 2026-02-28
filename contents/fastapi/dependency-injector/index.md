@@ -2,7 +2,7 @@
 date: '2025-08-02'
 title: 'FastAPI에서 의존성 주입을?'
 category: 'FastAPI'
-series: 'fastapi-series'
+series: 'fastapi'
 seriesOrder: 4
 summary: 'FastAPI에서 제공하는 의존성 주입(Dependency Injection) 기능의 실제 활용법과 한계, 그리고 더 확장된 DI 설계 방법까지 단계별로 알아봅니다.'
 thumbnail: './fastapi-logo.png'

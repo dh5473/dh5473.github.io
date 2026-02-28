@@ -2,7 +2,7 @@
 date: '2025-02-17'
 title: '[Python] Global Interpreter Lock'
 category: 'Python'
-series: 'python-series'
+series: 'python'
 seriesOrder: 3
 summary: 'Python GIL에 대해 알아보고, 멀티스레딩 환경에서의 제약사항과 I/O 바운드 작업에서의 활용을 살펴봅니다.'
 thumbnail: './python-logo.png'

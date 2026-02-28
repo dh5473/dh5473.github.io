@@ -2,7 +2,7 @@
 date: '2025-02-06'
 title: '[Python] Reference Counting'
 category: 'Python'
-series: 'python-series'
+series: 'python'
 seriesOrder: 1
 summary: 'Python의 메모리 관리 기법인 참조 카운팅의 동작 원리와 순환 참조 문제에 대해 알아봅니다.'
 thumbnail: './python-logo.png'

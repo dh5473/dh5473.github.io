@@ -2,7 +2,7 @@
 date: '2025-02-21'
 title: '[Python] Garbage Collection'
 category: 'Python'
-series: 'python-series'
+series: 'python'
 seriesOrder: 2
 summary: 'Python의 가비지 컬렉션 과정과 세대별 가비지 컬렉터의 동작 원리에 대해 알아봅니다.'
 thumbnail: './python-logo.png'

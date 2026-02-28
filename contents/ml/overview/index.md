@@ -2,7 +2,7 @@
 date: '2026-02-28'
 title: '머신러닝이란 무엇인가: 지도학습, 비지도학습, 강화학습 한눈에 보기'
 category: 'Machine Learning'
-series: 'ml-foundations'
+series: 'ml'
 seriesOrder: 1
 tags: ['Machine Learning', '머신러닝', '지도학습', '비지도학습', '강화학습']
 summary: '머신러닝의 세 가지 패러다임인 지도학습, 비지도학습, 강화학습의 개념과 차이를 코드 예제와 함께 명확하게 정리합니다.'

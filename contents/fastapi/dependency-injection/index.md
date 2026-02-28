@@ -2,7 +2,7 @@
 date: '2025-07-28'
 title: 'Dependency Injection 제대로 이해하기'
 category: 'FastAPI'
-series: 'fastapi-series'
+series: 'fastapi'
 seriesOrder: 3
 summary: '의존성 주입(DI)의 개념과 원리를 이해하고, 실제 코드에 적용하는 방법을 알아봅니다.'
 thumbnail: './fastapi-logo.png'

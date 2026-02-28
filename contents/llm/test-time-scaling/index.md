@@ -2,6 +2,8 @@
 date: '2025-06-12'
 title: 'Test Time Scaling'
 category: 'LLM'
+series: 'llm'
+seriesOrder: 1
 summary: 'Chain-of-Thought부터 Test-Time Compute까지, 이미 학습된 LLM의 추론 성능을 향상시키는 방법들을 알아봅시다.'
 thumbnail: './image-06.png'
 ---
