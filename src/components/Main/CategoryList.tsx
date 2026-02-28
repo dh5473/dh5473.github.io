@@ -1,6 +1,7 @@
 import React, { FunctionComponent, ReactNode } from 'react'
 import styled from '@emotion/styled'
 import { Link } from 'gatsby'
+import { c, bp } from 'styles/theme'
 
 type CategoryItemProps = {
   active: boolean
@@ -14,13 +15,15 @@ type GatsbyLinkProps = {
 
 export type CategoryListProps = {
   selectedCategory: string
+  categories: string[]
 }
 
 const CategoryWrapper = styled.div`
-  border-bottom: 1px solid #f1f3f4;
+  position: relative;
+  border-bottom: 1px solid ${c.border};
   margin-bottom: 32px;
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     margin-bottom: 24px;
   }
 `
@@ -35,9 +38,21 @@ const CategoryContainer = styled.div`
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
+`
 
-  @media (max-width: 768px) {
-    gap: 0;
+// Fade gradient on the right to hint at horizontal scroll
+const ScrollFade = styled.div`
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 1px;
+  width: 48px;
+  background: linear-gradient(to right, transparent, ${c.bg});
+  pointer-events: none;
+
+  ${bp.md} {
+    display: block;
   }
 `
 
@@ -46,55 +61,57 @@ const CategoryTab = styled(({ active, ...props }: GatsbyLinkProps) => (
 ))`
   display: flex;
   align-items: center;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 2px solid transparent;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: ${({ active }) => (active ? '#1a1a1a' : '#9ca3af')};
+  color: ${({ active }) => (active ? c.text : c.textMuted)};
   text-decoration: none;
   white-space: nowrap;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: color 0.2s ease, border-color 0.2s ease;
 
   ${({ active }) =>
     active &&
     `
-    border-bottom-color: #3182f6;
-    color: #1a1a1a;
+    border-bottom-color: var(--primary);
+    color: var(--text);
   `}
 
   &:hover {
-    color: ${({ active }) => (active ? '#1a1a1a' : '#6b7280')};
+    color: ${c.text};
   }
 
-  @media (max-width: 768px) {
-    padding: 12px 16px;
-    font-size: 15px;
+  ${bp.md} {
+    padding: 12px 14px;
+    font-size: 14px;
   }
 `
 
 const CategoryList: FunctionComponent<CategoryListProps> = function ({
   selectedCategory,
+  categories,
 }) {
-  const categories = [
+  // Always show "전체" first, then alphabetical order
+  const sortedCategories = [...categories].sort((a, b) => a.localeCompare(b))
+  const tabs = [
     { key: 'All', name: '전체' },
-    { key: 'Dev', name: 'Dev' },
-    { key: 'ML', name: 'ML' },
+    ...sortedCategories.map(cat => ({ key: cat, name: cat })),
   ]
 
   return (
     <CategoryWrapper>
       <CategoryContainer>
-        {categories.map(category => (
+        {tabs.map(tab => (
           <CategoryTab
-            to={`/?category=${category.key}`}
-            active={category.key === selectedCategory}
-            key={category.key}
+            to={`/?category=${tab.key}`}
+            active={tab.key === selectedCategory}
+            key={tab.key}
           >
-            {category.name}
+            {tab.name}
           </CategoryTab>
         ))}
       </CategoryContainer>
+      <ScrollFade />
     </CategoryWrapper>
   )
 }

@@ -2,19 +2,16 @@ import React, { FunctionComponent, useState } from 'react'
 import styled from '@emotion/styled'
 import PostItem from 'components/Main/PostItem'
 import { PostListItemType } from 'types/PostItem.types'
+import { c, bp } from 'styles/theme'
 
 type PostListProps = {
   selectedCategory: string
   posts: PostListItemType[]
 }
 
-const PostListWrapper = styled.div`
-  /* 간단한 리스트 형태 */
-`
+const PostListWrapper = styled.div``
 
-const PostContainer = styled.div`
-  /* 각 포스트는 PostItem에서 구분선 처리 */
-`
+const PostContainer = styled.div``
 
 const PaginationWrapper = styled.div`
   display: flex;
@@ -23,7 +20,7 @@ const PaginationWrapper = styled.div`
   gap: 4px;
   margin: 64px 0;
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     margin: 48px 0;
   }
 `
@@ -32,10 +29,11 @@ const PageButton = styled.button<{ active?: boolean; disabled?: boolean }>`
   min-width: 32px;
   height: 32px;
   padding: 0 8px;
-  border: 1px solid ${({ active }) => (active ? '#3182f6' : 'transparent')};
-  background: ${({ active }) => (active ? '#3182f6' : 'transparent')};
+  border: 1px solid
+    ${({ active }) => (active ? c.primary : 'transparent')};
+  background: ${({ active }) => (active ? c.primary : 'transparent')};
   color: ${({ active, disabled }) =>
-    disabled ? '#d1d5db' : active ? '#ffffff' : '#6b7280'};
+    disabled ? c.border : active ? '#ffffff' : c.textMuted};
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
@@ -43,19 +41,19 @@ const PageButton = styled.button<{ active?: boolean; disabled?: boolean }>`
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: ${({ active }) => (active ? '#2563eb' : '#f9fafb')};
-    color: ${({ active }) => (active ? '#ffffff' : '#374151')};
+    background: ${({ active }) => (active ? c.primaryHov : c.bgSubtle)};
+    color: ${({ active }) => (active ? '#ffffff' : c.text)};
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.4;
   }
 `
 
 const PageEllipsis = styled.span`
   padding: 0 4px;
-  color: #9ca3af;
+  color: ${c.textMuted};
   font-size: 14px;
 `
 

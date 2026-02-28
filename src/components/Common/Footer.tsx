@@ -1,17 +1,21 @@
 import React, { FunctionComponent } from 'react'
 import styled from '@emotion/styled'
+import { c, bp } from 'styles/theme'
 
 const FooterWrapper = styled.footer`
   display: grid;
   place-items: center;
   margin-top: auto;
-  padding: 50px 0;
-  font-size: 15px;
+  padding: 48px 0;
+  font-size: 14px;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: ${c.textMuted};
+  border-top: 1px solid ${c.borderMuted};
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     font-size: 13px;
+    padding: 36px 0;
   }
 `
 

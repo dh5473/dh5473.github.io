@@ -3,6 +3,7 @@ import React, { FunctionComponent } from 'react'
 import styled from '@emotion/styled'
 import { PostFrontmatterType } from 'types/PostItem.types'
 import { GatsbyImage } from 'gatsby-plugin-image'
+import { c, bp, shadow } from 'styles/theme'
 
 type PostItemProps = PostFrontmatterType & {
   link: string
@@ -11,17 +12,17 @@ type PostItemProps = PostFrontmatterType & {
 const PostItemWrapper = styled(Link)`
   display: block;
   padding: 32px 0;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid ${c.borderMuted};
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   border-radius: 12px;
 
   &:hover {
-    background: #fafbfc;
+    background: ${c.bgSubtle};
     margin: 0 -24px;
     padding: 32px 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: ${shadow.md};
     transform: translateY(-2px);
   }
 
@@ -29,7 +30,7 @@ const PostItemWrapper = styled(Link)`
     border-bottom: none;
   }
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     padding: 24px 0;
 
     &:hover {
@@ -45,7 +46,7 @@ const PostContent = styled.div`
   gap: 24px;
   align-items: flex-start;
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     flex-direction: column;
     gap: 16px;
   }
@@ -60,48 +61,49 @@ const PostTitle = styled.h2`
   font-size: 20px;
   font-weight: 600;
   line-height: 1.4;
-  color: #1a1a1a;
+  color: ${c.text};
   margin: 0 0 8px 0;
-  transition: color 0.3s ease;
+  transition: color 0.25s ease;
 
   ${PostItemWrapper}:hover & {
-    color: #3182f6;
+    color: ${c.primary};
   }
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     font-size: 18px;
   }
 `
 
 const PostSummary = styled.p`
-  font-size: 16px;
-  line-height: 1.5;
-  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.6;
+  color: ${c.textMuted};
   margin: 0 0 16px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     font-size: 14px;
   }
 `
 
 const PostCategory = styled.span`
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: 13px;
+  color: ${c.primary};
+  font-weight: 500;
 `
 
 const PostMeta = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: 13px;
+  color: ${c.textMuted};
 
-  @media (max-width: 768px) {
-    font-size: 13px;
+  ${bp.md} {
+    font-size: 12px;
   }
 `
 
@@ -111,24 +113,28 @@ const PostDivider = styled.span`
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background: #d1d5db;
+  background: ${c.border};
 `
 
 const PostThumbnail = styled.div`
   flex-shrink: 0;
   width: 160px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 
   ${PostItemWrapper}:hover & {
-    transform: scale(1.05);
+    transform: scale(1.04);
   }
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     width: 100%;
     height: 200px;
+  }
+
+  ${bp.sm} {
+    height: 180px;
   }
 `
 
@@ -136,26 +142,23 @@ const ThumbnailImage = styled(GatsbyImage)`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 
   ${PostItemWrapper}:hover & {
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
 `
-
-// TODO: 카테고리 태그는 토스 블로그에서 포스트 리스트에 표시되지 않음
-// 필요시 개별 포스트 페이지에 구현
 
 const PostItem: FunctionComponent<PostItemProps> = function ({
   title,
   date,
   category,
   summary,
-  thumbnail: {
-    childImageSharp: { gatsbyImageData },
-  },
+  thumbnail,
   link,
 }) {
+  const gatsbyImageData = thumbnail?.childImageSharp?.gatsbyImageData ?? null
+
   return (
     <PostItemWrapper to={link}>
       <PostContent>
@@ -169,9 +172,11 @@ const PostItem: FunctionComponent<PostItemProps> = function ({
           </PostMeta>
         </PostTextContent>
 
-        <PostThumbnail>
-          <ThumbnailImage image={gatsbyImageData} alt={title} />
-        </PostThumbnail>
+        {gatsbyImageData && (
+          <PostThumbnail>
+            <ThumbnailImage image={gatsbyImageData} alt={title} />
+          </PostThumbnail>
+        )}
       </PostContent>
     </PostItemWrapper>
   )
