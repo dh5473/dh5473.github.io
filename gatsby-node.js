@@ -12,6 +12,7 @@ exports.onCreateWebpackConfig = ({ getConfig, actions }) => {
         components: path.resolve(__dirname, 'src/components'),
         utils: path.resolve(__dirname, 'src/utils'),
         hooks: path.resolve(__dirname, 'src/hooks'),
+        styles: path.resolve(__dirname, 'src/styles'),
       },
     },
   })
@@ -62,7 +63,7 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
   // Import Post Template Component
   const PostTemplateComponent = path.resolve(
     __dirname,
-    'src/templates/postTemplate.tsx',
+    'src/templates/PostTemplate.tsx',
   )
 
   // Page Generating Function
