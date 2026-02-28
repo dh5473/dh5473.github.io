@@ -1,10 +1,12 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, useState, useEffect } from 'react'
 import styled from '@emotion/styled'
 import PostItem from 'components/Main/PostItem'
 import { PostListItemType } from 'types/PostItem.types'
 import { c, bp } from 'styles/theme'
+import { getSectionById } from 'styles/sections'
 
 type PostListProps = {
+  selectedSection: string
   selectedCategory: string
   posts: PostListItemType[]
 }
@@ -60,10 +62,15 @@ const PageEllipsis = styled.span`
 const POSTS_PER_PAGE = 10
 
 const PostList: FunctionComponent<PostListProps> = function ({
+  selectedSection,
   selectedCategory,
   posts,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedSection, selectedCategory])
 
   const filteredPosts = posts.filter(
     ({
@@ -71,6 +78,12 @@ const PostList: FunctionComponent<PostListProps> = function ({
         frontmatter: { category },
       },
     }: PostListItemType) => {
+      // Section filter: if a section is selected, only show posts in that section's categories
+      if (selectedSection !== 'all') {
+        const sectionCats = getSectionById(selectedSection)?.categories ?? []
+        if (!sectionCats.includes(category)) return false
+      }
+      // Category filter
       if (selectedCategory === 'All') return true
       return category === selectedCategory
     },

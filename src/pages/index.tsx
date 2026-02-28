@@ -1,12 +1,14 @@
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import styled from '@emotion/styled'
-import CategoryList from 'components/Main/CategoryList'
 import PostList from 'components/Main/PostList'
+import NavDropdown from 'components/Main/NavDropdown'
+import HeroCarousel from 'components/Main/HeroCarousel'
 import { graphql, navigate } from 'gatsby'
-import { PostListItemType } from 'types/PostItem.types'
+import { PostListItemType, SeriesInfo } from 'types/PostItem.types'
 import queryString, { ParsedQuery } from 'query-string'
 import Template from 'components/Common/Template'
-import { getAllSeries, isPostInSeries } from 'utils/seriesData'
+import { seriesMetadata } from 'utils/seriesData'
+import { getSectionForCategory } from 'styles/sections'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
 import { c, bp, shadow } from 'styles/theme'
@@ -30,6 +32,8 @@ type IndexPageProps = {
   }
 }
 
+// ─── Layout ─────────────────────────────────────────────────────────
+
 const Container = styled.div`
   min-height: 100vh;
   background: ${c.bg};
@@ -47,37 +51,46 @@ const Header = styled.header`
 const HeaderContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 64px;
+  height: 60px;
+  gap: 16px;
 
   ${bp.md} {
-    padding: 0 16px;
-    height: 56px;
+    padding: 0 20px;
+    height: 54px;
   }
 `
 
 const Logo = styled.h1`
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: ${c.text};
   margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
 
   span {
     color: ${c.primary};
   }
 `
 
-const HeaderButtons = styled.div`
+const NavCenter = styled.div`
+  flex: 1;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  justify-content: center;
 
-  ${bp.md} {
-    gap: 8px;
+  ${bp.lg} {
+    display: none;
   }
+`
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 `
 
 const ThemeToggle = styled.button`
@@ -90,9 +103,10 @@ const ThemeToggle = styled.button`
   border-radius: 8px;
   background: ${c.bgSubtle};
   color: ${c.textMuted};
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: ${c.bgMuted};
@@ -112,13 +126,14 @@ const GitHubButton = styled.a`
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
   transition: background 0.2s ease;
   text-decoration: none;
   display: inline-block;
+  flex-shrink: 0;
 
   &:hover {
     background: ${c.primaryHov};
@@ -126,144 +141,44 @@ const GitHubButton = styled.a`
 
   ${bp.md} {
     padding: 6px 12px;
-    font-size: 13px;
+    font-size: 12px;
   }
 `
+
+const MobileNavWrapper = styled.div`
+  display: none;
+
+  ${bp.lg} {
+    display: flex;
+  }
+`
+
+// ─── Main ────────────────────────────────────────────────────────────
 
 const MainContent = styled.main`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px 80px;
 
   ${bp.md} {
-    padding: 0 16px;
+    padding: 0 20px 60px;
   }
 `
 
-const ContentLayout = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 48px;
-  margin-top: 32px;
-
-  ${bp.lg} {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
-  ${bp.md} {
-    gap: 24px;
-  }
-`
-
-const MainSection = styled.section`
-  min-width: 0;
-`
-
-const Sidebar = styled.aside`
-  ${bp.lg} {
-    order: -1;
-  }
-`
-
-const SidebarSection = styled.div`
-  margin-bottom: 48px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  ${bp.md} {
-    margin-bottom: 32px;
-  }
-`
-
-const SidebarTitle = styled.h2`
-  font-size: 15px;
-  font-weight: 700;
-  color: ${c.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 0 0 16px 0;
-`
-
-const PopularPostItem = styled.div`
-  padding: 12px 0;
-  border-bottom: 1px solid ${c.borderMuted};
-
-  &:last-child {
-    border-bottom: none;
-  }
-`
-
-const PopularPostTitle = styled.h3`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${c.text};
-  margin: 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: ${c.primary};
-  }
-`
-
-const SeriesItem = styled.div<{ isActive?: boolean }>`
-  padding: 14px 16px;
-  background: ${props => (props.isActive ? c.bgMuted : c.bgSubtle)};
-  border: 1.5px solid ${props => (props.isActive ? c.primary : 'transparent')};
-  border-radius: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  &:hover {
-    background: ${c.bgMuted};
-    transform: translateY(-1px);
-    box-shadow: ${shadow.sm};
-  }
-`
-
-const SeriesTitle = styled.h3`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${c.text};
-  margin: 0 0 4px 0;
-`
-
-const SeriesDescription = styled.p`
-  font-size: 12px;
-  color: ${c.textMuted};
-  margin: 0 0 8px 0;
-  line-height: 1.4;
-`
-
-const SeriesCount = styled.span`
-  font-size: 11px;
-  color: ${c.primary};
-  font-weight: 600;
-`
+// ─── Series filter banner ────────────────────────────────────────────
 
 const SeriesFilterInfo = styled.div`
   background: ${c.bgMuted};
   border: 1px solid ${c.border};
   border-left: 3px solid ${c.primary};
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 24px;
+  border-radius: 10px;
+  padding: 12px 20px;
+  margin-top: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  box-shadow: ${shadow.sm};
 `
 
 const SeriesFilterText = styled.span`
@@ -276,45 +191,96 @@ const SeriesFilterClear = styled.button`
   background: none;
   border: none;
   color: ${c.primary};
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
+  font-family: inherit;
 
   &:hover {
     text-decoration: underline;
   }
 `
 
-const HeroSection = styled.section`
-  padding: 40px 0;
+// ─── Content layout ──────────────────────────────────────────────────
+
+const ContentRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 40px;
+  align-items: start;
+  margin-top: 32px;
+
+  ${bp.lg} {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+`
+
+const PostSection = styled.section`
+  min-width: 0;
+`
+
+const SeriesSidebar = styled.aside`
+  position: sticky;
+  top: 76px;
+
+  ${bp.lg} {
+    display: none;
+  }
+`
+
+const SidebarLabel = styled.p`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${c.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 12px 0;
+`
+
+const SidebarSeriesItem = styled.button<{ active: boolean }>`
   display: flex;
-  justify-content: center;
-
-  ${bp.md} {
-    padding: 24px 0;
-  }
-`
-
-const HeroImage = styled.img`
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   width: 100%;
-  max-width: 1200px;
-  height: 300px;
-  border-radius: 16px;
-  object-fit: cover;
-  box-shadow: ${shadow.lg};
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1.5px solid ${({ active }) => (active ? c.primary : c.borderMuted)};
+  background: ${({ active }) => (active ? c.bgMuted : c.bgSubtle)};
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
 
-  ${bp.md} {
-    height: 200px;
-    border-radius: 12px;
+  &:last-child {
+    margin-bottom: 0;
   }
 
-  ${bp.sm} {
-    height: 160px;
-    border-radius: 10px;
+  &:hover {
+    background: ${c.bgMuted};
+    border-color: ${({ active }) => (active ? c.primary : c.border)};
+    transform: translateY(-1px);
   }
 `
+
+const SidebarSeriesTitle = styled.span<{ active: boolean }>`
+  font-size: 13px;
+  font-weight: ${({ active }) => (active ? '600' : '500')};
+  color: ${({ active }) => (active ? c.primary : c.text)};
+  line-height: 1.4;
+`
+
+const SidebarSeriesCount = styled.span`
+  font-size: 11px;
+  color: ${c.textMuted};
+  font-weight: 500;
+`
+
+// ─── Page ────────────────────────────────────────────────────────────
 
 const IndexPage: FunctionComponent<IndexPageProps> = function ({
   location: { search },
@@ -322,10 +288,11 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     site: {
       siteMetadata: { title, description, siteUrl },
     },
-    allMarkdownRemark: { edges, distinct: categories },
+    allMarkdownRemark: { edges },
   },
 }) {
   const parsed: ParsedQuery<string> = queryString.parse(search)
+
   const selectedCategory: string =
     typeof parsed.category !== 'string' || !parsed.category
       ? 'All'
@@ -334,9 +301,18 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
   const selectedSeries: string | null =
     typeof parsed.series === 'string' ? parsed.series : null
 
+  const selectedSection: string = (() => {
+    if (typeof parsed.section === 'string' && parsed.section) {
+      return parsed.section
+    }
+    if (selectedCategory !== 'All') {
+      return getSectionForCategory(selectedCategory)
+    }
+    return 'all'
+  })()
+
   const [isDark, setIsDark] = useState(false)
 
-  // Sync toggle state with current data-theme on mount
   useEffect(() => {
     const current = document.documentElement.getAttribute('data-theme')
     setIsDark(current === 'dark')
@@ -351,7 +327,7 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [selectedCategory, selectedSeries])
+  }, [selectedCategory, selectedSection, selectedSeries])
 
   const handleSeriesClick = (seriesId: string) => {
     const currentParams = queryString.parse(search)
@@ -359,8 +335,8 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       ...currentParams,
       series: selectedSeries === seriesId ? undefined : seriesId,
       category: 'All',
+      section: undefined,
     }
-
     const newSearch = queryString.stringify(newParams, {
       skipNull: true,
       skipEmptyString: true,
@@ -368,20 +344,39 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     navigate(`/?${newSearch}`)
   }
 
-  const popularPosts = edges.slice(0, 3).map(({ node }) => ({
-    title: node.frontmatter.title,
+  // categoryCounts for NavDropdown
+  const categoryCounts: Record<string, number> = {}
+  edges.forEach(({ node }) => {
+    const cat = node.frontmatter.category
+    categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1
+  })
+
+  // Series list from frontmatter + display metadata
+  const seriesList: SeriesInfo[] = Array.from(
+    new Set(
+      edges
+        .map(({ node }) => node.frontmatter.series)
+        .filter((s): s is string => Boolean(s)),
+    ),
+  ).map(id => ({
+    id,
+    title: seriesMetadata[id]?.title ?? id,
+    description: seriesMetadata[id]?.description ?? '',
+    postCount: edges.filter(({ node }) => node.frontmatter.series === id)
+      .length,
+    color: seriesMetadata[id]?.color,
   }))
 
-  const seriesList = getAllSeries()
   const currentSeries = selectedSeries
     ? seriesList.find(s => s.id === selectedSeries)
     : null
 
   const filteredPosts = selectedSeries
-    ? edges.filter(({ node }) =>
-        isPostInSeries(node.fields.slug, selectedSeries),
-      )
+    ? edges.filter(({ node }) => node.frontmatter.series === selectedSeries)
     : edges
+
+  // Featured posts for carousel: latest 3 (or 5 if available)
+  const featuredPosts = edges.slice(0, 5)
 
   return (
     <Template
@@ -393,10 +388,19 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       <Container>
         <Header>
           <HeaderContent>
-            <Logo>
+            <Logo onClick={() => navigate('/')}>
               <span>don</span>tech
             </Logo>
-            <HeaderButtons>
+
+            <NavCenter>
+              <NavDropdown
+                selectedSection={selectedSection}
+                selectedCategory={selectedCategory}
+                categoryCounts={categoryCounts}
+              />
+            </NavCenter>
+
+            <HeaderActions>
               <ThemeToggle onClick={toggleTheme} aria-label="테마 전환">
                 <FontAwesomeIcon icon={isDark ? faSun : faMoon} />
               </ThemeToggle>
@@ -407,66 +411,62 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
               >
                 GitHub
               </GitHubButton>
-            </HeaderButtons>
+              {/* Mobile: hamburger is rendered inside NavDropdown */}
+              <MobileNavWrapper>
+                <NavDropdown
+                  selectedSection={selectedSection}
+                  selectedCategory={selectedCategory}
+                  categoryCounts={categoryCounts}
+                />
+              </MobileNavWrapper>
+            </HeaderActions>
           </HeaderContent>
         </Header>
 
         <MainContent>
-          <HeroSection>
-            <HeroImage src="/hero-image.jpg" alt="Hero Image" />
-          </HeroSection>
+          {/* Hero carousel */}
+          <HeroCarousel posts={featuredPosts} />
 
-          <CategoryList
-            selectedCategory={selectedCategory}
-            categories={categories}
-          />
-
-          <ContentLayout>
-            <MainSection>
+          <ContentRow>
+            {/* Post list */}
+            <PostSection>
               {currentSeries && (
                 <SeriesFilterInfo>
                   <SeriesFilterText>
-                    &ldquo;{currentSeries.title}&rdquo; 시리즈의 글을 보고
-                    있습니다
+                    &ldquo;{currentSeries.title}&rdquo; 시리즈의 글을 보고 있습니다
                   </SeriesFilterText>
-                  <SeriesFilterClear
-                    onClick={() => handleSeriesClick(selectedSeries!)}
-                  >
+                  <SeriesFilterClear onClick={() => handleSeriesClick(selectedSeries!)}>
                     전체 글 보기
                   </SeriesFilterClear>
                 </SeriesFilterInfo>
               )}
               <PostList
+                selectedSection={selectedSection}
                 selectedCategory={selectedCategory}
                 posts={filteredPosts}
               />
-            </MainSection>
+            </PostSection>
 
-            <Sidebar>
-              <SidebarSection>
-                <SidebarTitle>아티클 시리즈</SidebarTitle>
-                {seriesList.map(series => (
-                  <SeriesItem
+            {/* Right sidebar: series */}
+            <SeriesSidebar>
+              <SidebarLabel>SERIES</SidebarLabel>
+              {seriesList.map(series => {
+                const isActive = selectedSeries === series.id
+                return (
+                  <SidebarSeriesItem
                     key={series.id}
-                    isActive={selectedSeries === series.id}
+                    active={isActive}
                     onClick={() => handleSeriesClick(series.id)}
                   >
-                    <SeriesTitle>{series.title}</SeriesTitle>
-                    <SeriesDescription>{series.description}</SeriesDescription>
-                    <SeriesCount>아티클 {series.postCount}</SeriesCount>
-                  </SeriesItem>
-                ))}
-              </SidebarSection>
-              <SidebarSection>
-                <SidebarTitle>인기있는 글</SidebarTitle>
-                {popularPosts.map((post, index) => (
-                  <PopularPostItem key={index}>
-                    <PopularPostTitle>{post.title}</PopularPostTitle>
-                  </PopularPostItem>
-                ))}
-              </SidebarSection>
-            </Sidebar>
-          </ContentLayout>
+                    <SidebarSeriesTitle active={isActive}>
+                      {series.title}
+                    </SidebarSeriesTitle>
+                    <SidebarSeriesCount>아티클 {series.postCount}개</SidebarSeriesCount>
+                  </SidebarSeriesItem>
+                )
+              })}
+            </SeriesSidebar>
+          </ContentRow>
         </MainContent>
       </Container>
     </Template>
@@ -498,6 +498,8 @@ export const getPostList = graphql`
             summary
             date(formatString: "YYYY.MM.DD.")
             category
+            series
+            seriesOrder
             thumbnail {
               childImageSharp {
                 gatsbyImageData(width: 768, height: 400)
