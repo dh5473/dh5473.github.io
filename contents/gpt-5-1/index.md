@@ -1,7 +1,7 @@
 ---
 date: '2025-11-16'
 title: '반드시 체크해야 할 GPT-5.1 주요 변경사항'
-category: 'ML'
+category: 'LLM'
 summary: 'GPT-5와 달라진 핵심 변경 사항을 정리해봅니다.'
 thumbnail: './gpt-5-1.png'
 ---

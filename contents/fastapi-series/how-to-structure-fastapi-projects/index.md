@@ -1,7 +1,9 @@
 ---
 date: '2025-07-08'
 title: 'FastAPI 프로젝트를 체계적으로 구조화하는 방법'
-category: 'Dev'
+category: 'FastAPI'
+series: 'fastapi-series'
+seriesOrder: 2
 summary: 'FastAPI 프로젝트의 확장성과 유지보수성을 높이는 두 가지 주요 구조화 전략에 대해 알아봅니다.'
 thumbnail: './fastapi-logo.png'
 ---

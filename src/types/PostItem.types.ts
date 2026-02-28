@@ -11,6 +11,8 @@ export type PostFrontmatterType = {
     }
     publicURL: string
   } | null
+  series?: string | null
+  seriesOrder?: number | null
 }
 
 export type PostListItemType = {

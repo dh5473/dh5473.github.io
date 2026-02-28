@@ -1,7 +1,9 @@
 ---
 date: '2025-06-27'
 title: 'FastAPI를 선택해야만 하는 이유'
-category: 'Dev'
+category: 'FastAPI'
+series: 'fastapi-series'
+seriesOrder: 1
 summary: 'Django, Flask와 함께 가장 많이 고려되는 파이썬 웹 프레임워크인 FastAPI에 대해 알아봅니다.'
 thumbnail: './fastapi-logo.png'
 ---

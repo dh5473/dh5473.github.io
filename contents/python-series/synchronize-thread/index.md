@@ -1,7 +1,9 @@
 ---
 date: '2025-02-27'
 title: '[Python] Thread Synchronization'
-category: 'Dev'
+category: 'Python'
+series: 'python-series'
+seriesOrder: 4
 summary: 'Python의 다양한 스레드 동기화 도구들과 활용 방법에 대해 알아봅니다.'
 thumbnail: './python-logo.png'
 ---

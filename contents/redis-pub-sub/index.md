@@ -1,7 +1,9 @@
 ---
 date: '2025-06-06'
 title: 'Redis Pub/Sub 활용하기'
-category: 'Dev'
+category: 'System Design'
+series: 'async-mq-series'
+seriesOrder: 1
 summary: 'Pub-Sub 패턴에 대해 알아보고, Redis Pub/Sub으로 간단한 실습을 진행합니다.'
 thumbnail: './redis-pub-sub-background.png'
 ---
