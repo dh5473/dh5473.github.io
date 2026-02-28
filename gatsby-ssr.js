@@ -40,5 +40,10 @@ exports.onRenderBody = ({ setHtmlAttributes, setHeadComponents }) => {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap',
     }),
+    // Dark mode flash prevention — runs synchronously before paint
+    React.createElement('script', {
+      key: 'theme-init',
+      src: '/theme-init.js',
+    }),
   ])
 }
