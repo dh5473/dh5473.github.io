@@ -83,8 +83,8 @@ const LeftPane = styled.div`
   }
 
   ${bp.md} {
-    padding: 28px 28px 24px;
-    min-height: 0;
+    padding: 24px 24px 20px;
+    min-height: 190px;
   }
 `
 
@@ -104,9 +104,9 @@ const SlideText = styled.div<{ active: boolean }>`
   }
 
   ${bp.md} {
-    top: 28px;
-    left: 28px;
-    right: 28px;
+    top: 24px;
+    left: 24px;
+    right: 24px;
   }
 `
 
@@ -159,11 +159,6 @@ const Summary = styled.p`
   overflow: hidden;
 
   ${bp.md} {
-    -webkit-line-clamp: 2;
-    font-size: 13px;
-  }
-
-  ${bp.sm} {
     display: none;
   }
 `
@@ -184,8 +179,8 @@ const Controls = styled.div`
   }
 
   ${bp.md} {
-    bottom: 24px;
-    left: 28px;
+    bottom: 20px;
+    left: 24px;
   }
 `
 
@@ -246,12 +241,7 @@ const RightPane = styled.div`
   overflow: hidden;
 
   ${bp.md} {
-    height: 200px;
-    order: -1;
-  }
-
-  ${bp.sm} {
-    height: 160px;
+    display: none;
   }
 `
 
