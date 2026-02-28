@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리합니다. 반복적인 개발 과정과 실무에서 자주 하는 실수를 코드 예제와 함께 짚어봅니다."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" property="og:description" content="머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리합니다. 반복적인 개발 과정과 실무에서 자주 하는 실수를 코드 예제와 함께 짚어봅니다."/><meta data-react-helmet="true" property="og:image" content="https://dh5473.github.io/hero-image.jpg"/><meta data-react-helmet="true" property="og:url" content="https://dh5473.github.io/ml/workflow/"/><meta data-react-helmet="true" property="og:site_name" content="Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:description" content="머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리합니다. 반복적인 개발 과정과 실무에서 자주 하는 실수를 코드 예제와 함께 짚어봅니다."/><meta data-react-helmet="true" name="twitter:image" content="https://dh5473.github.io/hero-image.jpg"/><meta data-react-helmet="true" name="twitter:image:alt" content="머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok&#x27;s Blog</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Donhyeok's Blog","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://dh5473.github.io/","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok's Blog","description":"머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리합니다. 반복적인 개발 과정과 실무에서 자주 하는 실수를 코드 예제와 함께 짚어봅니다.","image":"https://dh5473.github.io/hero-image.jpg","url":"https://dh5473.github.io/ml/workflow/","datePublished":"2026-02-28","dateModified":"2026-02-28","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://dh5473.github.io/ml/workflow/"},"articleSection":"Machine Learning"}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dh5473.github.io/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://dh5473.github.io/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지 | Donhyeok's Blog","item":"https://dh5473.github.io/ml/workflow/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://dh5473.github.io/ml/workflow/" data-baseprotocol="https:" data-basehost="dh5473.github.io"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css e92kep">.css-e92kep{position:relative;width:100%;height:400px;overflow:hidden;background:linear-gradient(135deg, #0d9488 0%, #1c1917 100%);}@media (max-width: 768px){.css-e92kep{height:300px;}}</style><div class="css-e92kep e1opi4mu2"><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.02.28.</span></div></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p>머신러닝 공부를 시작하면 모델 구현 코드는 금방 찾을 수 있다. 그런데 막상 실제 데이터를 앞에 두면 막막해진다. “이 데이터 어떻게 정리하지?”, “모델은 어떤 걸 써야 하지?”, “학습시켰는데 이게 잘 된 건지 어떻게 알아?”</p>
+<p>알고리즘을 아는 것과 프로젝트를 완성하는 것은 완전히 다른 문제다. 이 글에서는 머신러닝 프로젝트가 어떤 단계를 거쳐 완성되는지 전체 흐름을 잡는다. <a href="/ml/overview/">지난 글에서 지도학습, 비지도학습, 강화학습의 개념을 살펴봤다면</a>, 이번엔 “실제로 프로젝트를 어떻게 진행하는가”에 집중한다.</p>
+<hr>
+<h2>워크플로우는 선형이 아니다</h2>
+<p>많은 입문자들이 ML 프로젝트를 이렇게 상상한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">데이터 수집 → 전처리 → 모델 학습 → 배포  (끝)</code></pre></div>
+<p>현실은 다르다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">문제 정의
+    ↓
+데이터 수집 ←──────────────────┐
+    ↓                          │
+EDA (탐색적 분석)              │ 반복
+    ↓                          │
+데이터 전처리 ←────────────────┤
+    ↓                          │
+모델 학습 &amp; 평가 ──────────────┘
+    ↓
+배포
+    ↓
+모니터링 → (다시 데이터 수집으로)</code></pre></div>
+<p>모델 평가 결과를 보고 전처리 방식을 바꾸고, 새 데이터를 수집하고, 다시 학습시키는 과정이 반복된다. Andrew Ng은 이 반복적인 특성 때문에 ML 개발을 “실험 중심 개발(Iterative Development)“이라고 부른다. 한 번에 완성하려는 욕심을 버리는 것이 첫 번째 마인드셋이다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 참고</strong><br>
+  실무 ML 엔지니어의 시간 배분은 대략 이렇다: 데이터 수집/정제 60-70%, 모델링 20-30%, 배포/모니터링 10-20%. 알고리즘 공부에 시간을 많이 투자하게 되지만, 실제로는 데이터를 다루는 능력이 훨씬 더 결정적이다.
+</div>
+<p>이 글 전체에서 <strong>집값 예측 프로젝트</strong>를 예시로 쓴다. 면적, 층수, 위치 같은 특성으로 아파트 가격을 예측하는 회귀 문제다.</p>
+<hr>
+<h2>1단계: 문제 정의</h2>
+<p>코드보다 먼저 해야 하는 것. 의외로 이 단계를 서두르다가 나중에 처음부터 다시 하는 경우가 많다.</p>
+<p><strong>풀어야 할 질문:</strong></p>
+<ul>
+<li>무엇을 예측하는가? (타겟 변수)</li>
+<li>회귀인가, 분류인가?</li>
+<li>어떤 평가지표가 의미 있는가?</li>
+<li>어느 정도의 성능이면 “성공”인가?</li>
+</ul>
+<p>집값 예측이라면:</p>
+<ul>
+<li>타겟: 가격 (연속값 → 회귀)</li>
+<li>평가지표: MAE(평균 절대 오차) — “평균적으로 얼마나 틀리는가”가 직관적</li>
+<li>성공 기준: MAE가 2,000만원 이하면 실용적으로 쓸 만하다</li>
+</ul>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 주의</strong><br>
+  평가지표를 나중에 결정하면 안 된다. 모델을 학습시킨 후 "이 지표가 높네, 이걸로 쓰자"는 순환 논리다. 비즈니스 요구사항에서 평가지표가 먼저 결정되어야 한다.
+</div>
+<hr>
+<h2>2단계: 데이터 수집과 EDA</h2>
+<p>데이터 없이는 아무것도 할 수 없다. 데이터를 어디서 구할 것인지가 프로젝트의 첫 번째 현실적인 관문이다.</p>
+<p><strong>데이터 소스:</strong></p>
+<ul>
+<li><strong>공개 데이터셋</strong>: Kaggle, UCI ML Repository, 공공데이터포털(data.go.kr)</li>
+<li><strong>직접 수집</strong>: 웹 크롤링, API 호출</li>
+<li><strong>사내 데이터</strong>: DB, 로그 파일</li>
+</ul>
+<p>데이터를 확보하면 바로 모델을 학습시키고 싶어진다. 그보다 먼저 해야 할 것이 **EDA(Exploratory Data Analysis, 탐색적 데이터 분석)**다. 데이터를 이해하지 못한 채 학습시키면 이상한 결과가 나와도 왜 그런지 알 수 없다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 데이터 로드</span>
+df <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'apartments.csv'</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 1. 기본 구조 파악</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>df<span class="token punctuation">.</span>shape<span class="token punctuation">)</span>       <span class="token comment"># (10000, 12) → 10,000행, 12개 컬럼</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>df<span class="token punctuation">.</span>dtypes<span class="token punctuation">)</span>      <span class="token comment"># 각 컬럼의 데이터 타입</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>df<span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>      <span class="token comment"># 첫 5행 확인</span>
+
+<span class="token comment"># 2. 결측치 확인</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>df<span class="token punctuation">.</span>isnull<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token comment"># area          0</span>
+<span class="token comment"># floor        23   ← 23개 결측치</span>
+<span class="token comment"># built_year  156   ← 156개 결측치</span>
+<span class="token comment"># price         0</span>
+
+<span class="token comment"># 3. 기본 통계</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>df<span class="token punctuation">.</span>describe<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token comment">#         area        floor        price</span>
+<span class="token comment"># mean   84.3         8.2       45000.0</span>
+<span class="token comment"># std    21.5         4.1       18000.0</span>
+<span class="token comment"># min    20.0         1.0        8000.0</span>
+<span class="token comment"># max   200.0        30.0      350000.0</span></code></pre></div>
+<p><code class="language-text">describe()</code>의 min/max를 보면 이상값을 금방 발견할 수 있다. 20m² 아파트나 8,000만원짜리 신축 아파트는 실제로 존재할까? 도메인 지식을 동원해서 이상값인지 특수 케이스인지 판단해야 한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 4. 타겟 변수(가격) 분포 확인</span>
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+df<span class="token punctuation">[</span><span class="token string">'price'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>hist<span class="token punctuation">(</span>bins<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'가격 분포'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'가격 (만원)'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 5. 주요 특성과 타겟의 관계</span>
+correlation <span class="token operator">=</span> df<span class="token punctuation">.</span>corr<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'price'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>sort_values<span class="token punctuation">(</span>ascending<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>correlation<span class="token punctuation">)</span>
+<span class="token comment"># area          0.72   ← 면적이 가격과 가장 강한 상관관계</span>
+<span class="token comment"># floor         0.31</span>
+<span class="token comment"># built_year   -0.18   ← 건축연도가 오래될수록 가격이 낮은 경향</span></code></pre></div>
+<p>EDA 단계에서 얻는 인사이트가 이후 전처리와 피처 엔지니어링 방향을 결정한다.</p>
+<hr>
+<h2>3단계: 데이터 전처리</h2>
+<p>현실 데이터는 항상 지저분하다. 그 상태로는 모델에 넣을 수 없다. 전처리는 크게 세 가지 문제를 해결한다.</p>
+<h3>결측치 처리</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> SimpleImputer
+
+<span class="token comment"># 숫자형 결측치 → 중앙값으로 대체</span>
+imputer <span class="token operator">=</span> SimpleImputer<span class="token punctuation">(</span>strategy<span class="token operator">=</span><span class="token string">'median'</span><span class="token punctuation">)</span>
+df<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'floor'</span><span class="token punctuation">,</span> <span class="token string">'built_year'</span><span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">=</span> imputer<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>df<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'floor'</span><span class="token punctuation">,</span> <span class="token string">'built_year'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
+<p>결측치를 무조건 평균이나 중앙값으로 채우는 게 항상 정답은 아니다. 결측이 “무작위”가 아닌 경우(예: 특정 지역 데이터만 빠진 경우)라면 결측 여부 자체가 정보가 될 수 있다.</p>
+<h3>범주형 변수 인코딩</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 지역(구) 컬럼이 문자열인 경우</span>
+df <span class="token operator">=</span> pd<span class="token punctuation">.</span>get_dummies<span class="token punctuation">(</span>df<span class="token punctuation">,</span> columns<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'district'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> drop_first<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+<span class="token comment"># '강남구', '서초구', '마포구' → 0/1 컬럼들로 변환</span></code></pre></div>
+<h3>피처 스케일링</h3>
+<p>모델마다 다르지만, 선형 모델과 KNN처럼 거리/크기에 민감한 알고리즘은 스케일링이 필수다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
+
+scaler <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
+<span class="token comment"># 평균 0, 표준편차 1로 정규화</span></code></pre></div>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 데이터 누수(Data Leakage) 주의</strong><br>
+  <code>fit_transform()</code>은 훈련 데이터에만 적용하고, 테스트 데이터에는 반드시 <code>transform()</code>만 써야 한다. 테스트 데이터의 통계를 훈련에 쓰면 모델이 실제보다 좋아 보이는 착시가 생긴다.
+</div>
+<hr>
+<h2>4단계: 모델 학습과 평가</h2>
+<h3>데이터 분리부터</h3>
+<p>학습에 쓴 데이터로 평가하면 시험 문제를 미리 알고 시험 보는 것과 같다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+X <span class="token operator">=</span> df<span class="token punctuation">.</span>drop<span class="token punctuation">(</span><span class="token string">'price'</span><span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+y <span class="token operator">=</span> df<span class="token punctuation">[</span><span class="token string">'price'</span><span class="token punctuation">]</span>
+
+<span class="token comment"># 훈련(80%) / 테스트(20%) 분리</span>
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"훈련 데이터: </span><span class="token interpolation"><span class="token punctuation">{</span>X_train<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string">건"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"테스트 데이터: </span><span class="token interpolation"><span class="token punctuation">{</span>X_test<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string">건"</span></span><span class="token punctuation">)</span></code></pre></div>
+<h3>간단한 모델부터 시작</h3>
+<p>처음부터 XGBoost나 신경망을 꺼낼 필요가 없다. <strong>가장 단순한 모델의 성능을 먼저 확인</strong>하는 것이 좋다. 이를 베이스라인(Baseline)이라고 한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LinearRegression
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> mean_absolute_error
+
+<span class="token comment"># 베이스라인: 선형 회귀</span>
+model <span class="token operator">=</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span>
+model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+y_pred <span class="token operator">=</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>
+mae <span class="token operator">=</span> mean_absolute_error<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> y_pred<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"MAE: </span><span class="token interpolation"><span class="token punctuation">{</span>mae<span class="token punctuation">:</span><span class="token format-spec">,.0f</span><span class="token punctuation">}</span></span><span class="token string">만원"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># MAE: 3,240만원</span></code></pre></div>
+<p>3,240만원이 좋은 성능인지 나쁜 성능인지는 목표 기준(2,000만원 이하)과 비교하면 판단할 수 있다. 이 베이스라인을 기준으로 “더 복잡한 모델을 쓰면 얼마나 개선되는가”를 측정한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestRegressor
+
+<span class="token comment"># 더 복잡한 모델 시도</span>
+rf_model <span class="token operator">=</span> RandomForestRegressor<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+rf_model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+y_pred_rf <span class="token operator">=</span> rf_model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>
+mae_rf <span class="token operator">=</span> mean_absolute_error<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> y_pred_rf<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"랜덤 포레스트 MAE: </span><span class="token interpolation"><span class="token punctuation">{</span>mae_rf<span class="token punctuation">:</span><span class="token format-spec">,.0f</span><span class="token punctuation">}</span></span><span class="token string">만원"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 랜덤 포레스트 MAE: 1,820만원  ← 목표 달성!</span></code></pre></div>
+<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
+  <strong>📌 모델 선택 원칙</strong><br><br>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li>항상 단순한 모델(선형 회귀, 로지스틱 회귀)로 베이스라인을 잡는다</li>
+    <li>복잡한 모델은 베이스라인 대비 "얼마나 개선됐는가"로 정당화한다</li>
+    <li>복잡도 증가 대비 성능 개선이 미미하면, 단순한 모델이 낫다</li>
+  </ul>
+</div>
+<hr>
+<h2>5단계: 배포와 그 이후</h2>
+<p>좋은 모델을 만들었다면 실제로 쓸 수 있게 만들어야 한다. 가장 일반적인 방식은 REST API로 감싸서 서비스로 제공하는 것이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 학습된 모델 저장</span>
+<span class="token keyword">import</span> joblib
+
+joblib<span class="token punctuation">.</span>dump<span class="token punctuation">(</span>rf_model<span class="token punctuation">,</span> <span class="token string">'apartment_price_model.pkl'</span><span class="token punctuation">)</span>
+joblib<span class="token punctuation">.</span>dump<span class="token punctuation">(</span>scaler<span class="token punctuation">,</span> <span class="token string">'scaler.pkl'</span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># FastAPI로 예측 서비스 만들기</span>
+<span class="token keyword">from</span> fastapi <span class="token keyword">import</span> FastAPI
+<span class="token keyword">import</span> joblib
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+app <span class="token operator">=</span> FastAPI<span class="token punctuation">(</span><span class="token punctuation">)</span>
+model <span class="token operator">=</span> joblib<span class="token punctuation">.</span>load<span class="token punctuation">(</span><span class="token string">'apartment_price_model.pkl'</span><span class="token punctuation">)</span>
+scaler <span class="token operator">=</span> joblib<span class="token punctuation">.</span>load<span class="token punctuation">(</span><span class="token string">'scaler.pkl'</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>post</span><span class="token punctuation">(</span><span class="token string">"/predict"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">predict_price</span><span class="token punctuation">(</span>area<span class="token punctuation">:</span> <span class="token builtin">float</span><span class="token punctuation">,</span> floor<span class="token punctuation">:</span> <span class="token builtin">int</span><span class="token punctuation">,</span> built_year<span class="token punctuation">:</span> <span class="token builtin">int</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    features <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">[</span>area<span class="token punctuation">,</span> floor<span class="token punctuation">,</span> built_year<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+    features_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>features<span class="token punctuation">)</span>
+    price <span class="token operator">=</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>features_scaled<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span><span class="token string">"predicted_price"</span><span class="token punctuation">:</span> <span class="token builtin">round</span><span class="token punctuation">(</span>price<span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">}</span>  <span class="token comment"># 100만원 단위로 반올림</span></code></pre></div>
+<p>배포 후가 끝이 아니다. 모델은 시간이 지나면서 성능이 떨어진다. 부동산 시장이 변하면 과거 데이터로 학습한 모델의 예측은 점점 빗나간다. 이를 **모델 드리프트(Model Drift)**라고 하며, 정기적으로 새 데이터로 재학습하는 파이프라인이 필요하다.</p>
+<hr>
+<h2>흔히 하는 실수 3가지</h2>
+<h3>1. 테스트 세트에 손대기</h3>
+<p>여러 모델을 시도하다가 테스트 성능이 좋은 것을 고르는 경우가 있다. 이렇게 하면 테스트 세트가 사실상 검증 세트가 되어버린다. 진짜 테스트 세트는 <strong>딱 한 번</strong>, 최종 모델을 평가할 때만 써야 한다.</p>
+<h3>2. 데이터 누수</h3>
+<p>테스트 데이터의 정보가 훈련 과정에 흘러들어가는 것. 가장 흔한 실수는 전체 데이터에 <code class="language-text">fit_transform()</code>을 적용한 뒤 분리하는 것이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 잘못된 순서: 전체 데이터로 fit → 분리</span>
+X_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X<span class="token punctuation">)</span>  <span class="token comment"># 테스트 데이터 정보가 포함됨</span>
+X_train<span class="token punctuation">,</span> X_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X_scaled<span class="token punctuation">,</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span>
+
+<span class="token comment"># ✅ 올바른 순서: 분리 → 훈련 데이터로만 fit</span>
+X_train<span class="token punctuation">,</span> X_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span>
+X_train_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>   <span class="token comment"># 훈련 데이터로만 fit</span>
+X_test_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>          <span class="token comment"># transform만 적용</span></code></pre></div>
+<h3>3. EDA 없이 바로 모델링</h3>
+<p>데이터를 이해하지 않은 채 모델부터 돌리는 것. 이상값이나 잘못된 데이터가 섞여 있으면 아무리 좋은 알고리즘을 써도 결과를 신뢰할 수 없다. 경험상 EDA에 시간을 충분히 쓴 프로젝트가 나중에 훨씬 빠르게 진행된다.</p>
+<hr>
+<h2>마치며</h2>
+<p>머신러닝 프로젝트에서 “알고리즘 선택”은 생각보다 작은 부분이다. 문제를 제대로 정의하고, 데이터를 깊이 이해하고, 올바르게 평가하는 것이 훨씬 더 많은 시간을 차지한다. 처음 프로젝트를 진행할 때 이 흐름을 염두에 두면, 어느 단계에서 막혔는지 명확하게 파악할 수 있다.</p>
+<p>다음 글부터는 본격적으로 알고리즘을 파고든다. ml-linear 시리즈에서 가장 기본적인 지도학습 알고리즘인 선형 회귀(Linear Regression)부터 시작한다. 오늘 살펴본 집값 예측 예시가 실제로 어떻게 작동하는지 수식과 코드로 낱낱이 분해할 예정이다.</p>
+<hr>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization (Coursera)</a></li>
+<li><a href="https://scikit-learn.org/stable/getting_started.html" target="_blank" rel="noopener noreferrer">Scikit-learn: Getting Started</a></li>
+<li><a href="https://developers.google.com/machine-learning/crash-course" target="_blank" rel="noopener noreferrer">Google ML Crash Course — ML Engineering for Production</a></li>
+</ul></div><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆<br/>© 2025 Developer Donhyeok, Powered By Gatsby.</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/workflow/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-3833bb964c99dfe4b352.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-dd13df16b67f06d88678.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-eb69e9ecf27313b24260.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="46bcf852e6dd16cd3e94";</script><script src="/webpack-runtime-0874e6ba7f030e3a8c21.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-3833bb964c99dfe4b352.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
