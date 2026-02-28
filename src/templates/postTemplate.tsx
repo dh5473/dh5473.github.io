@@ -33,7 +33,7 @@ type PostTemplateProps = {
                 gatsbyImageData: IGatsbyImageData
               }
               publicURL: string
-            }
+            } | null
           }
         }
       }[]
@@ -53,23 +53,19 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     node: {
       html,
       fields: { slug },
-      frontmatter: {
-        title,
-        summary,
-        date,
-        rawDate,
-        category,
-        thumbnail: {
-          childImageSharp: { gatsbyImageData },
-          publicURL,
-        },
-      },
+      frontmatter: { title, summary, date, rawDate, category, thumbnail },
     },
   } = edges[0]
 
+  const gatsbyImageData =
+    thumbnail?.childImageSharp?.gatsbyImageData ?? undefined
+  const publicURL = thumbnail?.publicURL ?? null
+
   const baseUrl = siteUrl.replace(/\/$/, '')
   const pageUrl = `${baseUrl}${slug}`
-  const absoluteImage = `${baseUrl}${publicURL}`
+  const absoluteImage = publicURL
+    ? `${baseUrl}${publicURL}`
+    : `${baseUrl}/hero-image.jpg`
 
   return (
     <Template

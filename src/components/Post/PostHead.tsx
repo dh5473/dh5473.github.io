@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react'
 import styled from '@emotion/styled'
 import { GatsbyImage, IGatsbyImageData } from 'gatsby-plugin-image'
 import PostHeadInfo, { PostHeadInfoProps } from './PostHeadInfo'
+import { bp } from 'styles/theme'
 
 type GatsbyImgProps = {
   image: IGatsbyImageData
@@ -10,15 +11,20 @@ type GatsbyImgProps = {
 }
 
 type PostHeadProps = PostHeadInfoProps & {
-  thumbnail: IGatsbyImageData
+  thumbnail?: IGatsbyImageData
 }
 
-const PostHeadWrapper = styled.div`
+const PostHeadWrapper = styled.div<{ hasThumbnail: boolean }>`
   position: relative;
   width: 100%;
   height: 400px;
+  overflow: hidden;
+  background: ${({ hasThumbnail }) =>
+    hasThumbnail
+      ? 'transparent'
+      : 'linear-gradient(135deg, #0d9488 0%, #1c1917 100%)'};
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     height: 300px;
   }
 `
@@ -26,15 +32,27 @@ const PostHeadWrapper = styled.div`
 const BackgroundImage = styled((props: GatsbyImgProps) => (
   <GatsbyImage {...props} style={{ position: 'absolute' }} />
 ))`
-  z-index: -1;
+  z-index: 0;
   width: 100%;
   height: 400px;
   object-fit: cover;
-  filter: brightness(0.25);
+  filter: brightness(0.22);
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     height: 300px;
   }
+`
+
+// Teal-to-transparent gradient overlay for a subtle color signature
+const GradientOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );
 `
 
 const PostHead: FunctionComponent<PostHeadProps> = function ({
@@ -44,8 +62,9 @@ const PostHead: FunctionComponent<PostHeadProps> = function ({
   thumbnail,
 }) {
   return (
-    <PostHeadWrapper>
-      <BackgroundImage image={thumbnail} alt="thumbnail" />
+    <PostHeadWrapper hasThumbnail={!!thumbnail}>
+      {thumbnail && <BackgroundImage image={thumbnail} alt="thumbnail" />}
+      <GradientOverlay />
       <PostHeadInfo title={title} date={date} category={category} />
     </PostHeadWrapper>
   )

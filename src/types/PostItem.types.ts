@@ -10,7 +10,7 @@ export type PostFrontmatterType = {
       gatsbyImageData: IGatsbyImageData
     }
     publicURL: string
-  }
+  } | null
 }
 
 export type PostListItemType = {

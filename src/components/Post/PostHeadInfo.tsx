@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react'
 import styled from '@emotion/styled'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { bp } from 'styles/theme'
 
 export type PostHeadInfoProps = {
   title: string
@@ -10,6 +11,8 @@ export type PostHeadInfoProps = {
 }
 
 const PostHeadInfoWrapper = styled.div`
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   width: 768px;
@@ -18,7 +21,7 @@ const PostHeadInfoWrapper = styled.div`
   padding: 60px 0;
   color: #ffffff;
 
-  @media (max-width: 768px) {
+  ${bp.md} {
     width: 100%;
     padding: 40px 20px;
   }
@@ -27,54 +30,70 @@ const PostHeadInfoWrapper = styled.div`
 const PrevPageIcon = styled.div`
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #ffffff;
-  color: #000000;
-  font-size: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1c1917;
+  font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s ease;
 
-  @media (max-width: 768px) {
-    width: 30px;
-    height: 30px;
-    font-size: 18px;
+  &:hover {
+    background: #ffffff;
   }
+
+  ${bp.md} {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+`
+
+const CategoryBadge = styled.span`
+  display: inline-block;
+  margin-top: auto;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  background: rgba(13, 148, 136, 0.8);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  width: fit-content;
 `
 
 const Title = styled.h1`
   display: -webkit-box;
   overflow: hidden;
   overflow-wrap: break-word;
-  margin-top: auto;
   text-overflow: ellipsis;
   white-space: normal;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  font-size: 45px;
+  font-size: 42px;
   font-weight: 800;
-  margin: 0;
-  margin-top: auto;
+  margin: 0 0 12px 0;
+  line-height: 1.25;
 
-  @media (max-width: 768px) {
-    font-size: 30px;
+  ${bp.md} {
+    font-size: 28px;
   }
 `
 
 const PostData = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  margin-top: 10px;
-  font-size: 18px;
-  font-weight: 700;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 400;
+  opacity: 0.75;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 15px;
-    font-weight: 400;
+  ${bp.md} {
+    font-size: 13px;
   }
 `
 
@@ -96,10 +115,10 @@ const PostHeadInfo: FunctionComponent<PostHeadInfoProps> = function ({
       <PrevPageIcon onClick={goBackPage}>
         <FontAwesomeIcon icon={faArrowLeft} />
       </PrevPageIcon>
+      <CategoryBadge>{category}</CategoryBadge>
       <Title>{title}</Title>
       <PostData>
-        <div>{category}</div>
-        <div>{date}</div>
+        <span>{date}</span>
       </PostData>
     </PostHeadInfoWrapper>
   )
