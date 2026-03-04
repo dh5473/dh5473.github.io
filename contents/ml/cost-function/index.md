@@ -198,10 +198,9 @@ MSE만 있는 건 아니다. 데이터 특성에 따라 더 적합한 비용 함
 코드로 비교해보자.
 
 ```python
+# 위 코드에서 학습한 model, area를 그대로 사용
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-import numpy as np
 
-y_true = np.array([2.1, 2.8, 3.2, 3.6, 4.1, 4.5, 5.2, 5.8])
 y_pred = model.predict(area)
 
 mse  = mean_squared_error(y_true, y_pred)
