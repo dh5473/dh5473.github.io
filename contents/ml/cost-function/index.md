@@ -1,5 +1,5 @@
 ---
-date: '2026-03-03'
+date: '2026-03-06'
 title: '비용 함수(Cost Function): 모델이 얼마나 틀렸는지 측정하는 법'
 category: 'Machine Learning'
 series: 'ml'
