@@ -20,7 +20,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'ml': {
     title: 'ML 기초',
-    description: 'ML 개요, 프로젝트 워크플로우',
+    description: '개요부터 선형 회귀, 비용 함수, 경사하강법까지',
     color: '#ff7f0e',
   },
   'llm': {
