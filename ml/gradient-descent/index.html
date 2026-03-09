@@ -1,0 +1,297 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="비용 함수의 최솟값을 찾는 경사하강법의 원리를 직관부터 수식, 코드까지 완전히 이해한다. 학습률의 역할, 수렴 과정 시각화, 실전 팁까지."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" property="og:description" content="비용 함수의 최솟값을 찾는 경사하강법의 원리를 직관부터 수식, 코드까지 완전히 이해한다. 학습률의 역할, 수렴 과정 시각화, 실전 팁까지."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/hero-image.jpg"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/gradient-descent/"/><meta data-react-helmet="true" property="og:site_name" content="Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:description" content="비용 함수의 최솟값을 찾는 경사하강법의 원리를 직관부터 수식, 코드까지 완전히 이해한다. 학습률의 역할, 수렴 과정 시각화, 실전 팁까지."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/hero-image.jpg"/><meta data-react-helmet="true" name="twitter:image:alt" content="경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok&#x27;s Blog</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Donhyeok's Blog","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://dh5473.github.io/","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok's Blog","description":"비용 함수의 최솟값을 찾는 경사하강법의 원리를 직관부터 수식, 코드까지 완전히 이해한다. 학습률의 역할, 수렴 과정 시각화, 실전 팁까지.","image":"https://donmain.dev/hero-image.jpg","url":"https://donmain.dev/ml/gradient-descent/","datePublished":"2026-03-07","dateModified":"2026-03-07","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/gradient-descent/"},"articleSection":"Machine Learning"}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dh5473.github.io/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://dh5473.github.io/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘 | Donhyeok's Blog","item":"https://donmain.dev/ml/gradient-descent/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/gradient-descent/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css e92kep">.css-e92kep{position:relative;width:100%;height:400px;overflow:hidden;background:linear-gradient(135deg, #0d9488 0%, #1c1917 100%);}@media (max-width: 768px){.css-e92kep{height:300px;}}</style><div class="css-e92kep e1opi4mu2"><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.03.07.</span></div></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/cost-function/">지난 글에서</a> 비용 함수가 모델의 “성적표”라고 했다. MSE라는 숫자 하나로 모델이 얼마나 틀렸는지 측정할 수 있게 됐다. 남은 질문은 하나다 — <strong>이 숫자를 어떻게 줄이는가?</strong></p>
+<p>비용 함수 J(w, b)의 U자 커브를 떠올려보자. 바닥이 최적의 파라미터다. 그런데 처음에는 우리가 이 커브의 어디에 서 있는지 모른다. 바닥이 왼쪽인지 오른쪽인지도 모른다. 이 상태에서 바닥을 찾아가는 방법이 **경사하강법(Gradient Descent)**이다.</p>
+<p>아이디어는 놀랍도록 단순하다. <strong>현재 위치에서 기울기(경사)를 계산하고, 내리막 방향으로 한 걸음 이동한다.</strong> 이걸 반복하면 결국 바닥에 도달한다.</p>
+<hr>
+<h2>직관: 안개 낀 산에서 내려오기</h2>
+<p>경사하강법을 이해하는 가장 쉬운 비유는 이것이다.</p>
+<blockquote>
+<p>안개가 짙게 낀 산 위에 서 있다. 사방이 안 보여서 정상이 어딘지, 계곡이 어딘지 알 수 없다. 할 수 있는 건 딱 하나 — <strong>발밑의 경사를 느끼고, 내리막 방향으로 한 발 내딛는 것</strong>이다. 이걸 반복하면 결국 계곡(최저점)에 도달한다.</p>
+</blockquote>
+<p>이게 경사하강법의 전부다. “발밑의 경사”가 미분값(gradient)이고, “한 발”이 학습률(learning rate)이다.</p>
+<hr>
+<h2>수식으로 표현하면</h2>
+<p>파라미터 w를 업데이트하는 규칙은 다음과 같다.</p>
+<blockquote>
+<p><strong>w := w − α × ∂J/∂w</strong></p>
+<ul>
+<li><strong>w</strong>: 현재 파라미터 값</li>
+<li><strong>α</strong> (알파): 학습률(learning rate) — 한 번에 얼마나 이동할지</li>
+<li><strong>∂J/∂w</strong>: 비용 함수 J를 w에 대해 미분한 값 — 현재 위치의 기울기</li>
+</ul>
+</blockquote>
+<p>b도 동일한 방식으로 업데이트한다.</p>
+<blockquote>
+<p><strong>b := b − α × ∂J/∂b</strong></p>
+</blockquote>
+<p>왜 <strong>빼는</strong> 건가? 기울기가 양수라는 건 “w를 키우면 J가 올라간다”는 뜻이다. 우리는 J를 줄이고 싶으니 반대 방향(-)으로 가야 한다. 기울기가 음수면 w를 키워야 J가 줄어드니 자연스럽게 양의 방향으로 이동한다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 := 표기</strong><br>
+  수학에서 <code>=</code>는 "같다"를 의미하지만, 여기서 <code>:=</code>는 "업데이트한다"는 뜻이다. 오른쪽 값을 계산해서 왼쪽에 대입한다. 프로그래밍의 <code>w = w - alpha * gradient</code>와 같다.
+</div>
+<hr>
+<h2>MSE의 편미분 유도</h2>
+<p><a href="/ml/cost-function/">비용 함수 글</a>에서 MSE를 이렇게 정의했다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">J(w, b) = (1/n) × Σᵢ(ŷᵢ − yᵢ)²
+         = (1/n) × Σᵢ(wxᵢ + b − yᵢ)²</code></pre></div>
+<p>이걸 w와 b에 대해 각각 편미분하면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">∂J/∂w = (2/n) × Σᵢ(wxᵢ + b − yᵢ) × xᵢ
+∂J/∂b = (2/n) × Σᵢ(wxᵢ + b − yᵢ)</code></pre></div>
+<p>복잡해 보이지만, 코드로 옮기면 단순하다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token keyword">def</span> <span class="token function">compute_gradients</span><span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> w<span class="token punctuation">,</span> b<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    n <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span>
+    y_pred <span class="token operator">=</span> w <span class="token operator">*</span> X <span class="token operator">+</span> b
+    error <span class="token operator">=</span> y_pred <span class="token operator">-</span> y             <span class="token comment"># 각 포인트의 오차</span>
+    dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>n<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>error <span class="token operator">*</span> X<span class="token punctuation">)</span>  <span class="token comment"># w에 대한 기울기</span>
+    db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>n<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>error<span class="token punctuation">)</span>      <span class="token comment"># b에 대한 기울기</span>
+    <span class="token keyword">return</span> dw<span class="token punctuation">,</span> db</code></pre></div>
+<p><code class="language-text">error * X</code>에서 각 오차에 해당 x값을 곱하는 이유는, x가 큰 데이터 포인트의 오차가 w에 더 큰 영향을 미치기 때문이다.</p>
+<hr>
+<h2>경사하강법 구현</h2>
+<p>이제 전체 알고리즘을 처음부터 구현해보자.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 데이터 (선형 회귀 글과 동일)</span>
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">60</span><span class="token punctuation">,</span> <span class="token number">75</span><span class="token punctuation">,</span> <span class="token number">85</span><span class="token punctuation">,</span> <span class="token number">95</span><span class="token punctuation">,</span> <span class="token number">110</span><span class="token punctuation">,</span> <span class="token number">120</span><span class="token punctuation">,</span> <span class="token number">140</span><span class="token punctuation">,</span> <span class="token number">155</span><span class="token punctuation">]</span><span class="token punctuation">,</span> dtype<span class="token operator">=</span><span class="token builtin">float</span><span class="token punctuation">)</span>
+y <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">2.1</span><span class="token punctuation">,</span> <span class="token number">2.8</span><span class="token punctuation">,</span> <span class="token number">3.2</span><span class="token punctuation">,</span> <span class="token number">3.6</span><span class="token punctuation">,</span> <span class="token number">4.1</span><span class="token punctuation">,</span> <span class="token number">4.5</span><span class="token punctuation">,</span> <span class="token number">5.2</span><span class="token punctuation">,</span> <span class="token number">5.8</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 초기값</span>
+w <span class="token operator">=</span> <span class="token number">0.0</span>
+b <span class="token operator">=</span> <span class="token number">0.0</span>
+learning_rate <span class="token operator">=</span> <span class="token number">0.00001</span>  <span class="token comment"># 학습률</span>
+epochs <span class="token operator">=</span> <span class="token number">5000</span>            <span class="token comment"># 반복 횟수</span>
+
+<span class="token comment"># 학습 기록</span>
+history <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+<span class="token keyword">for</span> epoch <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>epochs<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 1. 예측</span>
+    y_pred <span class="token operator">=</span> w <span class="token operator">*</span> X <span class="token operator">+</span> b
+
+    <span class="token comment"># 2. 비용 계산</span>
+    cost <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># 3. 기울기 계산</span>
+    n <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span>
+    dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>n<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">*</span> X<span class="token punctuation">)</span>
+    db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>n<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span>
+
+    <span class="token comment"># 4. 파라미터 업데이트</span>
+    w <span class="token operator">=</span> w <span class="token operator">-</span> learning_rate <span class="token operator">*</span> dw
+    b <span class="token operator">=</span> b <span class="token operator">-</span> learning_rate <span class="token operator">*</span> db
+
+    <span class="token keyword">if</span> epoch <span class="token operator">%</span> <span class="token number">1000</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        history<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token punctuation">(</span>epoch<span class="token punctuation">,</span> cost<span class="token punctuation">,</span> w<span class="token punctuation">,</span> b<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Epoch </span><span class="token interpolation"><span class="token punctuation">{</span>epoch<span class="token punctuation">:</span><span class="token format-spec">5d</span><span class="token punctuation">}</span></span><span class="token string"> | Cost: </span><span class="token interpolation"><span class="token punctuation">{</span>cost<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string"> | w: </span><span class="token interpolation"><span class="token punctuation">{</span>w<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string"> | b: </span><span class="token interpolation"><span class="token punctuation">{</span>b<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n최종 결과: w = </span><span class="token interpolation"><span class="token punctuation">{</span>w<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">, b = </span><span class="token interpolation"><span class="token punctuation">{</span>b<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Epoch     0 | Cost: 16.648750 | w: 0.008920 | b: 0.000078
+Epoch  1000 | Cost: 0.003062 | w: 0.037320 | b: 0.000201
+Epoch  2000 | Cost: 0.003061 | w: 0.037322 | b: 0.000074
+Epoch  3000 | Cost: 0.003059 | w: 0.037323 | b: -0.000053
+Epoch  4000 | Cost: 0.003057 | w: 0.037324 | b: -0.000179
+
+최종 결과: w = 0.0373, b = -0.0003</code></pre></div>
+<p>5000번 반복 후 w ≈ 0.037로 최적값(0.0380)에 가까워졌지만, b는 -0.0003으로 최적값(-0.0818)에 한참 못 미친다. w는 빠르게 수렴하는데 b가 느린 이유는, 입력값(면적)의 스케일이 60~155로 크기 때문에 w의 기울기가 b의 기울기보다 수십 배 크기 때문이다. 이게 바로 <strong>Feature Scaling</strong>이 중요한 이유다.</p>
+<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ 정규 방정식 vs 경사하강법</strong><br>
+  정규 방정식은 한 번에 정확한 해를 구하지만, 데이터가 클수록 느려진다 (O(n³)). 경사하강법은 반복이 필요하지만 데이터 크기에 관계없이 효율적이다. 현실의 대규모 데이터에서는 경사하강법이 사실상 유일한 선택지다.
+</div>
+<hr>
+<h2>학습률(Learning Rate)의 역할</h2>
+<p>학습률 α는 경사하강법에서 <strong>가장 중요한 하이퍼파라미터</strong>다. 한 번에 얼마나 이동할지를 결정한다.</p>
+<h3>학습률이 너무 작으면</h3>
+<p>수렴이 극도로 느려진다. 바닥까지 도달하긴 하지만, 수만 번을 반복해야 할 수 있다. 시간과 컴퓨팅 자원의 낭비다.</p>
+<h3>학습률이 너무 크면</h3>
+<p>바닥을 지나쳐 반대편으로 튕겨나간다. 심하면 비용이 줄어들지 않고 오히려 발산(diverge)한다 — J가 무한대로 커진다.</p>
+<h3>적절한 학습률이면</h3>
+<p>처음에는 큰 보폭으로 빠르게 내려오다가, 바닥에 가까워질수록 기울기가 작아지면서 자연스럽게 보폭이 줄어든다. 별도의 감속 장치 없이도 알아서 속도가 조절되는 셈이다.</p>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 35.9375%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAABcSAAAXEgFnn9JSAAABCUlEQVR42lWSiY6DMAxE8/9fWmkLJJD7ms6wUFGjCDD289jG4LI5J3LOKKXcLoQQ4L2Hcw7LsuA4DqSU8LTW2ulTvsxUAnqr54sSBbgqnHCFdSbpW631W1wgmWDbtv0D6TM5BZSw3Tp/qjsqCg/Ft6mQCvzYGJgxwnh/fIHF72gscH7vHRuTwqVqKOFqS6o0DjxkTMZN+k2I6QIODLbecvq2ZfcdUYG89hjQCZVFKrkVVoIbQYPdgCJMqQ2ZwNE02MF5ZdTkzxkeDLYExcJlcT6VCYJ23jXrIZ+1aOuKIShzzL2lHCzs8oJ3b54/lBxRqG7ZHd48L25ZzytPI7Aohyqz/gSqU6yW9gHuhiRphlpVAQAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/581baa8f2c8b171924bf58bbaad26f7f/9e594/learning-rate-comparison.avif 192w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/3124f/learning-rate-comparison.avif 384w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/0187b/learning-rate-comparison.avif 768w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/7799c/learning-rate-comparison.avif 1152w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/e6083/learning-rate-comparison.avif 1536w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/ed2b8/learning-rate-comparison.avif 1935w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/581baa8f2c8b171924bf58bbaad26f7f/dce26/learning-rate-comparison.webp 192w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/955be/learning-rate-comparison.webp 384w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/58a3c/learning-rate-comparison.webp 768w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/ccee1/learning-rate-comparison.webp 1152w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/eac03/learning-rate-comparison.webp 1536w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/2babe/learning-rate-comparison.webp 1935w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/581baa8f2c8b171924bf58bbaad26f7f/4eff4/learning-rate-comparison.png 192w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/0cf21/learning-rate-comparison.png 384w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/2b7c5/learning-rate-comparison.png 768w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/ab7b1/learning-rate-comparison.png 1152w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/990b0/learning-rate-comparison.png 1536w,
+/static/581baa8f2c8b171924bf58bbaad26f7f/624e2/learning-rate-comparison.png 1935w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/581baa8f2c8b171924bf58bbaad26f7f/2b7c5/learning-rate-comparison.png"
+            alt="학습률에 따른 수렴 과정 비교"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p align="center" style="color: #888; font-size: 13px;"><em>학습률이 너무 작으면 수렴이 느리고, 너무 크면 발산한다. 적절한 학습률에서 효율적으로 수렴한다.</em></p>
+<p>코드로 확인해보자.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">learning_rates <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token number">0.000001</span><span class="token punctuation">,</span> <span class="token number">0.00001</span><span class="token punctuation">,</span> <span class="token number">0.0001</span><span class="token punctuation">]</span>
+
+<span class="token keyword">for</span> lr <span class="token keyword">in</span> learning_rates<span class="token punctuation">:</span>
+    w<span class="token punctuation">,</span> b <span class="token operator">=</span> <span class="token number">0.0</span><span class="token punctuation">,</span> <span class="token number">0.0</span>
+    <span class="token keyword">for</span> _ <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">3000</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        y_pred <span class="token operator">=</span> w <span class="token operator">*</span> X <span class="token operator">+</span> b
+        dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span><span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">*</span> X<span class="token punctuation">)</span>
+        db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span><span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span>
+        w <span class="token operator">-=</span> lr <span class="token operator">*</span> dw
+        b <span class="token operator">-=</span> lr <span class="token operator">*</span> db
+    cost <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>w <span class="token operator">*</span> X <span class="token operator">+</span> b <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"lr=</span><span class="token interpolation"><span class="token punctuation">{</span>lr<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string"> → w=</span><span class="token interpolation"><span class="token punctuation">{</span>w<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">, b=</span><span class="token interpolation"><span class="token punctuation">{</span>b<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">, cost=</span><span class="token interpolation"><span class="token punctuation">{</span>cost<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">lr=0.0000002 → w=0.0373, b=0.0003, cost=0.003064
+lr=0.0000100 → w=0.0373, b=-0.0001, cost=0.003059
+lr=0.0001000 → w=nan, b=nan, cost=nan</code></pre></div>
+<p>학습률 0.0001은 이 데이터에서 발산했다(nan). 비용이 매 epoch마다 2배씩 커지며 무한대로 폭주한다. 실무에서는 보통 0.01, 0.001, 0.0001 등을 시도해보며 가장 안정적으로 수렴하는 값을 찾는다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 주의: Feature Scaling</strong><br>
+  위 예제에서 학습률이 0.00001처럼 극히 작은 이유는, 입력값(면적)의 스케일이 60~155로 크기 때문이다. 입력을 <strong>정규화(normalization)</strong>하면 학습률을 0.01 수준으로 올릴 수 있고, 수렴도 훨씬 빨라진다. Feature scaling은 경사하강법의 거의 필수 전처리다.
+</div>
+<hr>
+<h2>경사하강법의 변형들</h2>
+<p>지금까지 다룬 건 <strong>배치 경사하강법(Batch Gradient Descent)</strong> — 매 업데이트마다 전체 데이터를 사용한다. 데이터가 수백만 건이면 한 번 업데이트에 수백만 개를 계산해야 해서 매우 느리다.</p>
+<p>이 문제를 해결하는 변형들이 있다.</p>
+<table>
+<thead>
+<tr>
+<th>변형</th>
+<th>데이터 사용량</th>
+<th>장점</th>
+<th>단점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>배치(Batch)</strong></td>
+<td>전체 데이터</td>
+<td>안정적 수렴</td>
+<td>대규모 데이터에서 느림</td>
+</tr>
+<tr>
+<td><strong>확률적(SGD)</strong></td>
+<td>1개</td>
+<td>매우 빠름</td>
+<td>불안정한 수렴 (진동)</td>
+</tr>
+<tr>
+<td><strong>미니배치(Mini-batch)</strong></td>
+<td>n개 (32, 64, 128 등)</td>
+<td>속도 + 안정성 균형</td>
+<td>배치 크기 튜닝 필요</td>
+</tr>
+</tbody>
+</table>
+<p>실무에서는 <strong>미니배치 경사하강법</strong>이 표준이다. 딥러닝 프레임워크(PyTorch, TensorFlow)의 기본값도 미니배치다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 미니배치 경사하강법 예시</span>
+batch_size <span class="token operator">=</span> <span class="token number">4</span>
+
+<span class="token keyword">for</span> epoch <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 데이터를 랜덤하게 셔플</span>
+    indices <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>permutation<span class="token punctuation">(</span><span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">for</span> start <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span><span class="token punctuation">,</span> batch_size<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        batch_idx <span class="token operator">=</span> indices<span class="token punctuation">[</span>start<span class="token punctuation">:</span>start <span class="token operator">+</span> batch_size<span class="token punctuation">]</span>
+        X_batch <span class="token operator">=</span> X<span class="token punctuation">[</span>batch_idx<span class="token punctuation">]</span>
+        y_batch <span class="token operator">=</span> y<span class="token punctuation">[</span>batch_idx<span class="token punctuation">]</span>
+
+        y_pred <span class="token operator">=</span> w <span class="token operator">*</span> X_batch <span class="token operator">+</span> b
+        dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span><span class="token builtin">len</span><span class="token punctuation">(</span>y_batch<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y_batch<span class="token punctuation">)</span> <span class="token operator">*</span> X_batch<span class="token punctuation">)</span>
+        db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span><span class="token builtin">len</span><span class="token punctuation">(</span>y_batch<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y_batch<span class="token punctuation">)</span>
+        w <span class="token operator">-=</span> learning_rate <span class="token operator">*</span> dw
+        b <span class="token operator">-=</span> learning_rate <span class="token operator">*</span> db</code></pre></div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 SGD라는 이름의 혼란</strong><br>
+  "SGD(Stochastic Gradient Descent)"라는 용어가 실무에서는 미니배치까지 포함해서 통칭으로 쓰이는 경우가 많다. PyTorch의 <code>torch.optim.SGD</code>도 실제로는 미니배치 방식이다. 문맥에 따라 "순수 SGD(1개씩)"인지 "통칭 SGD"인지 구분해야 한다.
+</div>
+<hr>
+<h2>수렴 판정: 언제 멈출 것인가</h2>
+<p>경사하강법을 언제 멈춰야 할까? 세 가지 기준이 일반적이다.</p>
+<ol>
+<li><strong>최대 반복 횟수(epochs)</strong>: 미리 정한 횟수만큼 반복 후 중단. 가장 단순하지만 조기 종료가 안 됨</li>
+<li><strong>비용 변화량</strong>: 연속된 epoch 간 비용 차이가 threshold 이하면 중단 (예: |J_prev - J_curr| &#x3C; 1e-7)</li>
+<li><strong>기울기 크기</strong>: 기울기의 절대값이 거의 0이면 바닥에 도달한 것이므로 중단</li>
+</ol>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">tolerance <span class="token operator">=</span> <span class="token number">1e-7</span>
+prev_cost <span class="token operator">=</span> <span class="token builtin">float</span><span class="token punctuation">(</span><span class="token string">'inf'</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> epoch <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">100000</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    y_pred <span class="token operator">=</span> w <span class="token operator">*</span> X <span class="token operator">+</span> b
+    cost <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>y_pred <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># 수렴 판정</span>
+    <span class="token keyword">if</span> <span class="token builtin">abs</span><span class="token punctuation">(</span>prev_cost <span class="token operator">-</span> cost<span class="token punctuation">)</span> <span class="token operator">&lt;</span> tolerance<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"수렴! Epoch </span><span class="token interpolation"><span class="token punctuation">{</span>epoch<span class="token punctuation">}</span></span><span class="token string">, Cost: </span><span class="token interpolation"><span class="token punctuation">{</span>cost<span class="token punctuation">:</span><span class="token format-spec">.8f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        <span class="token keyword">break</span>
+
+    prev_cost <span class="token operator">=</span> cost
+    <span class="token comment"># ... (기울기 계산 및 업데이트)</span></code></pre></div>
+<hr>
+<h2>마치며</h2>
+<p>경사하강법의 핵심은 결국 한 문장이다 — <strong>기울기의 반대 방향으로 조금씩 이동한다.</strong> 이 단순한 아이디어가 선형 회귀뿐 아니라 로지스틱 회귀, 신경망, 대규모 언어 모델까지 모든 ML/DL 학습의 기반이다.</p>
+<p>이 시리즈에서 ML의 핵심 흐름을 따라왔다. <a href="/ml/linear-regression/">데이터에 직선을 맞추고</a>, <a href="/ml/cost-function/">오차를 측정하는 기준을 정의하고</a>, 그 오차를 줄이는 알고리즘을 이해했다. 이 세 가지 — 모델, 비용 함수, 최적화 — 가 ML의 뼈대다. 앞으로 만나는 어떤 복잡한 모델이든 이 구조 위에서 동작한다.</p>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Gradient Descent (Coursera)</a></li>
+<li><a href="https://www.youtube.com/watch?v=IHZwWFHWa-w" target="_blank" rel="noopener noreferrer">3Blue1Brown — Gradient Descent, How Neural Networks Learn (YouTube)</a></li>
+<li><a href="https://arxiv.org/abs/1609.04747" target="_blank" rel="noopener noreferrer">Sebastian Ruder — An Overview of Gradient Descent Optimization Algorithms</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html" target="_blank" rel="noopener noreferrer">Scikit-learn SGDRegressor Documentation</a></li>
+</ul></div><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆<br/>© 2025 Developer Donhyeok, Powered By Gatsby.</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/gradient-descent/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-322166d553e0e2013641.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-1d9bc70b5a2203212934.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-eb69e9ecf27313b24260.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="473968f12db9c94f3f22";</script><script src="/webpack-runtime-8630689dfd3728dfc992.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-322166d553e0e2013641.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
