@@ -12,7 +12,7 @@ module.exports = {
     title: `Donhyeok's Blog`,
     description: `Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그`,
     author: `Donhyeok`,
-    siteUrl: `https://dh5473.github.io/`,
+    siteUrl: `https://donmain.dev/`,
   },
   plugins: [
     // Google Analytics 4
@@ -127,7 +127,7 @@ module.exports = {
     {
       resolve: 'gatsby-plugin-canonical-urls',
       options: {
-        siteUrl: 'https://dh5473.github.io/',
+        siteUrl: 'https://donmain.dev/',
         stripQueryString: true,
       },
     },
