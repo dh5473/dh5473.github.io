@@ -1,0 +1,313 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="변수 하나에서 여러 개로 확장하는 다중 선형 회귀의 원리와 벡터화 구현. Feature Scaling이 왜 필수인지, 어떤 방법을 써야 하는지 코드로 완전히 이해한다."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" property="og:description" content="변수 하나에서 여러 개로 확장하는 다중 선형 회귀의 원리와 벡터화 구현. Feature Scaling이 왜 필수인지, 어떤 방법을 써야 하는지 코드로 완전히 이해한다."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/hero-image.jpg"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/multiple-linear-regression/"/><meta data-react-helmet="true" property="og:site_name" content="Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:description" content="변수 하나에서 여러 개로 확장하는 다중 선형 회귀의 원리와 벡터화 구현. Feature Scaling이 왜 필수인지, 어떤 방법을 써야 하는지 코드로 완전히 이해한다."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/hero-image.jpg"/><meta data-react-helmet="true" name="twitter:image:alt" content="다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok&#x27;s Blog"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok&#x27;s Blog</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Donhyeok's Blog","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://dh5473.github.io/","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok's Blog","description":"변수 하나에서 여러 개로 확장하는 다중 선형 회귀의 원리와 벡터화 구현. Feature Scaling이 왜 필수인지, 어떤 방법을 써야 하는지 코드로 완전히 이해한다.","image":"https://donmain.dev/hero-image.jpg","url":"https://donmain.dev/ml/multiple-linear-regression/","datePublished":"2026-03-11","dateModified":"2026-03-11","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/multiple-linear-regression/"},"articleSection":"Machine Learning"}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dh5473.github.io/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://dh5473.github.io/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들 | Donhyeok's Blog","item":"https://donmain.dev/ml/multiple-linear-regression/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/multiple-linear-regression/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css e92kep">.css-e92kep{position:relative;width:100%;height:400px;overflow:hidden;background:linear-gradient(135deg, #0d9488 0%, #1c1917 100%);}@media (max-width: 768px){.css-e92kep{height:300px;}}</style><div class="css-e92kep e1opi4mu2"><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.03.11.</span></div></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/gradient-descent/">이전 글</a>에서 경사하강법으로 면적 → 가격 예측 모델을 만들었다. 잘 동작했지만, 한 가지 찜찜한 점이 있었다 — <strong>b가 수렴을 안 한다는 것</strong>. 5,000번 반복해도 b는 최적값(-0.08)에 한참 못 미치는 -0.0003에 머물렀다. 원인은 입력값의 <strong>스케일 차이</strong>였다.</p>
+<p>현실은 이보다 더 복잡하다. 집값은 면적 하나로 정해지지 않는다. 방 개수, 층수, 역까지 거리, 건축 연도… 변수가 수십 개일 수도 있다. 변수가 늘어나면 모델은 어떻게 바뀌고, 스케일 문제는 얼마나 심각해질까?</p>
+<hr>
+<h2>단일 변수에서 다중 변수로</h2>
+<p><a href="/ml/linear-regression/">선형 회귀 글</a>에서 다룬 모델은 변수가 하나였다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = wx + b</code></pre></div>
+<p>변수가 여러 개면 각각에 가중치를 붙인다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = w₁x₁ + w₂x₂ + w₃x₃ + ... + wₙxₙ + b</code></pre></div>
+<p>예를 들어 면적(x₁), 방 수(x₂), 층수(x₃)로 집값을 예측한다면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">가격 = w₁ × 면적 + w₂ × 방수 + w₃ × 층수 + b</code></pre></div>
+<p>각 wᵢ의 의미는 **“다른 변수를 고정했을 때, xᵢ가 1 증가하면 ŷ가 wᵢ만큼 변한다”**는 것이다. 면적이 1평 늘어날 때 가격이 얼마나 오르는지, 방이 하나 추가될 때 가격이 얼마나 오르는지를 각각 독립적으로 파악할 수 있다.</p>
+<h3>벡터화 표기</h3>
+<p>변수가 많아지면 수식을 일일이 쓰기 어렵다. 행렬로 한 번에 표현하면 깔끔하다.</p>
+<p>데이터 하나를 벡터로 쓰면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">x = [x₁, x₂, x₃]    (특성 벡터)
+w = [w₁, w₂, w₃]    (가중치 벡터)</code></pre></div>
+<p>예측값:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = x · w + b    (내적 + 편향)</code></pre></div>
+<p>데이터가 m개면 행렬 X(m × n)로 한 번에 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = Xw + b</code></pre></div>
+<p>코드로 쓰면 <code class="language-text">y_pred = X @ w + b</code> — 한 줄이다. NumPy의 행렬 곱(<code class="language-text">@</code>)이 모든 데이터 포인트에 대한 예측을 동시에 처리한다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 표기법 정리</strong><br>
+  <strong>n</strong>: 특성(변수) 수, <strong>m</strong>: 데이터 포인트 수.<br>
+  X는 (m × n) 행렬 — 행이 데이터, 열이 특성. w는 (n,) 벡터. 이 표기가 scikit-learn, PyTorch 등 거의 모든 ML 라이브러리의 표준이다.
+</div>
+<hr>
+<h2>다중 선형 회귀 구현</h2>
+<p>실제 데이터로 구현해보자. 아파트 가격 예측 — 면적(평), 방 수, 층수를 특성으로 사용한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 아파트 데이터: 면적(평), 방 수, 층수 → 가격(억원)</span>
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">[</span><span class="token number">142</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">23</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">91</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">132</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span>  <span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">54</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span>  <span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token number">146</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">19</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">111</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span>  <span class="token number">7</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">21</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">60</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span>  <span class="token number">9</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token number">142</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span>  <span class="token number">7</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">122</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">18</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">126</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span>  <span class="token number">4</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">114</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">14</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token number">114</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">18</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">127</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span>  <span class="token number">9</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">156</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">21</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">139</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span>  <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token number">143</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">63</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">15</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">42</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span>  <span class="token number">7</span><span class="token punctuation">]</span><span class="token punctuation">,</span>  <span class="token punctuation">[</span><span class="token number">61</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">12</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">,</span> dtype<span class="token operator">=</span><span class="token builtin">float</span><span class="token punctuation">)</span>
+
+y <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token number">7.56</span><span class="token punctuation">,</span> <span class="token number">4.63</span><span class="token punctuation">,</span> <span class="token number">6.45</span><span class="token punctuation">,</span> <span class="token number">3.34</span><span class="token punctuation">,</span> <span class="token number">6.88</span><span class="token punctuation">,</span> <span class="token number">6.80</span><span class="token punctuation">,</span> <span class="token number">5.25</span><span class="token punctuation">,</span> <span class="token number">4.84</span><span class="token punctuation">,</span>
+    <span class="token number">5.97</span><span class="token punctuation">,</span> <span class="token number">7.28</span><span class="token punctuation">,</span> <span class="token number">6.06</span><span class="token punctuation">,</span> <span class="token number">4.23</span><span class="token punctuation">,</span> <span class="token number">5.01</span><span class="token punctuation">,</span> <span class="token number">5.83</span><span class="token punctuation">,</span> <span class="token number">6.70</span><span class="token punctuation">,</span> <span class="token number">5.45</span><span class="token punctuation">,</span>
+    <span class="token number">6.85</span><span class="token punctuation">,</span> <span class="token number">4.73</span><span class="token punctuation">,</span> <span class="token number">3.57</span><span class="token punctuation">,</span> <span class="token number">4.84</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
+<p>경사하강법을 다변수 버전으로 확장하면, 핵심 변화는 <code class="language-text">dw</code>가 스칼라에서 <strong>벡터</strong>가 된다는 것이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 초기화</span>
+n_features <span class="token operator">=</span> X<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>  <span class="token comment"># 3</span>
+w <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span>n_features<span class="token punctuation">)</span>
+b <span class="token operator">=</span> <span class="token number">0.0</span>
+lr <span class="token operator">=</span> <span class="token number">0.00001</span>
+epochs <span class="token operator">=</span> <span class="token number">5000</span>
+m <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> epoch <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>epochs<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    y_pred <span class="token operator">=</span> X @ w <span class="token operator">+</span> b                    <span class="token comment"># (20,) = (20,3) @ (3,)</span>
+    error <span class="token operator">=</span> y_pred <span class="token operator">-</span> y                    <span class="token comment"># (20,)</span>
+    dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>m<span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>X<span class="token punctuation">.</span>T @ error<span class="token punctuation">)</span>            <span class="token comment"># (3,) = (3,20) @ (20,)</span>
+    db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>m<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>error<span class="token punctuation">)</span>            <span class="token comment"># scalar</span>
+    w <span class="token operator">=</span> w <span class="token operator">-</span> lr <span class="token operator">*</span> dw
+    b <span class="token operator">=</span> b <span class="token operator">-</span> lr <span class="token operator">*</span> db
+
+    <span class="token keyword">if</span> epoch <span class="token operator">%</span> <span class="token number">1000</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        cost <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>error <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Epoch </span><span class="token interpolation"><span class="token punctuation">{</span>epoch<span class="token punctuation">:</span><span class="token format-spec">5d</span><span class="token punctuation">}</span></span><span class="token string"> | Cost: </span><span class="token interpolation"><span class="token punctuation">{</span>cost<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> | w=</span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span>w<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Epoch     0 | Cost: 32.9157 | w=[0.0129 0.0004 0.0015]
+Epoch  1000 | Cost: 0.8968 | w=[0.0441 0.0298 0.0386]
+Epoch  2000 | Cost: 0.8099 | w=[0.0421 0.0561 0.0505]
+Epoch  3000 | Cost: 0.7449 | w=[0.041  0.081  0.0543]
+Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]</code></pre></div>
+<p>5,000번 반복 후에도 cost가 0.64에서 크게 줄지 않는다. sklearn의 정답(cost ≈ 0.07)과 비교하면 한참 멀다. w₂(방 수)는 0.13인데 정답은 0.49 — 수렴이 안 된 것이다.</p>
+<p><strong>왜?</strong> 면적은 42<del>156, 방 수는 1</del>5, 층수는 2~23. 값의 범위가 전혀 다르다.</p>
+<hr>
+<h2>Feature Scaling이 필요한 이유</h2>
+<p>면적의 범위가 42<del>156이고 방 수는 1</del>5다. 기울기(gradient) 계산에서 <code class="language-text">X.T @ error</code>를 하면, 면적 열은 값이 크니 기울기도 크고, 방 수 열은 값이 작으니 기울기도 작다.</p>
+<p>결과적으로 <strong>하나의 학습률로 모든 변수를 동시에 적절히 업데이트하는 게 불가능</strong>해진다.</p>
+<ul>
+<li>학습률을 면적에 맞추면 → 방 수와 층수가 너무 느리게 수렴</li>
+<li>학습률을 방 수에 맞추면 → 면적이 발산</li>
+</ul>
+<p>이전 글에서 단일 변수인데도 이 문제를 겪었다. 면적(60~155)이 크니 w는 빠르게 수렴하는데 b는 느렸다. 변수가 여러 개면 이 문제가 훨씬 심각해진다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 등고선으로 이해하기</strong><br>
+  비용 함수를 2D 등고선으로 그리면, 스케일이 다른 변수는 <strong>가늘고 긴 타원</strong>을 만든다. 경사하강법은 이 타원의 긴 축 방향으로 지그재그하며 느리게 수렴한다. 스케일을 맞추면 등고선이 <strong>원</strong>에 가까워지고, 경사하강법은 곧장 최저점으로 내려간다.
+</div>
+<p>해결책은 간단하다. <strong>모든 변수를 비슷한 범위로 맞춰준다.</strong> 이게 Feature Scaling이다.</p>
+<hr>
+<h2>Feature Scaling 방법 비교</h2>
+<table>
+<thead>
+<tr>
+<th>방법</th>
+<th>공식</th>
+<th>결과 범위</th>
+<th>특징</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Min-Max Normalization</strong></td>
+<td>(x − min) / (max − min)</td>
+<td>[0, 1]</td>
+<td>범위가 명확, 이상치에 민감</td>
+</tr>
+<tr>
+<td><strong>Standardization (Z-score)</strong></td>
+<td>(x − μ) / σ</td>
+<td>평균 0, 표준편차 1</td>
+<td>이상치에 덜 민감, 가장 범용적</td>
+</tr>
+<tr>
+<td><strong>Mean Normalization</strong></td>
+<td>(x − μ) / (max − min)</td>
+<td>약 [−0.5, 0.5]</td>
+<td>Min-Max와 Standardization의 중간</td>
+</tr>
+</tbody>
+</table>
+<h3>Min-Max Normalization</h3>
+<p>모든 값을 0~1 사이로 압축한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_min <span class="token operator">=</span> X<span class="token punctuation">.</span><span class="token builtin">min</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+X_max <span class="token operator">=</span> X<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+X_minmax <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X_min<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token punctuation">(</span>X_max <span class="token operator">-</span> X_min<span class="token punctuation">)</span>
+<span class="token comment"># 면적 42 → 0.0, 면적 156 → 1.0</span></code></pre></div>
+<p><strong>장점</strong>: 결과가 [0, 1]로 직관적. 이미지 처리 등 범위가 중요한 경우 적합.
+<strong>단점</strong>: 이상치(outlier)가 하나라도 있으면 나머지 데이터가 좁은 범위로 몰린다.</p>
+<h3>Standardization (Z-score)</h3>
+<p>평균을 0, 표준편차를 1로 맞춘다. 실무에서 <strong>가장 많이 쓰는 방법</strong>이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_mean <span class="token operator">=</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>  <span class="token comment"># [109.25, 3.15, 12.7]</span>
+X_std <span class="token operator">=</span> X<span class="token punctuation">.</span>std<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>    <span class="token comment"># [34.58, 1.31, 6.79]</span>
+X_scaled <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X_mean<span class="token punctuation">)</span> <span class="token operator">/</span> X_std</code></pre></div>
+<p><strong>장점</strong>: 이상치의 영향이 상대적으로 작다. 대부분의 ML 알고리즘에서 기본 선택.
+<strong>단점</strong>: 결과가 특정 범위로 제한되지 않는다 (보통 -3~3 정도).</p>
+<h3>Mean Normalization</h3>
+<p>평균을 빼고 범위로 나눈다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_mean_norm <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token punctuation">(</span>X<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">-</span> X<span class="token punctuation">.</span><span class="token builtin">min</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre></div>
+<p>Min-Max와 Standardization 사이의 절충안. Andrew Ng 강의에서 자주 등장하지만, 실무에서는 Standardization이 더 일반적이다.</p>
+<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ 어떤 방법을 쓸까?</strong><br>
+  확신이 없으면 <strong>Standardization</strong>을 쓴다. 선형 회귀, 로지스틱 회귀, SVM, 신경망 등 경사하강법 기반 알고리즘에서 거의 항상 잘 동작한다. 트리 기반 모델(Decision Tree, Random Forest, XGBoost)은 분할 기준이 크기 비교라서 스케일링이 필요 없다.
+</div>
+<hr>
+<h2>Before/After: 스케일링의 효과</h2>
+<p>같은 데이터, 같은 경사하강법인데 스케일링 여부만 다르다. 차이가 극적이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Standardization 적용</span>
+X_mean <span class="token operator">=</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+X_std <span class="token operator">=</span> X<span class="token punctuation">.</span>std<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+X_scaled <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X_mean<span class="token punctuation">)</span> <span class="token operator">/</span> X_std
+
+w <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span>
+b <span class="token operator">=</span> <span class="token number">0.0</span>
+lr <span class="token operator">=</span> <span class="token number">0.01</span>  <span class="token comment"># 학습률을 1,000배 키울 수 있다!</span>
+m <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>y<span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> epoch <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">5001</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    y_pred <span class="token operator">=</span> X_scaled @ w <span class="token operator">+</span> b
+    error <span class="token operator">=</span> y_pred <span class="token operator">-</span> y
+    cost <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>error <span class="token operator">**</span> <span class="token number">2</span><span class="token punctuation">)</span>
+    dw <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>m<span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>X_scaled<span class="token punctuation">.</span>T @ error<span class="token punctuation">)</span>
+    db <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">/</span>m<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>error<span class="token punctuation">)</span>
+    w <span class="token operator">=</span> w <span class="token operator">-</span> lr <span class="token operator">*</span> dw
+    b <span class="token operator">=</span> b <span class="token operator">-</span> lr <span class="token operator">*</span> db
+
+    <span class="token keyword">if</span> epoch <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">50</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">,</span> <span class="token number">1000</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Epoch </span><span class="token interpolation"><span class="token punctuation">{</span>epoch<span class="token punctuation">:</span><span class="token format-spec">5d</span><span class="token punctuation">}</span></span><span class="token string"> | Cost: </span><span class="token interpolation"><span class="token punctuation">{</span>cost<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Epoch     0 | Cost: 32.9157
+Epoch    10 | Cost: 21.9449
+Epoch    50 | Cost: 4.3841
+Epoch   100 | Cost: 0.6392
+Epoch   500 | Cost: 0.0693
+Epoch  1000 | Cost: 0.0693</code></pre></div>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>스케일링 없이 (lr=0.00001)</th>
+<th>스케일링 후 (lr=0.01)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>500 epoch</strong></td>
+<td>Cost: 0.97</td>
+<td>Cost: 0.069 (수렴 완료)</td>
+</tr>
+<tr>
+<td><strong>5000 epoch</strong></td>
+<td>Cost: 0.64 (아직 수렴 안 됨)</td>
+<td>Cost: 0.069</td>
+</tr>
+<tr>
+<td><strong>학습률</strong></td>
+<td>0.00001</td>
+<td>0.01 (1,000배)</td>
+</tr>
+<tr>
+<td><strong>수렴 시점</strong></td>
+<td>수렴 못 함</td>
+<td>~268 epoch</td>
+</tr>
+</tbody>
+</table>
+<p>학습률을 <strong>1,000배</strong> 키울 수 있고, 268 epoch 만에 수렴한다. 스케일링 없이는 5,000번을 돌려도 못 닿는 cost(0.069)에 말이다.</p>
+<h3>스케일링 후 가중치 해석</h3>
+<p>스케일링 후의 가중치 <code class="language-text">[0.856, 0.645, 0.178]</code>은 원래 단위가 아니라 <strong>표준화된 단위</strong>다. 원래 스케일로 되돌리려면:</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 스케일링된 가중치 → 원래 스케일</span>
+w_original <span class="token operator">=</span> w <span class="token operator">/</span> X_std
+b_original <span class="token operator">=</span> b <span class="token operator">-</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>w <span class="token operator">*</span> X_mean <span class="token operator">/</span> X_std<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"원래 스케일: w = </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span>w_original<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"             b = </span><span class="token interpolation"><span class="token punctuation">{</span>b_original<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">원래 스케일: w = [0.0247, 0.4909, 0.0262]
+             b = 1.0321</code></pre></div>
+<p>해석하면:</p>
+<ul>
+<li><strong>면적</strong> 1평 증가 → 가격 약 <strong>0.025억(250만원)</strong> 상승</li>
+<li><strong>방 수</strong> 1개 증가 → 가격 약 <strong>0.49억(4,900만원)</strong> 상승</li>
+<li><strong>층수</strong> 1층 증가 → 가격 약 <strong>0.026억(260만원)</strong> 상승</li>
+</ul>
+<p>방 수의 영향이 면적이나 층수보다 훨씬 크다. 스케일링 전 가중치(<code class="language-text">[0.04, 0.13, 0.05]</code>)로는 이 사실을 알 수 없었다.</p>
+<hr>
+<h2>sklearn으로 한 번에</h2>
+<p>위에서 직접 구현한 건 원리를 이해하기 위해서였다. 실전에서는 sklearn의 <code class="language-text">Pipeline</code>으로 스케일링과 학습을 한 번에 처리한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LinearRegression
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
+
+<span class="token comment"># 파이프라인: 스케일링 → 선형 회귀를 하나로</span>
+pipe <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'scaler'</span><span class="token punctuation">,</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+pipe<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"R² = </span><span class="token interpolation"><span class="token punctuation">{</span>pipe<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"coef = </span><span class="token interpolation"><span class="token punctuation">{</span>pipe<span class="token punctuation">.</span>named_steps<span class="token punctuation">[</span><span class="token string">'lr'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>coef_<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"intercept = </span><span class="token interpolation"><span class="token punctuation">{</span>pipe<span class="token punctuation">.</span>named_steps<span class="token punctuation">[</span><span class="token string">'lr'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>intercept_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">R² = 0.9506
+coef = [0.8556  0.6452  0.1777]
+intercept = 5.6135</code></pre></div>
+<p>R² = 0.95 — 세 가지 변수로 가격 변동의 95%를 설명한다. <code class="language-text">LinearRegression</code>은 내부적으로 정규 방정식을 쓰기 때문에 스케일링 없이도 정확한 해를 구하지만, 파이프라인에 넣어두면 다른 모델로 교체할 때(로지스틱 회귀, SVM 등) 스케일링이 이미 적용되어 있어 편하다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 새 아파트 예측</span>
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+new_house <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">85</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>  <span class="token comment"># 면적 85평, 방 3개, 10층</span>
+pred <span class="token operator">=</span> pipe<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>new_house<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"예측 가격: </span><span class="token interpolation"><span class="token punctuation">{</span>pred<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">억원"</span></span><span class="token punctuation">)</span>  <span class="token comment"># → 4.87억원</span></code></pre></div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 Pipeline을 쓰는 진짜 이유</strong><br>
+  스케일링과 모델을 따로 관리하면, 새 데이터를 예측할 때 스케일링을 잊는 실수가 생긴다. Pipeline은 <code>fit</code>, <code>predict</code>, <code>score</code>를 호출하면 전처리와 모델을 자동으로 순서대로 적용한다. 코드가 깔끔해지고 실수가 줄어든다.
+</div>
+<hr>
+<h2>흔한 실수</h2>
+<h3>1. Test 데이터에 Train의 스케일러를 적용하지 않는다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 잘못된 방법: test 데이터를 따로 스케일링</span>
+scaler_train <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
+X_train_scaled <span class="token operator">=</span> scaler_train<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
+
+scaler_test <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>  <span class="token comment"># 별도 fit → 기준이 다름!</span>
+X_test_scaled <span class="token operator">=</span> scaler_test<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ✅ 올바른 방법: train으로 fit한 scaler를 test에도 적용</span>
+scaler <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
+X_train_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
+X_test_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>  <span class="token comment"># 같은 scaler로 transform만</span></code></pre></div>
+<p>Train 데이터의 평균과 표준편차로 test 데이터를 변환해야 한다. Test 데이터로 별도로 fit하면 기준이 달라져서 모델이 엉뚱한 예측을 한다. Pipeline을 쓰면 이 실수를 구조적으로 방지할 수 있다.</p>
+<h3>2. 범주형 변수에 스케일링을 적용한다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 원-핫 인코딩된 변수까지 스케일링</span>
+<span class="token comment"># gender: [0, 1], type: [0, 0, 1] → 이미 범위가 정해져 있다</span></code></pre></div>
+<p>원-핫 인코딩이나 0/1 이진 변수는 스케일링할 필요가 없다. 오히려 스케일링하면 의미가 왜곡된다. 수치형 연속 변수만 스케일링한다.</p>
+<h3>3. 타겟(y)까지 스케일링한다</h3>
+<p>일반적인 선형 회귀에서 y는 스케일링하지 않는다. y를 스케일링하면 예측값도 스케일링된 단위로 나오기 때문에 다시 역변환해야 하고, 해석이 복잡해진다. 단, 신경망에서 y의 범위가 극단적으로 크면 학습 안정성을 위해 스케일링하기도 한다 — 이건 특수한 경우다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 데이터 누수(Data Leakage) 주의</strong><br>
+  Train/Test 분할 <strong>전에</strong> 전체 데이터로 스케일링하면, test 데이터의 통계가 train에 섞여 들어간다. 반드시 분할 <strong>후</strong> train 데이터만으로 fit하고, 그 기준으로 test를 transform해야 한다.
+</div>
+<hr>
+<h2>마치며</h2>
+<p>변수가 여러 개가 되면 모델 자체보다 <strong>전처리</strong>가 결과를 좌우한다. 같은 경사하강법, 같은 데이터인데 Feature Scaling 하나로 5,000번 돌려도 안 되던 수렴이 268번 만에 끝난다. 이건 이론적 차이가 아니라 실전에서 매번 마주하는 차이다.</p>
+<p>다음 글에서는 변수가 많아질 때 생기는 또 다른 문제 — **과적합(Overfitting)**과 이를 막는 <strong>규제(Regularization)</strong> 기법을 다룬다.</p>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Multiple Features (Coursera)</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html" target="_blank" rel="noopener noreferrer">Scikit-learn — StandardScaler Documentation</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Pipeline Documentation</a></li>
+<li><a href="https://sebastianraschka.com/Articles/2014_about_feature_scaling.html" target="_blank" rel="noopener noreferrer">Feature Scaling — Why it Matters (Sebastian Raschka)</a></li>
+</ul></div><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆<br/>© 2025 Developer Donhyeok, Powered By Gatsby.</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/multiple-linear-regression/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-322166d553e0e2013641.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-cb21fc490a7fd58241ac.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-eb69e9ecf27313b24260.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="2401f762218d59193fa6";</script><script src="/webpack-runtime-aa6bcb149761502ad132.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-322166d553e0e2013641.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
