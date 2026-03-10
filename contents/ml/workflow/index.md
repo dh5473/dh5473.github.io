@@ -5,7 +5,7 @@ category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 2
 tags: ['Machine Learning', '머신러닝 워크플로우', 'EDA', '데이터 전처리', '모델 배포']
-summary: '머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리합니다. 반복적인 개발 과정과 실무에서 자주 하는 실수를 코드 예제와 함께 짚어봅니다.'
+summary: '머신러닝 프로젝트의 전체 흐름을 문제 정의부터 배포까지 단계별로 정리한다. 반복적 개발 과정과 실무에서 자주 하는 실수까지 코드와 함께.'
 thumbnail: './thumbnail.png'
 ---
 
