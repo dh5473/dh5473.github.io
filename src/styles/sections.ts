@@ -24,7 +24,7 @@ export const sections: Array<{
   {
     id: 'data-ai',
     name: 'Data & AI',
-    categories: ['Machine Learning', 'Deep Learning', 'LLM'],
+    categories: ['Statistics', 'Machine Learning', 'Deep Learning', 'LLM'],
   },
   {
     id: 'architecture',
