@@ -4,7 +4,7 @@ export type SectionId =
   | 'languages-frameworks'
   | 'data-ai'
   | 'architecture'
-  | 'infrastructure'
+  | 'experience'
 
 export const sections: Array<{
   id: SectionId
@@ -14,7 +14,7 @@ export const sections: Array<{
   {
     id: 'cs-fundamentals',
     name: 'CS Fundamentals',
-    categories: ['Operating Systems', 'Data Structures', 'Networking', 'Database'],
+    categories: ['Operating Systems', 'Data Structures', 'Networking', 'Database', 'Linux'],
   },
   {
     id: 'languages-frameworks',
@@ -24,17 +24,17 @@ export const sections: Array<{
   {
     id: 'data-ai',
     name: 'Data & AI',
-    categories: ['Statistics', 'Machine Learning', 'Deep Learning', 'LLM'],
+    categories: ['Statistics', 'Machine Learning', 'Deep Learning', 'LLM', 'MLOps'],
   },
   {
     id: 'architecture',
     name: 'Architecture',
-    categories: ['System Design', 'Software Engineering'],
+    categories: ['System Design', 'Software Engineering', 'DevOps', 'Cloud'],
   },
   {
-    id: 'infrastructure',
-    name: 'Infrastructure',
-    categories: ['Linux & Cloud', 'DevOps', 'MLOps'],
+    id: 'experience',
+    name: 'Experience',
+    categories: ['Troubleshooting'],
   },
 ]
 
