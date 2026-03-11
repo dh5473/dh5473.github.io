@@ -299,7 +299,7 @@ print(f"intercept = {pipe.named_steps['lr'].intercept_:.4f}")
 
 ```
 R² = 0.9506
-coef = [0.8556  0.6452  0.1777]
+coef = [0.8555  0.6452  0.1777]
 intercept = 5.6135
 ```
 

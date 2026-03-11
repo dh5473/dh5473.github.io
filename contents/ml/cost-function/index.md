@@ -203,8 +203,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 y_pred = model.predict(area)
 
-mse  = mean_squared_error(y_true, y_pred)
-mae  = mean_absolute_error(y_true, y_pred)
+mse  = mean_squared_error(price, y_pred)
+mae  = mean_absolute_error(price, y_pred)
 rmse = np.sqrt(mse)
 
 print(f"MSE:  {mse:.4f}")   # 0.0025
