@@ -12,7 +12,7 @@
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = w₁x₁ + w₂x₂ + w₃x₃ + ... + wₙxₙ + b</code></pre></div>
 <p>예를 들어 면적(x₁), 방 수(x₂), 층수(x₃)로 집값을 예측한다면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">가격 = w₁ × 면적 + w₂ × 방수 + w₃ × 층수 + b</code></pre></div>
-<p>각 wᵢ의 의미는 **“다른 변수를 고정했을 때, xᵢ가 1 증가하면 ŷ가 wᵢ만큼 변한다”**는 것이다. 면적이 1평 늘어날 때 가격이 얼마나 오르는지, 방이 하나 추가될 때 가격이 얼마나 오르는지를 각각 독립적으로 파악할 수 있다.</p>
+<p>각 wᵢ의 의미는 <strong>“다른 변수를 고정했을 때, xᵢ가 1 증가하면 ŷ가 wᵢ만큼 변한다”</strong> 는 것이다. 면적이 1평 늘어날 때 가격이 얼마나 오르는지, 방이 하나 추가될 때 가격이 얼마나 오르는지를 각각 독립적으로 파악할 수 있다.</p>
 <h3>벡터화 표기</h3>
 <p>변수가 많아지면 수식을 일일이 쓰기 어렵다. 행렬로 한 번에 표현하면 깔끔하다.</p>
 <p>데이터 하나를 벡터로 쓰면:</p>
@@ -73,10 +73,10 @@ Epoch  2000 | Cost: 0.8099 | w=[0.0421 0.0561 0.0505]
 Epoch  3000 | Cost: 0.7449 | w=[0.041  0.081  0.0543]
 Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]</code></pre></div>
 <p>5,000번 반복 후에도 cost가 0.64에서 크게 줄지 않는다. sklearn의 정답(cost ≈ 0.07)과 비교하면 한참 멀다. w₂(방 수)는 0.13인데 정답은 0.49 — 수렴이 안 된 것이다.</p>
-<p><strong>왜?</strong> 면적은 42<del>156, 방 수는 1</del>5, 층수는 2~23. 값의 범위가 전혀 다르다.</p>
+<p><strong>왜?</strong> 면적은 42~156, 방 수는 1~5, 층수는 2~23. 값의 범위가 전혀 다르다.</p>
 <hr>
 <h2>Feature Scaling이 필요한 이유</h2>
-<p>면적의 범위가 42<del>156이고 방 수는 1</del>5다. 기울기(gradient) 계산에서 <code class="language-text">X.T @ error</code>를 하면, 면적 열은 값이 크니 기울기도 크고, 방 수 열은 값이 작으니 기울기도 작다.</p>
+<p>면적의 범위가 42~156이고 방 수는 1~5다. 기울기(gradient) 계산에서 <code class="language-text">X.T @ error</code>를 하면, 면적 열은 값이 크니 기울기도 크고, 방 수 열은 값이 작으니 기울기도 작다.</p>
 <p>결과적으로 <strong>하나의 학습률로 모든 변수를 동시에 적절히 업데이트하는 게 불가능</strong>해진다.</p>
 <ul>
 <li>학습률을 면적에 맞추면 → 방 수와 층수가 너무 느리게 수렴</li>
@@ -279,7 +279,7 @@ X_test_scaled <span class="token operator">=</span> scaler<span class="token pun
 <hr>
 <h2>마치며</h2>
 <p>변수가 여러 개가 되면 모델 자체보다 <strong>전처리</strong>가 결과를 좌우한다. 같은 경사하강법, 같은 데이터인데 Feature Scaling 하나로 5,000번 돌려도 안 되던 수렴이 268번 만에 끝난다. 이건 이론적 차이가 아니라 실전에서 매번 마주하는 차이다.</p>
-<p>다음 글에서는 변수가 많아질 때 생기는 또 다른 문제 — **과적합(Overfitting)**과 이를 막는 <strong>규제(Regularization)</strong> 기법을 다룬다.</p>
+<p>다음 글에서는 변수가 많아질 때 생기는 또 다른 문제 — <strong>과적합(Overfitting)</strong> 과 이를 막는 <strong>규제(Regularization)</strong> 기법을 다룬다.</p>
 <h2>참고자료</h2>
 <ul>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Multiple Features (Coursera)</a></li>
