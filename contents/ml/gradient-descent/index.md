@@ -168,7 +168,7 @@ Epoch  4000 | Cost: 0.003057 | w: 0.037324 | b: -0.000179
 코드로 확인해보자.
 
 ```python
-learning_rates = [0.000001, 0.00001, 0.0001]
+learning_rates = [0.0000002, 0.00001, 0.0001]
 
 for lr in learning_rates:
     w, b = 0.0, 0.0
@@ -179,13 +179,13 @@ for lr in learning_rates:
         w -= lr * dw
         b -= lr * db
     cost = np.mean((w * X + b - y) ** 2)
-    print(f"lr={lr:.6f} → w={w:.4f}, b={b:.4f}, cost={cost:.6f}")
+    print(f"lr={lr} → w={w:.4f}, b={b:.4f}, cost={cost:.6f}")
 ```
 
 ```
-lr=0.0000002 → w=0.0373, b=0.0003, cost=0.003064
-lr=0.0000100 → w=0.0373, b=-0.0001, cost=0.003059
-lr=0.0001000 → w=nan, b=nan, cost=nan
+lr=2e-07 → w=0.0373, b=0.0003, cost=0.003064
+lr=1e-05 → w=0.0373, b=-0.0001, cost=0.003059
+lr=0.0001 → w=nan, b=nan, cost=nan
 ```
 
 학습률 0.0001은 이 데이터에서 발산했다(nan). 비용이 매 epoch마다 2배씩 커지며 무한대로 폭주한다. 실무에서는 보통 0.01, 0.001, 0.0001 등을 시도해보며 가장 안정적으로 수렴하는 값을 찾는다.
