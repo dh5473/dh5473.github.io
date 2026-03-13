@@ -20,7 +20,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'ml': {
     title: 'ML 기초',
-    description: '선형 회귀, 비용 함수, 경사하강법, Feature Scaling, Regularization까지',
+    description: '선형 회귀부터 로지스틱 회귀까지, 회귀와 분류의 기초',
     color: '#ff7f0e',
   },
   'llm': {
