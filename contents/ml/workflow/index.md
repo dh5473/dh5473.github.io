@@ -126,7 +126,7 @@ plt.xlabel('가격 (만원)')
 plt.show()
 
 # 5. 주요 특성과 타겟의 관계
-correlation = df.corr()['price'].sort_values(ascending=False)
+correlation = df.corr(numeric_only=True)['price'].sort_values(ascending=False)
 print(correlation)
 # area          0.72   ← 면적이 가격과 가장 강한 상관관계
 # floor         0.31
