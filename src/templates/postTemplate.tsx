@@ -3,8 +3,11 @@ import React, { FunctionComponent } from 'react'
 import Template from 'components/Common/Template'
 import PostHead from 'components/Post/PostHead'
 import PostContent from 'components/Post/PostContent'
+import PostSeriesNav from 'components/Post/PostSeriesNav'
+import PostSeriesIndex from 'components/Post/PostSeriesIndex'
 import CommentWidget from 'components/Post/CommentWidget'
 import { IGatsbyImageData } from 'gatsby-plugin-image'
+import { seriesMetadata } from 'utils/seriesData'
 
 type PostTemplateProps = {
   data: {
@@ -39,6 +42,15 @@ type PostTemplateProps = {
       }[]
     }
   }
+  pageContext: {
+    slug: string
+    seriesId?: string
+    seriesCurrentOrder?: number
+    seriesTotal?: number
+    seriesPosts?: { slug: string; title: string; seriesOrder: number }[]
+    prevPost?: { slug: string; title: string }
+    nextPost?: { slug: string; title: string }
+  }
 }
 
 const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
@@ -48,6 +60,7 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     },
     allMarkdownRemark: { edges },
   },
+  pageContext: { seriesId, seriesCurrentOrder, seriesTotal, seriesPosts, prevPost, nextPost },
 }) {
   const {
     node: {
@@ -67,6 +80,14 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     ? `${baseUrl}${publicURL}`
     : `${baseUrl}/hero-image.jpg`
 
+  const seriesMeta = seriesId ? seriesMetadata[seriesId] : undefined
+  const hasSeriesNav = !!(
+    seriesId &&
+    seriesCurrentOrder != null &&
+    seriesTotal != null &&
+    seriesMeta
+  )
+
   return (
     <Template
       title={`${title} | ${siteTitle}`}
@@ -83,7 +104,26 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
         category={category}
         thumbnail={gatsbyImageData}
       />
+      {hasSeriesNav && seriesPosts && (
+        <PostSeriesIndex
+          seriesTitle={seriesMeta!.title}
+          seriesColor={seriesMeta?.color}
+          currentOrder={seriesCurrentOrder!}
+          posts={seriesPosts}
+        />
+      )}
       <PostContent html={html} />
+      {hasSeriesNav && (
+        <PostSeriesNav
+          seriesId={seriesId!}
+          seriesTitle={seriesMeta!.title}
+          seriesColor={seriesMeta?.color}
+          currentOrder={seriesCurrentOrder!}
+          total={seriesTotal!}
+          prevPost={prevPost ?? null}
+          nextPost={nextPost ?? null}
+        />
+      )}
       <CommentWidget />
     </Template>
   )
