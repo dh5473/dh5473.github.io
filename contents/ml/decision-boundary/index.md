@@ -1,5 +1,5 @@
 ---
-date: '2026-03-15'
+date: '2026-03-14'
 title: '결정 경계(Decision Boundary): 모델이 데이터를 가르는 선'
 category: 'Machine Learning'
 series: 'ml'
