@@ -1,0 +1,758 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="모델 에러를 편향과 분산으로 분해하고, 과소적합과 과적합의 근본 원인을 수학적으로 이해한다. 학습 곡선으로 진단하고 해결책을 찾는 법까지."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech"/><meta data-react-helmet="true" property="og:description" content="모델 에러를 편향과 분산으로 분해하고, 과소적합과 과적합의 근본 원인을 수학적으로 이해한다. 학습 곡선으로 진단하고 해결책을 찾는 법까지."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/284d16133b6799a132c997835c17201d/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/bias-variance/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="모델 에러를 편향과 분산으로 분해하고, 과소적합과 과적합의 근본 원인을 수학적으로 이해한다. 학습 곡선으로 진단하고 해결책을 찾는 법까지."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/284d16133b6799a132c997835c17201d/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://dh5473.github.io/","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech","description":"모델 에러를 편향과 분산으로 분해하고, 과소적합과 과적합의 근본 원인을 수학적으로 이해한다. 학습 곡선으로 진단하고 해결책을 찾는 법까지.","image":"https://donmain.dev/static/284d16133b6799a132c997835c17201d/thumbnail.png","url":"https://donmain.dev/ml/bias-variance/","datePublished":"2026-03-16","dateModified":"2026-03-16","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/bias-variance/"},"articleSection":"Machine Learning"}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dh5473.github.io/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://dh5473.github.io/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인 | dontech","item":"https://donmain.dev/ml/bias-variance/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/bias-variance/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:1186px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;586&#x27;%20width=&#x27;1186&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAABcSAAAXEgFnn9JSAAAB4klEQVR42l1T25KaQBTkPYEZQEQYBHUrq6IIeEHcXa3KZh82t8pW8pD//5JOH5SqrTx0zTAMfbr7HCw3WsOL19DDHJp7PVp1MHcHRNNdh9FkS9SIZ3tEkx2CcYUwq7t7A1NhsjgjW58R8p6lwxze4gkqq6D8OZzhkgUKPL/+RXv5hcfPb6jbV+wevuH88gfHy09sT1/RPH6HJ4SfDiguP3D68hvpfQvL5aGf7uGWL1CzHVSwIJawBwtoKo9nVEqEVDbKdjCzBj6d2KbAR5KF8wZTfhemNXyzISHVeJHY3MDNn6Fyqk03ULcYnCHfEaLaSyt4tG3fH6CJdLpFwnuKrsSZojhrSGY3KrpDFeRwJyfo5QV6fsSHuy02D0+Ii5b7PRXt4UxrmLRERoUBCWxGpm6QTC2pLCr7QyEWtV56hJ60CKhCJwXPckREGq8Q0ZHi3hGS/wm7rjITp5N9vWRzb3fNKdnRBuNMcjohyvbMtYQTMZLhtfh7SFFLyAZUGLBqD0M7WVIi4RrHcsacRixqRO0B7ljQ3NZ3z6a+NsVwphIhIFKZMXbLv82kYr5OZ2nZQUZFh6KG82tKxrWhQ0bC1Uuqq2Uh7W2qPoJbLgOS92Mjq8+iKlxdydlh+TFUuOieZf8PnBkUhHq1wrcAAAAASUVORK5CYII=" alt=""/><picture><source type="image/avif" data-srcset="/static/284d16133b6799a132c997835c17201d/faa47/thumbnail.avif 750w,/static/284d16133b6799a132c997835c17201d/978df/thumbnail.avif 1080w,/static/284d16133b6799a132c997835c17201d/bd396/thumbnail.avif 1186w" sizes="(min-width: 1186px) 1186px, 100vw"/><source type="image/webp" data-srcset="/static/284d16133b6799a132c997835c17201d/9dce1/thumbnail.webp 750w,/static/284d16133b6799a132c997835c17201d/e1ddc/thumbnail.webp 1080w,/static/284d16133b6799a132c997835c17201d/83bd8/thumbnail.webp 1186w" sizes="(min-width: 1186px) 1186px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1186px) 1186px, 100vw" decoding="async" loading="lazy" data-src="/static/284d16133b6799a132c997835c17201d/89f72/thumbnail.png" data-srcset="/static/284d16133b6799a132c997835c17201d/3dc74/thumbnail.png 750w,/static/284d16133b6799a132c997835c17201d/32554/thumbnail.png 1080w,/static/284d16133b6799a132c997835c17201d/89f72/thumbnail.png 1186w" alt="thumbnail"/></picture><noscript><picture><source type="image/avif" srcSet="/static/284d16133b6799a132c997835c17201d/faa47/thumbnail.avif 750w,/static/284d16133b6799a132c997835c17201d/978df/thumbnail.avif 1080w,/static/284d16133b6799a132c997835c17201d/bd396/thumbnail.avif 1186w" sizes="(min-width: 1186px) 1186px, 100vw"/><source type="image/webp" srcSet="/static/284d16133b6799a132c997835c17201d/9dce1/thumbnail.webp 750w,/static/284d16133b6799a132c997835c17201d/e1ddc/thumbnail.webp 1080w,/static/284d16133b6799a132c997835c17201d/83bd8/thumbnail.webp 1186w" sizes="(min-width: 1186px) 1186px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1186px) 1186px, 100vw" decoding="async" loading="lazy" src="/static/284d16133b6799a132c997835c17201d/89f72/thumbnail.png" srcSet="/static/284d16133b6799a132c997835c17201d/3dc74/thumbnail.png 750w,/static/284d16133b6799a132c997835c17201d/32554/thumbnail.png 1080w,/static/284d16133b6799a132c997835c17201d/89f72/thumbnail.png 1186w" alt="thumbnail"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.03.16.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">13<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">11</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">12</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/random-forest/">배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">13</span><a class="css-dizrmv e4kcwtw5" href="/ml/boosting/">부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">3<!-- --> / <!-- -->3</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><style data-emotion="css qht250">.css-qht250{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:11px;cursor:default;opacity:0.35;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-qht250:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button disabled="" class="css-qht250 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/decision-tree/">이전 글</a>에서 결정 트리를 깊게 키우면 훈련 데이터를 거의 완벽하게 외우지만, 새 데이터에는 형편없어지는 걸 봤다. 그게 바로 <strong>과적합(Overfitting)</strong> 이다. 반대로 너무 단순한 모델은 훈련 데이터조차 제대로 못 맞춘다 — <strong>과소적합(Underfitting)</strong> 이다.</p>
+<p>이 두 현상을 “감으로” 이해하는 건 쉽다. 그런데 왜 이런 일이 생기는지, 어떻게 <strong>수학적으로</strong> 측정하고 진단할 수 있는지는 다른 이야기다. 편향-분산 트레이드오프(Bias-Variance Tradeoff)가 그 답을 준다.</p>
+<hr>
+<h2>모델 에러의 분해</h2>
+<p>모델의 에러를 측정할 때 우리는 보통 <strong>MSE(Mean Squared Error)</strong> 를 쓴다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">MSE = E[(y - ŷ)²]</code></pre></div>
+<p>이 수식을 전개하면, MSE가 세 가지 항으로 분해된다는 걸 보일 수 있다. 잠깐 수학 타임이지만, 이게 전체 이야기의 핵심이다.</p>
+<h3>수식 증명</h3>
+<p><code class="language-text">f(x)</code>를 데이터를 생성한 실제 함수, <code class="language-text">ε</code>을 노이즈(평균 0, 분산 σ²), <code class="language-text">ŷ</code>를 모델의 예측이라 하자.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">y = f(x) + ε</code></pre></div>
+<p>E[ε] = 0이고, Var(ε) = σ²이다. 모델 ŷ는 특정 훈련 데이터셋으로 학습한 결과이므로, 다른 훈련 데이터셋을 쓰면 다른 ŷ가 나온다. 이 기댓값(여러 훈련 셋에 대한 평균)을 E[ŷ]라 쓴다.</p>
+<p>기댓값 MSE를 전개하면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">E[(y - ŷ)²]
+= E[(f + ε - ŷ)²]
+= E[(f - ŷ)²] + 2·E[(f - ŷ)·ε] + E[ε²]
+
+   ε가 ŷ와 독립이고 E[ε]=0이므로 2번째 항 = 0
+
+= E[(f - ŷ)²] + σ²
+
+   이제 첫 항을 E[ŷ]를 더하고 빼서 전개:
+
+= E[(f - E[ŷ] + E[ŷ] - ŷ)²] + σ²
+= (f - E[ŷ])² + E[(E[ŷ] - ŷ)²] + σ²
+     ↑               ↑              ↑
+   Bias²          Variance      Irreducible Noise</code></pre></div>
+<p>결론:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">E[(y - ŷ)²] = Bias(ŷ)² + Var(ŷ) + σ²</code></pre></div>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 60.416666666666664%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAACXBIWXMAABcSAAAXEgFnn9JSAAACF0lEQVR42j2T2Y7cIBRE/f+/FiVPiaJRkodpL+MVbGxWA5WC6WlLJbCwz6270ICP9wHWejjn694Yg7bt0HU92m5AP4wY+h7LPGPbNkzjCCkl/7HwzlU57uN9o0kpQWuP06YqcSXMR8TpMkwAjssRNhI2ITBg5I/8Afk4kLkmBs9UpIQUaIL3eBvWCtDURuBE4GESLgaQDCZ3CbEsVf48ASrvewUWGELAOH5gGXo0QMbvYcfbcsHf/NYS7AkjvKi4joaumBaKuwLgPj/fs3cYpxF71yJcFxrHA6UMfvQnut3AlTRNfJVAcX9rU0HFzVeKBRao/mOAorPybgtQCAFjAyEZ39oDw2ErtLorKkDrSueQi6Piku+Kafd9B8tUq2MG8QU4TRP208L4zHolfG8V/q4nlI0wz7qeYofidzch6lT42BashKV1rakXWKmn43mT2eWzdJkmau1o4G20+Dkq/JMX3tcJj/df+NNxjNjpjWDPsamNecK+auuKw8AOyUO/GlA6W5zNZ8a7zGg3A7WtFZCWGeBowBLi7ef61MthShFKO1weL5W6WVrW1DZfUL3APkjIVUMrV8+ssi8l8wl3mg5vTreYOIeLrFKTwEGdQlWp42KXdR3ocGnsm6JJrpRgrau4nxl4WQ40MUYOvsbN1IvKFarXiLUNDPZ4PNjNHjNrN7J2I8ck3gGZmQWmHTiH8Y71ypYR/A9M9pyaSThF9QAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/8053b07914103ff67996bb6649a5560c/9e594/bias-variance-decomposition.avif 192w,
+/static/8053b07914103ff67996bb6649a5560c/3124f/bias-variance-decomposition.avif 384w,
+/static/8053b07914103ff67996bb6649a5560c/0187b/bias-variance-decomposition.avif 768w,
+/static/8053b07914103ff67996bb6649a5560c/7799c/bias-variance-decomposition.avif 1152w,
+/static/8053b07914103ff67996bb6649a5560c/16371/bias-variance-decomposition.avif 1336w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/8053b07914103ff67996bb6649a5560c/dce26/bias-variance-decomposition.webp 192w,
+/static/8053b07914103ff67996bb6649a5560c/955be/bias-variance-decomposition.webp 384w,
+/static/8053b07914103ff67996bb6649a5560c/58a3c/bias-variance-decomposition.webp 768w,
+/static/8053b07914103ff67996bb6649a5560c/ccee1/bias-variance-decomposition.webp 1152w,
+/static/8053b07914103ff67996bb6649a5560c/0f15a/bias-variance-decomposition.webp 1336w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/8053b07914103ff67996bb6649a5560c/4eff4/bias-variance-decomposition.png 192w,
+/static/8053b07914103ff67996bb6649a5560c/0cf21/bias-variance-decomposition.png 384w,
+/static/8053b07914103ff67996bb6649a5560c/2b7c5/bias-variance-decomposition.png 768w,
+/static/8053b07914103ff67996bb6649a5560c/ab7b1/bias-variance-decomposition.png 1152w,
+/static/8053b07914103ff67996bb6649a5560c/13969/bias-variance-decomposition.png 1336w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/8053b07914103ff67996bb6649a5560c/2b7c5/bias-variance-decomposition.png"
+            alt="편향-분산 트레이드오프 분해도"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<h3>각 항의 의미</h3>
+<table>
+<thead>
+<tr>
+<th>항</th>
+<th>수식</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bias²</strong></td>
+<td><code class="language-text">(f(x) - E[ŷ])²</code></td>
+<td>모델 예측의 평균이 실제 값과 얼마나 다른가 (체계적 오차)</td>
+</tr>
+<tr>
+<td><strong>Variance</strong></td>
+<td><code class="language-text">E[(ŷ - E[ŷ])²]</code></td>
+<td>훈련 데이터가 바뀔 때 예측이 얼마나 흔들리는가</td>
+</tr>
+<tr>
+<td><strong>σ²</strong></td>
+<td>줄일 수 없음</td>
+<td>데이터 자체의 노이즈 (어떤 모델도 제거 불가)</td>
+</tr>
+</tbody>
+</table>
+<p>총 에러(MSE)는 이 세 항의 합이다. σ²는 어떤 모델을 쓰든 줄일 수 없으므로, 우리가 통제할 수 있는 건 <strong>Bias²와 Variance</strong> 뿐이다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 왜 기댓값이 필요한가?</strong><br>
+  실제로 우리는 하나의 훈련 데이터셋으로만 모델을 학습한다. 하지만 Bias와 Variance는 "만약 다른 훈련셋으로 반복 학습하면 어떻게 달라질까"라는 가상의 실험을 생각한다. 이 사고 실험이 모델의 구조적 특성을 드러낸다.
+</div>
+<hr>
+<h2>편향(Bias)이란?</h2>
+<p>편향은 <strong>체계적 오차(systematic error)</strong> 다. 모델의 평균 예측과 실제 값의 차이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Bias(ŷ) = E[ŷ] - f(x)</code></pre></div>
+<p>편향이 높다는 건, 모델이 아무리 많은 데이터로 학습해도 <strong>근본적으로 잘못된 방향으로 예측</strong>한다는 뜻이다.</p>
+<h3>높은 편향 = 과소적합(Underfitting)</h3>
+<p>사인 곡선 데이터를 1차 다항식(직선)으로 맞추는 걸 생각해보자.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> PolynomialFeatures
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LinearRegression
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
+
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+n <span class="token operator">=</span> <span class="token number">30</span>
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+y <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> n<span class="token punctuation">)</span>
+
+<span class="token comment"># degree=1: 직선</span>
+pipe_d1 <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_d1<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">)</span>
+
+train_mse <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>pipe_d1<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span> <span class="token operator">-</span> y<span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Degree 1 Train MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>train_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Degree 1 Train MSE: 0.3412</code></pre></div>
+<p>직선은 사인 곡선의 전체적인 추세(증가 후 감소)를 전혀 포착하지 못한다. 훈련 데이터에서도, 테스트 데이터에서도 에러가 높다. 이게 <strong>높은 편향</strong>이다.</p>
+<ul>
+<li>더 많은 훈련 데이터를 넣어도 직선은 여전히 직선이다 → 근본적으로 해결 안 됨</li>
+<li>모델의 <strong>표현력(expressivity)</strong> 이 부족한 게 원인</li>
+</ul>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 과소적합의 신호</strong><br>
+  훈련 에러 자체가 높다면 편향 문제다. 훈련 데이터를 늘려도 에러가 크게 줄지 않는다. 모델을 더 복잡하게 만들거나, 더 많은 특성을 추가해야 한다.
+</div>
+<hr>
+<h2>분산(Variance)이란?</h2>
+<p>분산은 <strong>훈련 데이터의 변동에 대한 민감도</strong>다. 훈련 데이터가 조금 달라졌을 때 예측이 얼마나 크게 변하는지를 측정한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Variance = E[(ŷ - E[ŷ])²]</code></pre></div>
+<p>분산이 높다는 건, 훈련 데이터의 특정 노이즈까지 외워버린다는 뜻이다. 약간 다른 훈련셋으로 학습하면 완전히 다른 모델이 된다.</p>
+<h3>높은 분산 = 과적합(Overfitting)</h3>
+<p>같은 데이터에 15차 다항식을 맞추면:</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># degree=15: 15차 다항식</span>
+pipe_d15 <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_d15<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">)</span>
+
+train_mse <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>pipe_d15<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span> <span class="token operator">-</span> y<span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Degree 15 Train MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>train_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 다른 훈련 셋으로 실험</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">99</span><span class="token punctuation">)</span>
+X2 <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+y2 <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X2<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> n<span class="token punctuation">)</span>
+
+pipe_d15_v2 <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_d15_v2<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X2<span class="token punctuation">,</span> y2<span class="token punctuation">)</span>
+
+<span class="token comment"># 두 모델의 예측 차이 (같은 x 위치에서)</span>
+X_test <span class="token operator">=</span> np<span class="token punctuation">.</span>linspace<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+diff <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">(</span>pipe_d15<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span> <span class="token operator">-</span> pipe_d15_v2<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"훈련셋이 달라졌을 때 예측 차이 (MSE): </span><span class="token interpolation"><span class="token punctuation">{</span>diff<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Degree 15 Train MSE: 0.0512</code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">훈련셋이 달라졌을 때 예측 차이 (MSE): 1.8743</code></pre></div>
+<p>훈련 에러는 매우 낮지만(0.05), 조금 다른 훈련셋을 쓰면 예측이 크게 달라진다(차이 1.87). 이게 <strong>높은 분산</strong>이다.</p>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 34.375%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAABcSAAAXEgFnn9JSAAABJUlEQVR42j1RC7LDIAjM/U/62nxMgooKug9MW2cYEpfdBVzGGJjRGgYzhgh67xgWnq/rwhY2vMOK676gqvDTjdP7ALcOrh1fnaXUCrEi9Zwz1ITDviOEAGliwgPSBUW9TvBa34gxQqShG4+rgIsg54K/14qlpoRoXbCJuYMf766UgswZOx2gFJ97w5tNUGrBRYYFsm/5YdUaWO7zRLRu2EUt++juTJHmmDGnR5RpErkxtjPgtd1T9Liz1dSJUao2snXysZhdTnE3sX3VVn/uIZ5T+IgByUxEns5UO9YjmknCSYyFiObiveA7ki/exf2eboJ2nVhpBc0myIadbmrrGvNx1NbToKJYHHRRtheeyzaChxP93+OLuVH7YM5xboxpZrUH8/t/r0EhhUY1Ps8AAAAASUVORK5CYII='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/1b3e1657cbe38a703a8bbcdcec1499d7/9e594/underfitting-vs-overfitting.avif 192w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/3124f/underfitting-vs-overfitting.avif 384w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/0187b/underfitting-vs-overfitting.avif 768w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/7799c/underfitting-vs-overfitting.avif 1152w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/e6083/underfitting-vs-overfitting.avif 1536w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/dc09b/underfitting-vs-overfitting.avif 2235w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/1b3e1657cbe38a703a8bbcdcec1499d7/dce26/underfitting-vs-overfitting.webp 192w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/955be/underfitting-vs-overfitting.webp 384w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/58a3c/underfitting-vs-overfitting.webp 768w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/ccee1/underfitting-vs-overfitting.webp 1152w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/eac03/underfitting-vs-overfitting.webp 1536w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/821af/underfitting-vs-overfitting.webp 2235w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/1b3e1657cbe38a703a8bbcdcec1499d7/4eff4/underfitting-vs-overfitting.png 192w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/0cf21/underfitting-vs-overfitting.png 384w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/2b7c5/underfitting-vs-overfitting.png 768w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/ab7b1/underfitting-vs-overfitting.png 1152w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/990b0/underfitting-vs-overfitting.png 1536w,
+/static/1b3e1657cbe38a703a8bbcdcec1499d7/baaf6/underfitting-vs-overfitting.png 2235w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/1b3e1657cbe38a703a8bbcdcec1499d7/2b7c5/underfitting-vs-overfitting.png"
+            alt="과소적합 vs 균형 vs 과적합 비교"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p>왼쪽(degree=1)은 사인 곡선의 형태를 전혀 잡지 못한다. 가운데(degree=4)는 주요 패턴을 잘 포착한다. 오른쪽(degree=15)은 훈련 데이터의 노이즈까지 따라가며 구불구불해진다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 과적합의 신호</strong><br>
+  훈련 에러는 낮은데 검증 에러가 높다면 분산 문제다. 훈련셋을 더 늘리거나, 모델을 단순하게 만들거나, <a href="/ml/regularization/">규제(Regularization)</a>를 적용해야 한다.
+</div>
+<hr>
+<h2>트레이드오프: 왜 동시에 낮출 수 없나?</h2>
+<p>편향과 분산은 <strong>반대 방향으로 움직인다</strong>. 모델을 복잡하게 만들수록:</p>
+<ul>
+<li>편향(Bias)은 낮아진다 → 데이터의 패턴을 더 잘 포착</li>
+<li>분산(Variance)은 높아진다 → 노이즈에도 민감해짐</li>
+</ul>
+<p>이게 <strong>트레이드오프</strong>의 본질이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> mean_squared_error
+
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+degrees <span class="token operator">=</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">16</span><span class="token punctuation">)</span>
+train_errors<span class="token punctuation">,</span> val_errors <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+X_full <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+y_full <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X_full<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> deg <span class="token keyword">in</span> degrees<span class="token punctuation">:</span>
+    pipe <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+        <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span>deg<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    <span class="token comment"># 훈련 에러</span>
+    pipe<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">)</span>
+    tr_mse <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_full<span class="token punctuation">,</span> pipe<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_full<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token comment"># 검증 에러 (5-fold CV)</span>
+    cv_scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>pipe<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">,</span>
+                                 cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span><span class="token punctuation">)</span>
+    train_errors<span class="token punctuation">.</span>append<span class="token punctuation">(</span>tr_mse<span class="token punctuation">)</span>
+    val_errors<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token operator">-</span>cv_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+best_deg <span class="token operator">=</span> degrees<span class="token punctuation">[</span><span class="token builtin">int</span><span class="token punctuation">(</span>np<span class="token punctuation">.</span>argmin<span class="token punctuation">(</span>val_errors<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 Degree: </span><span class="token interpolation"><span class="token punctuation">{</span>best_deg<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  Train MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>train_errors<span class="token punctuation">[</span>best_deg<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  Val MSE:   </span><span class="token interpolation"><span class="token punctuation">{</span>val_errors<span class="token punctuation">[</span>best_deg<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">최적 Degree: 4
+  Train MSE: 0.0731
+  Val MSE:   0.1023</code></pre></div>
+<p>degree가 커질수록 훈련 에러는 계속 줄지만, 검증 에러는 어느 순간부터 다시 올라간다. <strong>검증 에러가 최솟값이 되는 degree=4가 최적</strong>이다. 이 지점이 편향과 분산의 균형점이다.</p>
+<hr>
+<h2>학습 곡선(Learning Curve)으로 진단</h2>
+<p>편향과 분산 문제를 실전에서 진단하는 가장 강력한 도구는 <strong>학습 곡선(Learning Curve)</strong> 이다.</p>
+<p>학습 곡선은 <strong>훈련 데이터의 크기를 늘려가면서</strong> 훈련 에러와 검증 에러가 어떻게 변하는지를 보여준다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> learning_curve
+
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+n <span class="token operator">=</span> <span class="token number">200</span>
+X_lc <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> n<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+y_lc <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X_lc<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> n<span class="token punctuation">)</span>
+
+<span class="token comment"># 과소적합 모델 (degree=1)</span>
+pipe_under <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+train_sizes<span class="token punctuation">,</span> train_scores<span class="token punctuation">,</span> val_scores <span class="token operator">=</span> learning_curve<span class="token punctuation">(</span>
+    pipe_under<span class="token punctuation">,</span> X_lc<span class="token punctuation">,</span> y_lc<span class="token punctuation">,</span>
+    train_sizes<span class="token operator">=</span>np<span class="token punctuation">.</span>linspace<span class="token punctuation">(</span><span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"== 과소적합 모델 (Degree=1) =="</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'데이터 수'</span><span class="token punctuation">:</span><span class="token format-spec">>8</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'훈련 MSE'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'검증 MSE'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> sz<span class="token punctuation">,</span> tr<span class="token punctuation">,</span> val <span class="token keyword">in</span> <span class="token builtin">zip</span><span class="token punctuation">(</span>train_sizes<span class="token punctuation">,</span>
+                        <span class="token operator">-</span>train_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        <span class="token operator">-</span>val_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">int</span><span class="token punctuation">(</span>sz<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">>8</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span>tr<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span>val<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">== 과소적합 모델 (Degree=1) ==
+ 데이터 수 |   훈련 MSE |   검증 MSE
+       20 |     0.3289 |     0.3892
+       40 |     0.3351 |     0.3614
+       60 |     0.3398 |     0.3541
+       80 |     0.3412 |     0.3498
+      100 |     0.3423 |     0.3471
+      120 |     0.3431 |     0.3455
+      140 |     0.3436 |     0.3447
+      160 |     0.3440 |     0.3443
+      180 |     0.3443 |     0.3441
+      200 |     0.3445 |     0.3440</code></pre></div>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 과적합 모델 (degree=15)</span>
+pipe_over <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+train_sizes<span class="token punctuation">,</span> train_scores_o<span class="token punctuation">,</span> val_scores_o <span class="token operator">=</span> learning_curve<span class="token punctuation">(</span>
+    pipe_over<span class="token punctuation">,</span> X_lc<span class="token punctuation">,</span> y_lc<span class="token punctuation">,</span>
+    train_sizes<span class="token operator">=</span>np<span class="token punctuation">.</span>linspace<span class="token punctuation">(</span><span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"\n== 과적합 모델 (Degree=15) =="</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'데이터 수'</span><span class="token punctuation">:</span><span class="token format-spec">>8</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'훈련 MSE'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'검증 MSE'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> sz<span class="token punctuation">,</span> tr<span class="token punctuation">,</span> val <span class="token keyword">in</span> <span class="token builtin">zip</span><span class="token punctuation">(</span>train_sizes<span class="token punctuation">,</span>
+                        <span class="token operator">-</span>train_scores_o<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        <span class="token operator">-</span>val_scores_o<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">int</span><span class="token punctuation">(</span>sz<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">>8</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span>tr<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string"> | </span><span class="token interpolation"><span class="token punctuation">{</span>val<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">== 과적합 모델 (Degree=15) ==
+ 데이터 수 |   훈련 MSE |   검증 MSE
+       20 |     0.0000 |    12.4521
+       40 |     0.0001 |     3.8745
+       60 |     0.0023 |     2.1033
+       80 |     0.0198 |     1.4872
+      100 |     0.0312 |     1.1047
+      120 |     0.0428 |     0.8934
+      140 |     0.0487 |     0.7612
+      160 |     0.0511 |     0.6841
+      180 |     0.0523 |     0.6243
+      200 |     0.0531 |     0.5812</code></pre></div>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 38.541666666666664%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAYAAAD5nd/tAAAACXBIWXMAABcSAAAXEgFnn9JSAAABLUlEQVR42m1Sa4+DMAzr//+B+zZt0k3TYDwGo7T05dkcSOx0lawU4ThOUlNKwY5pmlDXNYZhwLIseL1eeL/fK9q2Rdd1CCEgpYSmafB8PuG9x/EYJYYYEYlxHPF4PFYhJVnnUDPJMVprV44gERWuqgrzPGNhkbpt0LGoSSTqyOEe93tcPAaKK2mmy0Kxsjk58krOsOxuoCGTmEA7K1GEzJ9fZEZHRxN5hU7zJqAOBPEFHY3DpPv9i5j/wUh3tu9RGP/yjiY0PpNuN3Bwv60cFnRsx5FouQQObuXlI29vf3e4UCycTgiXCyLFI1sLdBzZZqJQJNSyHMbrFYlzFLJa3u47tCwz2wkjRSYm9HTwcz6j4Rg8B+z5fByjKots9Zy0VRZsyBU8vwXH5Xrn8AESOG+4OqR3+QAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/0d22c12f22c102787215534375790765/9e594/learning-curves.avif 192w,
+/static/0d22c12f22c102787215534375790765/3124f/learning-curves.avif 384w,
+/static/0d22c12f22c102787215534375790765/0187b/learning-curves.avif 768w,
+/static/0d22c12f22c102787215534375790765/7799c/learning-curves.avif 1152w,
+/static/0d22c12f22c102787215534375790765/e6083/learning-curves.avif 1536w,
+/static/0d22c12f22c102787215534375790765/bb932/learning-curves.avif 1936w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/0d22c12f22c102787215534375790765/dce26/learning-curves.webp 192w,
+/static/0d22c12f22c102787215534375790765/955be/learning-curves.webp 384w,
+/static/0d22c12f22c102787215534375790765/58a3c/learning-curves.webp 768w,
+/static/0d22c12f22c102787215534375790765/ccee1/learning-curves.webp 1152w,
+/static/0d22c12f22c102787215534375790765/eac03/learning-curves.webp 1536w,
+/static/0d22c12f22c102787215534375790765/2ad52/learning-curves.webp 1936w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/0d22c12f22c102787215534375790765/4eff4/learning-curves.png 192w,
+/static/0d22c12f22c102787215534375790765/0cf21/learning-curves.png 384w,
+/static/0d22c12f22c102787215534375790765/2b7c5/learning-curves.png 768w,
+/static/0d22c12f22c102787215534375790765/ab7b1/learning-curves.png 1152w,
+/static/0d22c12f22c102787215534375790765/990b0/learning-curves.png 1536w,
+/static/0d22c12f22c102787215534375790765/1f183/learning-curves.png 1936w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/0d22c12f22c102787215534375790765/2b7c5/learning-curves.png"
+            alt="학습 곡선으로 보는 편향-분산 진단"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<h3>학습 곡선 해석</h3>
+<p><strong>왼쪽 (과소적합, 높은 편향):</strong></p>
+<ul>
+<li>훈련 에러와 검증 에러 모두 높다</li>
+<li>데이터를 아무리 늘려도 두 곡선이 높은 위치에서 수렴한다</li>
+<li><strong>갭이 작다</strong> — 문제는 데이터 부족이 아니라 모델의 표현력 부족</li>
+</ul>
+<p><strong>오른쪽 (과적합, 높은 분산):</strong></p>
+<ul>
+<li>훈련 에러는 매우 낮다</li>
+<li>검증 에러와의 <strong>갭이 크다</strong></li>
+<li>데이터를 늘릴수록 갭이 줄어들지만, 여전히 큰 갭이 남는다</li>
+</ul>
+<div style="background: #f6fff0; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ 학습 곡선 읽는 법</strong><br>
+  <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+    <li><strong>훈련/검증 에러가 모두 높고, 갭이 작다</strong> → 편향 문제(과소적합)</li>
+    <li><strong>훈련 에러는 낮고, 검증 에러는 높다 (갭이 크다)</strong> → 분산 문제(과적합)</li>
+    <li><strong>두 에러가 모두 낮고, 갭이 작다</strong> → 이상적인 상태</li>
+  </ul>
+</div>
+<hr>
+<h2>실전 진단 체크리스트</h2>
+<p>편향-분산 분석은 이론이 아니라 실전 디버깅 도구다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+<span class="token comment"># 전형적인 진단 코드</span>
+<span class="token keyword">def</span> <span class="token function">diagnose_model</span><span class="token punctuation">(</span>model<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""모델의 편향-분산 상태를 진단한다."""</span>
+    <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+
+    <span class="token comment"># 훈련/검증 분리</span>
+    X_tr<span class="token punctuation">,</span> X_val<span class="token punctuation">,</span> y_tr<span class="token punctuation">,</span> y_val <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+    model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_tr<span class="token punctuation">,</span> y_tr<span class="token punctuation">)</span>
+
+    train_mse <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_tr<span class="token punctuation">,</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_tr<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    val_mse   <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_val<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    gap       <span class="token operator">=</span> val_mse <span class="token operator">-</span> train_mse
+
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"훈련 MSE:  </span><span class="token interpolation"><span class="token punctuation">{</span>train_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"검증 MSE:  </span><span class="token interpolation"><span class="token punctuation">{</span>val_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"갭(Gap):   </span><span class="token interpolation"><span class="token punctuation">{</span>gap<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># 임계값 (데이터마다 다를 수 있음)</span>
+    baseline_mse <span class="token operator">=</span> <span class="token number">0.15</span>   <span class="token comment"># 허용 가능한 에러 수준</span>
+
+    <span class="token keyword">if</span> train_mse <span class="token operator">></span> baseline_mse<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"⚠️  높은 편향 (과소적합)"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 더 복잡한 모델 사용"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 더 많은 특성 추가"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 규제 강도 줄이기"</span><span class="token punctuation">)</span>
+    <span class="token keyword">elif</span> gap <span class="token operator">></span> baseline_mse<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"⚠️  높은 분산 (과적합)"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 더 많은 훈련 데이터 수집"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 규제(L1/L2) 적용"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 앙상블 방법 (배깅, 랜덤 포레스트)"</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"   → 특성 수 줄이기 (PCA 등)"</span><span class="token punctuation">)</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"✅ 균형 잡힌 모델"</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 예시</span>
+pipe_d1  <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>  <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_d4  <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>  <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_d15 <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> name<span class="token punctuation">,</span> pipe <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">"Degree 1"</span><span class="token punctuation">,</span> pipe_d1<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">"Degree 4"</span><span class="token punctuation">,</span> pipe_d4<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">"Degree 15"</span><span class="token punctuation">,</span> pipe_d15<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"=== </span><span class="token interpolation"><span class="token punctuation">{</span>name<span class="token punctuation">}</span></span><span class="token string"> ==="</span></span><span class="token punctuation">)</span>
+    diagnose_model<span class="token punctuation">(</span>pipe<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">=== Degree 1 ===
+훈련 MSE:  0.3401
+검증 MSE:  0.3582
+갭(Gap):   0.0181
+
+⚠️  높은 편향 (과소적합)
+   → 더 복잡한 모델 사용
+   → 더 많은 특성 추가
+   → 규제 강도 줄이기
+
+=== Degree 4 ===
+훈련 MSE:  0.0731
+검증 MSE:  0.1023
+갭(Gap):   0.0292
+
+✅ 균형 잡힌 모델
+
+=== Degree 15 ===
+훈련 MSE:  0.0189
+검증 MSE:  0.5847
+갭(Gap):   0.5658
+
+⚠️  높은 분산 (과적합)
+   → 더 많은 훈련 데이터 수집
+   → 규제(L1/L2) 적용
+   → 앙상블 방법 (배깅, 랜덤 포레스트)
+   → 특성 수 줄이기 (PCA 등)</code></pre></div>
+<h3>편향 문제 해결: 더 복잡한 모델</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> Ridge
+
+<span class="token comment"># Degree를 올려서 편향 해결</span>
+<span class="token keyword">for</span> deg <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">6</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    pipe <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+        <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span>deg<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">(</span><span class="token string">'ridge'</span><span class="token punctuation">,</span> Ridge<span class="token punctuation">(</span>alpha<span class="token operator">=</span><span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    cv_mse <span class="token operator">=</span> <span class="token operator">-</span>cross_val_score<span class="token punctuation">(</span>pipe<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">,</span>
+                               cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Degree </span><span class="token interpolation"><span class="token punctuation">{</span>deg<span class="token punctuation">:</span><span class="token format-spec">2d</span><span class="token punctuation">}</span></span><span class="token string"> | CV MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>cv_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Degree  1 | CV MSE: 0.3541
+Degree  2 | CV MSE: 0.1893
+Degree  4 | CV MSE: 0.0987
+Degree  6 | CV MSE: 0.1102</code></pre></div>
+<p>degree=4에서 검증 에러가 최소다. 이 이상 올리면 다시 올라간다.</p>
+<h3>분산 문제 해결: 규제 적용</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 규제를 적용해서 분산 감소</span>
+pipe_overfit <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'ridge'</span><span class="token punctuation">,</span> Ridge<span class="token punctuation">(</span>alpha<span class="token operator">=</span><span class="token number">100.0</span><span class="token punctuation">)</span><span class="token punctuation">)</span>   <span class="token comment"># 강한 규제</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+cv_mse <span class="token operator">=</span> <span class="token operator">-</span>cross_val_score<span class="token punctuation">(</span>pipe_overfit<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">,</span>
+                            cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Degree 15 + Ridge(alpha=100) | CV MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>cv_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 규제 없는 경우와 비교</span>
+pipe_no_reg <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span>   LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+cv_mse_no_reg <span class="token operator">=</span> <span class="token operator">-</span>cross_val_score<span class="token punctuation">(</span>pipe_no_reg<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">,</span>
+                                   cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Degree 15 (규제 없음)         | CV MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>cv_mse_no_reg<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Degree 15 + Ridge(alpha=100) | CV MSE: 0.1147
+Degree 15 (규제 없음)         | CV MSE: 1.2384</code></pre></div>
+<p>같은 degree=15라도 <a href="/ml/regularization/">Ridge 규제</a>를 적용하면 검증 MSE가 1.24에서 0.11로 크게 줄었다. 규제가 모델의 가중치를 억제해서 분산을 줄인 것이다.</p>
+<hr>
+<h2>편향-분산의 4가지 경우</h2>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 72.39583333333333%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAABcSAAAXEgFnn9JSAAAAuUlEQVR42s1S0QrDIAzs//+c+FQoQn1RaF9EKVas7Y0IHXRtdYMxFggGcrmYXBoUzHsPYwystXDOZQ8hlErQ4MtWJdy27fB+TEiFteIdc4U7EaaUEGOs/mRZloytEpIQ5CVb1xXTNGWn+JaQkm3bZi/tkxpyzsEYezbfc79X+f8IaY+kYM1I4bdUpuW+Knen9BXuQDjPM7qugxAix6UblFKi7/vTNAdCOmilFLTWxeOmUcdxxDAMp7Ef82JUk58NFsUAAAAASUVORK5CYII='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/548cfda9adca72dc8606fdaa3a8f6bbc/9e594/bias-variance-table.avif 192w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/3124f/bias-variance-table.avif 384w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/0187b/bias-variance-table.avif 768w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/7799c/bias-variance-table.avif 1152w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/862ed/bias-variance-table.avif 1467w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/548cfda9adca72dc8606fdaa3a8f6bbc/dce26/bias-variance-table.webp 192w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/955be/bias-variance-table.webp 384w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/58a3c/bias-variance-table.webp 768w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/ccee1/bias-variance-table.webp 1152w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/c31ea/bias-variance-table.webp 1467w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/548cfda9adca72dc8606fdaa3a8f6bbc/4eff4/bias-variance-table.png 192w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/0cf21/bias-variance-table.png 384w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/2b7c5/bias-variance-table.png 768w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/ab7b1/bias-variance-table.png 1152w,
+/static/548cfda9adca72dc8606fdaa3a8f6bbc/3b5ac/bias-variance-table.png 1467w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/548cfda9adca72dc8606fdaa3a8f6bbc/2b7c5/bias-variance-table.png"
+            alt="편향-분산 4가지 조합"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<table>
+<thead>
+<tr>
+<th align="center">편향</th>
+<th align="center">분산</th>
+<th align="center">상태</th>
+<th>조치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">낮음</td>
+<td align="center">낮음</td>
+<td align="center">이상적</td>
+<td>현재 상태 유지</td>
+</tr>
+<tr>
+<td align="center">높음</td>
+<td align="center">낮음</td>
+<td align="center">과소적합</td>
+<td>복잡한 모델, 더 많은 특성</td>
+</tr>
+<tr>
+<td align="center">낮음</td>
+<td align="center">높음</td>
+<td align="center">과적합</td>
+<td>규제, 더 많은 데이터, 앙상블</td>
+</tr>
+<tr>
+<td align="center">높음</td>
+<td align="center">높음</td>
+<td align="center">최악</td>
+<td>모델 구조 재검토</td>
+</tr>
+</tbody>
+</table>
+<p>실전에서 “높은 편향 + 높은 분산”이 되려면, 예를 들어 모델이 전체 공간에서는 단순하게 행동하지만 특정 영역에서만 과도하게 복잡해지는 경우다. 트리 기반 모델에서 일부 가지만 깊게 자라는 상황이 이에 해당한다.</p>
+<hr>
+<h2>앙상블 방법: 분산을 줄이는 강력한 도구 (예고)</h2>
+<p>편향-분산 관점에서, 개별 복잡한 모델은 낮은 편향을 가지지만 높은 분산을 가진다. 그렇다면 <strong>여러 모델의 예측을 평균</strong>내면 어떨까?</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 10개의 서로 다른 훈련셋으로 학습한 모델들의 예측 시뮬레이션</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+n_models <span class="token operator">=</span> <span class="token number">10</span>
+x_test <span class="token operator">=</span> <span class="token number">2.0</span>
+
+individual_preds <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>n_models<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 각기 다른 훈련셋</span>
+    X_i <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> <span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+    y_i <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X_i<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> <span class="token number">50</span><span class="token punctuation">)</span>
+
+    pipe <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+        <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">(</span><span class="token string">'ridge'</span><span class="token punctuation">,</span> Ridge<span class="token punctuation">(</span>alpha<span class="token operator">=</span><span class="token number">0.1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    pipe<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_i<span class="token punctuation">,</span> y_i<span class="token punctuation">)</span>
+    pred <span class="token operator">=</span> pipe<span class="token punctuation">.</span>predict<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">[</span>x_test<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+    individual_preds<span class="token punctuation">.</span>append<span class="token punctuation">(</span>pred<span class="token punctuation">)</span>
+
+true_val <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>x_test<span class="token punctuation">)</span>
+ensemble_pred <span class="token operator">=</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>individual_preds<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"실제 값:           </span><span class="token interpolation"><span class="token punctuation">{</span>true_val<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"개별 예측 분산:    </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>var<span class="token punctuation">(</span>individual_preds<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"앙상블 예측:       </span><span class="token interpolation"><span class="token punctuation">{</span>ensemble_pred<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"앙상블 에러:       </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token punctuation">(</span>ensemble_pred <span class="token operator">-</span> true_val<span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"평균 개별 에러:    </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">(</span>p <span class="token operator">-</span> true_val<span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span> <span class="token keyword">for</span> p <span class="token keyword">in</span> individual_preds<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">실제 값:           0.9093
+개별 예측 분산:    0.1823
+앙상블 예측:       0.9218
+앙상블 에러:       0.0016
+평균 개별 에러:    0.1840</code></pre></div>
+<p>앙상블의 에러(0.0016)가 개별 모델의 평균 에러(0.1840)보다 훨씬 낮다. 이게 <strong>배깅(Bagging)</strong> 의 핵심 원리다. 개별 모델들의 랜덤한 오차(분산)가 평균을 내는 과정에서 서로 상쇄된다.</p>
+<p>다음 글에서는 이 원리를 극대화한 <strong>랜덤 포레스트(Random Forest)</strong> 를 다룬다. 수백 개의 결정 트리를 서로 다른 훈련셋과 특성으로 학습시켜 분산을 획기적으로 낮추는 방법이다.</p>
+<hr>
+<h2>흔한 실수</h2>
+<h3>1. 테스트 에러만 보고 진단한다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 잘못된 접근</span>
+model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+test_mse <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"테스트 MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>test_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>   <span class="token comment"># 이것만으로는 원인을 모른다</span>
+
+<span class="token comment"># ✅ 올바른 접근: 훈련/검증 에러 모두 확인</span>
+train_mse <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_train<span class="token punctuation">,</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span><span class="token punctuation">)</span>
+val_mse   <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span>   model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_val<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"훈련 MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>train_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"검증 MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>val_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"갭:       </span><span class="token interpolation"><span class="token punctuation">{</span>val_mse <span class="token operator">-</span> train_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>테스트 에러가 높다는 것만으로는 편향 문제인지 분산 문제인지 알 수 없다. <strong>훈련 에러와 검증 에러를 함께</strong> 봐야 원인을 진단할 수 있다.</p>
+<h3>2. 데이터를 늘리는 게 항상 해결책이라 믿는다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 편향 문제에 데이터를 더 넣어봤자</span>
+pipe_under <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LinearRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> n_data <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token number">50</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">,</span> <span class="token number">1000</span><span class="token punctuation">,</span> <span class="token number">5000</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    X_n <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">*</span>np<span class="token punctuation">.</span>pi<span class="token punctuation">,</span> n_data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reshape<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+    y_n <span class="token operator">=</span> np<span class="token punctuation">.</span>sin<span class="token punctuation">(</span>X_n<span class="token punctuation">.</span>ravel<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> n_data<span class="token punctuation">)</span>
+    pipe_under<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_n<span class="token punctuation">,</span> y_n<span class="token punctuation">)</span>
+    mse <span class="token operator">=</span> mean_squared_error<span class="token punctuation">(</span>y_n<span class="token punctuation">,</span> pipe_under<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_n<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"n=</span><span class="token interpolation"><span class="token punctuation">{</span>n_data<span class="token punctuation">:</span><span class="token format-spec">5d</span><span class="token punctuation">}</span></span><span class="token string"> | Train MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">n=   50 | Train MSE: 0.3298
+n=  200 | Train MSE: 0.3401
+n= 1000 | Train MSE: 0.3445
+n= 5000 | Train MSE: 0.3451</code></pre></div>
+<p>직선(degree=1)은 데이터를 5000개로 늘려도 Train MSE가 0.34 수준에서 수렴한다. <strong>편향 문제는 데이터로 해결할 수 없다.</strong> 모델 구조를 바꿔야 한다.</p>
+<h3>3. 규제를 강하게 적용하면 항상 좋다고 생각한다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> Ridge
+
+<span class="token comment"># ❌ 규제가 너무 강하면 편향이 생긴다</span>
+<span class="token keyword">for</span> alpha <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token number">0.001</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">10000</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    pipe <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+        <span class="token punctuation">(</span><span class="token string">'poly'</span><span class="token punctuation">,</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">(</span><span class="token string">'ridge'</span><span class="token punctuation">,</span> Ridge<span class="token punctuation">(</span>alpha<span class="token operator">=</span>alpha<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    cv_mse <span class="token operator">=</span> <span class="token operator">-</span>cross_val_score<span class="token punctuation">(</span>pipe<span class="token punctuation">,</span> X_full<span class="token punctuation">,</span> y_full<span class="token punctuation">,</span>
+                               cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'neg_mean_squared_error'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"alpha=</span><span class="token interpolation"><span class="token punctuation">{</span>alpha<span class="token punctuation">:</span><span class="token format-spec">7.3f</span><span class="token punctuation">}</span></span><span class="token string"> | CV MSE: </span><span class="token interpolation"><span class="token punctuation">{</span>cv_mse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">alpha=  0.001 | CV MSE: 0.1124
+alpha=  1.000 | CV MSE: 0.0987
+alpha=100.000 | CV MSE: 0.1253
+alpha=10000.000 | CV MSE: 0.3318</code></pre></div>
+<p>alpha=1이 최적이다. alpha가 너무 크면(10000) 모델이 지나치게 단순해져서 오히려 편향이 높아진다. 규제 강도도 <strong>하이퍼파라미터 튜닝</strong>이 필요하다.</p>
+<hr>
+<h2>마치며</h2>
+<p>편향-분산 트레이드오프는 머신러닝에서 모든 모델 선택의 근간이 되는 개념이다. 정리하면:</p>
+<ul>
+<li><strong>편향(Bias)</strong>: 모델이 데이터의 실제 패턴을 얼마나 못 따라가는가 (과소적합의 원인)</li>
+<li><strong>분산(Variance)</strong>: 모델이 훈련 데이터의 노이즈에 얼마나 민감한가 (과적합의 원인)</li>
+<li><strong>총 에러 = Bias² + Variance + σ²</strong> — 줄일 수 없는 노이즈가 하한선을 정한다</li>
+<li>학습 곡선으로 어떤 문제인지 진단하고, 그에 맞는 해결책을 적용한다</li>
+</ul>
+<p>다음 글에서는 분산 문제를 정면으로 해결하는 방법인 <strong>배깅(Bagging)과 랜덤 포레스트(Random Forest)</strong> 를 다룬다. 수백 개의 결정 트리가 어떻게 협력해서 단일 트리보다 훨씬 강력한 예측을 만들어내는지 본다.</p>
+<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
+  <strong>📌 핵심 요약</strong><br><br>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li><strong>MSE 분해</strong>: E[(y - ŷ)²] = Bias² + Variance + σ²</li>
+    <li><strong>높은 편향</strong> = 과소적합 → 훈련/검증 에러 모두 높음, 갭은 작음 → 모델을 더 복잡하게</li>
+    <li><strong>높은 분산</strong> = 과적합 → 훈련 에러 낮음, 검증 에러 높음, 갭 큼 → 규제, 앙상블, 데이터 추가</li>
+    <li><strong>학습 곡선</strong>: 훈련 데이터 크기 변화에 따른 훈련/검증 에러로 문제를 시각적으로 진단</li>
+    <li><strong>σ²</strong>: 줄일 수 없는 노이즈, 모든 모델의 에러 하한선</li>
+    <li><strong>앙상블</strong>: 여러 모델의 예측을 평균내어 분산을 줄임 — 배깅/랜덤 포레스트의 원리</li>
+  </ul>
+</div>
+<hr>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Bias and Variance (Coursera)</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/learning_curve.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Learning Curves Documentation</a></li>
+<li><a href="https://hastie.su.domains/ElemStatLearn/" target="_blank" rel="noopener noreferrer">The Elements of Statistical Learning, Ch. 7 — Hastie, Tibshirani, Friedman</a></li>
+<li><a href="http://scott.fortmann-roe.com/docs/BiasVariance.html" target="_blank" rel="noopener noreferrer">Understanding the Bias-Variance Tradeoff — Scott Fortmann-Roe</a></li>
+<li><a href="https://www.youtube.com/watch?v=EuBBz3bI-aA" target="_blank" rel="noopener noreferrer">StatQuest: Bias and Variance (YouTube)</a></li>
+</ul></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/decision-tree/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">결정 트리(Decision Tree): 데이터를 질문으로 쪼개는 알고리즘</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/random-forest/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/bias-variance/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-4c0669d0cfe1242fa52c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="a2b7cc0e10143d11ed09";</script><script src="/webpack-runtime-0751c6f06d4bbf0d34d1.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

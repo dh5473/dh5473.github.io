@@ -1,0 +1,795 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="부트스트랩 샘플링과 배깅이 분산을 줄이는 원리, 랜덤 포레스트가 여기에 특성 무작위성을 더해 성능을 높이는 방법을 수학과 코드로 이해한다."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유 | dontech"/><meta data-react-helmet="true" property="og:description" content="부트스트랩 샘플링과 배깅이 분산을 줄이는 원리, 랜덤 포레스트가 여기에 특성 무작위성을 더해 성능을 높이는 방법을 수학과 코드로 이해한다."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/c07e3c71a5a55501e29e817fe9848298/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/random-forest/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="부트스트랩 샘플링과 배깅이 분산을 줄이는 원리, 랜덤 포레스트가 여기에 특성 무작위성을 더해 성능을 높이는 방법을 수학과 코드로 이해한다."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/c07e3c71a5a55501e29e817fe9848298/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://dh5473.github.io/","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"배깅과 랜덤 포레스트(Bagging & Random Forest): 여러 트리가 하나보다 강한 이유 | dontech","description":"부트스트랩 샘플링과 배깅이 분산을 줄이는 원리, 랜덤 포레스트가 여기에 특성 무작위성을 더해 성능을 높이는 방법을 수학과 코드로 이해한다.","image":"https://donmain.dev/static/c07e3c71a5a55501e29e817fe9848298/thumbnail.png","url":"https://donmain.dev/ml/random-forest/","datePublished":"2026-03-17","dateModified":"2026-03-17","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/random-forest/"},"articleSection":"Machine Learning"}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dh5473.github.io/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://dh5473.github.io/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"배깅과 랜덤 포레스트(Bagging & Random Forest): 여러 트리가 하나보다 강한 이유 | dontech","item":"https://donmain.dev/ml/random-forest/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/random-forest/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:1230px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;629&#x27;%20width=&#x27;1230&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAABcSAAAXEgFnn9JSAAABQklEQVR42p1S21LCMBDtP5QkTRCVlosIlUtLSwdaRBQQBhnqOOP45Jv//wXHbcQRtcyID2dyTnb3JLuJodQV8lAstg/iUE0G41CA80uYZl2vjGX8QvNCoQEhmn83zG7AeRNBMMfL8xvi0RqDYIHH7SvG8QOmkxSuO9amebfNNbRECy0qSu6eECZr+NE9RjcpeuEC/eEKjWasc1TxiJaFdGHWQ/BGBFb2YDoeuO2BEYRyj59hBrvcR60SwbFDVJ0BatVI7/3rUdT+q/7g+fmfhpKIRfOw9trI+C9NOXKn5S4u3e+aYKiTDmSlD0lzUqqtT5K2D+lQaxTT+rwHWQ0gSx1tIE+7pKnmrPdhWPryMIQ/AVumYLdriC59B+8abLYBm28ggimsdgI+WaGw3IIPZ6Rj8NGMdAo+XsLqJDqPZfF4gXcaMR9UqXvo8wAAAABJRU5ErkJggg==" alt=""/><picture><source type="image/avif" data-srcset="/static/c07e3c71a5a55501e29e817fe9848298/4eea0/thumbnail.avif 750w,/static/c07e3c71a5a55501e29e817fe9848298/2dd24/thumbnail.avif 1080w,/static/c07e3c71a5a55501e29e817fe9848298/630d2/thumbnail.avif 1230w" sizes="(min-width: 1230px) 1230px, 100vw"/><source type="image/webp" data-srcset="/static/c07e3c71a5a55501e29e817fe9848298/faf64/thumbnail.webp 750w,/static/c07e3c71a5a55501e29e817fe9848298/76435/thumbnail.webp 1080w,/static/c07e3c71a5a55501e29e817fe9848298/a5f89/thumbnail.webp 1230w" sizes="(min-width: 1230px) 1230px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1230px) 1230px, 100vw" decoding="async" loading="lazy" data-src="/static/c07e3c71a5a55501e29e817fe9848298/75314/thumbnail.png" data-srcset="/static/c07e3c71a5a55501e29e817fe9848298/323b4/thumbnail.png 750w,/static/c07e3c71a5a55501e29e817fe9848298/88bec/thumbnail.png 1080w,/static/c07e3c71a5a55501e29e817fe9848298/75314/thumbnail.png 1230w" alt="thumbnail"/></picture><noscript><picture><source type="image/avif" srcSet="/static/c07e3c71a5a55501e29e817fe9848298/4eea0/thumbnail.avif 750w,/static/c07e3c71a5a55501e29e817fe9848298/2dd24/thumbnail.avif 1080w,/static/c07e3c71a5a55501e29e817fe9848298/630d2/thumbnail.avif 1230w" sizes="(min-width: 1230px) 1230px, 100vw"/><source type="image/webp" srcSet="/static/c07e3c71a5a55501e29e817fe9848298/faf64/thumbnail.webp 750w,/static/c07e3c71a5a55501e29e817fe9848298/76435/thumbnail.webp 1080w,/static/c07e3c71a5a55501e29e817fe9848298/a5f89/thumbnail.webp 1230w" sizes="(min-width: 1230px) 1230px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1230px) 1230px, 100vw" decoding="async" loading="lazy" src="/static/c07e3c71a5a55501e29e817fe9848298/75314/thumbnail.png" srcSet="/static/c07e3c71a5a55501e29e817fe9848298/323b4/thumbnail.png 750w,/static/c07e3c71a5a55501e29e817fe9848298/88bec/thumbnail.png 1080w,/static/c07e3c71a5a55501e29e817fe9848298/75314/thumbnail.png 1230w" alt="thumbnail"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.03.17.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">13<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">11</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/bias-variance/">편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">12</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">배깅과 랜덤 포레스트(Bagging &amp; Random Forest): 여러 트리가 하나보다 강한 이유</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">13</span><a class="css-dizrmv e4kcwtw5" href="/ml/boosting/">부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">3<!-- --> / <!-- -->3</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><style data-emotion="css qht250">.css-qht250{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:11px;cursor:default;opacity:0.35;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-qht250:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button disabled="" class="css-qht250 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/bias-variance/">편향-분산 트레이드오프</a> 글에서 모델의 오류가 두 가지 원인에서 나온다는 걸 봤다 — <strong>편향(Bias)</strong> 과 <strong>분산(Variance)</strong>. <a href="/ml/decision-tree/">결정 트리</a>는 훈련 데이터에 깊게 맞춰지는 경향이 있어서, 편향은 낮지만 분산이 크다. 즉, 훈련 데이터가 조금만 달라지면 트리의 모양이 크게 변한다.</p>
+<p>분산이 크면 어떻게 될까? 새로운 데이터(테스트 셋)에서 성능이 들쑥날쑥해진다. 과적합의 전형적인 증상이다.</p>
+<p>이 문제의 해결책이 바로 <strong>앙상블(Ensemble)</strong> 이다. 여러 개의 모델을 만들어 결과를 합치면, 각 모델의 오류가 서로 상쇄되어 전체 분산이 줄어든다. 그 중에서도 <strong>배깅(Bagging)</strong> 과 <strong>랜덤 포레스트(Random Forest)</strong> 는 결정 트리의 높은 분산 문제를 가장 직접적으로 해결하는 방법이다.</p>
+<hr>
+<h2>앙상블(Ensemble) 개념</h2>
+<h3>여러 모델을 합치면 왜 더 좋을까?</h3>
+<p>직관적인 예시부터 시작하자. 어떤 퀴즈 대회에서 혼자 답을 맞히는 것보다, 100명의 청중에게 물어봐서 다수결로 정하는 것이 더 정확하다. 이것이 <strong>지혜의 군중(Wisdom of the Crowd)</strong> 효과다. 개인의 실수는 랜덤하게 분포하기 때문에, 평균을 내면 서로 상쇄된다.</p>
+<p>머신러닝에서도 같은 원리가 적용된다. 각 모델이 독립적으로 오류를 내고, 그 오류들이 서로 연관되지 않는다면, 모델을 합칠수록 오류가 줄어든다.</p>
+<h3>투표(Voting)로 오류 줄이기</h3>
+<p>개별 정확도가 70%인 분류기 3개가 있다고 해보자. 다수결 투표를 하면 앙상블의 정확도는 얼마일까?</p>
+<p>세 분류기 중 최소 2개가 맞아야 다수결이 맞다. 독립적이라고 가정할 때:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">P(정확히 2개 맞음) = C(3,2) × 0.7² × 0.3¹ = 3 × 0.49 × 0.3 = 0.441
+P(정확히 3개 맞음) = C(3,3) × 0.7³ × 0.3⁰ = 1 × 0.343 = 0.343
+
+P(다수결 정확) = 0.441 + 0.343 = 0.784</code></pre></div>
+<p>개별 70% → 앙상블 <strong>78.4%</strong>. 모델 수를 늘릴수록 이 효과는 커진다.</p>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 42.708333333333336%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAABcSAAAXEgFnn9JSAAABnklEQVR42l1SyXIVMQyc//8ubkAVlxxIiqQoeOHN9rzJluWZ0LSd5cChy6q2JLelnlpr6FBViAhyLiN+5ztqreTzKzRj3Tc8PD3hnpgZxywIkiBFMLVmOM8Dy3bD9x8/mfgL83rDcbw15FlKgbDIa8AqNzynHb/Djpnxmh05h2ty2FPApGpUYIhRsDoWuAgf01BVedeM6osi5IC9RDj+oJkNeCmYQ+ZjB3I5eBomV/4ymUVs4LQgKr9nipzIxRcUYWISLHHHxm8dVC3a2MxwSxU+66g168IUk/fKGZwoVHmlioUqhAklnVRaEZximWcqcWyk8MlGs54/lPYZG3/DuPB+si9fUSUDL8Dddo9v6x1wggWKT+vnkZS5rC0EbJGjyRV97l2RsmkdyrrCvtjKpXSCL3iL2IonHIIlFNNR+LplxeozUmk437jeoOM97nvo7piOdkCb4lIXPMXLwB/bkExYfIwtd7vcgsCopBfVj5nVwW0x4uHxEc+XS7cNXyBSFSSVcUrN5Ow/H8qHF7tfr9crlnUZloqJzvAeMUT8A8mKtbCH9iAeAAAAAElFTkSuQmCC'); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/1dcab5772cbaa5f3363b801d43dfeafc/9e594/ensemble-voting.avif 192w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/3124f/ensemble-voting.avif 384w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/0187b/ensemble-voting.avif 768w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/7799c/ensemble-voting.avif 1152w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/e6083/ensemble-voting.avif 1536w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/8e978/ensemble-voting.avif 2085w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/1dcab5772cbaa5f3363b801d43dfeafc/dce26/ensemble-voting.webp 192w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/955be/ensemble-voting.webp 384w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/58a3c/ensemble-voting.webp 768w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/ccee1/ensemble-voting.webp 1152w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/eac03/ensemble-voting.webp 1536w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/812e7/ensemble-voting.webp 2085w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/1dcab5772cbaa5f3363b801d43dfeafc/4eff4/ensemble-voting.png 192w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/0cf21/ensemble-voting.png 384w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/2b7c5/ensemble-voting.png 768w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/ab7b1/ensemble-voting.png 1152w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/990b0/ensemble-voting.png 1536w,
+/static/1dcab5772cbaa5f3363b801d43dfeafc/988cb/ensemble-voting.png 2085w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/1dcab5772cbaa5f3363b801d43dfeafc/2b7c5/ensemble-voting.png"
+            alt="앙상블 투표 원리와 정확도 향상"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p>오른쪽 그래프에서 볼 수 있듯이, 개별 정확도 70%인 모델을 21개 앙상블하면 전체 정확도가 94.5%에 달한다. 단, 이 계산에는 중요한 전제가 있다 — <strong>오류들이 서로 독립</strong>이어야 한다는 것이다.</p>
+<h3>오류 독립성 조건</h3>
+<p>수학적으로, n개의 독립적인 분류기를 다수결로 합칠 때 앙상블 정확도는:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">P(앙상블 정확) = Σ_{k=⌈n/2⌉}^{n} C(n,k) × p^k × (1-p)^(n-k)</code></pre></div>
+<p>여기서 p는 개별 분류기의 정확도다. n → ∞이면 이 값은 1에 수렴한다 — <strong>단, p > 0.5일 때만</strong>.</p>
+<p>핵심은 <strong>오류의 독립성</strong>이다. 모든 모델이 같은 데이터로 학습하면, 같은 샘플에서 같이 틀리는 경향이 있다 — 오류가 독립적이지 않다. 그래서 각 모델에게 <strong>다른 데이터</strong>를 주는 것이 중요하다.</p>
+<hr>
+<h2>부트스트랩 샘플링(Bootstrap Sampling)</h2>
+<p>각 모델에 다른 데이터를 주는 가장 간단한 방법이 <strong>부트스트랩 샘플링</strong>이다.</p>
+<h3>복원 추출 개념</h3>
+<p>원본 데이터셋 N개에서 <strong>복원 추출(sampling with replacement)</strong> 로 N개를 뽑는다. 한 번 뽑힌 샘플을 돌려놓고 다시 뽑을 수 있으므로, 같은 샘플이 여러 번 선택될 수 있고, 어떤 샘플은 한 번도 선택되지 않을 수 있다.</p>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 57.8125%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAACXBIWXMAABcSAAAXEgFnn9JSAAACPklEQVR42m2TSW8TMRiG898rLpxQr0g9Ie6IsomKC6UVgra0SdMlShNakjSzexbPjO2Zh2+SLoA4PPpsz+v3W6zpVcZSC8Y4wdLtjXUopfA8n8Viie8FRFFEEAQkSYI1RjRCLZhaotCdCT1b5VQ6pcxjqkLR7fNMEeQFQVkSFgWeLgjjHJU3JLmjri1FpsUgE0qs1XJP1nVJb3fk+HyW8+4g4tNAsXtRcfIzJpvP8Y77HA36VJMJ82WKG54SfTnl/AgSv8BOT6lGr2mGOzRqJIYVvY03lmcfDU+2DU/fFmy8Ktg5Voz9Ge+/feXH/h7RuRgFJeP9lMmHa2Z7Hkno4OI7driFO3xBu5jIGMRw7LdceY7R0nHld7RMlxlRpcmahlLmUltLpGqqGurK4eoGrUpaabO1haBlnUuFWmaYzTDpDJvNJc5XMQtvyAWXdmcLKrUguZ1ikl8rbWtSbOrRlp5kSMEoWn2LKVN6lIG4x1h1S1P4IgqglKh9uSRmwYQmW6zoEjT5UrRznCRGNBTLNVrOdSyG2Q1m+Jz6ZBM33ZaMapW1ud3H9jdpgj6iBEnafXOjl5izLdpCqiujR3RwZyhZ2ngkXNKm0weBS0Y474AmGUtV0mZ+Q5Ne04QDWjUWTfg3K8Oka1kyV+uqqJIHQxOdU/t9THCMjfq4eIDxDyVerrX3lVV3iOnaUHuPc1jNwlvTZX0Q31+O1+d/6jKZXebJY8mjdC1bHa16fyT6D+E/+/gh1qGHCuXXlFiVmt8sR466iCVpCwAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/5b83207fba0ad04ef3e015b28b0c4838/9e594/bootstrap-sampling.avif 192w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/3124f/bootstrap-sampling.avif 384w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/0187b/bootstrap-sampling.avif 768w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/7799c/bootstrap-sampling.avif 1152w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/e6083/bootstrap-sampling.avif 1536w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/3c2e5/bootstrap-sampling.avif 1785w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/5b83207fba0ad04ef3e015b28b0c4838/dce26/bootstrap-sampling.webp 192w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/955be/bootstrap-sampling.webp 384w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/58a3c/bootstrap-sampling.webp 768w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/ccee1/bootstrap-sampling.webp 1152w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/eac03/bootstrap-sampling.webp 1536w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/14636/bootstrap-sampling.webp 1785w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/5b83207fba0ad04ef3e015b28b0c4838/4eff4/bootstrap-sampling.png 192w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/0cf21/bootstrap-sampling.png 384w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/2b7c5/bootstrap-sampling.png 768w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/ab7b1/bootstrap-sampling.png 1152w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/990b0/bootstrap-sampling.png 1536w,
+/static/5b83207fba0ad04ef3e015b28b0c4838/f36bc/bootstrap-sampling.png 1785w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/5b83207fba0ad04ef3e015b28b0c4838/2b7c5/bootstrap-sampling.png"
+            alt="부트스트랩 샘플링 과정과 OOB 샘플"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p>빨간색으로 표시된 숫자가 <strong>복원 추출로 중복된 샘플</strong>이다. 어떤 샘플은 두 번, 세 번 뽑히고, 어떤 샘플은 아예 뽑히지 않는다.</p>
+<h3>OOB(Out-of-Bag) 샘플이란?</h3>
+<p>각 부트스트랩 샘플에 포함되지 않은 샘플들이 <strong>OOB 샘플</strong>이다. 한 샘플이 N번의 추출에서 단 한 번도 선택되지 않을 확률은:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">P(OOB) = (1 - 1/N)^N</code></pre></div>
+<p>N이 클 때 이 값은:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">lim_{N→∞} (1 - 1/N)^N = e^{-1} ≈ 0.368</code></pre></div>
+<p>즉, **전체 데이터의 약 36.8%**가 각 부트스트랩 샘플의 OOB 샘플이 된다. 이 OOB 샘플들은 해당 트리를 학습할 때 전혀 사용되지 않았으므로, 자연스럽게 <strong>검증 데이터</strong> 역할을 할 수 있다.</p>
+<h3>NumPy로 직접 구현</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+N <span class="token operator">=</span> <span class="token number">10</span>  <span class="token comment"># 원본 데이터 크기</span>
+
+<span class="token comment"># 복원 추출로 부트스트랩 샘플 생성</span>
+bootstrap_sample <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>choice<span class="token punctuation">(</span>np<span class="token punctuation">.</span>arange<span class="token punctuation">(</span>N<span class="token punctuation">)</span><span class="token punctuation">,</span> size<span class="token operator">=</span>N<span class="token punctuation">,</span> replace<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+oob_indices <span class="token operator">=</span> np<span class="token punctuation">.</span>setdiff1d<span class="token punctuation">(</span>np<span class="token punctuation">.</span>arange<span class="token punctuation">(</span>N<span class="token punctuation">)</span><span class="token punctuation">,</span> bootstrap_sample<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"원본 인덱스:      </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>arange<span class="token punctuation">(</span>N<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"부트스트랩 샘플:  </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>bootstrap_sample<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"OOB 샘플 인덱스: </span><span class="token interpolation"><span class="token punctuation">{</span>oob_indices<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"OOB 비율: </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>oob_indices<span class="token punctuation">)</span> <span class="token operator">/</span> N<span class="token punctuation">:</span><span class="token format-spec">.2%</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">원본 인덱스:      [0 1 2 3 4 5 6 7 8 9]
+부트스트랩 샘플:  [0 0 1 4 4 6 6 7 8 9]
+OOB 샘플 인덱스: [2 3 5]
+OOB 비율: 30.00%</code></pre></div>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 대규모에서의 OOB 비율</span>
+N_large <span class="token operator">=</span> <span class="token number">10000</span>
+trials <span class="token operator">=</span> <span class="token number">1000</span>
+oob_ratios <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+<span class="token keyword">for</span> _ <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>trials<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    sample <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>choice<span class="token punctuation">(</span>N_large<span class="token punctuation">,</span> size<span class="token operator">=</span>N_large<span class="token punctuation">,</span> replace<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    oob <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>np<span class="token punctuation">.</span>setdiff1d<span class="token punctuation">(</span>np<span class="token punctuation">.</span>arange<span class="token punctuation">(</span>N_large<span class="token punctuation">)</span><span class="token punctuation">,</span> sample<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    oob_ratios<span class="token punctuation">.</span>append<span class="token punctuation">(</span>oob <span class="token operator">/</span> N_large<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"평균 OOB 비율: </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>oob_ratios<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>  <span class="token comment"># ≈ 0.3679 ≈ e^(-1)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"이론값 e^(-1): </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">평균 OOB 비율: 0.3679
+이론값 e^(-1): 0.3679</code></pre></div>
+<hr>
+<h2>배깅(Bagging: Bootstrap Aggregating)</h2>
+<p>부트스트랩 샘플링으로 만든 여러 개의 데이터셋에 각각 모델을 학습시키고, 예측을 집계(Aggregating)하는 방법이 <strong>배깅</strong>이다. Leo Breiman이 1996년에 제안했다.</p>
+<h3>배깅 알고리즘</h3>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">입력: 훈련 데이터 D = {(x₁,y₁), ..., (xₙ,yₙ)}, 트리 수 B
+
+For b = 1 to B:
+  1. D에서 복원 추출로 D_b (크기 N) 생성 (부트스트랩)
+  2. D_b로 결정 트리 T_b 학습 (가지치기 없이 완전히)
+
+분류: 최종 예측 = Majority Vote({T_1(x), T_2(x), ..., T_B(x)})
+회귀: 최종 예측 = Mean({T_1(x), T_2(x), ..., T_B(x)})</code></pre></div>
+<h3>배깅이 분산을 줄이는 수학적 근거</h3>
+<p>분산이 σ²이고 서로 <strong>독립</strong>인 B개의 트리 예측값 T₁, T₂, …, T_B의 평균을 내면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Var(T̄) = Var((T₁ + T₂ + ... + T_B) / B) = σ² / B</code></pre></div>
+<p>트리 수 B를 늘릴수록 분산이 <strong>B분의 1</strong>로 줄어든다. 100개 트리면 분산이 1/100이 된다.</p>
+<p>그런데 현실에서 트리들은 완전히 독립이 아니다. 같은 원본 데이터에서 부트스트랩 샘플링을 하므로, 트리들 사이에 <strong>상관관계 ρ</strong>가 생긴다. 이때 분산 공식은:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Var(T̄) = ρσ² + (1-ρ)σ²/B</code></pre></div>
+<ul>
+<li>B → ∞로 가도 <strong>ρσ²</strong> 항이 남는다. 트리 간 상관관계가 높으면, 아무리 많은 트리를 써도 이 분산 하한선을 내려갈 수 없다.</li>
+<li>따라서 <strong>트리 간 상관관계(ρ)를 줄이는 것</strong>이 배깅 이상의 성능 향상 핵심이다.</li>
+</ul>
+<h3>NumPy/Scratch로 배깅 구현</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>tree <span class="token keyword">import</span> DecisionTreeClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+cancer <span class="token operator">=</span> load_breast_cancer<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> cancer<span class="token punctuation">.</span>data<span class="token punctuation">,</span> cancer<span class="token punctuation">.</span>target
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token class-name">BaggingClassifierScratch</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>n_estimators <span class="token operator">=</span> n_estimators
+        self<span class="token punctuation">.</span>rng <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>default_rng<span class="token punctuation">(</span>random_state<span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>trees <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+    <span class="token keyword">def</span> <span class="token function">fit</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        n_samples <span class="token operator">=</span> X<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+        self<span class="token punctuation">.</span>trees <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+        <span class="token keyword">for</span> _ <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>n_estimators<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token comment"># 부트스트랩 샘플링</span>
+            indices <span class="token operator">=</span> self<span class="token punctuation">.</span>rng<span class="token punctuation">.</span>choice<span class="token punctuation">(</span>n_samples<span class="token punctuation">,</span> size<span class="token operator">=</span>n_samples<span class="token punctuation">,</span> replace<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+            X_boot<span class="token punctuation">,</span> y_boot <span class="token operator">=</span> X<span class="token punctuation">[</span>indices<span class="token punctuation">]</span><span class="token punctuation">,</span> y<span class="token punctuation">[</span>indices<span class="token punctuation">]</span>
+            <span class="token comment"># 완전히 성장한 트리 학습</span>
+            tree <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span>self<span class="token punctuation">.</span>rng<span class="token punctuation">.</span>integers<span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            tree<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_boot<span class="token punctuation">,</span> y_boot<span class="token punctuation">)</span>
+            self<span class="token punctuation">.</span>trees<span class="token punctuation">.</span>append<span class="token punctuation">(</span>tree<span class="token punctuation">)</span>
+        <span class="token keyword">return</span> self
+
+    <span class="token keyword">def</span> <span class="token function">predict</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> X<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token comment"># 각 트리의 예측을 모아 다수결</span>
+        predictions <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span>tree<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span> <span class="token keyword">for</span> tree <span class="token keyword">in</span> self<span class="token punctuation">.</span>trees<span class="token punctuation">]</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> np<span class="token punctuation">.</span>apply_along_axis<span class="token punctuation">(</span>
+            <span class="token keyword">lambda</span> x<span class="token punctuation">:</span> np<span class="token punctuation">.</span>bincount<span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">.</span>argmax<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span> arr<span class="token operator">=</span>predictions
+        <span class="token punctuation">)</span>
+
+    <span class="token keyword">def</span> <span class="token function">score</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>self<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span> <span class="token operator">==</span> y<span class="token punctuation">)</span>
+
+<span class="token comment"># 학습 및 평가</span>
+bagging_scratch <span class="token operator">=</span> BaggingClassifierScratch<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+bagging_scratch<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+single_tree <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+single_tree<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"단일 DecisionTree 정확도: </span><span class="token interpolation"><span class="token punctuation">{</span>single_tree<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"배깅(scratch) 정확도:    </span><span class="token interpolation"><span class="token punctuation">{</span>bagging_scratch<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">단일 DecisionTree 정확도: 0.9474
+배깅(scratch) 정확도:    0.9561</code></pre></div>
+<hr>
+<h2>랜덤 포레스트(Random Forest)</h2>
+<p>배깅은 트리들의 분산을 줄이지만, 한 가지 한계가 있다 — 같은 원본 데이터에서 나온 부트스트랩 샘플들은 여전히 서로 유사하다. 특히 <strong>중요한 특성</strong> 하나가 있으면, 모든 트리가 그 특성을 최상위 분기점으로 사용하게 되어 트리들이 비슷해진다. 상관관계 ρ가 높아지는 것이다.</p>
+<h3>배깅 + 특성 무작위성(Feature Randomness)</h3>
+<p>랜덤 포레스트는 배깅에 <strong>특성 무작위성</strong>을 추가한다. 각 노드에서 분기점을 찾을 때, <strong>전체 특성 중 일부(max_features개)만 무작위로 선택</strong>하고 그 중에서 최선의 분기를 찾는다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">배깅:          각 트리 → 부트스트랩 샘플 사용
+랜덤 포레스트: 각 트리 → 부트스트랩 샘플 사용
+               각 노드 → max_features개 특성만 고려 (← 이 부분이 추가!)</code></pre></div>
+<p>이로 인해:</p>
+<ol>
+<li>강한 특성 하나가 모든 트리를 지배하지 않는다</li>
+<li>트리마다 서로 다른 특성 조합을 학습한다</li>
+<li>트리 간 상관관계 ρ가 줄어든다</li>
+<li>분산 공식 <code class="language-text">ρσ² + (1-ρ)σ²/B</code>에서 ρ가 작아지므로 전체 분산이 낮아진다</li>
+</ol>
+<h3>왜 특성 무작위성이 필요한가?</h3>
+<p>극단적인 예시로 이해해보자. 30개의 특성 중 1개가 압도적으로 중요한 특성이라고 하자. 배깅에서는 모든 트리의 루트 노드가 그 특성을 선택한다. 트리들이 형제처럼 비슷해진다 — ρ ≈ 1.</p>
+<p>랜덤 포레스트에서 <code class="language-text">max_features=5</code>로 설정하면, 어떤 트리는 루트에서 그 특성을 못 보고 다른 특성으로 분기한다. 각 트리가 데이터의 다른 측면을 배운다 — ρ가 크게 줄어든다.</p>
+<h3>max_features 파라미터</h3>
+<p>sklearn의 기본값:</p>
+<ul>
+<li><strong>분류(Classification)</strong>: <code class="language-text">max_features='sqrt'</code> → √p개 (p = 전체 특성 수)</li>
+<li><strong>회귀(Regression)</strong>: <code class="language-text">max_features=1.0</code> (sklearn 1.1+) 또는 <code class="language-text">'sqrt'</code></li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+
+<span class="token comment"># p=30개 특성이면 sqrt(30) ≈ 5~6개 특성만 각 노드에서 고려</span>
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>
+    n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>
+    max_features<span class="token operator">=</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span>  <span class="token comment"># 기본값: 분류에서 √p</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span></code></pre></div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 max_features의 직관</strong><br>
+  max_features가 작을수록: 트리 간 상관관계 ↓, 개별 트리 성능 ↓<br>
+  max_features가 클수록: 트리 간 상관관계 ↑, 개별 트리 성능 ↑<br>
+  최적점은 중간 어딘가에 있다. 분류에는 √p, 회귀에는 p/3이 좋은 출발점이다.
+</div>
+<hr>
+<h2>sklearn으로 실전 구현</h2>
+<h3>BaggingClassifier vs RandomForestClassifier 비교</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>tree <span class="token keyword">import</span> DecisionTreeClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> BaggingClassifier<span class="token punctuation">,</span> RandomForestClassifier
+
+cancer <span class="token operator">=</span> load_breast_cancer<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> cancer<span class="token punctuation">.</span>data<span class="token punctuation">,</span> cancer<span class="token punctuation">.</span>target
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> stratify<span class="token operator">=</span>y
+<span class="token punctuation">)</span>
+
+<span class="token comment"># 단일 결정 트리</span>
+dt <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+dt<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token comment"># 배깅</span>
+bagging <span class="token operator">=</span> BaggingClassifier<span class="token punctuation">(</span>
+    estimator<span class="token operator">=</span>DecisionTreeClassifier<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>
+    max_samples<span class="token operator">=</span><span class="token number">1.0</span><span class="token punctuation">,</span>    <span class="token comment"># 부트스트랩 샘플 크기 (기본: 전체)</span>
+    max_features<span class="token operator">=</span><span class="token number">1.0</span><span class="token punctuation">,</span>   <span class="token comment"># 특성 서브샘플 없음 (배깅의 경우)</span>
+    bootstrap<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+bagging<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token comment"># 랜덤 포레스트</span>
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>
+    n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>
+    max_features<span class="token operator">=</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span>  <span class="token comment"># 특성 무작위성 (핵심 차이!)</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+rf<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"단일 DecisionTree: </span><span class="token interpolation"><span class="token punctuation">{</span>dt<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"BaggingClassifier: </span><span class="token interpolation"><span class="token punctuation">{</span>bagging<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"RandomForest:      </span><span class="token interpolation"><span class="token punctuation">{</span>rf<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">단일 DecisionTree: 0.9474
+BaggingClassifier: 0.9561
+RandomForest:      0.9649</code></pre></div>
+<h3>n_estimators에 따른 성능 변화</h3>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 59.895833333333336%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAACXBIWXMAABcSAAAXEgFnn9JSAAABj0lEQVR42p1T2W7bMBDk//9agT40hxM7qAPDkq3L4i0eQie7tIsoaoEEeRgMd8kdLJdDkXNGjBEhhH/A+XGUePn9iu3LHg+bLc5Ni5wSpmn6b42w1lLRCOcseO2d+wBnr3lnLIw2sMTTLe8XzJBSQnjvYejQnGekHGHDBBcDHLFfsF3EevKwhOU+w5C4sMbgMio0KuCp7fHr1GDTtnigqz13He7PLbbEd2fOd3ikvR9VhZ/Vqew/U475qevRSQXBs3BG475ucewNRukxKo+LdNDaY6BYmytLipVex67kpJ6gpIaojkdcFHWoJf7QlTO1PqdYkOM1zumdE3NcxbfzfFvR0hV4jinRa9PrrRGo+CvM4McThlS11iSYik3W+Gufz5jBWsI59y3BWEaTwD5mzPMM1iqCrMxJFl2Di9c5NrYPEdUgcTrVqOsafd9D0VsUQV7wHHldzE3rz1iRyc/tgN1uh/1+j8PhgGEYrsYuP4HdvijgrtlSHHfksyO5oWma8hs4b2hMgc1NZ4v1bs28AV8unPBhkL6dAAAAAElFTkSuQmCC'); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/e245f6b3dba68455fd96802fb2ee06f3/9e594/n-estimators-performance.avif 192w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/3124f/n-estimators-performance.avif 384w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/0187b/n-estimators-performance.avif 768w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/7799c/n-estimators-performance.avif 1152w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/af7ed/n-estimators-performance.avif 1485w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/e245f6b3dba68455fd96802fb2ee06f3/dce26/n-estimators-performance.webp 192w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/955be/n-estimators-performance.webp 384w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/58a3c/n-estimators-performance.webp 768w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/ccee1/n-estimators-performance.webp 1152w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/c9dbc/n-estimators-performance.webp 1485w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/e245f6b3dba68455fd96802fb2ee06f3/4eff4/n-estimators-performance.png 192w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/0cf21/n-estimators-performance.png 384w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/2b7c5/n-estimators-performance.png 768w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/ab7b1/n-estimators-performance.png 1152w,
+/static/e245f6b3dba68455fd96802fb2ee06f3/e0e1c/n-estimators-performance.png 1485w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/e245f6b3dba68455fd96802fb2ee06f3/2b7c5/n-estimators-performance.png"
+            alt="트리 수에 따른 성능 변화"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p>트리 수가 적을 때는 성능이 불안정하고, 100개 정도에서 수렴한다. 200개 이상은 성능 차이가 미미하지만 학습 시간만 늘어난다. 실전에서는 100~300개가 좋은 출발점이다.</p>
+<h3>회귀 예시</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestRegressor
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> fetch_california_housing
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> root_mean_squared_error
+
+housing <span class="token operator">=</span> fetch_california_housing<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X_h<span class="token punctuation">,</span> y_h <span class="token operator">=</span> housing<span class="token punctuation">.</span>data<span class="token punctuation">,</span> housing<span class="token punctuation">.</span>target
+X_tr<span class="token punctuation">,</span> X_te<span class="token punctuation">,</span> y_tr<span class="token punctuation">,</span> y_te <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X_h<span class="token punctuation">,</span> y_h<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+rf_reg <span class="token operator">=</span> RandomForestRegressor<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+rf_reg<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_tr<span class="token punctuation">,</span> y_tr<span class="token punctuation">)</span>
+
+y_pred <span class="token operator">=</span> rf_reg<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_te<span class="token punctuation">)</span>
+rmse <span class="token operator">=</span> root_mean_squared_error<span class="token punctuation">(</span>y_te<span class="token punctuation">,</span> y_pred<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"RMSE: </span><span class="token interpolation"><span class="token punctuation">{</span>rmse<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"R²:   </span><span class="token interpolation"><span class="token punctuation">{</span>rf_reg<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_te<span class="token punctuation">,</span> y_te<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">RMSE: 0.5032
+R²:   0.8050</code></pre></div>
+<hr>
+<h2>OOB(Out-of-Bag) 평가</h2>
+<h3>OOB error를 교차 검증 대신 쓸 수 있는 이유</h3>
+<p>각 트리는 자신의 OOB 샘플(약 36.8%)로 평가할 수 있다. 전체 데이터의 각 샘플은 평균적으로 <strong>B × 0.368개</strong> 트리의 OOB 샘플이 된다. 그 트리들의 예측만 모아 다수결을 내면 자연스럽게 <strong>교차 검증과 유사한 검증</strong>이 된다.</p>
+<p>교차 검증(k-fold)은 데이터를 k번 다시 학습해야 하지만, OOB 평가는 배깅 학습 중에 자동으로 이루어진다 — <strong>추가 학습 없이</strong> 교차 검증 수준의 일반화 오류 추정이 가능하다.</p>
+<h3>oob_score=True 설정</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+cancer <span class="token operator">=</span> load_breast_cancer<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> cancer<span class="token punctuation">.</span>data<span class="token punctuation">,</span> cancer<span class="token punctuation">.</span>target
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>
+    n_estimators<span class="token operator">=</span><span class="token number">200</span><span class="token punctuation">,</span>
+    oob_score<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>     <span class="token comment"># OOB 점수 계산 활성화</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+rf<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token comment"># 세 가지 평가 방법 비교</span>
+cv_scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>
+    RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">200</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"OOB Score:    </span><span class="token interpolation"><span class="token punctuation">{</span>rf<span class="token punctuation">.</span>oob_score_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"5-Fold CV:    </span><span class="token interpolation"><span class="token punctuation">{</span>cv_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> ± </span><span class="token interpolation"><span class="token punctuation">{</span>cv_scores<span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Test Score:   </span><span class="token interpolation"><span class="token punctuation">{</span>rf<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">OOB Score:    0.9604
+5-Fold CV:    0.9578 ± 0.0238
+Test Score:   0.9649</code></pre></div>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 61.979166666666664%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAACXBIWXMAABcSAAAXEgFnn9JSAAACeUlEQVR42n2SXWsTQRSG93cIInhb9D/ohd6KVlCQ3ohQBAUFixZBLGIRobW9iCV+YK2UVmhLVVoNJdKAn9XGNmnTdJM0TdKNyWbT3Z393jSvZzdWjQYvXpidPfPMMzOHM00TjDEYhvEr3pysKEis8UilN5DKZLGWTCGTzSHJp8GnMsgXBFiWCV03mtZy3mJJkqBpGv3Um7Jb5I29uj/nW9UqJMF5g0qlAtu24ThOy7iuC1GUfOj/ajwpzvtQVZX0LdiOTXFawktl8Z9579u0TViO5ccHerBdQz8E/htm2Q7KnqHl1fyG1Wo1uKYLRVRRr9UbwGKxiGq16ttVZQVCSaRdm03qdQffhTyNNYK4tIENuECGbSKYHcXD7BgmhFnITAa3mcvBUhleridwfHoc7S+eozsyh5rjNo5EVvNrFp6GBUwu6MiKNt2X6QM/SVGc+nYBHUuX0ZXsRUWRwOULBdQNE4+Xv2LfgwHsfzSIEwStuzXfTjcddI6YONxbwqG7Ot7ELQANw8XtGM7FruJ8/Dpu8vcgqVV6ZXo5l2kYiUXR9iSAA8P3cWZmEjsEdAloEPDiqIkjd0o42qdjboVgsHzgl+oyzsa60Bnvxg2+v2HIqIccauxnK0toGw7gIAE7ZqfoWASzDai04bVJHe2DAk4OqQgndLpTitNs2JMa+GlIr7pD0ODiZ+wZ6sPeYD+OTY1B1ESsSxkkxSyCH3Loec3jVmgDoWQa6e0MBLmMd+UFnI56d3gJVxK3UZZFcDo1NpNlxItbGHofQSDyFjPJVep+DUxjUKkVQlEJI+EcRucF8AUVhs6gawby8ham+VlMrL5CZOsjFKbgB6RPX226yfKDAAAAAElFTkSuQmCC'); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/1844c615aa33776c2ae075c2474c1025/9e594/oob-vs-cv.avif 192w,
+/static/1844c615aa33776c2ae075c2474c1025/3124f/oob-vs-cv.avif 384w,
+/static/1844c615aa33776c2ae075c2474c1025/0187b/oob-vs-cv.avif 768w,
+/static/1844c615aa33776c2ae075c2474c1025/7799c/oob-vs-cv.avif 1152w,
+/static/1844c615aa33776c2ae075c2474c1025/87e54/oob-vs-cv.avif 1185w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/1844c615aa33776c2ae075c2474c1025/dce26/oob-vs-cv.webp 192w,
+/static/1844c615aa33776c2ae075c2474c1025/955be/oob-vs-cv.webp 384w,
+/static/1844c615aa33776c2ae075c2474c1025/58a3c/oob-vs-cv.webp 768w,
+/static/1844c615aa33776c2ae075c2474c1025/ccee1/oob-vs-cv.webp 1152w,
+/static/1844c615aa33776c2ae075c2474c1025/aa846/oob-vs-cv.webp 1185w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/1844c615aa33776c2ae075c2474c1025/4eff4/oob-vs-cv.png 192w,
+/static/1844c615aa33776c2ae075c2474c1025/0cf21/oob-vs-cv.png 384w,
+/static/1844c615aa33776c2ae075c2474c1025/2b7c5/oob-vs-cv.png 768w,
+/static/1844c615aa33776c2ae075c2474c1025/ab7b1/oob-vs-cv.png 1152w,
+/static/1844c615aa33776c2ae075c2474c1025/9d8cf/oob-vs-cv.png 1185w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/1844c615aa33776c2ae075c2474c1025/2b7c5/oob-vs-cv.png"
+            alt="OOB Score vs 교차 검증 vs 테스트 Score 비교"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<p>세 점수가 매우 근접하다. OOB가 교차 검증의 훌륭한 대용이 됨을 확인할 수 있다. 특히 데이터가 크거나 학습이 오래 걸릴 때 유용하다.</p>
+<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ OOB 사용 팁</strong><br>
+  <code>oob_score=True</code>를 쓰려면 <code>bootstrap=True</code>(기본값)여야 한다. OOB 점수가 테스트 점수와 크게 다르면(예: OOB가 훨씬 낮으면) 데이터에 시간적 순서나 그룹 구조가 있어서 랜덤 분할이 적절하지 않은 신호일 수 있다.
+</div>
+<hr>
+<h2>특성 중요도(Feature Importance)</h2>
+<p>랜덤 포레스트의 강점 중 하나는 <strong>어떤 특성이 예측에 중요한지</strong> 자동으로 알려준다는 점이다.</p>
+<h3>계산 방법: Gini 불순도 감소량</h3>
+<p>각 특성의 중요도는 <strong>모든 트리에서 해당 특성으로 분기할 때 줄어드는 Gini 불순도의 평균</strong>으로 계산된다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">특성 j의 중요도 = (1/B) Σ_{b=1}^{B} Σ_{노드 t, 분기 특성=j} Δ불순도(t)
+
+여기서 Δ불순도(t) = 부모 노드 불순도 - (왼쪽 자식 가중 불순도 + 오른쪽 자식 가중 불순도)</code></pre></div>
+<p>값이 클수록 그 특성이 트리를 만들 때 더 많이 기여했다는 뜻이다. 모든 특성의 중요도 합은 1이다.</p>
+<h3>특성 중요도 시각화</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+cancer <span class="token operator">=</span> load_breast_cancer<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> cancer<span class="token punctuation">.</span>data<span class="token punctuation">,</span> cancer<span class="token punctuation">.</span>target
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">200</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+rf<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token comment"># 특성 중요도 추출</span>
+importances <span class="token operator">=</span> rf<span class="token punctuation">.</span>feature_importances_
+feature_names <span class="token operator">=</span> cancer<span class="token punctuation">.</span>feature_names
+sorted_idx <span class="token operator">=</span> np<span class="token punctuation">.</span>argsort<span class="token punctuation">(</span>importances<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"상위 10개 중요 특성:"</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    idx <span class="token operator">=</span> sorted_idx<span class="token punctuation">[</span>i<span class="token punctuation">]</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  </span><span class="token interpolation"><span class="token punctuation">{</span>i<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">:</span><span class="token format-spec">2d</span><span class="token punctuation">}</span></span><span class="token string">. </span><span class="token interpolation"><span class="token punctuation">{</span>feature_names<span class="token punctuation">[</span>idx<span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">&lt;35s</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span>importances<span class="token punctuation">[</span>idx<span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">상위 10개 중요 특성:
+   1. worst concave points                0.1521
+   2. worst perimeter                     0.1047
+   3. worst radius                        0.0937
+   4. mean concave points                 0.0835
+   5. worst area                          0.0703
+   6. mean perimeter                      0.0554
+   7. mean radius                         0.0483
+   8. worst concavity                     0.0445
+   9. mean area                           0.0397
+  10. mean concavity                      0.0336</code></pre></div>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 69.79166666666667%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAABcSAAAXEgFnn9JSAAACVklEQVR42pWT2W7TUBCG83BI0NCi0ioUUG95CIR4F+iWLsHZmggUuClc0QJtoaSlWRycuDGJncWJ43jJz8xJHKUgKmHp0xzPmfN7PDMn5DgOGNd1gRGuQ4/nuGioGjRFhSorqJUVmK3OX7EjfyR0Qp7nYWjbqP7SsHH6GWvE+gwvj4/w4ssR1k4+ifX4/eP1GNpL5s/Q1A2EOt0uWrqO01IRC/Eo7kgbCEubmJsQlrYQjjObuEt2IRkltjGfiAru0fpWbB1Pcmk0SEcIGs0mvldkrGZeYWU/hkfEw1ky7NvDIh3mDwbMEbeldfJHsX12ArPTRagbZFgsIJLaFYeWkju4T7Bdmvg40+cH75C5yCN1eY40sU8kfuTx4WeZau3AsvoI2VS/tmGIDB9TJhHKZIV4MLHziS08PcjhuKqg2TPHDRj3C6PReOX7Phxqar9PgtwZs9MRNVxO7YiaLM7w7P1bFKlhcH0xCdbQxmA4HGPbU+uSjhAcDAZoU3e+lUtUrz0sp3cRIVh4NStBM1o0Oz5sOugwkzFjhpN3tm6QIQvq1BS5VoNUOEeMiBcvkJULOFSrMM0e7D8O3yjIi3arhXK1ijeVEtJyEYdXNVhmH77riUDnfwR7vR6ajQYqqorXJJglaoYuuvavwzcKWvTLRlOHrNaQKF0ip8hod83pdQwynCXwz8I3bpphl7qsUZZfr1QUybaoBH2aKdM0wftcZw7mEbMsS8B+3md/EMczHQrUOcgd2PCGjgjgTDiI/fV6HYqiQNM0VCoV6HQRxLhN4liUP8q//hvsYOOv95zJpQAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <picture>
+          <source
+              srcset="/static/614caad6ba3cff1c0010cc5bdbdc22dd/9e594/feature-importance.avif 192w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/3124f/feature-importance.avif 384w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/0187b/feature-importance.avif 768w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/7799c/feature-importance.avif 1152w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/b423b/feature-importance.avif 1481w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/avif"
+            /><source
+              srcset="/static/614caad6ba3cff1c0010cc5bdbdc22dd/dce26/feature-importance.webp 192w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/955be/feature-importance.webp 384w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/58a3c/feature-importance.webp 768w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/ccee1/feature-importance.webp 1152w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/e26f5/feature-importance.webp 1481w"
+              sizes="(max-width: 768px) 100vw, 768px"
+              type="image/webp"
+            />
+          <source
+            srcset="/static/614caad6ba3cff1c0010cc5bdbdc22dd/4eff4/feature-importance.png 192w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/0cf21/feature-importance.png 384w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/2b7c5/feature-importance.png 768w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/ab7b1/feature-importance.png 1152w,
+/static/614caad6ba3cff1c0010cc5bdbdc22dd/b6ab9/feature-importance.png 1481w"
+            sizes="(max-width: 768px) 100vw, 768px"
+            type="image/png"
+          />
+          <img
+            class="gatsby-resp-image-image"
+            src="/static/614caad6ba3cff1c0010cc5bdbdc22dd/2b7c5/feature-importance.png"
+            alt="랜덤 포레스트 특성 중요도"
+            title=""
+            loading="lazy"
+            decoding="async"
+            style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+          />
+        </picture>
+    </span></p>
+<h3>Permutation Importance와 비교</h3>
+<p>Gini 기반 중요도에는 한계가 있다 — <strong>카디널리티가 높은 특성</strong>(연속값, 고유값이 많은 범주형)이 과대평가될 수 있다. 이 문제를 해결하는 것이 <strong>Permutation Importance</strong>다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>inspection <span class="token keyword">import</span> permutation_importance
+
+perm_result <span class="token operator">=</span> permutation_importance<span class="token punctuation">(</span>
+    rf<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">,</span> n_repeats<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Permutation Importance 상위 5개:"</span><span class="token punctuation">)</span>
+perm_sorted <span class="token operator">=</span> np<span class="token punctuation">.</span>argsort<span class="token punctuation">(</span>perm_result<span class="token punctuation">.</span>importances_mean<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    idx <span class="token operator">=</span> perm_sorted<span class="token punctuation">[</span>i<span class="token punctuation">]</span>
+    mean <span class="token operator">=</span> perm_result<span class="token punctuation">.</span>importances_mean<span class="token punctuation">[</span>idx<span class="token punctuation">]</span>
+    std <span class="token operator">=</span> perm_result<span class="token punctuation">.</span>importances_std<span class="token punctuation">[</span>idx<span class="token punctuation">]</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  </span><span class="token interpolation"><span class="token punctuation">{</span>feature_names<span class="token punctuation">[</span>idx<span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">&lt;35s</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span>mean<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> ± </span><span class="token interpolation"><span class="token punctuation">{</span>std<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Permutation Importance 상위 5개:
+  worst concave points                 0.0614 ± 0.0089
+  worst perimeter                      0.0526 ± 0.0072
+  mean concave points                  0.0438 ± 0.0065
+  worst radius                         0.0351 ± 0.0054
+  worst area                           0.0289 ± 0.0048</code></pre></div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 Gini 중요도 vs Permutation Importance</strong><br>
+  <strong>Gini 중요도</strong>: 학습 데이터 기준. 빠르게 계산. 상관된 특성이나 고카디널리티 특성에서 편향될 수 있음<br>
+  <strong>Permutation Importance</strong>: 검증/테스트 데이터 기준. 더 신뢰할 수 있음. 특성 순서를 무작위로 섞어 성능 감소 측정<br>
+  중요한 특성 선택 작업에는 Permutation Importance를 권장한다.
+</div>
+<hr>
+<h2>하이퍼파라미터 가이드</h2>
+<p>랜덤 포레스트의 주요 파라미터와 각각의 영향을 정리했다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>
+    n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>        <span class="token comment"># 트리 수</span>
+    max_depth<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">,</span>          <span class="token comment"># 최대 깊이 (None = 완전 성장)</span>
+    max_features<span class="token operator">=</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span>     <span class="token comment"># 노드별 고려 특성 수</span>
+    min_samples_leaf<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">,</span>      <span class="token comment"># 리프 노드 최소 샘플 수</span>
+    min_samples_split<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">,</span>     <span class="token comment"># 내부 노드 최소 샘플 수</span>
+    bootstrap<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>          <span class="token comment"># 부트스트랩 샘플링 여부</span>
+    oob_score<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span>         <span class="token comment"># OOB 점수 계산 여부</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span>               <span class="token comment"># 병렬 처리 (코어 수 -1)</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>파라미터</th>
+<th>기본값</th>
+<th>효과</th>
+<th>조정 방향</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="language-text">n_estimators</code></td>
+<td>100</td>
+<td>많을수록 안정적, 학습 시간 선형 증가</td>
+<td>100~500 사이에서 OOB로 확인</td>
+</tr>
+<tr>
+<td><code class="language-text">max_depth</code></td>
+<td>None</td>
+<td>작을수록 과소적합, 클수록 과적합</td>
+<td>None → 5~20 범위로 줄여보기</td>
+</tr>
+<tr>
+<td><code class="language-text">max_features</code></td>
+<td>‘sqrt’</td>
+<td>작을수록 트리 다양성↑, 개별 성능↓</td>
+<td>‘sqrt’(분류), ‘log2’, 0.5 등 시도</td>
+</tr>
+<tr>
+<td><code class="language-text">min_samples_leaf</code></td>
+<td>1</td>
+<td>클수록 단순한 트리, 분산 감소</td>
+<td>과적합이면 5~20으로 증가</td>
+</tr>
+<tr>
+<td><code class="language-text">min_samples_split</code></td>
+<td>2</td>
+<td>클수록 덜 세분화</td>
+<td>과적합이면 10~50으로 증가</td>
+</tr>
+</tbody>
+</table>
+<h3>실전 하이퍼파라미터 탐색</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> RandomizedSearchCV
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+param_dist <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">,</span> <span class="token number">300</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token boolean">None</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'max_features'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span> <span class="token string">'log2'</span><span class="token punctuation">,</span> <span class="token number">0.5</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'min_samples_leaf'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'min_samples_split'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+
+rf_search <span class="token operator">=</span> RandomizedSearchCV<span class="token punctuation">(</span>
+    RandomForestClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    param_distributions<span class="token operator">=</span>param_dist<span class="token punctuation">,</span>
+    n_iter<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span>
+rf_search<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 파라미터: </span><span class="token interpolation"><span class="token punctuation">{</span>rf_search<span class="token punctuation">.</span>best_params_<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"CV 최고 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>rf_search<span class="token punctuation">.</span>best_score_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"테스트 점수:  </span><span class="token interpolation"><span class="token punctuation">{</span>rf_search<span class="token punctuation">.</span>best_estimator_<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">최적 파라미터: {'n_estimators': 300, 'min_samples_split': 2,
+                'min_samples_leaf': 1, 'max_features': 'sqrt', 'max_depth': 20}
+CV 최고 점수: 0.9648
+테스트 점수:  0.9649</code></pre></div>
+<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ 빠른 시작 레시피</strong><br>
+  먼저 기본값 RandomForestClassifier(n_estimators=100, n_jobs=-1)로 베이스라인을 잡자. OOB 점수를 켜고 n_estimators를 늘려가며 수렴점을 찾는다. 그 다음 max_features와 min_samples_leaf를 조정해 분산-편향 균형을 맞춘다.
+</div>
+<hr>
+<h2>흔한 실수</h2>
+<h3>1. n_estimators를 너무 작게 잡는다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 트리 10개는 너무 불안정</span>
+rf_small <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+rf_small<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"n=10 정확도: </span><span class="token interpolation"><span class="token punctuation">{</span>rf_small<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>  <span class="token comment"># 0.9298 (불안정)</span>
+
+<span class="token comment"># ✅ 최소 100개부터 시작, OOB로 수렴 확인</span>
+rf_good <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> oob_score<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+rf_good<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"n=100 정확도: </span><span class="token interpolation"><span class="token punctuation">{</span>rf_good<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>  <span class="token comment"># 0.9649 (안정적)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"OOB 점수:    </span><span class="token interpolation"><span class="token punctuation">{</span>rf_good<span class="token punctuation">.</span>oob_score_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">n=10 정확도: 0.9298 (불안정)
+n=100 정확도: 0.9649 (안정적)
+OOB 점수:    0.9560</code></pre></div>
+<h3>2. 특성 스케일링을 걱정한다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 랜덤 포레스트에 StandardScaler를 쓸 필요가 없다</span>
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
+
+pipe_wrong <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">(</span><span class="token string">'scaler'</span><span class="token punctuation">,</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>  <span class="token comment"># 트리 기반 모델에는 불필요</span>
+    <span class="token punctuation">(</span><span class="token string">'rf'</span><span class="token punctuation">,</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+pipe_wrong<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token comment"># ✅ 랜덤 포레스트는 분기점만 찾으므로 스케일에 불변(invariant)</span>
+rf_no_scale <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+rf_no_scale<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"스케일링 O: </span><span class="token interpolation"><span class="token punctuation">{</span>pipe_wrong<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"스케일링 X: </span><span class="token interpolation"><span class="token punctuation">{</span>rf_no_scale<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 결과가 동일하다</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">스케일링 O: 0.9649
+스케일링 X: 0.9649</code></pre></div>
+<p>결정 트리는 분기점 위치만 중요하고, 특성 간 크기 비교를 하지 않으므로 스케일에 완전히 불변이다.</p>
+<h3>3. Gini 중요도만 믿는다</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 상관된 특성이 있을 때 Gini 중요도는 오도할 수 있다</span>
+<span class="token comment"># 예: 두 특성이 강하게 상관되면, 중요도가 두 특성에 나뉘어 각각이 낮아 보인다</span>
+
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>inspection <span class="token keyword">import</span> permutation_importance
+
+<span class="token comment"># ✅ 중요한 특성 선택 시 Permutation Importance를 함께 확인한다</span>
+perm <span class="token operator">=</span> permutation_importance<span class="token punctuation">(</span>rf<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">,</span> n_repeats<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 두 방법의 순위가 크게 다르면 특성 간 상관성을 의심하자</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Gini Top3:"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>cancer<span class="token punctuation">.</span>feature_names<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token keyword">for</span> i <span class="token keyword">in</span> np<span class="token punctuation">.</span>argsort<span class="token punctuation">(</span>rf<span class="token punctuation">.</span>feature_importances_<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token operator">-</span><span class="token number">3</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Perm Top3:"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>cancer<span class="token punctuation">.</span>feature_names<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token keyword">for</span> i <span class="token keyword">in</span> np<span class="token punctuation">.</span>argsort<span class="token punctuation">(</span>perm<span class="token punctuation">.</span>importances_mean<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token operator">-</span><span class="token number">3</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Gini Top3: ['worst concave points', 'worst perimeter', 'worst radius']
+Perm Top3: ['worst concave points', 'worst perimeter', 'mean concave points']</code></pre></div>
+<p>두 방법의 결과가 크게 다를수록 특성 간 상관성 또는 데이터 구조를 더 살펴봐야 한다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 메모리와 예측 시간</strong><br>
+  랜덤 포레스트는 모든 트리를 메모리에 유지한다. n_estimators=1000, 데이터 수십만 건이면 메모리 이슈가 생길 수 있다. 배포 환경에서 예측 지연이 문제면 <code>n_estimators</code>를 줄이거나, 학습 후 <code>joblib</code>으로 모델을 저장/로드해서 재사용하자. 각 트리 예측이 독립적이므로 <code>n_jobs=-1</code>로 병렬 예측도 가능하다.
+</div>
+<hr>
+<h2>마치며</h2>
+<p>배깅과 랜덤 포레스트의 핵심을 정리하면 이렇다.</p>
+<ul>
+<li><strong>배깅</strong>: 부트스트랩 샘플링 + 다수결/평균. 분산을 σ²/B로 줄인다.</li>
+<li><strong>랜덤 포레스트</strong>: 배깅 + 특성 무작위성. 트리 간 상관관계를 줄여 <code class="language-text">ρσ² + (1-ρ)σ²/B</code>의 ρ를 낮춘다.</li>
+<li><strong>OOB</strong>: 무료 교차 검증. <code class="language-text">oob_score=True</code> 하나로 추가 학습 없이 일반화 성능 추정.</li>
+<li><strong>특성 중요도</strong>: 어떤 특성이 예측에 기여하는지 자동으로 알려준다.</li>
+</ul>
+<p>랜덤 포레스트는 조정이 거의 필요 없는 <strong>강력한 베이스라인 모델</strong>이다. 기본값으로도 대부분의 데이터셋에서 좋은 성능을 낸다. 실전에서 가장 먼저 시도할 모델 중 하나다.</p>
+<p>다음 글에서는 앙상블의 또 다른 축인 <strong>부스팅(Boosting)</strong> 을 다룬다. 배깅이 트리를 <strong>병렬</strong>로 독립적으로 쌓는다면, 부스팅은 트리를 <strong>순차적</strong>으로 쌓으면서 이전 트리가 틀린 샘플에 더 집중한다 — 편향을 줄이는 방향으로. AdaBoost와 Gradient Boosting의 원리를 다음 글에서 파헤쳐보자.</p>
+<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
+  <strong>📌 핵심 요약</strong><br><br>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li><strong>앙상블</strong>: 독립적인 모델들의 오류가 서로 상쇄 → 분산 감소. 오류 독립성이 핵심</li>
+    <li><strong>부트스트랩</strong>: 복원 추출로 N개 샘플링. OOB 확률 ≈ e⁻¹ ≈ 36.8%</li>
+    <li><strong>배깅</strong>: Var(T̄) = σ²/B (독립 가정). 트리 수 증가 → 분산 감소</li>
+    <li><strong>랜덤 포레스트</strong>: 배깅 + 노드별 특성 서브샘플링(max_features). 트리 간 상관관계 ρ 감소 → Var(T̄) = ρσ² + (1-ρ)σ²/B 전체 감소</li>
+    <li><strong>OOB Score</strong>: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정</li>
+    <li><strong>특성 중요도</strong>: Gini 감소량 기반 (빠름, 편향 가능) vs Permutation Importance (신뢰성 높음)</li>
+    <li><strong>스케일 불변</strong>: 트리 기반 모델은 특성 스케일링 불필요</li>
+  </ul>
+</div>
+<hr>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://link.springer.com/article/10.1023/A:1010933404324" target="_blank" rel="noopener noreferrer">Leo Breiman — “Random Forests” (2001), Machine Learning 45:5–32</a></li>
+<li><a href="https://link.springer.com/article/10.1007/BF00058655" target="_blank" rel="noopener noreferrer">Leo Breiman — “Bagging Predictors” (1996), Machine Learning 24:123–140</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html" target="_blank" rel="noopener noreferrer">Scikit-learn — RandomForestClassifier Documentation</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/ensemble.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Ensemble Methods User Guide</a></li>
+<li><a href="https://www.youtube.com/watch?v=J4Wdy0Wc_xQ" target="_blank" rel="noopener noreferrer">StatQuest with Josh Starmer — Random Forests (YouTube)</a></li>
+<li><a href="https://hastie.su.domains/ElemStatLearn/" target="_blank" rel="noopener noreferrer">Trevor Hastie et al. — “The Elements of Statistical Learning”, Chapter 15</a></li>
+</ul></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/bias-variance/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/boosting/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/random-forest/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-4c0669d0cfe1242fa52c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="a2b7cc0e10143d11ed09";</script><script src="/webpack-runtime-0751c6f06d4bbf0d34d1.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
