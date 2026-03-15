@@ -1,15 +1,15 @@
 ---
-date: '2026-03-12'
+date: '2026-03-14'
 title: '규제(Regularization): 과적합을 막는 Ridge, Lasso, ElasticNet'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 7
+seriesOrder: 9
 tags: ['Regularization', 'Overfitting', 'Ridge Lasso', '머신러닝 기초', '과적합']
 summary: '변수가 많아지면 생기는 과적합 문제를 Ridge, Lasso, ElasticNet 규제로 해결하는 원리를 수학과 코드로 완전히 이해한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/multiple-linear-regression/)에서 변수를 3개로 늘리니 R² = 0.95가 나왔다. 변수가 많을수록 모델이 더 정확해지는 걸까? 변수를 10개, 50개, 100개로 늘리면?
+[이전 글](/ml/decision-boundary/)에서 로지스틱 회귀의 결정 경계를 시각화하고, 다항 특성을 추가하면 더 복잡한 경계를 만들 수 있다는 걸 봤다. 하지만 [다중 선형 회귀](/ml/multiple-linear-regression/)에서 변수를 늘렸을 때도 느꼈듯이, 변수가 많을수록 모델이 더 정확해지는 걸까? 변수를 10개, 50개, 100개로 늘리면?
 
 실제로 해보면 이상한 일이 벌어진다. 훈련 데이터에서는 오차가 거의 0에 수렴하는데, **새 데이터에서는 예측이 엉망**이 된다. 훈련 데이터를 외워버린 것이다. 이게 **과적합(Overfitting)** 이고, 이를 막는 기법이 **규제(Regularization)** 다.
 
@@ -38,7 +38,7 @@ y = np.sin(2 * np.pi * x) + np.random.normal(0, 0.3, 20)
 핵심은 이거다. 모델이 복잡해지면(=파라미터가 많아지면) **훈련 데이터의 노이즈까지 학습**한다. 훈련 데이터에 대한 성능은 올라가지만, 본 적 없는 데이터에서 성능이 떨어진다.
 
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 편향-분산 트레이드오프(Bias-Variance Tradeoff)</strong><br>
+  <strong>💡 편향-분산 트레이드오프(Bias-Variance Tradeoff) — [다음 글](/ml/bias-variance/)에서 자세히 다룬다</strong><br>
   과소적합 = 높은 편향(Bias), 과적합 = 높은 분산(Variance). 모델 복잡도를 올리면 편향은 줄지만 분산이 커진다. 최적의 복잡도는 이 둘의 합이 최소인 지점이다. 규제는 <strong>분산을 줄이는 대가로 편향을 약간 올려서</strong> 전체 오차를 낮추는 전략이다.
 </div>
 
@@ -383,9 +383,9 @@ ridge_zero = Ridge(alpha=0)
 
 ## 마치며
 
-규제의 핵심은 "모델에게 겸손함을 강제하는 것"이다. 데이터를 완벽하게 맞추려는 욕심을 억제하고, 약간의 훈련 오차를 감수하는 대신 새 데이터에 대한 예측력을 지킨다. 여기까지가 선형 모델의 기본기 — 선형 회귀, 비용 함수, 경사하강법, Feature Scaling, 규제까지 하나의 흐름으로 연결된다.
+규제의 핵심은 "모델에게 겸손함을 강제하는 것"이다. 데이터를 완벽하게 맞추려는 욕심을 억제하고, 약간의 훈련 오차를 감수하는 대신 새 데이터에 대한 예측력을 지킨다. 여기까지가 선형 모델의 기본기 — [선형 회귀](/ml/linear-regression/)부터 [로지스틱 회귀](/ml/logistic-regression/)까지, 비용 함수, 경사하강법, Feature Scaling, 규제가 하나의 흐름으로 연결된다.
 
-다음 글에서는 회귀가 아닌 **분류(Classification)** 문제로 넘어간다. 선형 회귀를 분류에 쓸 수 있을까? 그리고 왜 **로지스틱 회귀(Logistic Regression)** 라는 새로운 모델이 필요한지 다룬다.
+다음 글에서는 과적합과 과소적합의 근본 원인을 수학적으로 분석한다. 모델의 에러를 **편향(Bias)** 과 **분산(Variance)** 으로 분해하면, 왜 규제가 효과적인지, 어떤 상황에서 모델을 복잡하게 만들어야 하고 어떤 상황에서 단순하게 만들어야 하는지가 명확해진다.
 
 ## 참고자료
 

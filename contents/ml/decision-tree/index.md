@@ -1,15 +1,15 @@
 ---
-date: '2026-03-15'
+date: '2026-03-16'
 title: '결정 트리(Decision Tree): 데이터를 질문으로 쪼개는 알고리즘'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 10
+seriesOrder: 11
 tags: ['Decision Tree', '결정 트리', 'Gini Impurity', 'Information Gain', '머신러닝 기초']
 summary: '결정 트리가 데이터를 어떻게 질문으로 쪼개는지, 분할 기준(Gini, 정보 이득)부터 과적합 제어(max_depth, min_samples)까지 시각화와 코드로 완전히 이해한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/decision-boundary/)에서 로지스틱 회귀의 결정 경계를 살펴봤다. 선형 모델은 `w·x + b = 0`이라는 **직선 하나**로 세상을 나눈다. 다항 특성을 추가하면 곡선도 만들 수 있지만, 결국 수식이 경계를 결정한다는 구조는 바뀌지 않는다. 복잡하게 얽혀있는 데이터를 선형 경계 하나로 가르기에는 한계가 있다.
+[이전 글](/ml/bias-variance/)에서 모델의 에러를 편향(Bias)과 분산(Variance)으로 분해했다. 편향이 높으면 과소적합, 분산이 높으면 과적합 — 이 트레이드오프가 모든 모델 선택의 근간이다. 지금까지 배운 선형 모델은 `w·x + b = 0`이라는 **직선 하나**로 세상을 나눈다. 다항 특성을 추가하면 곡선도 만들 수 있지만, 결국 수식이 경계를 결정한다는 구조는 바뀌지 않는다.
 
 결정 트리는 완전히 다른 방식으로 접근한다. 수식 대신 **질문**을 사용한다.
 
@@ -488,7 +488,7 @@ depth=5: CV 평균=0.9533 (±0.0340)
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>결정 트리의 분산 문제</strong><br>
-  결정 트리는 훈련 데이터의 작은 변화에도 트리 구조가 크게 달라질 수 있다 — <strong>고분산(high variance)</strong> 모델이다. 이 약점을 극복하기 위해 여러 트리를 앙상블하는 <strong>랜덤 포레스트</strong>나 <strong>그래디언트 부스팅</strong>이 등장했다. 다음에 다룰 편향-분산 트레이드오프에서 더 자세히 살펴볼 예정이다.
+  결정 트리는 훈련 데이터의 작은 변화에도 트리 구조가 크게 달라질 수 있다 — <strong>고분산(high variance)</strong> 모델이다. <a href="/ml/bias-variance/">이전 글</a>에서 배운 편향-분산 분해를 떠올려보면, 결정 트리는 편향은 낮지만 분산이 높은 전형적인 케이스다. 이 약점을 극복하기 위해 여러 트리를 앙상블하는 <strong>랜덤 포레스트</strong>나 <strong>그래디언트 부스팅</strong>이 등장했다.
 </div>
 
 ---
@@ -617,7 +617,7 @@ clf_balanced = DecisionTreeClassifier(
 - **특성 중요도**: Gini 감소 기여량 기반 — EDA에 유용
 - **스케일링 불필요**: 순서 기반 분할이므로 스케일 무관
 
-다음 글에서는 머신러닝의 근본적인 딜레마인 **편향-분산 트레이드오프(Bias-Variance Tradeoff)** 를 다룬다. 결정 트리의 고분산 문제가 왜 생기는지, 어떻게 수학적으로 분해할 수 있는지, 그리고 랜덤 포레스트가 어떻게 이 문제를 해결하는지 연결해서 이해한다.
+다음 글에서는 결정 트리의 고분산 문제를 정면으로 해결하는 **앙상블 학습과 배깅(Bagging)** 을 다룬다. 여러 트리의 예측을 합쳐서 분산을 줄이는 원리와, 부트스트랩 샘플링의 수학적 근거를 파헤친다.
 
 ---
 

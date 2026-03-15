@@ -1,15 +1,15 @@
 ---
-date: '2026-03-13'
+date: '2026-03-12'
 title: '로지스틱 회귀(Logistic Regression): 분류 문제의 시작점'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 8
+seriesOrder: 7
 tags: ['Logistic Regression', '로지스틱 회귀', 'Classification', 'Sigmoid', '머신러닝 기초']
 summary: '선형 회귀로는 풀 수 없는 분류 문제를 시그모이드 함수와 Log Loss로 해결하는 로지스틱 회귀의 원리를 수학과 코드로 완전히 이해한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/regularization/)에서 선형 모델의 기본기를 마무리했다. 선형 회귀, 비용 함수, 경사하강법, Feature Scaling, 규제 — 하나의 흐름으로 연결되는 이 개념들은 모두 **연속적인 값을 예측**하는 회귀 문제를 다뤘다. 그런데 현실에서는 다른 종류의 질문이 훨씬 많다.
+[이전 글](/ml/multiple-linear-regression/)에서 변수를 여러 개로 늘려 더 정확한 예측 모델을 만들었다. 선형 회귀, 비용 함수, 경사하강법, Feature Scaling — 하나의 흐름으로 연결되는 이 개념들은 모두 **연속적인 값을 예측**하는 회귀 문제를 다뤘다. 그런데 현실에서는 다른 종류의 질문이 훨씬 많다.
 
 "이 이메일이 스팸인가, 아닌가?"
 "이 종양이 양성인가, 악성인가?"
@@ -336,7 +336,7 @@ print(f"\n혼동 행렬:\n{confusion_matrix(y_test, y_pred)}")
 
 <div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>✅ C 파라미터</strong><br>
-  sklearn의 <code>LogisticRegression(C=1.0)</code>에서 C는 <strong>규제 강도의 역수</strong>다. C가 크면 규제가 약하고(과적합 위험↑), C가 작으면 규제가 강하다(과소적합 위험↑). <a href="/ml/regularization/">이전 글</a>의 α(lambda)와 반대 관계인 셈이다. 기본값 C=1.0은 대부분의 경우 잘 동작한다.
+  sklearn의 <code>LogisticRegression(C=1.0)</code>에서 C는 <strong>규제 강도의 역수</strong>다. C가 크면 규제가 약하고(과적합 위험↑), C가 작으면 규제가 강하다(과소적합 위험↑). 뒤에서 다룰 <a href="/ml/regularization/">규제(Regularization) 글</a>의 α(lambda)와 반대 관계인 셈이다. 기본값 C=1.0은 대부분의 경우 잘 동작한다.
 </div>
 
 ---

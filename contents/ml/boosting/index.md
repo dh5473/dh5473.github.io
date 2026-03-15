@@ -1,9 +1,9 @@
 ---
-date: '2026-03-18'
+date: '2026-03-19'
 title: '부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 13
+seriesOrder: 14
 tags: ['Boosting', '부스팅', 'AdaBoost', 'Gradient Boosting', '앙상블', '머신러닝 기초']
 summary: '배깅과 달리 순차적으로 이전 모델의 오류를 보완하는 부스팅의 원리를 AdaBoost와 Gradient Boosting으로 이해한다. XGBoost와 LightGBM의 차이까지.'
 thumbnail: './thumbnail.png'
