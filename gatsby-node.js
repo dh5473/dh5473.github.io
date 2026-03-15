@@ -48,6 +48,11 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
             fields {
               slug
             }
+            frontmatter {
+              title
+              series
+              seriesOrder
+            }
           }
         }
       }
@@ -66,23 +71,49 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
     'src/templates/PostTemplate.tsx',
   )
 
+  // Build series map: seriesId -> sorted array of { slug, title, seriesOrder }
+  const edges = queryAllMarkdownData.data.allMarkdownRemark.edges
+  const seriesMap = {}
+  edges.forEach(({ node }) => {
+    const { series, seriesOrder, title } = node.frontmatter
+    if (series && seriesOrder != null) {
+      if (!seriesMap[series]) seriesMap[series] = []
+      seriesMap[series].push({ slug: node.fields.slug, title, seriesOrder })
+    }
+  })
+  Object.values(seriesMap).forEach(arr =>
+    arr.sort((a, b) => a.seriesOrder - b.seriesOrder),
+  )
+
   // Page Generating Function
   const generatePostPage = ({
     node: {
       fields: { slug },
+      frontmatter: { series, seriesOrder },
     },
   }) => {
-    const pageOptions = {
-      path: slug,
-      component: PostTemplateComponent,
-      context: {
-        slug,
-      },
+    let seriesContext = {}
+    if (series && seriesOrder != null && seriesMap[series]) {
+      const arr = seriesMap[series]
+      const idx = arr.findIndex(p => p.slug === slug)
+      const total = arr.length
+      seriesContext = {
+        seriesId: series,
+        seriesCurrentOrder: seriesOrder,
+        seriesTotal: total,
+        seriesPosts: arr.map(p => ({ slug: p.slug, title: p.title, seriesOrder: p.seriesOrder })),
+        prevPost: idx > 0 ? { slug: arr[idx - 1].slug, title: arr[idx - 1].title } : null,
+        nextPost: idx < total - 1 ? { slug: arr[idx + 1].slug, title: arr[idx + 1].title } : null,
+      }
     }
 
-    createPage(pageOptions)
+    createPage({
+      path: slug,
+      component: PostTemplateComponent,
+      context: { slug, ...seriesContext },
+    })
   }
 
   // Generate Post Page And Passing Slug Props For Query
-  queryAllMarkdownData.data.allMarkdownRemark.edges.forEach(generatePostPage)
+  edges.forEach(generatePostPage)
 }

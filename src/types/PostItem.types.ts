@@ -39,3 +39,31 @@ export interface SeriesInfo {
   postCount: number
   color?: string
 }
+
+export type SeriesNavPost = {
+  slug: string
+  title: string
+}
+
+export type SeriesIndexPost = {
+  slug: string
+  title: string
+  seriesOrder: number
+}
+
+export type PostSeriesIndexProps = {
+  seriesTitle: string
+  seriesColor?: string
+  currentOrder: number
+  posts: SeriesIndexPost[]
+}
+
+export type PostSeriesNavProps = {
+  seriesId: string
+  seriesTitle: string
+  seriesColor?: string
+  currentOrder: number
+  total: number
+  prevPost: SeriesNavPost | null
+  nextPost: SeriesNavPost | null
+}
