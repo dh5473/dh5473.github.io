@@ -9,7 +9,7 @@
  */
 module.exports = {
   siteMetadata: {
-    title: `Donhyeok's Blog`,
+    title: `dontech`,
     description: `Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그`,
     author: `Donhyeok`,
     siteUrl: `https://donmain.dev/`,
