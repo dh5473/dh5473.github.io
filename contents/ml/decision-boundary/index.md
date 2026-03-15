@@ -23,7 +23,7 @@ thumbnail: './thumbnail.png'
 h(x) = σ(w₁x₁ + w₂x₂ + b)
 ```
 
-σ(z) = 0.5가 되는 지점은 z = 0일 때다. 즉:
+[비용 함수 글](/ml/cost-function/)에서 배운 것처럼, σ(z) = 0.5가 되는 지점은 z = 0일 때다. 즉:
 
 ```
 w₁x₁ + w₂x₂ + b = 0
@@ -71,15 +71,15 @@ X_scaled = scaler.fit_transform(X)
 model = LogisticRegression()
 model.fit(X_scaled, y)
 
-print(f"w = {model.coef_[0].round(4)}")   # [1.7592, 1.5651]
-print(f"b = {model.intercept_[0]:.4f}")    # 0.1104
+print(f"w = {model.coef_[0].round(4)}")   # [2.5386, 2.0475]
+print(f"b = {model.intercept_[0]:.4f}")    # -0.0341
 print(f"정확도 = {model.score(X_scaled, y):.2%}")
 ```
 
 ```
-w = [1.7592, 1.5651]
-b = 0.1104
-정확도 = 97.00%
+w = [2.5386, 2.0475]
+b = -0.0341
+정확도 = 100.00%
 ```
 
 ### 결정 경계 그리기
@@ -172,7 +172,7 @@ plt.show()
 d(x) = (w · x + b) / ||w||
 ```
 
-이 거리가 클수록 시그모이드의 입력(z = w·x + b)이 크므로, 확률이 1에 가까워진다. 음수면 확률이 0에 가까워진다.
+이 거리가 클수록 시그모이드의 입력(z = w·x + b)이 크므로, [경사하강법 글](/ml/gradient-descent/)에서 본 것처럼 확률이 1에 가까워진다. 음수면 확률이 0에 가까워진다.
 
 ```python
 # 특정 학생들의 결정 경계로부터의 거리와 확률
@@ -188,11 +188,11 @@ for point in test_points:
 ```
 
 ```
-점 [-2.  -2. ] | 거리: -2.57 | 확률: 0.0054
-점 [-0.5 -0.3] | 거리: -0.57 | 확률: 0.2372
-점 [0.1 0. ] | 거리: +0.12 | 확률: 0.5633
-점 [1.  0.8] | 거리: +1.27 | 확률: 0.9286
-점 [2.5 2. ] | 거리: +2.97 | 확률: 0.9973
+점 [-2.  -2. ] | 거리: -2.82 | 확률: 0.0001
+점 [-0.5 -0.3] | 거리: -0.59 | 확률: 0.1281
+점 [0.1 0. ] | 거리: +0.07 | 확률: 0.5547
+점 [1.  0.8] | 거리: +1.27 | 확률: 0.9844
+점 [2.5 2. ] | 거리: +3.19 | 확률: 1.0000
 ```
 
 거리 0 근처(결정 경계 위)에서 확률 ≈ 0.5, 거리가 양수/음수로 커질수록 1/0에 수렴한다.
@@ -216,10 +216,10 @@ print(f"선형 모델 정확도: {model_linear.score(X_circle, y_circle):.2%}")
 ```
 
 ```
-선형 모델 정확도: 47.00%
+선형 모델 정확도: 50.50%
 ```
 
-47% — 동전 던지기보다 못하다. 직선으로는 동심원을 가를 수 없기 때문이다.
+50% — 동전 던지기 수준이다. 직선으로는 동심원을 가를 수 없기 때문이다.
 
 ![선형 경계의 한계: 동심원 데이터](./linear-limit.png)
 
@@ -261,10 +261,10 @@ print(f"다항 특성(degree=2) 정확도: {pipe_poly.score(X_circle, y_circle):
 ```
 
 ```
-다항 특성(degree=2) 정확도: 99.00%
+다항 특성(degree=2) 정확도: 100.00%
 ```
 
-47%에서 99%로. 같은 로지스틱 회귀인데, 입력 공간을 확장한 것만으로 성능이 극적으로 올랐다.
+50%에서 100%로. 같은 로지스틱 회귀인데, 입력 공간을 확장한 것만으로 성능이 극적으로 올랐다.
 
 ### 비선형 경계 시각화
 
@@ -272,8 +272,8 @@ print(f"다항 특성(degree=2) 정확도: {pipe_poly.score(X_circle, y_circle):
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
 for ax, (title, model, data) in zip(axes, [
-    ('선형 경계 (47%)', model_linear, X_circle),
-    ('다항 경계 degree=2 (99%)', pipe_poly, X_circle)
+    ('선형 경계 (50%)', model_linear, X_circle),
+    ('다항 경계 degree=2 (100%)', pipe_poly, X_circle)
 ]):
     xx, yy = np.meshgrid(np.linspace(-1.5, 1.5, 300),
                           np.linspace(-1.5, 1.5, 300))
@@ -424,19 +424,20 @@ plt.show()
 
 ```python
 from sklearn.datasets import load_iris
+from sklearn.multiclass import OneVsRestClassifier
 
 # 붓꽃 데이터 (4개 특성 → 3개 종)
 iris = load_iris()
 X_iris, y_iris = iris.data[:, :2], iris.target  # 시각화를 위해 2개 특성만
 
-# OvR 방식 (sklearn 기본)
-model_ovr = LogisticRegression(multi_class='ovr', max_iter=1000)
+# OvR 방식: 명시적으로 OneVsRestClassifier 사용
+model_ovr = OneVsRestClassifier(LogisticRegression(max_iter=1000))
 model_ovr.fit(X_iris, y_iris)
 print(f"OvR 정확도: {model_ovr.score(X_iris, y_iris):.2%}")
 ```
 
 ```
-OvR 정확도: 82.00%
+OvR 정확도: 80.67%
 ```
 
 OvR은 구현이 간단하지만 한 가지 문제가 있다 — 각 분류기가 독립적으로 확률을 내기 때문에, K개의 확률 합이 1이 되지 않는다. 예를 들어 어떤 점이 "클래스 0일 확률 0.7, 클래스 1일 확률 0.6"이 될 수 있다.
@@ -532,8 +533,8 @@ Cross-Entropy Loss: 0.2111
 ### 다중 클래스 결정 경계 시각화
 
 ```python
-# Softmax(multinomial) 방식
-model_softmax = LogisticRegression(multi_class='multinomial', max_iter=1000)
+# Softmax(multinomial) 방식 — sklearn의 기본 LogisticRegression이 multinomial을 사용
+model_softmax = LogisticRegression(max_iter=1000)
 model_softmax.fit(X_iris, y_iris)
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -592,7 +593,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # 파이프라인: 스케일링 → Softmax 로지스틱 회귀
 pipe_digits = Pipeline([
     ('scaler', StandardScaler()),
-    ('clf', LogisticRegression(multi_class='multinomial', max_iter=5000, C=1.0))
+    ('clf', LogisticRegression(max_iter=5000, C=1.0))
 ])
 
 pipe_digits.fit(X_train, y_train)
@@ -604,23 +605,23 @@ print(classification_report(y_test, y_pred))
 ```
 
 ```
-테스트 정확도: 96.94%
+테스트 정확도: 97.22%
 
               precision    recall  f1-score   support
 
            0       1.00      1.00      1.00        33
-           1       0.90      1.00      0.95        28
+           1       0.97      1.00      0.98        28
            2       1.00      1.00      1.00        33
-           3       1.00      0.97      0.99        34
+           3       0.97      0.97      0.97        34
            4       0.98      0.98      0.98        46
            5       0.94      0.94      0.94        47
            6       0.97      0.97      0.97        35
            7       0.97      0.97      0.97        34
-           8       0.97      0.87      0.92        30
+           8       0.97      0.93      0.95        30
            9       0.93      0.95      0.94        40
 
     accuracy                           0.97       360
-   macro avg       0.97      0.96      0.97       360
+   macro avg       0.97      0.97      0.97       360
 weighted avg       0.97      0.97      0.97       360
 ```
 
@@ -649,7 +650,7 @@ plt.show()
 
 ![손글씨 숫자 혼동 행렬](./digits-confusion-matrix.png)
 
-대각선이 진하면 정확하다는 뜻이다. 8과 1이 혼동되는 사례가 보이는데, 이건 필기체 8의 위쪽이 1과 비슷하게 보일 수 있기 때문이다. 이런 혼동 패턴은 결정 경계가 두 클래스 사이에서 미묘하게 흔들리는 영역을 알려준다.
+대각선이 진하면 정확하다는 뜻이다. 5가 9로 혼동되는 사례(2건)가 눈에 띄는데, 필기체에서 5의 아래 곡선과 9의 둥근 부분이 비슷하게 보일 수 있기 때문이다. 이런 혼동 패턴은 결정 경계가 두 클래스 사이에서 미묘하게 흔들리는 영역을 알려준다.
 
 ### 예측 확률 분석
 
@@ -684,11 +685,11 @@ plt.show()
 ### 1. 선형 분리 불가능한 데이터에 선형 모델을 고집한다
 
 ```python
-# ❌ 동심원 데이터에 기본 로지스틱 회귀 적용 → 47%
+# ❌ 동심원 데이터에 기본 로지스틱 회귀 적용 → 50%
 model = LogisticRegression()
 model.fit(X_circle, y_circle)  # 직선으로는 원을 가를 수 없다
 
-# ✅ 다항 특성 추가 → 99%
+# ✅ 다항 특성 추가 → 100%
 pipe = Pipeline([
     ('poly', PolynomialFeatures(degree=2)),
     ('scaler', StandardScaler()),
@@ -720,13 +721,14 @@ n=10, d=2: 66개  |  n=10, d=3: 286개  |  n=10, d=5: 3003개
 
 ```python
 # OvR: 각 분류기가 독립 → 확률 합 ≠ 1
-model_ovr = LogisticRegression(multi_class='ovr')
+from sklearn.multiclass import OneVsRestClassifier
+model_ovr = OneVsRestClassifier(LogisticRegression())
 
-# Softmax: 모든 클래스를 동시에 고려 → 확률 합 = 1
-model_softmax = LogisticRegression(multi_class='multinomial')
+# Softmax: 모든 클래스를 동시에 고려 → 확률 합 = 1 (sklearn 기본)
+model_softmax = LogisticRegression()
 ```
 
-대부분의 경우 Softmax가 더 나은 결과를 주고, sklearn의 기본값도 `'auto'`(데이터에 따라 multinomial 선택)다. 클래스 간 관계가 중요하면 Softmax를, 각 클래스가 완전히 독립이면 OvR을 선택한다.
+sklearn의 `LogisticRegression`은 기본적으로 Softmax(multinomial)를 사용한다. OvR이 필요하면 `OneVsRestClassifier`로 감싸면 된다. 클래스 간 관계가 중요하면 Softmax를, 각 클래스가 완전히 독립이면 OvR을 선택한다.
 
 <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
   <strong>📌 핵심 요약</strong><br><br>
