@@ -93,7 +93,7 @@ plt<span class="token punctuation">.</span>xlabel<span class="token punctuation"
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
 
 <span class="token comment"># 5. 주요 특성과 타겟의 관계</span>
-correlation <span class="token operator">=</span> df<span class="token punctuation">.</span>corr<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'price'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>sort_values<span class="token punctuation">(</span>ascending<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+correlation <span class="token operator">=</span> df<span class="token punctuation">.</span>corr<span class="token punctuation">(</span>numeric_only<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'price'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>sort_values<span class="token punctuation">(</span>ascending<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span>correlation<span class="token punctuation">)</span>
 <span class="token comment"># area          0.72   ← 면적이 가격과 가장 강한 상관관계</span>
 <span class="token comment"># floor         0.31</span>
