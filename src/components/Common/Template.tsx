@@ -53,7 +53,7 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
         <meta property="og:url" content={url} />
-        <meta property="og:site_name" content="Donhyeok's Blog" />
+        <meta property="og:site_name" content="dontech" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
