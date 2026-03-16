@@ -10,11 +10,11 @@
 <h3>정규화가 목적 함수에 내장되어 있다</h3>
 <p><a href="/ml/regularization/">규제(Regularization) 글</a>에서 Ridge와 Lasso를 배웠다. XGBoost는 이 아이디어를 트리 모델에 적용한다.</p>
 <p>sklearn의 GradientBoosting은 목적 함수가 순수한 손실 함수뿐이다:</p>
-<p>$$\text{Obj} = \sum_{i=1}^{n} L(y_i, \hat{y}_i)$$</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Obj = Σᵢ₌₁ⁿ L(yᵢ, ŷᵢ)</code></pre></div>
 <p>XGBoost는 여기에 <strong>트리 복잡도 페널티</strong>를 추가한다:</p>
-<p>$$\text{Obj} = \sum_{i=1}^{n} L(y_i, \hat{y}<em>i) + \sum</em>{k=1}^{K} \Omega(f_k)$$</p>
-<p>$$\Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</p>
-<p>$T$는 리프 노드 수, $w_j$는 각 리프의 예측값이다. $\gamma$가 크면 분할을 억제하고(가지치기 효과), $\lambda$가 크면 예측값을 보수적으로 줄인다(L2 규제). 과적합 방지가 목적 함수 수준에서 작동하는 셈이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Obj = Σᵢ₌₁ⁿ L(yᵢ, ŷᵢ) + Σₖ₌₁ᴷ Ω(fₖ)</code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Ω(f) = γT + (1/2)λ Σⱼ₌₁ᵀ wⱼ²</code></pre></div>
+<p><code class="language-text">T</code>는 리프 노드 수, <code class="language-text">wⱼ</code>는 각 리프의 예측값이다. γ가 크면 분할을 억제하고(가지치기 효과), λ가 크면 예측값을 보수적으로 줄인다(L2 규제). 과적합 방지가 목적 함수 수준에서 작동하는 셈이다.</p>
 <h3>2차 테일러 근사로 더 정확한 분할</h3>
 <p>Gradient Boosting은 손실 함수의 1차 도함수(그래디언트)만 사용한다. XGBoost는 <strong>2차 도함수(헤시안)</strong> 까지 활용해서 분할 품질을 높인다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">일반 Gradient Boosting:
@@ -262,7 +262,7 @@ model <span class="token operator">=</span> lgb<span class="token punctuation">.
 </tr>
 <tr>
 <td>정규화</td>
-<td>목적함수 내장 ($\gamma$, $\lambda$, $\alpha$)</td>
+<td>목적함수 내장 (γ, λ, α)</td>
 <td>외부 파라미터 (<code class="language-text">lambda_l1</code>/<code class="language-text">l2</code>)</td>
 </tr>
 </tbody>
@@ -549,7 +549,7 @@ lgb_model <span class="token operator">=</span> lgb<span class="token punctuatio
 <span class="token comment"># ✅ 각 모델의 제어 방식에 맞게 세팅</span>
 xgb_model <span class="token operator">=</span> xgb<span class="token punctuation">.</span>XGBClassifier<span class="token punctuation">(</span>max_depth<span class="token operator">=</span><span class="token number">6</span><span class="token punctuation">)</span>                    <span class="token comment"># 최대 64 리프</span>
 lgb_model <span class="token operator">=</span> lgb<span class="token punctuation">.</span>LGBMClassifier<span class="token punctuation">(</span>num_leaves<span class="token operator">=</span><span class="token number">63</span><span class="token punctuation">,</span> max_depth<span class="token operator">=</span><span class="token number">7</span><span class="token punctuation">)</span>    <span class="token comment"># 63 리프 + 깊이 안전장치</span></code></pre></div>
-<p>XGBoost의 <code class="language-text">max_depth=6</code>은 최대 $2^6 = 64$개 리프를 의미한다. LightGBM에서 같은 복잡도를 원한다면 <code class="language-text">num_leaves=63</code>으로 맞춰야 한다. <code class="language-text">max_depth</code>만 복사하면 의도한 것과 다른 모델이 만들어진다.</p>
+<p>XGBoost의 <code class="language-text">max_depth=6</code>은 최대 2⁶ = 64개 리프를 의미한다. LightGBM에서 같은 복잡도를 원한다면 <code class="language-text">num_leaves=63</code>으로 맞춰야 한다. <code class="language-text">max_depth</code>만 복사하면 의도한 것과 다른 모델이 만들어진다.</p>
 <h3>4. 네이티브 범주형 지원을 모른다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 무조건 원-핫 인코딩 (예전 습관)</span>
 <span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd

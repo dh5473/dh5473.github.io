@@ -504,7 +504,7 @@ plt<span class="token punctuation">.</span>tight_layout<span class="token punctu
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <p>랜덤 포레스트와 Gradient Boosting 모두 <code class="language-text">worst perimeter</code>, <code class="language-text">worst concave points</code> 같은 특성을 중요하게 본다. 단, Gradient Boosting은 더 소수의 특성에 집중하는 경향이 있어 희소한 특성 중요도를 갖는다.</p>
 <hr>
-<h2>n_estimators와 학습률의 관계</h2>
+<h2><code class="language-text">n_estimators</code>와 학습률의 관계</h2>
 <p>Gradient Boosting에서 가장 중요한 두 하이퍼파라미터는 <code class="language-text">n_estimators</code>와 <code class="language-text">learning_rate</code>다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> GradientBoostingClassifier
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
@@ -577,7 +577,7 @@ lr=1.000: train=1.0000, test=0.9649</code></pre></div>
     </span></p>
 <p>위 그래프에서 핵심 패턴이 보인다:</p>
 <ul>
-<li><strong>lr=0.001</strong>: n_estimators=200으로도 충분히 수렴하지 못했다. 더 많은 트리가 필요하다.</li>
+<li><strong>lr=0.001</strong>: <code class="language-text">n_estimators=200</code>으로도 충분히 수렴하지 못했다. 더 많은 트리가 필요하다.</li>
 <li><strong>lr=0.01</strong>: 천천히 수렴하지만 최종 성능은 좋다.</li>
 <li><strong>lr=0.1</strong>: 적당한 트리 수(50~100)에서 빠르게 수렴한다.</li>
 <li><strong>lr=1.0</strong>: 초반에 빠르게 오르지만 과적합 가능성이 있다.</li>
@@ -616,7 +616,7 @@ gb<span class="token punctuation">.</span>fit<span class="token punctuation">(</
 <p>500개를 지정했지만 173개에서 조기 종료가 일어났다. 학습 시간을 줄이면서도 과적합을 방지하는 효과적인 방법이다.</p>
 <hr>
 <h2>흔한 실수</h2>
-<h3>1. 학습률과 n_estimators를 따로 튜닝한다</h3>
+<h3>1. 학습률과 <code class="language-text">n_estimators</code>를 따로 튜닝한다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ n_estimators만 늘린다 (학습률 고정)</span>
 gb <span class="token operator">=</span> GradientBoostingClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">1000</span><span class="token punctuation">,</span> learning_rate<span class="token operator">=</span><span class="token number">0.1</span><span class="token punctuation">)</span>
 <span class="token comment"># learning_rate=0.1에서 100개면 이미 충분히 수렴했을 수 있다</span>
@@ -665,7 +665,7 @@ gb <span class="token operator">=</span> GradientBoostingClassifier<span class="
     <li><strong>부스팅 vs 배깅</strong>: 배깅은 병렬로 분산 감소, 부스팅은 순차적으로 편향 감소</li>
     <li><strong>AdaBoost</strong>: 오분류 샘플에 가중치 부여 → α = 0.5 × ln((1-ε)/ε) → 가중 합산</li>
     <li><strong>Gradient Boosting</strong>: 손실 함수의 음의 그래디언트(잔차)를 순차적으로 학습</li>
-    <li><strong>학습률 × n_estimators</strong>: 반비례 관계. 낮은 학습률 + 많은 트리 = 더 부드러운 수렴</li>
+    <li><strong>학습률 × <code>n_estimators</code></strong>: 반비례 관계. 낮은 학습률 + 많은 트리 = 더 부드러운 수렴</li>
     <li><strong>max_depth</strong>: Gradient Boosting에서는 3~5가 권장. 약한 학습기다워야 한다</li>
     <li><strong>XGBoost/LightGBM</strong>: 정규화 + 최적화로 속도와 성능 모두 개선한 실전 버전</li>
     <li><strong>조기 종료</strong>: n_iter_no_change 파라미터로 최적 트리 수를 자동으로 찾는다</li>
