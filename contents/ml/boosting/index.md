@@ -411,7 +411,7 @@ plt.show()
 
 ---
 
-## n_estimators와 학습률의 관계
+## `n_estimators`와 학습률의 관계
 
 Gradient Boosting에서 가장 중요한 두 하이퍼파라미터는 `n_estimators`와 `learning_rate`다.
 
@@ -448,7 +448,7 @@ lr=1.000: train=1.0000, test=0.9649
 
 위 그래프에서 핵심 패턴이 보인다:
 
-- **lr=0.001**: n_estimators=200으로도 충분히 수렴하지 못했다. 더 많은 트리가 필요하다.
+- **lr=0.001**: `n_estimators=200`으로도 충분히 수렴하지 못했다. 더 많은 트리가 필요하다.
 - **lr=0.01**: 천천히 수렴하지만 최종 성능은 좋다.
 - **lr=0.1**: 적당한 트리 수(50~100)에서 빠르게 수렴한다.
 - **lr=1.0**: 초반에 빠르게 오르지만 과적합 가능성이 있다.
@@ -506,7 +506,7 @@ print(f"테스트 정확도: {gb.score(X_test, y_test):.4f}")
 
 ## 흔한 실수
 
-### 1. 학습률과 n_estimators를 따로 튜닝한다
+### 1. 학습률과 `n_estimators`를 따로 튜닝한다
 
 ```python
 # ❌ n_estimators만 늘린다 (학습률 고정)
@@ -576,7 +576,7 @@ gb = GradientBoostingClassifier(n_estimators=100, max_depth=3)
     <li><strong>부스팅 vs 배깅</strong>: 배깅은 병렬로 분산 감소, 부스팅은 순차적으로 편향 감소</li>
     <li><strong>AdaBoost</strong>: 오분류 샘플에 가중치 부여 → α = 0.5 × ln((1-ε)/ε) → 가중 합산</li>
     <li><strong>Gradient Boosting</strong>: 손실 함수의 음의 그래디언트(잔차)를 순차적으로 학습</li>
-    <li><strong>학습률 × n_estimators</strong>: 반비례 관계. 낮은 학습률 + 많은 트리 = 더 부드러운 수렴</li>
+    <li><strong>학습률 × <code>n_estimators</code></strong>: 반비례 관계. 낮은 학습률 + 많은 트리 = 더 부드러운 수렴</li>
     <li><strong>max_depth</strong>: Gradient Boosting에서는 3~5가 권장. 약한 학습기다워야 한다</li>
     <li><strong>XGBoost/LightGBM</strong>: 정규화 + 최적화로 속도와 성능 모두 개선한 실전 버전</li>
     <li><strong>조기 종료</strong>: n_iter_no_change 파라미터로 최적 트리 수를 자동으로 찾는다</li>

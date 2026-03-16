@@ -59,9 +59,9 @@ rf = RandomForestClassifier(
 ```
 
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 max_features의 직관</strong><br>
-  max_features가 작을수록: 트리 간 상관관계 ↓, 개별 트리 성능 ↓<br>
-  max_features가 클수록: 트리 간 상관관계 ↑, 개별 트리 성능 ↑<br>
+  <strong>💡 <code>max_features</code>의 직관</strong><br>
+  <code>max_features</code>가 작을수록: 트리 간 상관관계 ↓, 개별 트리 성능 ↓<br>
+  <code>max_features</code>가 클수록: 트리 간 상관관계 ↑, 개별 트리 성능 ↑<br>
   최적점은 중간 어딘가에 있다. 분류에는 √p, 회귀에는 p/3이 좋은 출발점이다.
 </div>
 
@@ -373,7 +373,7 @@ CV 최고 점수: 0.9648
 
 <div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>✅ 빠른 시작 레시피</strong><br>
-  먼저 기본값 RandomForestClassifier(n_estimators=100, n_jobs=-1)로 베이스라인을 잡자. OOB 점수를 켜고 n_estimators를 늘려가며 수렴점을 찾는다. 그 다음 max_features와 min_samples_leaf를 조정해 분산-편향 균형을 맞춘다.
+  먼저 기본값 <code>RandomForestClassifier(n_estimators=100, n_jobs=-1)</code>로 베이스라인을 잡자. OOB 점수를 켜고 <code>n_estimators</code>를 늘려가며 수렴점을 찾는다. 그 다음 <code>max_features</code>와 <code>min_samples_leaf</code>를 조정해 분산-편향 균형을 맞춘다.
 </div>
 
 ---
@@ -455,7 +455,7 @@ Perm Top3: ['worst concave points', 'worst perimeter', 'mean concave points']
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ 메모리와 예측 시간</strong><br>
-  랜덤 포레스트는 모든 트리를 메모리에 유지한다. n_estimators=1000, 데이터 수십만 건이면 메모리 이슈가 생길 수 있다. 배포 환경에서 예측 지연이 문제면 <code>n_estimators</code>를 줄이거나, 학습 후 <code>joblib</code>으로 모델을 저장/로드해서 재사용하자. 각 트리 예측이 독립적이므로 <code>n_jobs=-1</code>로 병렬 예측도 가능하다.
+  랜덤 포레스트는 모든 트리를 메모리에 유지한다. <code>n_estimators=1000</code>, 데이터 수십만 건이면 메모리 이슈가 생길 수 있다. 배포 환경에서 예측 지연이 문제면 <code>n_estimators</code>를 줄이거나, 학습 후 <code>joblib</code>으로 모델을 저장/로드해서 재사용하자. 각 트리 예측이 독립적이므로 <code>n_jobs=-1</code>로 병렬 예측도 가능하다.
 </div>
 
 ---
@@ -464,7 +464,7 @@ Perm Top3: ['worst concave points', 'worst perimeter', 'mean concave points']
 
 랜덤 포레스트의 핵심은 **배깅 + 특성 무작위성**이다.
 
-- **특성 무작위성**: 각 노드에서 max_features개 특성만 후보로 선택. 트리 간 상관관계 ρ를 줄인다.
+- **특성 무작위성**: 각 노드에서 `max_features`개 특성만 후보로 선택. 트리 간 상관관계 ρ를 줄인다.
 - **분산 공식**: Var(T̄) = ρσ² + (1-ρ)σ²/B. ρ가 줄면 전체 분산이 줄어든다.
 - **OOB**: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정.
 - **특성 중요도**: 어떤 특성이 예측에 기여하는지 자동으로 알려준다.
@@ -476,12 +476,12 @@ Perm Top3: ['worst concave points', 'worst perimeter', 'mean concave points']
 <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
   <strong>📌 핵심 요약</strong><br><br>
   <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>랜덤 포레스트</strong>: 배깅 + 노드별 특성 서브샘플링(max_features). 트리 간 상관관계 ρ 감소 → Var(T̄) = ρσ² + (1-ρ)σ²/B 전체 감소</li>
-    <li><strong>max_features</strong>: 분류는 √p, 회귀는 p/3이 좋은 출발점. 작을수록 다양성↑, 개별 성능↓</li>
+    <li><strong>랜덤 포레스트</strong>: 배깅 + 노드별 특성 서브샘플링(<code>max_features</code>). 트리 간 상관관계 ρ 감소 → <code>Var(T̄) = ρσ² + (1-ρ)σ²/B</code> 전체 감소</li>
+    <li><strong><code>max_features</code></strong>: 분류는 √p, 회귀는 p/3이 좋은 출발점. 작을수록 다양성↑, 개별 성능↓</li>
     <li><strong>OOB Score</strong>: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정</li>
     <li><strong>특성 중요도</strong>: Gini 감소량 기반 (빠름, 편향 가능) vs Permutation Importance (신뢰성 높음)</li>
     <li><strong>스케일 불변</strong>: 트리 기반 모델은 특성 스케일링 불필요</li>
-    <li><strong>하이퍼파라미터</strong>: n_estimators=100~300, max_features='sqrt', OOB로 수렴 확인</li>
+    <li><strong>하이퍼파라미터</strong>: <code>n_estimators</code>=100~300, <code>max_features='sqrt'</code>, OOB로 수렴 확인</li>
   </ul>
 </div>
 

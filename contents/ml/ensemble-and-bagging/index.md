@@ -152,7 +152,7 @@ For b = 1 to B:
 
 ### 배깅이 분산을 줄이는 수학적 근거
 
-분산이 sigma^2이고 서로 **독립**인 B개의 트리 예측값 T_1, T_2, ..., T_B의 평균을 내면:
+분산이 sigma^2이고 서로 **독립**인 B개의 트리 예측값 `T_1`, `T_2`, ..., `T_B`의 평균을 내면:
 
 ```
 Var(T_bar) = Var((T_1 + T_2 + ... + T_B) / B) = sigma^2 / B
@@ -428,8 +428,8 @@ bagging_boot = BaggingClassifier(
 
 - **앙상블**: 독립적인 모델들의 오류가 서로 상쇄 -> 분산 감소. 오류 독립성이 핵심
 - **부트스트랩**: 복원 추출로 N개 샘플링. OOB 비율 ~= e^(-1) ~= 36.8%
-- **배깅**: Var(T_bar) = sigma^2/B (독립 가정). 트리 수 증가 -> 분산 감소
-- **상관관계 한계**: 실제로는 Var(T_bar) = rho * sigma^2 + (1 - rho) * sigma^2/B. B -> inf여도 rho * sigma^2가 남는다
+- **배깅**: `Var(T̄) = σ²/B` (독립 가정). 트리 수 증가 -> 분산 감소
+- **상관관계 한계**: 실제로는 `Var(T̄) = ρσ² + (1 - ρ)σ²/B`. B -> inf여도 `ρσ²`가 남는다
 
 배깅은 분산을 줄이는 강력한 도구이지만, 트리 간 상관관계라는 벽에 부딪힌다. 다음 글에서는 이 벽을 넘는 방법 — 각 노드에서 특성을 무작위로 선택하는 **랜덤 포레스트(Random Forest)** 를 다룬다.
 
@@ -438,8 +438,8 @@ bagging_boot = BaggingClassifier(
   <ul style="margin: 0; padding-left: 20px;">
     <li><strong>앙상블</strong>: 독립적인 모델들의 오류가 서로 상쇄 -> 분산 감소. 오류 독립성이 핵심</li>
     <li><strong>부트스트랩</strong>: 복원 추출로 N개 샘플링. OOB 확률 ~= e^(-1) ~= 36.8%</li>
-    <li><strong>배깅</strong>: Var(T_bar) = sigma^2/B (독립 가정). 트리 수 증가 -> 분산 감소</li>
-    <li><strong>상관관계 한계</strong>: Var(T_bar) = rho * sigma^2 + (1 - rho) * sigma^2/B. rho가 높으면 배깅 효과 제한</li>
+    <li><strong>배깅</strong>: <code>Var(T̄) = σ²/B</code> (독립 가정). 트리 수 증가 -> 분산 감소</li>
+    <li><strong>상관관계 한계</strong>: <code>Var(T̄) = ρσ² + (1 - ρ)σ²/B</code>. ρ가 높으면 배깅 효과 제한</li>
     <li><strong>OOB Score</strong>: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정</li>
     <li><strong>다음 단계</strong>: rho를 줄이기 위해 특성 무작위성을 추가한 랜덤 포레스트</li>
   </ul>
