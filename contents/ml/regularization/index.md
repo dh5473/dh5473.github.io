@@ -38,7 +38,7 @@ y = np.sin(2 * np.pi * x) + np.random.normal(0, 0.3, 20)
 핵심은 이거다. 모델이 복잡해지면(=파라미터가 많아지면) **훈련 데이터의 노이즈까지 학습**한다. 훈련 데이터에 대한 성능은 올라가지만, 본 적 없는 데이터에서 성능이 떨어진다.
 
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 편향-분산 트레이드오프(Bias-Variance Tradeoff) — [다음 글](/ml/bias-variance/)에서 자세히 다룬다</strong><br>
+  <strong>💡 편향-분산 트레이드오프(Bias-Variance Tradeoff) — [편향-분산 글](/ml/bias-variance/)에서 자세히 다룬다</strong><br>
   과소적합 = 높은 편향(Bias), 과적합 = 높은 분산(Variance). 모델 복잡도를 올리면 편향은 줄지만 분산이 커진다. 최적의 복잡도는 이 둘의 합이 최소인 지점이다. 규제는 <strong>분산을 줄이는 대가로 편향을 약간 올려서</strong> 전체 오차를 낮추는 전략이다.
 </div>
 
@@ -385,7 +385,7 @@ ridge_zero = Ridge(alpha=0)
 
 규제의 핵심은 "모델에게 겸손함을 강제하는 것"이다. 데이터를 완벽하게 맞추려는 욕심을 억제하고, 약간의 훈련 오차를 감수하는 대신 새 데이터에 대한 예측력을 지킨다. 여기까지가 선형 모델의 기본기 — [선형 회귀](/ml/linear-regression/)부터 [로지스틱 회귀](/ml/logistic-regression/)까지, 비용 함수, 경사하강법, Feature Scaling, 규제가 하나의 흐름으로 연결된다.
 
-다음 글에서는 과적합과 과소적합의 근본 원인을 수학적으로 분석한다. 모델의 에러를 **편향(Bias)** 과 **분산(Variance)** 으로 분해하면, 왜 규제가 효과적인지, 어떤 상황에서 모델을 복잡하게 만들어야 하고 어떤 상황에서 단순하게 만들어야 하는지가 명확해진다.
+여기까지가 선형 모델의 기본기다. 선형 회귀, 로지스틱 회귀, 그리고 과적합을 막는 규제까지. 다음 글에서는 로지스틱 회귀 외에 다른 분류 접근법을 만나본다 — 확률로 분류하는 [나이브 베이즈(Naive Bayes)](/ml/naive-bayes/)다.
 
 ## 참고자료
 

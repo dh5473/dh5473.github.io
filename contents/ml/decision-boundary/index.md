@@ -23,7 +23,7 @@ thumbnail: './thumbnail.png'
 h(x) = σ(w₁x₁ + w₂x₂ + b)
 ```
 
-[비용 함수 글](/ml/cost-function/)에서 배운 것처럼, σ(z) = 0.5가 되는 지점은 z = 0일 때다. 즉:
+[이전 글](/ml/logistic-regression/)에서 배운 것처럼, σ(z) = 0.5가 되는 지점은 z = 0일 때다. 즉:
 
 ```
 w₁x₁ + w₂x₂ + b = 0
