@@ -5,7 +5,7 @@ category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 14
 tags: ['Boosting', '부스팅', 'AdaBoost', 'Gradient Boosting', '앙상블', '머신러닝 기초']
-summary: '배깅과 달리 순차적으로 이전 모델의 오류를 보완하는 부스팅의 원리를 AdaBoost와 Gradient Boosting으로 이해한다. XGBoost와 LightGBM의 차이까지.'
+summary: '배깅과 달리 순차적으로 이전 모델의 오류를 보완하는 부스팅의 원리를 AdaBoost와 Gradient Boosting으로 이해한다.'
 thumbnail: './thumbnail.png'
 ---
 
@@ -568,7 +568,7 @@ gb = GradientBoostingClassifier(n_estimators=100, max_depth=3)
 - **배깅/랜덤 포레스트**: 분산을 낮춰 안정적이고 빠름. 노이즈에 강함.
 - **부스팅**: 편향을 낮춰 정확도를 끌어올림. 정형 데이터 대회의 왕자.
 
-**다음은 모델 평가와 지표**다. 정확도(Accuracy) 하나로 모델을 판단하는 것의 함정, Precision/Recall/F1/AUC-ROC가 어떻게 다른 상황에서 다른 인사이트를 주는지 알아본다. 어떤 모델을 만들든, 결국 "이 모델이 정말 잘하는가"를 제대로 평가하는 능력이 가장 중요하다.
+**다음은 실전 부스팅 모델**이다. sklearn의 GradientBoosting은 느리다는 한계가 있었다. [XGBoost와 LightGBM](/ml/xgboost-vs-lightgbm/)이 이 문제를 어떻게 해결했는지, 그리고 언제 어떤 모델을 골라야 하는지를 비교한다.
 
 <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
   <strong>📌 핵심 요약</strong><br><br>
