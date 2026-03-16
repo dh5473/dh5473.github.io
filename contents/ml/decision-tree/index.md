@@ -1,9 +1,9 @@
 ---
-date: '2026-03-16'
+date: '2026-03-19'
 title: '결정 트리(Decision Tree): 데이터를 질문으로 쪼개는 알고리즘'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 11
+seriesOrder: 14
 tags: ['Decision Tree', '결정 트리', 'Gini Impurity', 'Information Gain', '머신러닝 기초']
 summary: '결정 트리가 데이터를 어떻게 질문으로 쪼개는지, 분할 기준(Gini, 정보 이득)부터 과적합 제어(max_depth, min_samples)까지 시각화와 코드로 완전히 이해한다.'
 thumbnail: './thumbnail.png'

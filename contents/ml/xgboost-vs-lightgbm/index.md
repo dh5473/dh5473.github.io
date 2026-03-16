@@ -1,9 +1,9 @@
 ---
-date: '2026-03-20'
+date: '2026-03-23'
 title: 'XGBoost vs LightGBM: 실전 부스팅 모델, 어떤 걸 써야 할까'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 15
+seriesOrder: 18
 tags: ['XGBoost', 'LightGBM', 'CatBoost', 'Gradient Boosting', '부스팅', '머신러닝']
 summary: 'XGBoost의 정규화와 분할 알고리즘, LightGBM의 Leaf-wise 성장과 GOSS/EFB를 비교한다. CatBoost까지 포함한 실전 선택 기준.'
 thumbnail: './thumbnail.png'

@@ -1,9 +1,9 @@
 ---
-date: '2026-03-18'
+date: '2026-03-21'
 title: '랜덤 포레스트(Random Forest): 특성 무작위성으로 상관관계를 깨다'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 13
+seriesOrder: 16
 tags: ['Random Forest', '랜덤 포레스트', 'Feature Importance', 'max_features', '머신러닝 기초']
 summary: '배깅의 트리 간 상관관계 한계를 특성 무작위성(max_features)으로 해결하는 랜덤 포레스트의 원리를 수학과 코드로 이해한다.'
 thumbnail: './thumbnail.png'

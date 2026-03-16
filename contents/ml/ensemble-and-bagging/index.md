@@ -1,9 +1,9 @@
 ---
-date: '2026-03-17'
+date: '2026-03-20'
 title: '앙상블 학습과 배깅(Bagging): 약한 모델을 강하게 만드는 법'
 category: 'Machine Learning'
 series: 'ml'
-seriesOrder: 12
+seriesOrder: 15
 tags: ['Ensemble Learning', '앙상블', 'Bagging', 'Bootstrap', '머신러닝 기초']
 summary: '앙상블의 원리(다수결과 오류 독립성), 부트스트랩 샘플링, 배깅이 분산을 줄이는 수학적 근거를 코드와 함께 이해한다.'
 thumbnail: './thumbnail.png'
