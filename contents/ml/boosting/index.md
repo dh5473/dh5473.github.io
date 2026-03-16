@@ -224,7 +224,7 @@ F1(x) = [190. 195. 200. 205. 210.]
 
 ![Gradient Boosting 이터레이션에 따른 MSE](./boosting-iterations.png)
 
-초반에는 훈련 MSE와 검증 MSE가 함께 빠르게 감소한다. 어느 지점부터 검증 MSE는 더 이상 감소하지 않거나 오히려 올라가기 시작한다 — 과적합의 시작이다. **조기 종료(Early Stopping)**는 검증 손실이 증가하기 시작하는 지점에서 학습을 멈추는 전략이다.
+초반에는 훈련 MSE와 검증 MSE가 함께 빠르게 감소한다. 어느 지점부터 검증 MSE는 더 이상 감소하지 않거나 오히려 올라가기 시작한다 — 과적합의 시작이다. **조기 종료(Early Stopping)** 는 검증 손실이 증가하기 시작하는 지점에서 학습을 멈추는 전략이다.
 
 ### sklearn GradientBoostingClassifier
 
