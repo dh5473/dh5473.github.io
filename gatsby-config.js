@@ -188,7 +188,61 @@ module.exports = {
     {
       resolve: 'gatsby-plugin-robots-txt',
       options: {
+        host: 'https://donmain.dev',
+        sitemap: 'https://donmain.dev/sitemap-index.xml',
         policy: [{ userAgent: '*', allow: '/' }],
+      },
+    },
+
+    // RSS Feed
+    {
+      resolve: 'gatsby-plugin-feed',
+      options: {
+        query: `
+          {
+            site {
+              siteMetadata {
+                title
+                description
+                siteUrl
+              }
+            }
+          }
+        `,
+        feeds: [
+          {
+            serialize: ({ query: { site, allMarkdownRemark } }) => {
+              return allMarkdownRemark.nodes.map(node => ({
+                title: node.frontmatter.title,
+                description: node.frontmatter.summary,
+                date: node.frontmatter.date,
+                url: site.siteMetadata.siteUrl + node.fields.slug,
+                guid: site.siteMetadata.siteUrl + node.fields.slug,
+                categories: [node.frontmatter.category],
+              }))
+            },
+            query: `
+              {
+                allMarkdownRemark(
+                  sort: { frontmatter: { date: DESC } }
+                ) {
+                  nodes {
+                    fields { slug }
+                    frontmatter {
+                      title
+                      date
+                      summary
+                      category
+                    }
+                  }
+                }
+              }
+            `,
+            output: '/rss.xml',
+            title: 'dontech RSS Feed',
+            language: 'ko',
+          },
+        ],
       },
     },
   ],
