@@ -360,7 +360,11 @@ const HeroCarousel: FunctionComponent<HeroCarouselProps> = function ({ posts }) 
           return (
             <SlideImage key={node.id} active={index === activeIndex} gradient={gradient}>
               {gatsbyImageData && (
-                <ThumbnailImage image={gatsbyImageData} alt={frontmatter.title} />
+                <ThumbnailImage
+                  image={gatsbyImageData}
+                  alt={frontmatter.title}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
               )}
             </SlideImage>
           )
