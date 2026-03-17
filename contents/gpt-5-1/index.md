@@ -120,7 +120,7 @@ Responses API의 주요 장점은 다음과 같습니다.
 
 <br>
 
-![image.png](./chat-completions-and-responses.png)
+![Chat Completions API와 Responses API 비교](./chat-completions-and-responses.png)
 
 <br>
 

@@ -7,10 +7,13 @@ type StructuredDataProps = {
   description: string
   url: string
   image: string
+  siteUrl: string
   author?: string
   datePublished?: string
   dateModified?: string
   category?: string
+  wordCount?: number
+  keywords?: string[]
 }
 
 const StructuredData: FunctionComponent<StructuredDataProps> = function ({
@@ -19,17 +22,23 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
   description,
   url,
   image,
+  siteUrl,
   author = 'Donhyeok',
   datePublished,
   dateModified,
   category,
+  wordCount,
+  keywords,
 }) {
+  const baseUrl = siteUrl.replace(/\/$/, '')
+
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: "dontech",
+    name: 'dontech',
     description: 'Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그',
-    url: 'https://dh5473.github.io/',
+    url: `${baseUrl}/`,
+    inLanguage: 'ko',
     author: {
       '@type': 'Person',
       name: 'Donhyeok',
@@ -42,11 +51,12 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
 
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: title,
     description: description,
     image: image,
     url: url,
+    inLanguage: 'ko',
     datePublished: datePublished,
     dateModified: dateModified || datePublished,
     author: {
@@ -62,6 +72,8 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
       '@id': url,
     },
     articleSection: category,
+    ...(wordCount ? { wordCount } : {}),
+    ...(keywords && keywords.length > 0 ? { keywords: keywords.join(', ') } : {}),
   }
 
   const breadcrumbSchema = {
@@ -72,7 +84,7 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://dh5473.github.io/',
+        item: `${baseUrl}/`,
       },
       ...(type === 'article' && category
         ? [
@@ -80,7 +92,7 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
               '@type': 'ListItem',
               position: 2,
               name: category,
-              item: `https://dh5473.github.io/?category=${category}`,
+              item: `${baseUrl}/?category=${category}`,
             },
             {
               '@type': 'ListItem',

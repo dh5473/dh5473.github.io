@@ -22,6 +22,9 @@ type PostTemplateProps = {
       edges: {
         node: {
           html: string
+          wordCount: {
+            words: number
+          }
           fields: {
             slug: string
           }
@@ -67,6 +70,7 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       html,
       fields: { slug },
       frontmatter: { title, summary, date, rawDate, category, thumbnail },
+      wordCount: { words },
     },
   } = edges[0]
 
@@ -94,9 +98,11 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       description={summary}
       url={pageUrl}
       image={absoluteImage}
+      siteUrl={siteUrl}
       type="article"
       datePublished={rawDate}
       category={category}
+      wordCount={words}
     >
       <PostHead
         title={title}
@@ -144,6 +150,9 @@ export const queryMarkdownDataBySlug = graphql`
       edges {
         node {
           html
+          wordCount {
+            words
+          }
           fields {
             slug
           }

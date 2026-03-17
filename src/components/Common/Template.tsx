@@ -10,12 +10,15 @@ type TemplateProps = {
   description: string
   url: string
   image: string
+  siteUrl: string
   children: ReactNode
   type?: 'website' | 'article'
   author?: string
   datePublished?: string
   dateModified?: string
   category?: string
+  wordCount?: number
+  keywords?: string[]
 }
 
 const Container = styled.main`
@@ -29,12 +32,15 @@ const Template: FunctionComponent<TemplateProps> = function ({
   description,
   url,
   image,
+  siteUrl,
   children,
   type = 'website',
   author = 'Donhyeok',
   datePublished,
   dateModified,
   category,
+  wordCount,
+  keywords,
 }) {
   return (
     <Container>
@@ -54,6 +60,7 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta property="og:image" content={image} />
         <meta property="og:url" content={url} />
         <meta property="og:site_name" content="dontech" />
+        <meta property="og:locale" content="ko_KR" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
@@ -79,10 +86,13 @@ const Template: FunctionComponent<TemplateProps> = function ({
         description={description}
         url={url}
         image={image}
+        siteUrl={siteUrl}
         author={author}
         datePublished={datePublished}
         dateModified={dateModified}
         category={category}
+        wordCount={wordCount}
+        keywords={keywords}
       />
 
       <GlobalStyle />

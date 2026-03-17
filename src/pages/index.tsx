@@ -384,6 +384,7 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       description={description}
       url={siteUrl}
       image={`${siteUrl.replace(/\/$/, '')}/hero-image.jpg`}
+      siteUrl={siteUrl}
     >
       <Container>
         <Header>
