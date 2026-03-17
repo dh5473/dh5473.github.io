@@ -241,6 +241,7 @@ module.exports = {
             output: '/rss.xml',
             title: 'dontech RSS Feed',
             language: 'ko',
+            site_url: 'https://donmain.dev/',
           },
         ],
       },
