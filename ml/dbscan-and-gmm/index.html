@@ -1,0 +1,514 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="K-Means의 한계를 극복하는 두 가지 접근법. DBSCAN의 밀도 기반 클러스터링과 GMM의 확률적 소프트 클러스터링을 비교한다."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech"/><meta data-react-helmet="true" property="og:description" content="K-Means의 한계를 극복하는 두 가지 접근법. DBSCAN의 밀도 기반 클러스터링과 GMM의 확률적 소프트 클러스터링을 비교한다."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/79ebf68a3f3f559a07d893d7f4995ffa/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/dbscan-and-gmm/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" property="og:locale" content="ko_KR"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="K-Means의 한계를 극복하는 두 가지 접근법. DBSCAN의 밀도 기반 클러스터링과 GMM의 확률적 소프트 클러스터링을 비교한다."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/79ebf68a3f3f559a07d893d7f4995ffa/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://donmain.dev/","inLanguage":"ko","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech","description":"K-Means의 한계를 극복하는 두 가지 접근법. DBSCAN의 밀도 기반 클러스터링과 GMM의 확률적 소프트 클러스터링을 비교한다.","image":"https://donmain.dev/static/79ebf68a3f3f559a07d893d7f4995ffa/thumbnail.png","url":"https://donmain.dev/ml/dbscan-and-gmm/","inLanguage":"ko","datePublished":"2026-02-07","dateModified":"2026-02-07","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/dbscan-and-gmm/"},"articleSection":"Machine Learning","wordCount":1405}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://donmain.dev/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://donmain.dev/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교 | dontech","item":"https://donmain.dev/ml/dbscan-and-gmm/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/dbscan-and-gmm/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="dontech RSS Feed" href="/rss.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" media="print"/><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" media="print"/><noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/></noscript><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:1185px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;669&#x27;%20width=&#x27;1185&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAABcSAAAXEgFnn9JSAAABn0lEQVR42nVT2W7bMBDU/39KfiOPLYI2Vt0DTewYSWxZ1kGK9zVdUgmqyukCC4nUzuzsoQpvlrKnBG0MrLXw3qFpzuCMYxxHnE4n9H1f3HsP5zzFOaytWh5CjGBEkD2bMgID6wp4bZOQEFLNYtKK0BPRy8RRXxr0RtM5lI+MN3jc/YQUCutK1vZ+VQifOcPX8wmv04RNe8bjOOAjSwtgJlU8kid4+zdBpakfezYiUkAKtpT97XLGRckSEB09vVpQAo0UaIRA+xzw/dbiUHuIIc6EZyXwRApzas/3BdQqVVpQ+qo7JNOX95zk5keNm19b9GKCGzX2Xxx+f3LgbUQMCdWODUQwq/FsR3w0wRBJwTQrlEfAcuT8ddvg9uWAPgvoOsTjK4I0MAQPblZf5V6kFEsxkT8hTYcC7rVGig6x35aS8517G1aSEu7+Hn6zQaSVWk7ln7VJGUgEwQyIXiIOWwIfV9NMCDQ8//AAd3eHpNT/9zAnSY4hdDVi+5mCG3y0H1lhYuyK7IrQOgetDTmVpNn7olyBbPlLLAx5xiwJ/wDuslloQaRutwAAAABJRU5ErkJggg==" alt=""/><picture><source type="image/avif" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/ec5ff/thumbnail.avif 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/2860b/thumbnail.avif 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/0e4d4/thumbnail.avif 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><source type="image/webp" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/2b771/thumbnail.webp 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/2acb9/thumbnail.webp 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/24a34/thumbnail.webp 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1185px) 1185px, 100vw" decoding="async" loading="eager" src="/static/79ebf68a3f3f559a07d893d7f4995ffa/099a4/thumbnail.png" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/62282/thumbnail.png 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/f585f/thumbnail.png 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/099a4/thumbnail.png 1185w" alt="DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교"/></picture><noscript><picture><source type="image/avif" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/ec5ff/thumbnail.avif 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/2860b/thumbnail.avif 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/0e4d4/thumbnail.avif 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><source type="image/webp" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/2b771/thumbnail.webp 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/2acb9/thumbnail.webp 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/24a34/thumbnail.webp 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1185px) 1185px, 100vw" decoding="async" loading="eager" src="/static/79ebf68a3f3f559a07d893d7f4995ffa/099a4/thumbnail.png" srcSet="/static/79ebf68a3f3f559a07d893d7f4995ffa/62282/thumbnail.png 750w,/static/79ebf68a3f3f559a07d893d7f4995ffa/f585f/thumbnail.png 1080w,/static/79ebf68a3f3f559a07d893d7f4995ffa/099a4/thumbnail.png 1185w" alt="DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.02.07.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">36</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/anomaly-detection/">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">37</span><a class="css-dizrmv e4kcwtw5" href="/ml/pca/">PCA(주성분 분석): 차원 축소의 수학적 원리와 실전 활용</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">38</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">39</span><a class="css-dizrmv e4kcwtw5" href="/ml/tsne-and-umap/">t-SNE와 UMAP: 고차원 데이터 시각화 기법 비교</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">8<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><style data-emotion="css qht250">.css-qht250{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:11px;cursor:default;opacity:0.35;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-qht250:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button disabled="" class="css-qht250 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/pca/">이전 글</a>에서 PCA를 통해 고차원 데이터를 저차원으로 압축하는 방법을 배웠다. 차원 축소는 데이터를 시각화하거나, 모델에 넣기 전 전처리 단계로 유용했다. 하지만 차원을 줄인 뒤에도 풀어야 할 근본 문제가 남아 있다 — <strong>레이블 없는 데이터에서 구조를 발견하는 것</strong>, 즉 클러스터링이다.</p>
+<p><a href="/ml/kmeans-clustering/">K-Means</a>는 클러스터링의 대표 알고리즘이다. 직관적이고 빠르다. 하지만 치명적인 한계가 셋 있다.</p>
+<ul>
+<li><strong>구형(spherical) 클러스터만</strong> 잘 잡는다. 초승달, 고리 같은 비구형 형태에는 맥을 못 춘다</li>
+<li><strong>K를 미리 정해야</strong> 한다. 클러스터가 몇 개인지 모르면 시작조차 할 수 없다</li>
+<li><strong>노이즈에 취약</strong>하다. 모든 점을 반드시 어딘가에 할당하기 때문에, 이상치가 중심점을 왜곡한다</li>
+</ul>
+<p>이 글에서 다루는 두 알고리즘은 각각 다른 방식으로 이 한계를 돌파한다. <strong>DBSCAN</strong>은 밀도를 기준으로 클러스터를 찾아서 비구형 형태와 노이즈를 동시에 처리한다. **GMM(Gaussian Mixture Model)**은 확률 분포를 기반으로 소프트 할당을 수행해서, 타원형 클러스터와 중첩된 구조를 포착한다.</p>
+<hr>
+<h2>DBSCAN: 밀도 기반 클러스터링</h2>
+<h3>핵심 아이디어</h3>
+<p>DBSCAN(Density-Based Spatial Clustering of Applications with Noise)은 이름 그대로 <strong>밀도</strong>가 높은 영역을 클러스터로 잡는다. K-Means가 “중심과의 거리”로 사고하는 반면, DBSCAN은 “이 근처에 점이 충분히 모여 있느냐”로 사고한다.</p>
+<p>이 발상의 핵심에 두 개의 파라미터가 있다.</p>
+<ul>
+<li><strong>eps (epsilon)</strong>: 이웃으로 간주할 반경. 한 점에서 eps 이내에 있는 점들이 이웃이다</li>
+<li><strong>min_samples</strong>: 핵심 점(core point)이 되려면 eps 반경 안에 최소 몇 개의 점이 있어야 하는지</li>
+</ul>
+<p>이 두 파라미터로 데이터의 모든 점을 세 가지로 분류한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">[Core Point]     eps 반경 안에 min_samples 이상의 이웃이 있는 점
+                 → 밀도가 높은 영역의 중심. 클러스터의 핵심이다
+
+[Border Point]   스스로는 core point가 아니지만,
+                 어떤 core point의 eps 반경 안에 포함된 점
+                 → 클러스터 가장자리에 속한다
+
+[Noise Point]    어떤 core point의 eps 반경에도 포함되지 않는 점
+                 → 어디에도 속하지 않는 이상치. -1로 레이블된다</code></pre></div>
+<p>예를 들어 min_samples=4이고 eps=1.0이라면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">eps=1.0, min_samples=4
+
+        ●   ●
+     ●  ★  ●        ○         ·
+        ●
+                   ○   ○
+
+★ = Core point (반경 안에 점이 5개 → ≥ 4)
+● = Border point (core point의 이웃이지만, 자신의 이웃은 4개 미만)
+○ = Border point (근처 core point가 있다면)
+·  = Noise point (어떤 core point의 반경에도 포함 안 됨)</code></pre></div>
+<p>K-Means에서는 이 noise point(·)도 억지로 가장 가까운 클러스터에 밀어넣었을 것이다. DBSCAN은 “이건 어디에도 안 속한다”고 솔직하게 말한다. <a href="/ml/anomaly-detection/">이상 탐지</a>에서 다뤘던 이상치 검출과 자연스럽게 연결되는 지점이다.</p>
+<hr>
+<h3>DBSCAN 알고리즘 단계별 동작</h3>
+<p>알고리즘의 흐름을 한 단계씩 따라가보자.</p>
+<p><strong>Step 1: 모든 점의 이웃 탐색</strong></p>
+<p>각 데이터 포인트에 대해 eps 반경 내의 이웃 수를 센다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 의사코드</span>
+<span class="token keyword">for</span> each point p <span class="token keyword">in</span> dataset<span class="token punctuation">:</span>
+    neighbors<span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token punctuation">{</span>q <span class="token keyword">in</span> dataset <span class="token operator">|</span> distance<span class="token punctuation">(</span>p<span class="token punctuation">,</span> q<span class="token punctuation">)</span> <span class="token operator">&lt;=</span> eps<span class="token punctuation">}</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>neighbors<span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">>=</span> min_samples<span class="token punctuation">:</span>
+        mark p <span class="token keyword">as</span> CORE</code></pre></div>
+<p><strong>Step 2: 클러스터 확장</strong></p>
+<p>방문하지 않은 core point를 하나 고른다. 이 점을 시작으로 클러스터를 확장한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">1. 미방문 core point p를 고른다 → 새 클러스터 C 시작
+2. p의 eps-이웃을 모두 C에 넣는다
+3. 이웃 중 core point가 있으면, 그 점의 이웃도 C에 추가 (재귀적 확장)
+4. 더 이상 확장할 core point가 없으면 C 완성
+5. 아직 미방문 core point가 남아 있으면 1로 돌아간다</code></pre></div>
+<p>핵심은 <strong>3번</strong>이다. Core point끼리 eps 반경이 서로 겹치면 같은 클러스터로 연결된다. 이 연쇄 반응 덕분에 비구형 클러스터도 따라갈 수 있다. K-Means는 중심에서 뻗어나가는 원형으로만 확장하지만, DBSCAN은 밀도가 연결되는 방향이면 어디든 따라간다.</p>
+<p><strong>Step 3: 노이즈 처리</strong></p>
+<p>모든 core point의 클러스터 확장이 끝난 뒤, 어떤 클러스터에도 포함되지 않은 점은 noise(-1)로 표시한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">시간 복잡도:
+- 일반: O(n²) — 모든 점 쌍의 거리를 계산
+- KD-tree/Ball-tree 사용 시: O(n log n) — sklearn은 자동으로 적절한 자료구조 선택</code></pre></div>
+<hr>
+<h3>eps 선택: k-distance 그래프</h3>
+<p>DBSCAN의 가장 까다로운 부분은 eps 설정이다. 너무 작으면 대부분의 점이 noise가 되고, 너무 크면 모든 점이 하나의 거대 클러스터로 합쳐진다. 실전에서 가장 널리 쓰이는 방법이 <strong>k-distance 그래프</strong>다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> NearestNeighbors
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+<span class="token comment"># k = min_samples로 설정 (보통 min_samples = 2 * n_features)</span>
+k <span class="token operator">=</span> <span class="token number">4</span>
+nn <span class="token operator">=</span> NearestNeighbors<span class="token punctuation">(</span>n_neighbors<span class="token operator">=</span>k<span class="token punctuation">)</span>
+nn<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+distances<span class="token punctuation">,</span> _ <span class="token operator">=</span> nn<span class="token punctuation">.</span>kneighbors<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># k번째 이웃까지의 거리를 오름차순 정렬</span>
+k_distances <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>distances<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>figure<span class="token punctuation">(</span>figsize<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span>k_distances<span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'Points (sorted)'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>ylabel<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'</span><span class="token interpolation"><span class="token punctuation">{</span>k<span class="token punctuation">}</span></span><span class="token string">-distance'</span></span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'k-distance Graph'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>axhline<span class="token punctuation">(</span>y<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">,</span> color<span class="token operator">=</span><span class="token string">'r'</span><span class="token punctuation">,</span> linestyle<span class="token operator">=</span><span class="token string">'--'</span><span class="token punctuation">,</span> label<span class="token operator">=</span><span class="token string">'eps 후보'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>legend<span class="token punctuation">(</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
+<p>그래프에서 <strong>기울기가 급격히 변하는 “엘보(elbow)” 지점</strong>의 y값이 eps 후보다. 이 지점 아래의 점들은 밀도가 높은 영역(클러스터 내부), 위의 점들은 밀도가 낮은 영역(노이즈)이다.</p>
+<p><code class="language-text">min_samples</code> 선택의 경험적 규칙은 이렇다:</p>
+<ul>
+<li>최소값: <code class="language-text">min_samples >= n_features + 1</code></li>
+<li>경험적 기본값: <code class="language-text">min_samples = 2 * n_features</code></li>
+<li>노이즈가 많은 데이터: min_samples를 높인다</li>
+<li>2D 데이터 시작점: <code class="language-text">min_samples = 4</code></li>
+</ul>
+<hr>
+<h3>DBSCAN의 강점</h3>
+<p><strong>1. 비구형 클러스터 발견</strong></p>
+<p>K-Means가 절대 못 푸는 문제를 DBSCAN은 자연스럽게 해결한다. 초승달, 동심원, 불규칙 형태 — 밀도가 연결되어 있기만 하면 형태에 관계없이 클러스터로 잡는다.</p>
+<p><strong>2. K를 미리 정할 필요 없음</strong></p>
+<p>클러스터 수를 자동으로 결정한다. eps와 min_samples만 정하면 밀도 구조에서 클러스터가 자연스럽게 드러난다.</p>
+<p><strong>3. 노이즈를 명시적으로 처리</strong></p>
+<p>이상치를 억지로 클러스터에 밀어넣지 않고 noise로 분리한다. 이상 탐지와 클러스터링을 동시에 수행하는 셈이다.</p>
+<hr>
+<h3>DBSCAN의 한계: 밀도 편차 문제</h3>
+<p>DBSCAN에도 약점이 있다. 가장 큰 문제는 <strong>밀도가 균일하지 않은 데이터</strong>에서 발생한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">클러스터 A (고밀도)          클러스터 B (저밀도)
+
+  ● ● ● ● ●                ○       ○
+  ● ● ● ● ●
+  ● ● ● ● ●                    ○
+  ● ● ● ● ●                ○       ○
+  ● ● ● ● ●</code></pre></div>
+<p>A에 맞게 eps를 작게 설정하면, B의 점들은 서로 너무 멀어서 noise로 분류된다. B에 맞게 eps를 크게 설정하면, A와 B가 하나의 클러스터로 합쳐지거나, A 내부의 세밀한 구조를 놓친다. <strong>하나의 eps로 모든 밀도 수준을 포착할 수 없다</strong>는 근본적 한계다.</p>
+<p>그 외 한계:</p>
+<ul>
+<li><strong>고차원 데이터에 취약</strong>: 차원이 높아지면 거리 개념이 무의미해진다 — <a href="/ml/knn/">KNN</a>에서 다뤘던 “차원의 저주”와 같은 문제다</li>
+<li><strong>eps 민감도</strong>: eps를 약간만 바꿔도 결과가 크게 달라질 수 있다</li>
+</ul>
+<hr>
+<h3>HDBSCAN: 밀도 편차 극복</h3>
+<p>DBSCAN의 밀도 편차 문제를 해결하려는 확장이 **HDBSCAN(Hierarchical DBSCAN)**이다. 핵심 아이디어는 고정된 eps 대신, <strong>여러 eps 수준에서 DBSCAN을 실행하고 가장 안정적인 클러스터를 추출</strong>하는 것이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> hdbscan
+
+clusterer <span class="token operator">=</span> hdbscan<span class="token punctuation">.</span>HDBSCAN<span class="token punctuation">(</span>min_cluster_size<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">,</span> min_samples<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+labels <span class="token operator">=</span> clusterer<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># 각 클러스터 할당에 대한 확신도(probability)도 제공</span>
+probabilities <span class="token operator">=</span> clusterer<span class="token punctuation">.</span>probabilities_</code></pre></div>
+<p>HDBSCAN은 eps를 설정할 필요가 없고, <code class="language-text">min_cluster_size</code> 하나만 정하면 된다. 밀도가 다른 클러스터를 동시에 잘 잡아내며, 최근에는 <code class="language-text">sklearn.cluster.HDBSCAN</code>으로 sklearn에도 통합되었다. 밀도 기반 클러스터링을 실전에서 쓴다면 DBSCAN보다 HDBSCAN을 먼저 고려하는 것이 좋다.</p>
+<hr>
+<h2>GMM: 확률 기반 소프트 클러스터링</h2>
+<h3>하드 vs 소프트 할당</h3>
+<p>DBSCAN과 K-Means는 <strong>하드 클러스터링(hard clustering)</strong> 이다. 각 데이터 포인트는 정확히 하나의 클러스터에 속한다. 0 아니면 1이다.</p>
+<p>하지만 현실 데이터에서는 경계가 모호한 경우가 많다. 고객 세분화를 생각해보자. 한 고객이 “프리미엄 고객” 성향 60%, “일반 고객” 성향 40%일 수 있다. 하드 클러스터링은 이 고객을 프리미엄에 넣거나 일반에 넣거나 둘 중 하나를 강제한다. 미묘한 차이를 날려버리는 것이다.</p>
+<p>**GMM(Gaussian Mixture Model)**은 각 데이터 포인트가 <strong>각 클러스터에 속할 확률</strong>을 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K-Means (하드 할당)          GMM (소프트 할당)
+──────────────────           ──────────────────
+점 A → 클러스터 1              점 A → 클러스터 1: 0.92, 클러스터 2: 0.08
+점 B → 클러스터 2              점 B → 클러스터 1: 0.15, 클러스터 2: 0.85
+점 C → 클러스터 1              점 C → 클러스터 1: 0.51, 클러스터 2: 0.49  ← 경계 위의 점</code></pre></div>
+<p>점 C처럼 클러스터 경계에 있는 데이터를 0.51 대 0.49로 표현할 수 있다. 이 확률 정보가 이후 의사결정에서 큰 차이를 만든다.</p>
+<hr>
+<h3>GMM의 수학적 직관</h3>
+<p>GMM은 데이터가 <strong>여러 개의 가우시안(정규) 분포가 혼합되어 생성되었다</strong>고 가정한다. <a href="/ml/naive-bayes/">나이브 베이즈</a>에서 Gaussian NB가 각 클래스의 데이터를 가우시안으로 모델링했던 것과 비슷하지만, GMM은 <strong>레이블 없이</strong> 이 가우시안들을 찾아낸다.</p>
+<p>각 가우시안 컴포넌트 k는 세 가지 파라미터로 정의된다:</p>
+<ul>
+<li><strong>평균 (mu_k)</strong>: 분포의 중심 위치</li>
+<li><strong>공분산 행렬 (Sigma_k)</strong>: 분포의 형태와 방향. 타원의 기울기와 폭을 결정한다</li>
+<li><strong>혼합 가중치 (pi_k)</strong>: 전체 데이터에서 이 컴포넌트가 차지하는 비율. 모든 pi_k의 합은 1</li>
+</ul>
+<p>K-Means의 각 클러스터가 “중심점”만 가지는 것과 대비된다. GMM의 각 컴포넌트는 중심(평균)뿐 아니라 **퍼짐과 방향(공분산)**까지 가지기 때문에, 구형이 아닌 타원형 클러스터도 자연스럽게 표현한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K-Means 클러스터:             GMM 컴포넌트:
+원형만 가능                    타원형도 가능
+
+    ● ● ●                      ●  ●
+   ● ● ● ●                   ●  ●  ●  ●
+  ● ● ★ ● ●                ●  ●  ★  ●  ●
+   ● ● ● ●                   ●  ●  ●
+    ● ● ●                       ●  ●
+
+  (★ = 중심)                 (★ = 평균, 타원 = 공분산)</code></pre></div>
+<hr>
+<h3>EM 알고리즘: E-step과 M-step</h3>
+<p>GMM의 파라미터(각 컴포넌트의 평균, 공분산, 혼합 가중치)를 어떻게 학습할까? 정답은 <strong>EM(Expectation-Maximization) 알고리즘</strong>이다.</p>
+<p>EM은 직관적으로 이런 닭과 달걀 문제를 해결한다:</p>
+<ul>
+<li>각 점이 어느 컴포넌트에서 나왔는지 알면 → 각 컴포넌트의 파라미터를 추정할 수 있다</li>
+<li>각 컴포넌트의 파라미터를 알면 → 각 점이 어느 컴포넌트에서 나왔는지 추정할 수 있다</li>
+</ul>
+<p>둘 다 모르는 상태에서 시작해, 번갈아 추정하며 점진적으로 수렴한다.</p>
+<p><strong>E-step (Expectation, 기대):</strong></p>
+<p>현재 파라미터로 각 데이터 포인트가 각 컴포넌트에 속할 **사후 확률(responsibility)**을 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">r(i, k) = pi_k * N(x_i | mu_k, Sigma_k) / sum_j(pi_j * N(x_i | mu_j, Sigma_j))</code></pre></div>
+<p>N(x | mu, Sigma)는 가우시안 확률밀도함수다. 결과적으로 각 점 x_i에 대해 K개 컴포넌트의 확률 벡터가 나온다 (합 = 1).</p>
+<p><strong>M-step (Maximization, 최대화):</strong></p>
+<p>E-step에서 계산한 responsibility를 가중치로 사용해 각 컴포넌트의 파라미터를 업데이트한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># N_k = 컴포넌트 k에 할당된 데이터의 가중합
+N_k = sum_i(r(i, k))
+
+# 새 평균: responsibility로 가중 평균
+mu_k = sum_i(r(i, k) * x_i) / N_k
+
+# 새 공분산: responsibility로 가중된 편차 행렬
+Sigma_k = sum_i(r(i, k) * (x_i - mu_k)(x_i - mu_k)^T) / N_k
+
+# 새 혼합 가중치
+pi_k = N_k / n</code></pre></div>
+<p>K-Means와 비교하면 구조가 놀라울 정도로 비슷하다:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K-Means                         GMM (EM)
+───────                         ────────
+Assignment: 가장 가까운 중심    E-step: 각 컴포넌트 확률 계산
+→ 0 또는 1 (하드)               → 0~1 사이의 실수 (소프트)
+
+Update: 할당된 점의 평균        M-step: 가중 평균·공분산 업데이트
+→ 중심만 이동                   → 평균 + 공분산 + 가중치 모두 업데이트</code></pre></div>
+<p>사실 K-Means는 <strong>모든 공분산이 동일한 단위행렬이고, responsibility가 0/1인 GMM의 특수 케이스</strong>다. GMM이 더 일반적인 프레임워크인 것이다.</p>
+<hr>
+<h3>GMM vs K-Means: 핵심 차이</h3>
+<table>
+<thead>
+<tr>
+<th>기준</th>
+<th>K-Means</th>
+<th>GMM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>할당 방식</td>
+<td>하드 (0 or 1)</td>
+<td>소프트 (확률)</td>
+</tr>
+<tr>
+<td>클러스터 형태</td>
+<td>구형(spherical)</td>
+<td>타원형(elliptical)</td>
+</tr>
+<tr>
+<td>파라미터</td>
+<td>중심점만</td>
+<td>평균 + 공분산 + 가중치</td>
+</tr>
+<tr>
+<td>알고리즘</td>
+<td>Lloyd’s algorithm</td>
+<td>EM algorithm</td>
+</tr>
+<tr>
+<td>클러스터 크기</td>
+<td>비슷한 크기 가정</td>
+<td>다른 크기 허용 (pi_k)</td>
+</tr>
+<tr>
+<td>수렴 보장</td>
+<td>로컬 최적 (빠름)</td>
+<td>로컬 최적 (느림)</td>
+</tr>
+<tr>
+<td>결과물</td>
+<td>레이블</td>
+<td>레이블 + 확률</td>
+</tr>
+</tbody>
+</table>
+<p>GMM이 모든 면에서 낫다면 K-Means는 왜 쓸까? 세 가지 이유다.</p>
+<ol>
+<li><strong>속도</strong>: K-Means가 훨씬 빠르다. 대용량 데이터에서 이 차이는 크다</li>
+<li><strong>단순성</strong>: 결과 해석이 쉽다. “이 점은 클러스터 A” vs “이 점은 클러스터 A에 72.3%”</li>
+<li><strong>안정성</strong>: GMM은 공분산 행렬 추정이 불안정할 수 있다. 데이터가 적거나 차원이 높으면 특히 그렇다</li>
+</ol>
+<hr>
+<h3>BIC/AIC로 컴포넌트 수 결정</h3>
+<p>K-Means에서 K를 정하기 위해 엘보 방법이나 실루엣 스코어를 썼다면, GMM에서는 **BIC(Bayesian Information Criterion)**와 **AIC(Akaike Information Criterion)**를 쓴다.</p>
+<p>둘 다 모델 적합도와 복잡도 사이의 균형을 잡는다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">AIC = -2 * log_likelihood + 2 * k
+BIC = -2 * log_likelihood + k * log(n)
+
+여기서 k = 모델의 파라미터 수, n = 데이터 수</code></pre></div>
+<p>BIC는 AIC보다 파라미터 수에 더 큰 패널티를 준다 (n이 크면 log(n) > 2). 따라서 BIC가 더 간결한(parsimonious) 모델을 선호한다. <strong>실전에서는 BIC를 기본으로 사용</strong>하고, 값이 가장 낮은 컴포넌트 수를 선택한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>mixture <span class="token keyword">import</span> GaussianMixture
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+bics <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+aics <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+K_range <span class="token operator">=</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> k <span class="token keyword">in</span> K_range<span class="token punctuation">:</span>
+    gmm <span class="token operator">=</span> GaussianMixture<span class="token punctuation">(</span>n_components<span class="token operator">=</span>k<span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+    gmm<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+    bics<span class="token punctuation">.</span>append<span class="token punctuation">(</span>gmm<span class="token punctuation">.</span>bic<span class="token punctuation">(</span>X<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    aics<span class="token punctuation">.</span>append<span class="token punctuation">(</span>gmm<span class="token punctuation">.</span>aic<span class="token punctuation">(</span>X<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+best_k <span class="token operator">=</span> K_range<span class="token punctuation">[</span>np<span class="token punctuation">.</span>argmin<span class="token punctuation">(</span>bics<span class="token punctuation">)</span><span class="token punctuation">]</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"BIC 기준 최적 컴포넌트 수: </span><span class="token interpolation"><span class="token punctuation">{</span>best_k<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<hr>
+<h2>sklearn 실전 예제</h2>
+<h3>DBSCAN: 반달(moons) 데이터셋</h3>
+<p>K-Means가 실패하고 DBSCAN이 성공하는 대표적 예제다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> make_moons
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>cluster <span class="token keyword">import</span> DBSCAN<span class="token punctuation">,</span> KMeans
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 반달 데이터 생성</span>
+X<span class="token punctuation">,</span> y_true <span class="token operator">=</span> make_moons<span class="token punctuation">(</span>n_samples<span class="token operator">=</span><span class="token number">300</span><span class="token punctuation">,</span> noise<span class="token operator">=</span><span class="token number">0.08</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+X <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># K-Means</span>
+kmeans <span class="token operator">=</span> KMeans<span class="token punctuation">(</span>n_clusters<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> n_init<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">)</span>
+km_labels <span class="token operator">=</span> kmeans<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># DBSCAN</span>
+dbscan <span class="token operator">=</span> DBSCAN<span class="token punctuation">(</span>eps<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">,</span> min_samples<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+db_labels <span class="token operator">=</span> dbscan<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># 시각화</span>
+fig<span class="token punctuation">,</span> axes <span class="token operator">=</span> plt<span class="token punctuation">.</span>subplots<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> figsize<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">15</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+axes<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>scatter<span class="token punctuation">(</span>X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span> X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> c<span class="token operator">=</span>y_true<span class="token punctuation">,</span> cmap<span class="token operator">=</span><span class="token string">'viridis'</span><span class="token punctuation">,</span> s<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span>
+axes<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>set_title<span class="token punctuation">(</span><span class="token string">'Ground Truth'</span><span class="token punctuation">)</span>
+
+axes<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>scatter<span class="token punctuation">(</span>X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span> X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> c<span class="token operator">=</span>km_labels<span class="token punctuation">,</span> cmap<span class="token operator">=</span><span class="token string">'viridis'</span><span class="token punctuation">,</span> s<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span>
+axes<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>set_title<span class="token punctuation">(</span><span class="token string">'K-Means (K=2)'</span><span class="token punctuation">)</span>
+
+colors <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'viridis'</span> <span class="token keyword">if</span> l <span class="token operator">!=</span> <span class="token operator">-</span><span class="token number">1</span> <span class="token keyword">else</span> <span class="token string">'gray'</span> <span class="token keyword">for</span> l <span class="token keyword">in</span> db_labels<span class="token punctuation">]</span>
+axes<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">.</span>scatter<span class="token punctuation">(</span>X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span> X<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> c<span class="token operator">=</span>db_labels<span class="token punctuation">,</span> cmap<span class="token operator">=</span><span class="token string">'viridis'</span><span class="token punctuation">,</span> s<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">)</span>
+axes<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">.</span>set_title<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'DBSCAN (clusters: </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span><span class="token builtin">set</span><span class="token punctuation">(</span>db_labels<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token punctuation">{</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">)'</span></span><span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>tight_layout<span class="token punctuation">(</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
+<p>K-Means는 두 반달을 수직으로 잘라서 각각 반씩 나눈다. 구형으로만 분할할 수 있기 때문이다. DBSCAN은 밀도를 따라가며 두 반달을 정확히 분리한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K-Means 결과:                 DBSCAN 결과:
+수직 분할 (틀림)               반달 분리 (정확)
+
+  ▓▓▓▓ | ░░░░                 ▓▓▓▓▓▓▓▓
+  ▓▓▓▓ | ░░░░                 ░░░░░░░░░░
+      ▓▓ | ░░                     ░░░░░░
+        ▓ | ░                 ▓▓▓▓▓▓▓▓
+                              (▓, ░ = 서로 다른 클러스터)</code></pre></div>
+<p>eps 선정에 k-distance 그래프를 활용하는 실전 코드도 같이 보자.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> NearestNeighbors
+
+nn <span class="token operator">=</span> NearestNeighbors<span class="token punctuation">(</span>n_neighbors<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+nn<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+distances<span class="token punctuation">,</span> _ <span class="token operator">=</span> nn<span class="token punctuation">.</span>kneighbors<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+k_distances <span class="token operator">=</span> np<span class="token punctuation">.</span>sort<span class="token punctuation">(</span>distances<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>figure<span class="token punctuation">(</span>figsize<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span>k_distances<span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'Points (sorted by distance)'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>ylabel<span class="token punctuation">(</span><span class="token string">'5-distance'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'k-distance Graph for eps Selection'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>grid<span class="token punctuation">(</span><span class="token boolean">True</span><span class="token punctuation">,</span> alpha<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 엘보 지점을 읽어서 eps에 반영</span></code></pre></div>
+<hr>
+<h3>GMM: Iris 데이터셋</h3>
+<p>Iris는 3종 붓꽃 데이터로, 클래스 간 일부 중첩이 있어 소프트 클러스터링의 효과를 보기 좋다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_iris
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>mixture <span class="token keyword">import</span> GaussianMixture
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>decomposition <span class="token keyword">import</span> PCA
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># Iris 로드 + PCA로 2D 축소 (시각화용)</span>
+iris <span class="token operator">=</span> load_iris<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X_iris <span class="token operator">=</span> iris<span class="token punctuation">.</span>data
+y_iris <span class="token operator">=</span> iris<span class="token punctuation">.</span>target
+
+pca <span class="token operator">=</span> PCA<span class="token punctuation">(</span>n_components<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span>
+X_2d <span class="token operator">=</span> pca<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X_iris<span class="token punctuation">)</span>
+
+<span class="token comment"># GMM 피팅</span>
+gmm <span class="token operator">=</span> GaussianMixture<span class="token punctuation">(</span>n_components<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span> covariance_type<span class="token operator">=</span><span class="token string">'full'</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+gmm<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span>
+
+<span class="token comment"># 하드 레이블 &amp; 소프트 확률</span>
+labels <span class="token operator">=</span> gmm<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span>
+probs <span class="token operator">=</span> gmm<span class="token punctuation">.</span>predict_proba<span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span>
+
+<span class="token comment"># 불확실한 점 찾기 (최대 확률이 0.7 미만)</span>
+uncertain <span class="token operator">=</span> probs<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">0.7</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"불확실한 점: </span><span class="token interpolation"><span class="token punctuation">{</span>uncertain<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">개 / </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">개"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"불확실한 점의 확률 분포 예시:"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>probs<span class="token punctuation">[</span>uncertain<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre></div>
+<p>GMM은 확률을 돌려주기 때문에, “불확실한 점”을 명시적으로 찾을 수 있다. 이 정보는 실전에서 큰 가치가 있다. 불확실한 샘플을 추가 검토하거나, 전문가에게 레이블링을 요청하는 <strong>능동 학습(active learning)</strong> 에 활용할 수 있다.</p>
+<p>BIC로 최적 컴포넌트 수를 확인하는 코드:</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+bics <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+K_range <span class="token operator">=</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">8</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> k <span class="token keyword">in</span> K_range<span class="token punctuation">:</span>
+    gmm <span class="token operator">=</span> GaussianMixture<span class="token punctuation">(</span>n_components<span class="token operator">=</span>k<span class="token punctuation">,</span> covariance_type<span class="token operator">=</span><span class="token string">'full'</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+    gmm<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span>
+    bics<span class="token punctuation">.</span>append<span class="token punctuation">(</span>gmm<span class="token punctuation">.</span>bic<span class="token punctuation">(</span>X_2d<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>figure<span class="token punctuation">(</span>figsize<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span>K_range<span class="token punctuation">,</span> bics<span class="token punctuation">,</span> <span class="token string">'bo-'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'Number of Components'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>ylabel<span class="token punctuation">(</span><span class="token string">'BIC'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'BIC Score by Number of Components'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>grid<span class="token punctuation">(</span><span class="token boolean">True</span><span class="token punctuation">,</span> alpha<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"BIC 최소: k=</span><span class="token interpolation"><span class="token punctuation">{</span>K_range<span class="token punctuation">[</span>np<span class="token punctuation">.</span>argmin<span class="token punctuation">(</span>bics<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<hr>
+<h2>K-Means vs DBSCAN vs GMM: 종합 비교</h2>
+<p>세 알고리즘을 한 표로 정리한다.</p>
+<table>
+<thead>
+<tr>
+<th>기준</th>
+<th>K-Means</th>
+<th>DBSCAN</th>
+<th>GMM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>클러스터 수</td>
+<td>사전 지정 (K)</td>
+<td>자동 결정</td>
+<td>사전 지정 (K)</td>
+</tr>
+<tr>
+<td>할당 방식</td>
+<td>하드</td>
+<td>하드 + 노이즈</td>
+<td>소프트 (확률)</td>
+</tr>
+<tr>
+<td>클러스터 형태</td>
+<td>구형</td>
+<td>임의 형태</td>
+<td>타원형</td>
+</tr>
+<tr>
+<td>노이즈 처리</td>
+<td>없음 (강제 할당)</td>
+<td>명시적 (-1)</td>
+<td>없음 (강제 할당)</td>
+</tr>
+<tr>
+<td>주요 파라미터</td>
+<td>K</td>
+<td>eps, min_samples</td>
+<td>K, covariance_type</td>
+</tr>
+<tr>
+<td>파라미터 선택</td>
+<td>엘보/실루엣</td>
+<td>k-distance graph</td>
+<td>BIC/AIC</td>
+</tr>
+<tr>
+<td>시간 복잡도</td>
+<td>O(nKt)</td>
+<td>O(n log n)~O(n²)</td>
+<td>O(nK²d²t)</td>
+</tr>
+<tr>
+<td>고차원</td>
+<td>보통</td>
+<td>약함</td>
+<td>보통</td>
+</tr>
+<tr>
+<td>해석 용이성</td>
+<td>높음</td>
+<td>보통</td>
+<td>보통</td>
+</tr>
+</tbody>
+</table>
+<p><strong>언제 무엇을 쓸까?</strong></p>
+<ul>
+<li><strong>K-Means</strong>: 빠르게 구형 클러스터를 찾고 싶을 때. 대용량 데이터의 첫 시도</li>
+<li><strong>DBSCAN/HDBSCAN</strong>: 비구형 형태가 예상되거나, 노이즈가 많거나, 클러스터 수를 모를 때</li>
+<li><strong>GMM</strong>: 클러스터 경계가 모호하고 확률적 해석이 필요할 때. 타원형 클러스터가 예상될 때</li>
+</ul>
+<p>실전 팁을 하나 더 붙이면, 이 셋은 <strong>상호 배타적이 아니다</strong>. K-Means로 빠르게 데이터 구조를 파악한 뒤, DBSCAN으로 노이즈를 걸러내고, GMM으로 경계 불확실성을 분석하는 파이프라인이 가능하다.</p>
+<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
+  <strong>📌 핵심 요약</strong><br><br>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li><strong>DBSCAN</strong>: 밀도 기반. Core/Border/Noise 점으로 분류. eps와 min_samples로 제어. 비구형 클러스터와 노이즈 처리에 강하다</li>
+    <li><strong>HDBSCAN</strong>: DBSCAN의 밀도 편차 문제를 해결. eps 대신 min_cluster_size만 설정. 실전 권장</li>
+    <li><strong>GMM</strong>: 가우시안 혼합 모델. EM 알고리즘으로 학습. 소프트 클러스터링(확률 할당)이 핵심 장점</li>
+    <li><strong>EM 알고리즘</strong>: E-step(확률 계산) → M-step(파라미터 업데이트) 반복. K-Means의 일반화</li>
+    <li><strong>K-Means vs DBSCAN vs GMM</strong>: 구형/빠름 vs 임의형태/노이즈 vs 타원형/확률. 용도에 맞게 선택</li>
+    <li><strong>파라미터 선택</strong>: DBSCAN → k-distance graph, GMM → BIC/AIC</li>
+  </ul>
+</div>
+<hr>
+<h2>마치며</h2>
+<p>K-Means의 세 가지 한계 — 구형만 가능, K 필요, 노이즈 취약 — 를 DBSCAN과 GMM이 각각 다른 철학으로 극복하는 것을 봤다. DBSCAN은 밀도라는 직관적 개념으로 형태 제약을 깨고, GMM은 확률 분포로 경직된 할당을 부드럽게 만든다. 다음 글에서는 클러스터링과 차원 축소를 결합해, 고차원 데이터를 2D로 시각화하는 <strong>t-SNE와 UMAP</strong>을 다룬다.</p>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf" target="_blank" rel="noopener noreferrer">Martin Ester et al. — A Density-Based Algorithm for Discovering Clusters (KDD 1996)</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/clustering.html#dbscan" target="_blank" rel="noopener noreferrer">Scikit-learn — DBSCAN Documentation</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/mixture.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Gaussian Mixture Models</a></li>
+<li><a href="https://www.microsoft.com/en-us/research/publication/pattern-recognition-machine-learning/" target="_blank" rel="noopener noreferrer">Bishop — Pattern Recognition and Machine Learning, Chapter 9: Mixture Models and EM</a></li>
+<li><a href="https://hdbscan.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">HDBSCAN Documentation</a></li>
+</ul></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/pca/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">PCA(주성분 분석): 차원 축소의 수학적 원리와 실전 활용</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/tsne-and-umap/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">t-SNE와 UMAP: 고차원 데이터 시각화 기법 비교</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/dbscan-and-gmm/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-0694830708c73ec4e43c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="254eea8133c23796c6bc";</script><script src="/webpack-runtime-7755da4858a9a49e031a.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

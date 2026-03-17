@@ -1,0 +1,613 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="Confusion Matrix에서 Precision, Recall, F1-Score, ROC-AUC까지. 분류 모델의 성능을 정확하게 측정하는 방법과 상황별 지표 선택 기준을 정리한다."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech"/><meta data-react-helmet="true" property="og:description" content="Confusion Matrix에서 Precision, Recall, F1-Score, ROC-AUC까지. 분류 모델의 성능을 정확하게 측정하는 방법과 상황별 지표 선택 기준을 정리한다."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/10c42a8ff143744282453d699afb5033/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/classification-metrics/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" property="og:locale" content="ko_KR"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="Confusion Matrix에서 Precision, Recall, F1-Score, ROC-AUC까지. 분류 모델의 성능을 정확하게 측정하는 방법과 상황별 지표 선택 기준을 정리한다."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/10c42a8ff143744282453d699afb5033/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://donmain.dev/","inLanguage":"ko","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech","description":"Confusion Matrix에서 Precision, Recall, F1-Score, ROC-AUC까지. 분류 모델의 성능을 정확하게 측정하는 방법과 상황별 지표 선택 기준을 정리한다.","image":"https://donmain.dev/static/10c42a8ff143744282453d699afb5033/thumbnail.png","url":"https://donmain.dev/ml/classification-metrics/","inLanguage":"ko","datePublished":"2026-01-25","dateModified":"2026-01-25","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/classification-metrics/"},"articleSection":"Machine Learning","wordCount":1401}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://donmain.dev/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://donmain.dev/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리 | dontech","item":"https://donmain.dev/ml/classification-metrics/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/classification-metrics/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="dontech RSS Feed" href="/rss.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" media="print"/><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" media="print"/><noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/></noscript><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:924px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;485&#x27;%20width=&#x27;924&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAA9hAAAPYQGoP6dpAAABvUlEQVR42m1S207CQBTkFxSV3S0iRSiXCgJSyqWtLSgoQVAjEuMlKj5oNDH66sePZxdRDDxMdtOenTMz54TEVhUzaBJx+w/ye6oJXvDBs860LiZhKTACn3svEZpd5I81UUKYFX/PjegeVlM1rBr1aU2yQcQeWLIGLVlHQrexRY0XCNlmBbrh4mz0jMHZE4LDK5wMJ7DcUxxcPKE9uIem18B3fLCci/h4guLgGm9HI/QqHUTovTZPGCElqZyPyesXRnfvGI5fcPXwgWp3jP7tK24ePqFlXCLzECV1ufNTVPsDXNZ78AqBsv7fssxiu45wqYWVcgtrdIZ3A6w7x3T6SoEgMkYu4noZH48+bs492P4IZvlIOVzIUFAWer6NVKkDo9SFbgbgRkMNRFAzYUpCBzG9gl7Lgt+0YVC9nvHAFxT+qExnA5jFLoydNhLpfQgaAsvvK2JBluVAxKaFSMwGk5nKQc2R/bMs10NYHQgKnpOFmQ1mugrcaKqh8CzdqY7bXYi0M327lJDUCAqYZxzMq+a0HixPtmi6nHLkNFWZpyJL1KZ7uWwPFWm0stBR7Z/RUKSMcuSyad5XmS+r/QbLDDDk2WVoHAAAAABJRU5ErkJggg==" alt=""/><picture><source type="image/avif" srcSet="/static/10c42a8ff143744282453d699afb5033/df6ef/thumbnail.avif 750w,/static/10c42a8ff143744282453d699afb5033/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/10c42a8ff143744282453d699afb5033/8384a/thumbnail.webp 750w,/static/10c42a8ff143744282453d699afb5033/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/10c42a8ff143744282453d699afb5033/43f69/thumbnail.png" srcSet="/static/10c42a8ff143744282453d699afb5033/68929/thumbnail.png 750w,/static/10c42a8ff143744282453d699afb5033/43f69/thumbnail.png 924w" alt="분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리"/></picture><noscript><picture><source type="image/avif" srcSet="/static/10c42a8ff143744282453d699afb5033/df6ef/thumbnail.avif 750w,/static/10c42a8ff143744282453d699afb5033/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/10c42a8ff143744282453d699afb5033/8384a/thumbnail.webp 750w,/static/10c42a8ff143744282453d699afb5033/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/10c42a8ff143744282453d699afb5033/43f69/thumbnail.png" srcSet="/static/10c42a8ff143744282453d699afb5033/68929/thumbnail.png 750w,/static/10c42a8ff143744282453d699afb5033/43f69/thumbnail.png 924w" alt="분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.25.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">21</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/backpropagation/">역전파(Backpropagation): 신경망이 학습하는 원리</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">22</span><a class="css-dizrmv e4kcwtw5" href="/ml/activation-functions/">활성화 함수(Activation Functions): ReLU는 어떻게 딥러닝을 살렸나</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">23</span><a class="css-dizrmv e4kcwtw5" href="/ml/optimizers/">옵티마이저(Optimizers): SGD에서 Adam까지, 경사하강법의 진화</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">24</span><a class="css-dizrmv e4kcwtw5" href="/ml/neural-network-tips/">신경망 학습 안정화: Dropout, Batch Normalization, 가중치 초기화</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">25</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">5<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p>Phase 5까지 24개 글에 걸쳐 긴 여정을 달려왔다. <a href="/ml/linear-regression/">선형 회귀</a>에서 시작해 <a href="/ml/logistic-regression/">로지스틱 회귀</a>, <a href="/ml/decision-tree/">결정 트리</a>와 <a href="/ml/random-forest/">랜덤 포레스트</a>, <a href="/ml/xgboost-vs-lightgbm/">XGBoost/LightGBM</a>, 그리고 <a href="/ml/neural-network-basics/">신경망</a>과 <a href="/ml/neural-network-tips/">학습 안정화 기법</a>까지 – 주요 지도학습 알고리즘은 전부 다뤘다. 도구상자는 꽉 찼다.</p>
+<p>이제 핵심 질문이 남았다. <strong>이 모델들 중 어떤 게 더 좋은가?</strong> “좋다”는 걸 어떻게 측정하는가?</p>
+<p>“정확도(Accuracy) 높은 게 좋은 모델 아니야?”라고 생각할 수 있다. 맞는 것 같지만, 현실은 그렇게 단순하지 않다. 이번 글부터 Phase 6 – 모델 평가 – 를 시작한다. 첫 번째 주제는 <strong>분류 모델의 평가 지표</strong>다.</p>
+<hr>
+<h2>1. Accuracy의 함정</h2>
+<p>Accuracy(정확도)는 가장 직관적인 지표다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Accuracy = 정확히 맞힌 수 / 전체 수</code></pre></div>
+<p>테스트 데이터 100개 중 95개를 맞히면 Accuracy 95%. 깔끔하다. 그런데 이런 상황을 보자.</p>
+<p><strong>예시: 신용카드 사기 탐지</strong></p>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>건수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>정상 거래</td>
+<td>9,900건</td>
+</tr>
+<tr>
+<td>사기 거래</td>
+<td>100건</td>
+</tr>
+<tr>
+<td>합계</td>
+<td>10,000건</td>
+</tr>
+</tbody>
+</table>
+<p>여기서 모델이 <strong>모든 거래를 “정상”이라고 예측</strong>하면 어떻게 될까?</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Accuracy = 9,900 / 10,000 = 99%</code></pre></div>
+<p>99% 정확도. 숫자만 보면 훌륭하다. 하지만 이 모델은 사기를 <strong>단 하나도</strong> 잡지 못한다. 사기 탐지기로서 완전히 쓸모없다.</p>
+<p>이것이 <strong>Accuracy Paradox</strong>다. 클래스 불균형(imbalanced data)이 심한 데이터에서 Accuracy는 모델의 실제 성능을 감춘다. 현실의 데이터는 거의 항상 불균형이다 – 스팸 메일, 질병 진단, 이상 탐지, 제조 불량 검출… 모두 양성(Positive) 클래스가 소수다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Accuracy가 유용한 경우</strong><br>클래스 비율이 대체로 균형 잡혀 있고(예: 50:50 ~ 70:30), 양성/음성 오분류의 비용이 비슷할 때는 Accuracy도 충분히 좋은 지표다. 문제는 이런 조건이 현실에서 드물다는 것이다.</div>
+<p>Accuracy만으로 부족하다면, <strong>어떤 종류의 실수를 얼마나 했는지</strong> 분해해서 봐야 한다. 그 시작점이 Confusion Matrix다.</p>
+<hr>
+<h2>2. Confusion Matrix (혼동 행렬)</h2>
+<p>Confusion Matrix는 모델의 예측 결과를 4가지로 분류한 표다.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>예측: Positive</th>
+<th>예측: Negative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>실제: Positive</strong></td>
+<td>True Positive (TP)</td>
+<td>False Negative (FN)</td>
+</tr>
+<tr>
+<td><strong>실제: Negative</strong></td>
+<td>False Positive (FP)</td>
+<td>True Negative (TN)</td>
+</tr>
+</tbody>
+</table>
+<p>각 칸의 의미를 암 검진 예시로 풀어보자.</p>
+<ul>
+<li><strong>TP (True Positive)</strong>: 실제 암 환자를 “암”이라고 정확히 진단</li>
+<li><strong>FN (False Negative)</strong>: 실제 암 환자를 “정상”이라고 놓침 → <strong>가장 위험한 실수</strong></li>
+<li><strong>FP (False Positive)</strong>: 정상인을 “암”이라고 잘못 진단 → 불필요한 추가 검사</li>
+<li><strong>TN (True Negative)</strong>: 정상인을 “정상”이라고 정확히 진단</li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> confusion_matrix
+
+y_true <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+y_pred <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+
+cm <span class="token operator">=</span> confusion_matrix<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>cm<span class="token punctuation">)</span>
+<span class="token comment"># [[4, 1],   ← 실제 Negative: TN=4, FP=1</span>
+<span class="token comment">#  [1, 4]]   ← 실제 Positive: FN=1, TP=4</span></code></pre></div>
+<p>Confusion Matrix 자체는 숫자의 나열일 뿐이다. 여기서 <strong>의미 있는 지표</strong>를 뽑아내야 한다.</p>
+<hr>
+<h2>3. Precision (정밀도)</h2>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Precision = TP / (TP + FP)</code></pre></div>
+<p><strong>“모델이 Positive라고 예측한 것 중에서, 실제로 Positive인 비율”</strong></p>
+<p>직관적으로 말하면: 모델이 “이건 양성이다”라고 말했을 때, <strong>그 말을 얼마나 믿을 수 있는가?</strong></p>
+<h3>Precision이 중요한 상황</h3>
+<p><strong>False Positive의 비용이 클 때</strong> Precision을 중시한다.</p>
+<table>
+<thead>
+<tr>
+<th>상황</th>
+<th>FP의 결과</th>
+<th>Precision 중요도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>스팸 메일 필터</td>
+<td>정상 메일이 스팸함으로 → 중요 메일 놓침</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>추천 시스템</td>
+<td>관련 없는 상품 추천 → 사용자 이탈</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>법적 판결</td>
+<td>무고한 사람 유죄 판결</td>
+<td>매우 높음</td>
+</tr>
+</tbody>
+</table>
+<p>스팸 필터를 예로 들면, 중요한 업무 메일이 스팸으로 분류되면 치명적이다. 차라리 스팸을 몇 개 놓치더라도(FN 증가), 스팸이라고 판단한 것은 확실히 스팸이어야 한다(높은 Precision).</p>
+<hr>
+<h2>4. Recall (재현율, Sensitivity)</h2>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Recall = TP / (TP + FN)</code></pre></div>
+<p><strong>“실제 Positive인 것 중에서, 모델이 Positive로 잡아낸 비율”</strong></p>
+<p>직관적으로: 진짜 양성 케이스를 <strong>얼마나 빠짐없이 잡아내는가?</strong></p>
+<h3>Recall이 중요한 상황</h3>
+<p><strong>False Negative의 비용이 클 때</strong> Recall을 중시한다.</p>
+<table>
+<thead>
+<tr>
+<th>상황</th>
+<th>FN의 결과</th>
+<th>Recall 중요도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>암 조기 검진</td>
+<td>암 환자를 정상으로 판단 → 치료 시기 놓침</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>제조 불량 검출</td>
+<td>불량품이 출하 → 사고/리콜</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>바이러스 탐지</td>
+<td>악성코드를 정상으로 판단 → 시스템 감염</td>
+<td>매우 높음</td>
+</tr>
+</tbody>
+</table>
+<p>암 검진에서 실제 암 환자 100명 중 모델이 80명만 잡아내면 Recall은 80%다. 나머지 20명은 “정상”이라는 결과를 받고 집에 간다. 이 20명에게 Accuracy 99%는 의미 없다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Specificity (특이도)</strong><br>Recall이 "실제 양성 중 양성 예측 비율"이라면, Specificity는 반대쪽이다.<br><br><code>Specificity = TN / (TN + FP)</code><br><br>"실제 음성 중 음성으로 정확히 예측한 비율." ROC 곡선에서 X축이 1 - Specificity(= FPR)다.</div>
+<hr>
+<h2>5. Precision-Recall Trade-off</h2>
+<p>Precision과 Recall은 <strong>시소 관계</strong>다. 하나를 올리면 다른 하나가 내려간다.</p>
+<p><a href="/ml/logistic-regression/">로지스틱 회귀</a>를 떠올려보자. 출력은 0~1 사이의 확률값이고, 기본 threshold는 0.5다. 확률이 0.5 이상이면 Positive, 미만이면 Negative로 분류한다. 이 threshold를 조절하면 Precision-Recall 균형이 바뀐다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">threshold를 낮추면 (예: 0.3):
+→ 더 많은 샘플을 Positive로 분류
+→ 실제 Positive를 더 많이 잡음 → Recall ↑
+→ 하지만 Negative도 Positive로 잘못 분류 → Precision ↓
+
+threshold를 높이면 (예: 0.7):
+→ 확실한 것만 Positive로 분류
+→ Positive라고 한 것은 거의 맞음 → Precision ↑
+→ 하지만 애매한 Positive를 놓침 → Recall ↓</code></pre></div>
+<h3>PR Curve</h3>
+<p>threshold를 0에서 1까지 변화시키면서 Precision과 Recall을 기록하면 <strong>PR Curve</strong>(Precision-Recall Curve)가 된다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> precision_recall_curve
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+<span class="token comment"># y_scores: 모델이 출력한 확률값</span>
+precision<span class="token punctuation">,</span> recall<span class="token punctuation">,</span> thresholds <span class="token operator">=</span> precision_recall_curve<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span>recall<span class="token punctuation">,</span> precision<span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'Recall'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>ylabel<span class="token punctuation">(</span><span class="token string">'Precision'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'Precision-Recall Curve'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
+<p><img src="./pr-curve.png" alt="PR Curve"></p>
+<p>이상적인 모델은 Precision과 Recall이 모두 1인 <strong>우상단 꼭짓점</strong>에 가깝다. 곡선 아래 면적(AP, Average Precision)이 클수록 좋다.</p>
+<hr>
+<h2>6. F1-Score</h2>
+<p>Precision과 Recall 중 하나만 보면 전체 그림을 놓친다. 둘을 하나의 숫자로 합치고 싶다. 산술 평균을 쓰면 되지 않을까?</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">산술 평균 = (Precision + Recall) / 2
+
+예시: Precision = 1.0, Recall = 0.01
+산술 평균 = (1.0 + 0.01) / 2 = 0.505</code></pre></div>
+<p>Recall이 0.01(거의 아무것도 못 잡음)인데 0.505라는 그럴듯한 점수가 나온다. 산술 평균은 극단적인 불균형을 제대로 반영하지 못한다.</p>
+<p><strong>F1-Score</strong>는 <strong>조화 평균</strong>(harmonic mean)을 사용한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">F1 = 2 × (Precision × Recall) / (Precision + Recall)
+
+예시: Precision = 1.0, Recall = 0.01
+F1 = 2 × (1.0 × 0.01) / (1.0 + 0.01) = 0.0198</code></pre></div>
+<p>조화 평균은 <strong>둘 중 낮은 쪽에 훨씬 민감하다</strong>. Precision이 아무리 높아도 Recall이 바닥이면 F1도 바닥이다. 이것이 조화 평균을 쓰는 이유다.</p>
+<table>
+<thead>
+<tr>
+<th>Precision</th>
+<th>Recall</th>
+<th>산술 평균</th>
+<th>F1 (조화 평균)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.9</td>
+<td>0.9</td>
+<td>0.90</td>
+<td>0.90</td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>0.01</td>
+<td>0.505</td>
+<td>0.020</td>
+</tr>
+<tr>
+<td>0.6</td>
+<td>0.4</td>
+<td>0.50</td>
+<td>0.48</td>
+</tr>
+<tr>
+<td>0.8</td>
+<td>0.8</td>
+<td>0.80</td>
+<td>0.80</td>
+</tr>
+</tbody>
+</table>
+<p>Precision과 Recall이 비슷할 때는 두 평균이 거의 같지만, 차이가 벌어질수록 F1이 훨씬 보수적인 점수를 매기는 것을 확인할 수 있다.</p>
+<hr>
+<h2>7. F-beta Score</h2>
+<p>F1은 Precision과 Recall에 <strong>동일한 가중치</strong>를 준다. 하지만 실무에서는 한쪽이 더 중요한 경우가 대부분이다. 이때 <strong>F-beta Score</strong>를 쓴다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">F_β = (1 + β²) × (Precision × Recall) / (β² × Precision + Recall)</code></pre></div>
+<ul>
+<li><strong>β = 1</strong>: F1과 동일. Precision = Recall 동일 비중</li>
+<li><strong>β = 0.5</strong>: Precision에 더 큰 가중치. “거짓 알람을 줄이는 게 우선”</li>
+<li><strong>β = 2</strong>: Recall에 더 큰 가중치. “놓치지 않는 게 우선”</li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> fbeta_score
+
+<span class="token comment"># Recall 중시 (암 검진)</span>
+f2 <span class="token operator">=</span> fbeta_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> beta<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Precision 중시 (스팸 필터)</span>
+f05 <span class="token operator">=</span> fbeta_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> beta<span class="token operator">=</span><span class="token number">0.5</span><span class="token punctuation">)</span></code></pre></div>
+<p>β의 의미를 직관적으로 풀면: **“Recall이 Precision보다 β배 더 중요하다”**는 뜻이다. β=2이면 Recall을 Precision보다 2배 중시한다.</p>
+<hr>
+<h2>8. ROC Curve와 AUC</h2>
+<h3>ROC Curve</h3>
+<p><strong>ROC(Receiver Operating Characteristic) Curve</strong>는 threshold를 변화시키면서 **TPR(True Positive Rate)**과 **FPR(False Positive Rate)**의 관계를 그린 곡선이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">TPR = TP / (TP + FN)  ← Recall과 동일
+FPR = FP / (FP + TN)  ← 1 - Specificity</code></pre></div>
+<ul>
+<li>X축: FPR (음성을 양성으로 잘못 분류한 비율)</li>
+<li>Y축: TPR (양성을 양성으로 올바르게 분류한 비율)</li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> roc_curve<span class="token punctuation">,</span> roc_auc_score
+
+fpr<span class="token punctuation">,</span> tpr<span class="token punctuation">,</span> thresholds <span class="token operator">=</span> roc_curve<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+auc <span class="token operator">=</span> roc_auc_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span>fpr<span class="token punctuation">,</span> tpr<span class="token punctuation">,</span> label<span class="token operator">=</span><span class="token string-interpolation"><span class="token string">f'ROC (AUC = </span><span class="token interpolation"><span class="token punctuation">{</span>auc<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">)'</span></span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>plot<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">'k--'</span><span class="token punctuation">,</span> label<span class="token operator">=</span><span class="token string">'Random (AUC = 0.5)'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>xlabel<span class="token punctuation">(</span><span class="token string">'False Positive Rate'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>ylabel<span class="token punctuation">(</span><span class="token string">'True Positive Rate'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'ROC Curve'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>legend<span class="token punctuation">(</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
+<p><img src="./roc-curve.png" alt="ROC Curve"></p>
+<h3>AUC (Area Under the Curve)</h3>
+<p><strong>AUC</strong>는 ROC 곡선 아래의 면적이다. 0에서 1 사이 값을 가진다.</p>
+<table>
+<thead>
+<tr>
+<th>AUC 범위</th>
+<th>해석</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.9 ~ 1.0</td>
+<td>매우 우수</td>
+</tr>
+<tr>
+<td>0.8 ~ 0.9</td>
+<td>우수</td>
+</tr>
+<tr>
+<td>0.7 ~ 0.8</td>
+<td>보통</td>
+</tr>
+<tr>
+<td>0.6 ~ 0.7</td>
+<td>미흡</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>랜덤 추측과 동일 (대각선)</td>
+</tr>
+</tbody>
+</table>
+<p>AUC의 직관적 의미: <strong>임의의 양성 샘플이 임의의 음성 샘플보다 높은 점수를 받을 확률</strong>이다. AUC = 0.85면, 양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때 모델이 양성에 더 높은 점수를 줄 확률이 85%다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 AUC의 장점</strong><br>AUC는 threshold에 독립적이다. 특정 threshold를 정하지 않아도 모델의 전반적인 분류 능력을 하나의 숫자로 평가할 수 있다. 서로 다른 모델을 비교할 때 특히 유용하다.</div>
+<hr>
+<h2>9. ROC Curve vs PR Curve</h2>
+<p>두 곡선 모두 모델의 성능을 시각화하지만, <strong>어떤 상황에서 어떤 걸 쓸지</strong>가 중요하다.</p>
+<table>
+<thead>
+<tr>
+<th>기준</th>
+<th>ROC Curve</th>
+<th>PR Curve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>축</td>
+<td>FPR vs TPR</td>
+<td>Recall vs Precision</td>
+</tr>
+<tr>
+<td>클래스 균형</td>
+<td>균형 데이터에서 잘 작동</td>
+<td>불균형 데이터에서 더 정직</td>
+</tr>
+<tr>
+<td>음성 클래스 영향</td>
+<td>TN 포함 → 음성 많으면 FPR 낮게 유지</td>
+<td>TN 미포함 → 양성 클래스에만 집중</td>
+</tr>
+<tr>
+<td>Random baseline</td>
+<td>대각선 (AUC = 0.5)</td>
+<td>양성 비율에 따라 달라짐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>핵심: 클래스 불균형이 심하면 PR Curve를 써라.</strong></p>
+<p>이유가 있다. 클래스 비율이 99:1인 데이터에서 ROC Curve는 FPR 계산에 TN이 포함되므로, 음성이 9,900개면 FP가 100개 나와도 FPR은 겨우 1%다. ROC Curve에서는 꽤 좋아 보인다. 하지만 PR Curve에서 Precision을 보면, 실제로 양성이라고 예측한 것 중 절반이 틀린 셈이라 성능이 낮게 나타난다. PR Curve가 더 정직한 평가를 해준다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> <span class="token punctuation">(</span>
+    precision_recall_curve<span class="token punctuation">,</span>
+    average_precision_score<span class="token punctuation">,</span>
+    roc_curve<span class="token punctuation">,</span>
+    roc_auc_score
+<span class="token punctuation">)</span>
+
+<span class="token comment"># ROC</span>
+fpr<span class="token punctuation">,</span> tpr<span class="token punctuation">,</span> _ <span class="token operator">=</span> roc_curve<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+roc_auc <span class="token operator">=</span> roc_auc_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+
+<span class="token comment"># PR</span>
+precision<span class="token punctuation">,</span> recall<span class="token punctuation">,</span> _ <span class="token operator">=</span> precision_recall_curve<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+pr_auc <span class="token operator">=</span> average_precision_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_scores<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"ROC-AUC: </span><span class="token interpolation"><span class="token punctuation">{</span>roc_auc<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"PR-AUC (AP): </span><span class="token interpolation"><span class="token punctuation">{</span>pr_auc<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<hr>
+<h2>10. 다중 클래스 평가: Macro, Micro, Weighted</h2>
+<p>지금까지는 이진 분류를 다뤘다. <a href="/ml/decision-boundary/">결정 경계</a>를 여러 클래스로 확장할 때, 각 클래스별 Precision/Recall/F1을 어떻게 하나로 합칠까? 세 가지 평균 방식이 있다.</p>
+<h3>Macro Average</h3>
+<p>각 클래스의 지표를 <strong>단순 평균</strong>한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Macro F1 = (F1_class0 + F1_class1 + F1_class2) / 3</code></pre></div>
+<p>모든 클래스를 <strong>동등하게</strong> 취급한다. 소수 클래스의 성능이 전체 점수에 크게 반영된다. 클래스 불균형이 있을 때 소수 클래스 성능을 확인하기 좋다.</p>
+<h3>Micro Average</h3>
+<p>전체 TP, FP, FN을 <strong>합산</strong>한 후 지표를 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Micro Precision = 전체 TP / (전체 TP + 전체 FP)</code></pre></div>
+<p>다수 클래스의 영향력이 크다. 전체적인 정확도와 비슷한 값이 나온다.</p>
+<h3>Weighted Average</h3>
+<p>각 클래스의 <strong>샘플 수에 비례</strong>하여 가중 평균한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Weighted F1 = Σ (n_i / N) × F1_i</code></pre></div>
+<p>클래스 불균형을 반영하면서도 각 클래스의 기여를 샘플 수에 따라 조절한다.</p>
+<table>
+<thead>
+<tr>
+<th>방식</th>
+<th>계산</th>
+<th>적합한 상황</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Macro</td>
+<td>클래스별 단순 평균</td>
+<td>소수 클래스 성능이 중요할 때</td>
+</tr>
+<tr>
+<td>Micro</td>
+<td>전체 합산 후 계산</td>
+<td>전체 정확도가 중요할 때</td>
+</tr>
+<tr>
+<td>Weighted</td>
+<td>샘플 수 가중 평균</td>
+<td>불균형 데이터의 균형잡힌 평가</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>11. 실전 예제: 여러 모델 비교</h2>
+<p>지금까지 배운 지표를 모두 활용해서, <a href="/ml/random-forest/">랜덤 포레스트</a>와 <a href="/ml/xgboost-vs-lightgbm/">XGBoost</a> 등 여러 모델을 비교해보자.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> make_classification
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LogisticRegression
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier<span class="token punctuation">,</span> GradientBoostingClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>svm <span class="token keyword">import</span> SVC
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> <span class="token punctuation">(</span>
+    classification_report<span class="token punctuation">,</span>
+    roc_auc_score<span class="token punctuation">,</span>
+    average_precision_score
+<span class="token punctuation">)</span>
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># 불균형 데이터 생성 (양성 10%)</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> make_classification<span class="token punctuation">(</span>
+    n_samples<span class="token operator">=</span><span class="token number">2000</span><span class="token punctuation">,</span>
+    n_features<span class="token operator">=</span><span class="token number">20</span><span class="token punctuation">,</span>
+    n_informative<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">,</span>
+    weights<span class="token operator">=</span><span class="token punctuation">[</span><span class="token number">0.9</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">]</span><span class="token punctuation">,</span>  <span class="token comment"># 90:10 불균형</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span>
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span> stratify<span class="token operator">=</span>y
+<span class="token punctuation">)</span>
+
+<span class="token comment"># 모델 정의</span>
+models <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'Logistic Regression'</span><span class="token punctuation">:</span> LogisticRegression<span class="token punctuation">(</span>max_iter<span class="token operator">=</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'Random Forest'</span><span class="token punctuation">:</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'Gradient Boosting'</span><span class="token punctuation">:</span> GradientBoostingClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'SVM (RBF)'</span><span class="token punctuation">:</span> SVC<span class="token punctuation">(</span>probability<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># 학습 및 평가</span>
+<span class="token keyword">for</span> name<span class="token punctuation">,</span> model <span class="token keyword">in</span> models<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+    y_pred <span class="token operator">=</span> model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>
+    y_proba <span class="token operator">=</span> model<span class="token punctuation">.</span>predict_proba<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span>
+
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'='</span><span class="token operator">*</span><span class="token number">50</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  </span><span class="token interpolation"><span class="token punctuation">{</span>name<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'='</span><span class="token operator">*</span><span class="token number">50</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>classification_report<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> digits<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  ROC-AUC:  </span><span class="token interpolation"><span class="token punctuation">{</span>roc_auc_score<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> y_proba<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  PR-AUC:   </span><span class="token interpolation"><span class="token punctuation">{</span>average_precision_score<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> y_proba<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>실행하면 이런 식의 결과가 나온다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">==================================================
+  Gradient Boosting
+==================================================
+              precision    recall  f1-score   support
+
+           0      0.967     0.985     0.976       540
+           1      0.831     0.717     0.770        60
+
+    accuracy                          0.957       600
+   macro avg      0.899     0.851     0.873       600
+weighted avg      0.954     0.957     0.955       600
+
+  ROC-AUC:  0.952
+  PR-AUC:   0.836</code></pre></div>
+<p>이 결과를 읽는 법:</p>
+<ol>
+<li>**Accuracy는 95.7%**로 높지만, 이건 다수 클래스(0) 덕분이다</li>
+<li><strong>양성 클래스(1)의 Recall은 71.7%</strong> – 실제 양성 60명 중 약 17명을 놓쳤다</li>
+<li><strong>양성 클래스의 Precision은 83.1%</strong> – 양성이라고 한 것 중 17%는 오탐</li>
+<li><strong>ROC-AUC 0.952</strong> – 전반적인 분류 능력은 우수</li>
+<li><strong>PR-AUC 0.836</strong> – 불균형 상황에서도 양성 탐지 성능이 양호</li>
+</ol>
+<p>모델 간 비교 시 <strong>어떤 지표를 기준으로 삼을지</strong>는 비즈니스 맥락에 따라 달라진다.</p>
+<hr>
+<h2>12. 지표 선택 가이드</h2>
+<p>모든 지표를 알았으니, 이제 실전에서 <strong>언제 어떤 지표를 쓸지</strong> 정리하자.</p>
+<h3>비즈니스 맥락별 선택</h3>
+<table>
+<thead>
+<tr>
+<th>도메인</th>
+<th>핵심 지표</th>
+<th>이유</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>스팸 필터</td>
+<td><strong>Precision</strong></td>
+<td>정상 메일을 스팸으로 분류하면 비즈니스 피해</td>
+</tr>
+<tr>
+<td>암/질병 검진</td>
+<td><strong>Recall</strong></td>
+<td>환자를 놓치면 생명 위험</td>
+</tr>
+<tr>
+<td>일반적인 균형 분류</td>
+<td><strong>F1-Score</strong></td>
+<td>Precision/Recall 양쪽 균형</td>
+</tr>
+<tr>
+<td>정보 검색</td>
+<td><strong>Precision@K</strong></td>
+<td>상위 K개 결과의 관련성</td>
+</tr>
+<tr>
+<td>사기 탐지</td>
+<td><strong>PR-AUC</strong></td>
+<td>불균형 + 놓치면 안 됨</td>
+</tr>
+<tr>
+<td>모델 전반 비교</td>
+<td><strong>ROC-AUC</strong></td>
+<td>threshold 독립적 비교</td>
+</tr>
+<tr>
+<td>소수 클래스 중시</td>
+<td><strong>Macro F1</strong></td>
+<td>클래스별 동등한 비중</td>
+</tr>
+</tbody>
+</table>
+<h3>실전 의사결정 플로우</h3>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">클래스가 균형인가?
+├── Yes → Accuracy + F1로 충분
+└── No → 불균형 데이터
+    ├── FN 비용 > FP 비용?
+    │   └── Yes → Recall (또는 F2) 중시
+    ├── FP 비용 > FN 비용?
+    │   └── Yes → Precision (또는 F0.5) 중시
+    └── 전반적 비교?
+        └── PR-AUC 사용</code></pre></div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실무 팁: 지표는 하나만 보지 마라</strong><br>보고서에는 주요 지표(primary metric) 하나를 기준으로 삼되, 보조 지표(secondary metrics)도 함께 제시해야 한다. 예를 들어 암 검진 모델이면 Recall을 primary로 삼되, Precision이 너무 낮지 않은지(false alarm이 너무 많으면 의료진이 무시하게 됨) 반드시 확인한다. 지표 하나에 올인하면 다른 쪽이 무너지는 함정에 빠진다.</div>
+<h3>지표와 <a href="/ml/decision-boundary/">결정 경계</a>의 관계</h3>
+<p>threshold를 조절하면 <a href="/ml/decision-boundary/">결정 경계</a>가 이동한다. threshold를 낮추면 경계가 Negative 쪽으로 밀려서 더 많은 샘플이 Positive로 분류된다. 결국 평가 지표 선택은 **“결정 경계를 어디에 그을 것인가”**에 대한 비즈니스 판단과 직결된다.</p>
+<hr>
+<h2>정리</h2>
+<table>
+<thead>
+<tr>
+<th>지표</th>
+<th>공식</th>
+<th>핵심 질문</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td>(TP+TN) / 전체</td>
+<td>전체 중 맞힌 비율은?</td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>TP / (TP+FP)</td>
+<td>양성 예측 중 진짜 양성은?</td>
+</tr>
+<tr>
+<td>Recall</td>
+<td>TP / (TP+FN)</td>
+<td>진짜 양성 중 잡아낸 비율은?</td>
+</tr>
+<tr>
+<td>F1</td>
+<td>2×P×R / (P+R)</td>
+<td>P와 R의 균형 점수는?</td>
+</tr>
+<tr>
+<td>F-beta</td>
+<td>(1+β²)×P×R / (β²×P+R)</td>
+<td>P/R에 가중치를 주면?</td>
+</tr>
+<tr>
+<td>ROC-AUC</td>
+<td>ROC 곡선 아래 면적</td>
+<td>전반적 분류 능력은?</td>
+</tr>
+<tr>
+<td>PR-AUC</td>
+<td>PR 곡선 아래 면적</td>
+<td>불균형 데이터에서의 실력은?</td>
+</tr>
+</tbody>
+</table>
+<p>핵심 원칙을 세 줄로:</p>
+<ol>
+<li><strong>Accuracy만 보지 마라</strong> – 불균형 데이터에서는 거짓말쟁이다</li>
+<li><strong>FP와 FN 중 뭐가 더 치명적인지</strong> 먼저 정하라 – 그게 지표를 결정한다</li>
+<li><strong>ROC-AUC로 전반적 비교, PR-AUC로 불균형 검증</strong> – 둘 다 확인하라</li>
+</ol>
+<hr>
+<h2>다음 글 미리보기</h2>
+<p>분류 모델의 평가 지표를 정리했다. 하지만 <a href="/ml/linear-regression/">선형 회귀</a>나 <a href="/ml/multiple-linear-regression/">다중 선형 회귀</a>처럼 <strong>연속된 값을 예측하는 회귀 모델</strong>은 Precision이나 Recall로 평가할 수 없다. 다음 글에서는 MSE, RMSE, MAE, R² 등 <a href="/ml/regression-metrics/">회귀 모델의 평가 지표</a>를 다룬다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/neural-network-tips/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">신경망 학습 안정화: Dropout, Batch Normalization, 가중치 초기화</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/regression-metrics/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">회귀 모델 평가 지표: MSE, MAE, R², MAPE 언제 어떤 걸 쓸까</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/classification-metrics/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-0694830708c73ec4e43c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="254eea8133c23796c6bc";</script><script src="/webpack-runtime-7755da4858a9a49e031a.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

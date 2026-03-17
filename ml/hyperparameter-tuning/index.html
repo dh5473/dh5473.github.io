@@ -1,0 +1,631 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="모델 성능을 끌어올리는 체계적인 하이퍼파라미터 탐색법. Grid Search의 한계부터 Random Search, Bayesian Optimization(Optuna)까지."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech"/><meta data-react-helmet="true" property="og:description" content="모델 성능을 끌어올리는 체계적인 하이퍼파라미터 탐색법. Grid Search의 한계부터 Random Search, Bayesian Optimization(Optuna)까지."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/80eae096a5967cac51424f582b2a6e6d/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/hyperparameter-tuning/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" property="og:locale" content="ko_KR"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech"/><meta data-react-helmet="true" name="twitter:description" content="모델 성능을 끌어올리는 체계적인 하이퍼파라미터 탐색법. Grid Search의 한계부터 Random Search, Bayesian Optimization(Optuna)까지."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/80eae096a5967cac51424f582b2a6e6d/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://donmain.dev/","inLanguage":"ko","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech","description":"모델 성능을 끌어올리는 체계적인 하이퍼파라미터 탐색법. Grid Search의 한계부터 Random Search, Bayesian Optimization(Optuna)까지.","image":"https://donmain.dev/static/80eae096a5967cac51424f582b2a6e6d/thumbnail.png","url":"https://donmain.dev/ml/hyperparameter-tuning/","inLanguage":"ko","datePublished":"2026-01-28","dateModified":"2026-01-28","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/hyperparameter-tuning/"},"articleSection":"Machine Learning","wordCount":1349}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://donmain.dev/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://donmain.dev/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization | dontech","item":"https://donmain.dev/ml/hyperparameter-tuning/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/hyperparameter-tuning/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="dontech RSS Feed" href="/rss.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" media="print"/><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" media="print"/><noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/></noscript><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:924px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;485&#x27;%20width=&#x27;924&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAA9hAAAPYQGoP6dpAAABoklEQVR42n1S207CQBT0E7iG7rYUaylKy00QLJdikYjBqAQhAppoSBQv+KAx8ffHs0tQQ5CHSZt2d87MnNniiQqWULcFDiU0w5VPnqqD5X0w24NqLP79vbOKreUL08uI8iIirIBQLC8R5gUErEMECRG+j7B+gIjpgscPwOn8v4QKHbBsH1fXL+heTNG7esRl/wEn53c4mzyjO3xA3R+iO3pC7XQCdbcBbtXA16j9ITR2PfQnrxjczDGefmB0/47L2zkGs08Mb95w0pvidvaFMX1XsxTB3iKC9ZZJvmJWESq2Edw/RiB/hEDGQ7DgI+h1EY6XECVFwq5CJJpewbZJeRobMhTyjWwbVvEUqRKh0IHu+FByPtQk2XOOpFXNrEEj8nTFRzzd2EBIttNOG3aug6TdokyPoZOtWKYJlqpJi9xuQqOta1adBLiLQSs5/liWIZc7YKRE0UoyV7F5xfEkmKhPtgW+40LfqSJOEa3b9C+hmJajC0LJ8gBlxZJVKNmm7KEYJqwz6itLlDf3UJJq6/slLAtSxSHifAtMDKbii4GrhN8abi7jAIYQCAAAAABJRU5ErkJggg==" alt=""/><picture><source type="image/avif" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/df6ef/thumbnail.avif 750w,/static/80eae096a5967cac51424f582b2a6e6d/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/8384a/thumbnail.webp 750w,/static/80eae096a5967cac51424f582b2a6e6d/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/80eae096a5967cac51424f582b2a6e6d/43f69/thumbnail.png" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/68929/thumbnail.png 750w,/static/80eae096a5967cac51424f582b2a6e6d/43f69/thumbnail.png 924w" alt="하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization"/></picture><noscript><picture><source type="image/avif" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/df6ef/thumbnail.avif 750w,/static/80eae096a5967cac51424f582b2a6e6d/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/8384a/thumbnail.webp 750w,/static/80eae096a5967cac51424f582b2a6e6d/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/80eae096a5967cac51424f582b2a6e6d/43f69/thumbnail.png" srcSet="/static/80eae096a5967cac51424f582b2a6e6d/68929/thumbnail.png 750w,/static/80eae096a5967cac51424f582b2a6e6d/43f69/thumbnail.png 924w" alt="하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.28.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">26</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/regression-metrics/">회귀 모델 평가 지표: MSE, MAE, R², MAPE 언제 어떤 걸 쓸까</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">27</span><a class="css-dizrmv e4kcwtw5" href="/ml/cross-validation/">교차 검증(Cross-Validation): K-Fold, Stratified, Time Series Split</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">28</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">29</span><a class="css-dizrmv e4kcwtw5" href="/ml/ml-practical-advice/">머신러닝 실전 가이드: 학습 곡선, 오차 분석, 다음 스텝 결정법</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">30</span><a class="css-dizrmv e4kcwtw5" href="/ml/categorical-encoding/">범주형 데이터 인코딩: One-Hot, Label, Ordinal Encoding 총정리</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">6<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/cross-validation/">이전 글</a>에서 교차 검증(Cross-Validation)을 배웠다. K-Fold로 데이터를 나눠 모델을 공정하게 평가할 수 있게 됐다. 점수를 믿을 수 있게 된 것이다. 그런데 자연스럽게 다음 질문이 따라온다 — <strong>어떻게 하면 그 점수를 더 높일 수 있는가?</strong></p>
+<p>모델의 구조를 바꾸는 것도 방법이지만, 같은 모델이라도 <strong>하이퍼파라미터 설정에 따라 성능이 크게 달라진다</strong>. 랜덤 포레스트의 트리 수를 100으로 할지 500으로 할지, XGBoost의 learning_rate를 0.1로 할지 0.01로 할지 — 이 선택이 정확도 몇 퍼센트를 좌우한다. 이 글에서는 하이퍼파라미터를 체계적으로 탐색하는 방법을 정리한다.</p>
+<hr>
+<h2>파라미터 vs 하이퍼파라미터</h2>
+<p>먼저 용어를 구분하자. 둘은 자주 혼동되지만 본질적으로 다르다.</p>
+<p><strong>파라미터(Parameter)</strong> 는 모델이 학습 과정에서 <strong>스스로 배우는 값</strong>이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">선형 회귀: 가중치 w, 편향 b
+신경망:    각 층의 가중치 행렬 W, 편향 벡터 b
+결정 트리: 각 노드의 분기 기준값</code></pre></div>
+<p><strong>하이퍼파라미터(Hyperparameter)</strong> 는 학습 <strong>전에 사람이 설정하는 값</strong>이다. 모델이 데이터를 보기 전에 결정해야 한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">랜덤 포레스트: n_estimators, max_depth, max_features
+XGBoost:      learning_rate, max_depth, n_estimators, reg_lambda
+신경망:        학습률, 배치 크기, 은닉층 수, 은닉 노드 수</code></pre></div>
+<p>파라미터는 경사 하강법 등 <a href="/ml/optimizers/">옵티마이저</a>가 자동으로 최적화한다. 하이퍼파라미터는 그런 자동 최적화 대상이 아니다 — 우리가 직접 좋은 값을 찾아야 한다. 그 과정이 바로 <strong>하이퍼파라미터 튜닝</strong>이다.</p>
+<hr>
+<h2>수동 튜닝: 직관에 의존하는 방법</h2>
+<p>가장 원시적인 방법은 수동 튜닝이다. 값을 하나 넣고, 학습시키고, 결과를 보고, 다시 바꾸고 — 이 과정을 반복한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+
+<span class="token comment"># 시도 1</span>
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> max_depth<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>cross_val_score<span class="token punctuation">(</span>rf<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment"># 0.847</span>
+
+<span class="token comment"># 시도 2 — max_depth를 올려보자</span>
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> max_depth<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>cross_val_score<span class="token punctuation">(</span>rf<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment"># 0.862</span>
+
+<span class="token comment"># 시도 3 — n_estimators도 늘려볼까</span>
+rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">300</span><span class="token punctuation">,</span> max_depth<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>cross_val_score<span class="token punctuation">(</span>rf<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment"># 0.871</span></code></pre></div>
+<p>이 방법의 문제점:</p>
+<ol>
+<li><strong>재현 불가능</strong> — 어떤 조합을 시도했는지 기록하지 않으면 추적이 안 된다</li>
+<li><strong>비체계적</strong> — 직관에 의존하므로 좋은 영역을 놓칠 수 있다</li>
+<li><strong>시간 낭비</strong> — 사람이 루프를 돌아야 한다</li>
+</ol>
+<p>수동 튜닝은 탐색 범위를 잡기 위한 초기 실험으로는 괜찮지만, 최종 성능을 끌어올리는 방법으로는 부족하다. 자동화된 탐색이 필요하다.</p>
+<hr>
+<h2>Grid Search: 모든 조합을 시도한다</h2>
+<p>Grid Search는 가장 직관적인 자동 탐색법이다. 각 하이퍼파라미터에 대해 후보 값들을 정의하고, <strong>가능한 모든 조합</strong>을 시도한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> GridSearchCV
+
+param_grid <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">,</span> <span class="token number">300</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">15</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'max_features'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span> <span class="token string">'log2'</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+
+grid_search <span class="token operator">=</span> GridSearchCV<span class="token punctuation">(</span>
+    estimator<span class="token operator">=</span>RandomForestClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    param_grid<span class="token operator">=</span>param_grid<span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span>          <span class="token comment"># 모든 CPU 코어 사용</span>
+    verbose<span class="token operator">=</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+grid_search<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 파라미터: </span><span class="token interpolation"><span class="token punctuation">{</span>grid_search<span class="token punctuation">.</span>best_params_<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 CV 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>grid_search<span class="token punctuation">.</span>best_score_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>위 예시에서 총 조합 수는 3 x 4 x 2 = <strong>24개</strong>. 각 조합마다 5-fold CV를 수행하므로, 모델 학습 횟수는 24 x 5 = <strong>120번</strong>이다.</p>
+<p><code class="language-text">GridSearchCV</code>의 장점은 명확하다 — 정의한 범위 내에서 <strong>최적 조합을 반드시 찾는다</strong>. 하지만 이 “반드시”가 문제를 만든다.</p>
+<hr>
+<h2>Grid Search의 한계: 차원의 저주</h2>
+<p>하이퍼파라미터가 3개이고 각각 후보가 4개면 조합은 4³ = 64개. 관리 가능하다. 하지만 하이퍼파라미터가 늘어나면?</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">하이퍼파라미터 3개 × 후보 4개 =   64 조합
+하이퍼파라미터 5개 × 후보 4개 = 1,024 조합
+하이퍼파라미터 7개 × 후보 4개 = 16,384 조합
+하이퍼파라미터 10개 × 후보 4개 = 1,048,576 조합</code></pre></div>
+<p>기하급수적으로 증가한다. <a href="/ml/xgboost-vs-lightgbm/">XGBoost</a>처럼 튜닝 가능한 하이퍼파라미터가 10개 이상인 모델에서 Grid Search는 사실상 불가능하다.</p>
+<p>더 근본적인 문제가 있다. Grid Search는 <strong>격자점만 탐색한다</strong>. learning_rate 후보를 [0.01, 0.1, 1.0]으로 설정했는데, 실제 최적값이 0.03이라면? 격자 사이에 있는 값은 영원히 발견할 수 없다.</p>
+<p>또한 Grid Search는 <strong>모든 하이퍼파라미터를 동등하게 취급한다</strong>. 실제로는 성능에 미치는 영향이 파라미터마다 크게 다르다. learning_rate는 민감하지만 n_estimators는 어느 정도 크기만 되면 큰 차이가 없는 경우가 많다. Grid Search는 이런 중요도 차이를 무시하고 모든 조합을 동일한 비용으로 탐색한다 — 비효율적이다.</p>
+<hr>
+<h2>Random Search: 무작위가 더 효율적인 이유</h2>
+<p>Random Search는 격자 대신 <strong>각 하이퍼파라미터의 분포에서 무작위로 샘플링</strong>한다. Bergstra &#x26; Bengio (2012)의 논문 “Random Search for Hyper-Parameter Optimization”에서 그 효과가 증명됐다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> RandomizedSearchCV
+<span class="token keyword">from</span> scipy<span class="token punctuation">.</span>stats <span class="token keyword">import</span> randint<span class="token punctuation">,</span> uniform
+
+param_distributions <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">,</span>       <span class="token comment"># 100~499 균등 분포</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">,</span>             <span class="token comment"># 3~19 균등 분포</span>
+    <span class="token string">'max_features'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span> <span class="token string">'log2'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'min_samples_split'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'min_samples_leaf'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+random_search <span class="token operator">=</span> RandomizedSearchCV<span class="token punctuation">(</span>
+    estimator<span class="token operator">=</span>RandomForestClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    param_distributions<span class="token operator">=</span>param_distributions<span class="token punctuation">,</span>
+    n_iter<span class="token operator">=</span><span class="token number">60</span><span class="token punctuation">,</span>          <span class="token comment"># 60개 조합만 시도</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">,</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+random_search<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 파라미터: </span><span class="token interpolation"><span class="token punctuation">{</span>random_search<span class="token punctuation">.</span>best_params_<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 CV 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>random_search<span class="token punctuation">.</span>best_score_<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<h3>왜 무작위가 격자보다 나은가</h3>
+<p>핵심 직관은 이렇다. 하이퍼파라미터 2개가 있는데, 실제로 성능에 중요한 건 1개뿐이라고 가정하자.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Grid Search (9회 탐색):
+
+  파라미터 B (덜 중요)
+  │ ● ● ●
+  │ ● ● ●
+  │ ● ● ●
+  └──────── 파라미터 A (중요)
+  → 파라미터 A에 대해 3개 값만 탐색
+
+Random Search (9회 탐색):
+
+  파라미터 B (덜 중요)
+  │   ●     ●
+  │ ●    ●
+  │    ●   ●
+  │  ●       ●  ●
+  └──────────── 파라미터 A (중요)
+  → 파라미터 A에 대해 9개 값을 탐색</code></pre></div>
+<p>Grid Search는 9번 시도해도 “중요한” 파라미터 A를 3개 값에서만 평가한다. 나머지 6번은 덜 중요한 파라미터 B의 변화만 보는 셈이다. Random Search는 9번 시도에서 파라미터 A의 <strong>서로 다른 9개 값</strong>을 탐색한다. 중요한 차원에서의 탐색 밀도가 훨씬 높다.</p>
+<p>Bergstra &#x26; Bengio는 논문에서 하이퍼파라미터 공간에 “중요한 차원”과 “덜 중요한 차원”이 섞여 있을 때 — 현실에서 거의 항상 그렇다 — Random Search가 같은 예산으로 더 좋은 결과를 낸다는 것을 이론적, 실험적으로 보였다.</p>
+<p>실전 가이드라인: <strong>하이퍼파라미터가 3개 이하이고 후보 값이 명확하면 Grid Search</strong>, 그 외에는 <strong>Random Search</strong>를 기본으로 쓴다.</p>
+<hr>
+<h2>Bayesian Optimization: 이전 결과를 기억하는 탐색</h2>
+<p>Grid Search와 Random Search에는 공통적인 약점이 있다. 각 시도가 <strong>독립적</strong>이다. 이전에 어떤 조합이 좋았는지 전혀 활용하지 않는다. 99번째 시도의 결과가 100번째 시도에 영향을 주지 않는다.</p>
+<p><strong>Bayesian Optimization</strong>은 다르다. 이전 평가 결과를 바탕으로 <strong>다음에 어디를 탐색할지 결정한다</strong>. 핵심 아이디어는 두 가지다:</p>
+<h3>1. 대리 모델(Surrogate Model)</h3>
+<p>하이퍼파라미터 → 성능 의 관계를 근사하는 모델을 만든다. 실제 모델을 학습시키는 것은 비용이 크지만, 대리 모델은 가볍다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">실제 목적 함수:   f(하이퍼파라미터) = CV 점수  ← 비용이 크다 (모델 학습 필요)
+대리 모델:       ĝ(하이퍼파라미터) ≈ f       ← 비용이 작다 (예측만)</code></pre></div>
+<p>대리 모델의 종류:</p>
+<ul>
+<li><strong>가우시안 프로세스(GP)</strong>: 평균과 불확실성을 동시에 예측. 저차원에서 강력</li>
+<li><strong>TPE(Tree-structured Parzen Estimator)</strong>: 좋은 결과/나쁜 결과 영역을 분리하여 다음 탐색 방향 제안. 고차원에서 효율적</li>
+<li><strong>랜덤 포레스트</strong>: SMAC 프레임워크에서 사용</li>
+</ul>
+<h3>2. 획득 함수(Acquisition Function)</h3>
+<p>대리 모델의 예측을 바탕으로, <strong>다음에 어떤 하이퍼파라미터를 시도할지</strong> 결정하는 전략이다. 두 가지 상충하는 목표의 균형을 잡는다:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Exploitation (활용): 현재까지 좋았던 영역 근처를 집중 탐색
+Exploration (탐색):  아직 시도하지 않은 미지의 영역 탐색</code></pre></div>
+<p>대표적인 획득 함수:</p>
+<ul>
+<li><strong>EI (Expected Improvement)</strong>: 현재 최고 점수 대비 개선 기댓값을 최대화</li>
+<li><strong>PI (Probability of Improvement)</strong>: 개선될 확률을 최대화</li>
+<li><strong>UCB (Upper Confidence Bound)</strong>: 예측 평균 + 불확실성의 가중합을 최대화</li>
+</ul>
+<p>Bayesian Optimization의 전체 흐름:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">1. 초기 몇 개의 하이퍼파라미터 조합을 무작위로 평가
+2. 결과로 대리 모델 학습
+3. 획득 함수를 통해 다음 탐색 지점 선택
+4. 해당 지점에서 실제 모델 학습 + 평가
+5. 결과를 대리 모델에 추가하고 업데이트
+6. 3~5 반복</code></pre></div>
+<p>이 방식은 <strong>탐색 예산이 제한적일 때</strong> 특히 효과적이다. 모델 학습 한 번에 수 분<del>수 시간이 걸리는 딥러닝에서 100번의 시도 대신 20</del>30번으로 유사한 결과를 얻을 수 있다.</p>
+<hr>
+<h2>Optuna: 실전 Bayesian Optimization</h2>
+<p>Optuna는 Bayesian Optimization을 쉽게 사용할 수 있게 해주는 Python 라이브러리다. 기본 샘플러로 <strong>TPE(Tree-structured Parzen Estimator)</strong> 를 사용한다.</p>
+<h3>기본 사용법</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> optuna
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+
+<span class="token keyword">def</span> <span class="token function">objective</span><span class="token punctuation">(</span>trial<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""Optuna가 최적화할 목적 함수"""</span>
+    <span class="token comment"># 하이퍼파라미터 탐색 공간 정의</span>
+    n_estimators <span class="token operator">=</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'n_estimators'</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">)</span>
+    max_depth <span class="token operator">=</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'max_depth'</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span>
+    max_features <span class="token operator">=</span> trial<span class="token punctuation">.</span>suggest_categorical<span class="token punctuation">(</span><span class="token string">'max_features'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span> <span class="token string">'log2'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+    min_samples_split <span class="token operator">=</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'min_samples_split'</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span>
+    min_samples_leaf <span class="token operator">=</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'min_samples_leaf'</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span>
+
+    rf <span class="token operator">=</span> RandomForestClassifier<span class="token punctuation">(</span>
+        n_estimators<span class="token operator">=</span>n_estimators<span class="token punctuation">,</span>
+        max_depth<span class="token operator">=</span>max_depth<span class="token punctuation">,</span>
+        max_features<span class="token operator">=</span>max_features<span class="token punctuation">,</span>
+        min_samples_split<span class="token operator">=</span>min_samples_split<span class="token punctuation">,</span>
+        min_samples_leaf<span class="token operator">=</span>min_samples_leaf<span class="token punctuation">,</span>
+        random_state<span class="token operator">=</span><span class="token number">42</span>
+    <span class="token punctuation">)</span>
+
+    score <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>rf<span class="token punctuation">,</span> X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> score<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 스터디 생성 및 최적화 실행</span>
+study <span class="token operator">=</span> optuna<span class="token punctuation">.</span>create_study<span class="token punctuation">(</span>direction<span class="token operator">=</span><span class="token string">'maximize'</span><span class="token punctuation">)</span>
+study<span class="token punctuation">.</span>optimize<span class="token punctuation">(</span>objective<span class="token punctuation">,</span> n_trials<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 파라미터: </span><span class="token interpolation"><span class="token punctuation">{</span>study<span class="token punctuation">.</span>best_params<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 CV 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>study<span class="token punctuation">.</span>best_value<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>Optuna의 핵심 장점:</p>
+<ol>
+<li><strong>Define-by-run</strong>: 탐색 공간을 코드 안에서 동적으로 정의한다. 조건부 하이퍼파라미터도 자연스럽게 표현 가능</li>
+<li><strong>Pruning</strong>: 학습 도중 성능이 나쁘면 조기 중단. 시간 절약</li>
+<li><strong>시각화</strong>: <code class="language-text">optuna.visualization</code>으로 탐색 과정을 한눈에 파악</li>
+</ol>
+<h3>XGBoost + Optuna 전체 예시</h3>
+<p><a href="/ml/xgboost-vs-lightgbm/">XGBoost</a>의 하이퍼파라미터를 Optuna로 탐색하는 실전 코드다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> optuna
+<span class="token keyword">import</span> xgboost <span class="token keyword">as</span> xgb
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
+
+<span class="token comment"># 데이터 준비</span>
+X<span class="token punctuation">,</span> y <span class="token operator">=</span> load_breast_cancer<span class="token punctuation">(</span>return_X_y<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">objective</span><span class="token punctuation">(</span>trial<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    params <span class="token operator">=</span> <span class="token punctuation">{</span>
+        <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'n_estimators'</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'max_depth'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'max_depth'</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'learning_rate'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'learning_rate'</span><span class="token punctuation">,</span> <span class="token number">0.01</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> log<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'subsample'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'subsample'</span><span class="token punctuation">,</span> <span class="token number">0.6</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'colsample_bytree'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'colsample_bytree'</span><span class="token punctuation">,</span> <span class="token number">0.6</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'reg_lambda'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'reg_lambda'</span><span class="token punctuation">,</span> <span class="token number">1e-3</span><span class="token punctuation">,</span> <span class="token number">10.0</span><span class="token punctuation">,</span> log<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'reg_alpha'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'reg_alpha'</span><span class="token punctuation">,</span> <span class="token number">1e-3</span><span class="token punctuation">,</span> <span class="token number">10.0</span><span class="token punctuation">,</span> log<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'min_child_weight'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'min_child_weight'</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+
+    model <span class="token operator">=</span> xgb<span class="token punctuation">.</span>XGBClassifier<span class="token punctuation">(</span>
+        <span class="token operator">**</span>params<span class="token punctuation">,</span>
+        tree_method<span class="token operator">=</span><span class="token string">'hist'</span><span class="token punctuation">,</span>
+        random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+        use_label_encoder<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span>
+        eval_metric<span class="token operator">=</span><span class="token string">'logloss'</span>
+    <span class="token punctuation">)</span>
+
+    scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>
+        model<span class="token punctuation">,</span> X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span>
+        cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'accuracy'</span>
+    <span class="token punctuation">)</span>
+    <span class="token keyword">return</span> scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Optuna 스터디 실행</span>
+study <span class="token operator">=</span> optuna<span class="token punctuation">.</span>create_study<span class="token punctuation">(</span>direction<span class="token operator">=</span><span class="token string">'maximize'</span><span class="token punctuation">)</span>
+study<span class="token punctuation">.</span>optimize<span class="token punctuation">(</span>objective<span class="token punctuation">,</span> n_trials<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span> show_progress_bar<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 결과 확인</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n최적 CV 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>study<span class="token punctuation">.</span>best_value<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 하이퍼파라미터:"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> study<span class="token punctuation">.</span>best_params<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  </span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">: </span><span class="token interpolation"><span class="token punctuation">{</span>value<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 최적 파라미터로 최종 모델 학습</span>
+best_model <span class="token operator">=</span> xgb<span class="token punctuation">.</span>XGBClassifier<span class="token punctuation">(</span>
+    <span class="token operator">**</span>study<span class="token punctuation">.</span>best_params<span class="token punctuation">,</span>
+    tree_method<span class="token operator">=</span><span class="token string">'hist'</span><span class="token punctuation">,</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    eval_metric<span class="token operator">=</span><span class="token string">'logloss'</span>
+<span class="token punctuation">)</span>
+best_model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
+test_score <span class="token operator">=</span> best_model<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n테스트 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>test_score<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p><code class="language-text">suggest_float(..., log=True)</code>는 로그 스케일 샘플링이다. learning_rate처럼 0.001<del>1.0 범위를 탐색할 때, 선형 균등 분포로 뽑으면 대부분의 샘플이 0.5</del>1.0에 몰린다. 로그 스케일로 뽑으면 0.001<del>0.01, 0.01</del>0.1, 0.1~1.0 각 구간에서 비슷한 밀도로 탐색한다. <a href="/ml/regularization/">규제</a> 강도나 학습률처럼 스케일이 넓은 하이퍼파라미터에는 <strong>항상 log=True를 쓴다</strong>.</p>
+<h3>탐색 과정 시각화</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 최적화 이력 시각화</span>
+optuna<span class="token punctuation">.</span>visualization<span class="token punctuation">.</span>plot_optimization_history<span class="token punctuation">(</span>study<span class="token punctuation">)</span>
+
+<span class="token comment"># 하이퍼파라미터 중요도</span>
+optuna<span class="token punctuation">.</span>visualization<span class="token punctuation">.</span>plot_param_importances<span class="token punctuation">(</span>study<span class="token punctuation">)</span>
+
+<span class="token comment"># 하이퍼파라미터 간 관계</span>
+optuna<span class="token punctuation">.</span>visualization<span class="token punctuation">.</span>plot_contour<span class="token punctuation">(</span>study<span class="token punctuation">,</span> params<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'learning_rate'</span><span class="token punctuation">,</span> <span class="token string">'max_depth'</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
+<p><code class="language-text">plot_param_importances</code>는 어떤 하이퍼파라미터가 성능에 가장 큰 영향을 주는지 보여준다. 보통 learning_rate와 max_depth가 상위에 온다.</p>
+<hr>
+<h2>Successive Halving: 빠른 조기 탈락</h2>
+<p>sklearn 0.24+에서 <code class="language-text">HalvingGridSearchCV</code>와 <code class="language-text">HalvingRandomSearchCV</code>를 제공한다. 아이디어는 단순하다 — 많은 후보를 적은 리소스로 평가하고, 하위 후보를 탈락시키면서 점차 리소스를 늘린다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>experimental <span class="token keyword">import</span> enable_halving_search_cv
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> HalvingRandomSearchCV
+<span class="token keyword">from</span> scipy<span class="token punctuation">.</span>stats <span class="token keyword">import</span> randint<span class="token punctuation">,</span> uniform
+
+param_distributions <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'max_features'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'sqrt'</span><span class="token punctuation">,</span> <span class="token string">'log2'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'min_samples_split'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+
+halving_search <span class="token operator">=</span> HalvingRandomSearchCV<span class="token punctuation">(</span>
+    estimator<span class="token operator">=</span>RandomForestClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    param_distributions<span class="token operator">=</span>param_distributions<span class="token punctuation">,</span>
+    n_candidates<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>     <span class="token comment"># 초기 후보 100개</span>
+    factor<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span>             <span class="token comment"># 매 라운드 1/3만 생존</span>
+    resource<span class="token operator">=</span><span class="token string">'n_samples'</span><span class="token punctuation">,</span> <span class="token comment"># 리소스 = 데이터 샘플 수</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+halving_search<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">라운드 1: 100개 후보 × 소량 데이터 → 상위 33개 생존
+라운드 2:  33개 후보 × 3배 데이터 → 상위 11개 생존
+라운드 3:  11개 후보 × 9배 데이터 → 상위  4개 생존
+라운드 4:   4개 후보 × 전체 데이터 → 최종 1개 선택</code></pre></div>
+<p>전체 데이터로 100번 학습하는 대신, 적은 데이터로 빠르게 걸러내고 유망한 후보에만 전체 데이터를 쓴다. 총 연산량이 크게 줄어든다.</p>
+<hr>
+<h2>모델별 주요 하이퍼파라미터 정리</h2>
+<p>어떤 하이퍼파라미터를 튜닝해야 할지 모르면 시작할 수 없다. 모델별로 중요한 하이퍼파라미터와 일반적인 탐색 범위를 정리한다.</p>
+<h3>랜덤 포레스트</h3>
+<p><a href="/ml/random-forest/">랜덤 포레스트</a>에서 배운 핵심 파라미터들이다.</p>
+<table>
+<thead>
+<tr>
+<th>하이퍼파라미터</th>
+<th>역할</th>
+<th>탐색 범위</th>
+<th>참고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="language-text">n_estimators</code></td>
+<td>트리 수</td>
+<td>100~500</td>
+<td>많을수록 좋지만 수익 체감</td>
+</tr>
+<tr>
+<td><code class="language-text">max_depth</code></td>
+<td>트리 최대 깊이</td>
+<td>5~30 또는 None</td>
+<td>과적합 제어</td>
+</tr>
+<tr>
+<td><code class="language-text">max_features</code></td>
+<td>노드당 고려 특성 수</td>
+<td>‘sqrt’, ‘log2’, 0.3~0.8</td>
+<td>트리 간 상관관계 조절</td>
+</tr>
+<tr>
+<td><code class="language-text">min_samples_split</code></td>
+<td>분할 최소 샘플 수</td>
+<td>2~20</td>
+<td>과적합 방지</td>
+</tr>
+<tr>
+<td><code class="language-text">min_samples_leaf</code></td>
+<td>리프 최소 샘플 수</td>
+<td>1~10</td>
+<td>과적합 방지</td>
+</tr>
+</tbody>
+</table>
+<h3>XGBoost / LightGBM</h3>
+<table>
+<thead>
+<tr>
+<th>하이퍼파라미터</th>
+<th>역할</th>
+<th>탐색 범위</th>
+<th>스케일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="language-text">learning_rate</code></td>
+<td>각 트리의 기여도</td>
+<td>0.01~0.3</td>
+<td><strong>log</strong></td>
+</tr>
+<tr>
+<td><code class="language-text">max_depth</code></td>
+<td>트리 깊이</td>
+<td>3~10</td>
+<td>linear</td>
+</tr>
+<tr>
+<td><code class="language-text">n_estimators</code></td>
+<td>부스팅 라운드 수</td>
+<td>100~1000</td>
+<td>linear</td>
+</tr>
+<tr>
+<td><code class="language-text">subsample</code></td>
+<td>행 샘플링 비율</td>
+<td>0.6~1.0</td>
+<td>linear</td>
+</tr>
+<tr>
+<td><code class="language-text">colsample_bytree</code></td>
+<td>열 샘플링 비율</td>
+<td>0.6~1.0</td>
+<td>linear</td>
+</tr>
+<tr>
+<td><code class="language-text">reg_lambda</code> (L2)</td>
+<td>L2 <a href="/ml/regularization/">규제</a> 강도</td>
+<td>0.001~10</td>
+<td><strong>log</strong></td>
+</tr>
+<tr>
+<td><code class="language-text">reg_alpha</code> (L1)</td>
+<td>L1 규제 강도</td>
+<td>0.001~10</td>
+<td><strong>log</strong></td>
+</tr>
+<tr>
+<td><code class="language-text">min_child_weight</code></td>
+<td>리프 최소 헤시안 합</td>
+<td>1~10</td>
+<td>linear</td>
+</tr>
+</tbody>
+</table>
+<h3>신경망</h3>
+<table>
+<thead>
+<tr>
+<th>하이퍼파라미터</th>
+<th>역할</th>
+<th>탐색 범위</th>
+<th>스케일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>learning_rate</td>
+<td><a href="/ml/optimizers/">옵티마이저</a> 학습률</td>
+<td>1e-5~1e-1</td>
+<td><strong>log</strong></td>
+</tr>
+<tr>
+<td>batch_size</td>
+<td>미니배치 크기</td>
+<td>16, 32, 64, 128, 256</td>
+<td>categorical</td>
+</tr>
+<tr>
+<td>hidden_layers</td>
+<td>은닉층 수</td>
+<td>1~5</td>
+<td>linear</td>
+</tr>
+<tr>
+<td>hidden_units</td>
+<td>층당 노드 수</td>
+<td>32~512</td>
+<td>linear</td>
+</tr>
+<tr>
+<td>dropout</td>
+<td>드롭아웃 비율</td>
+<td>0.0~0.5</td>
+<td>linear</td>
+</tr>
+<tr>
+<td>weight_decay</td>
+<td>L2 규제</td>
+<td>1e-5~1e-2</td>
+<td><strong>log</strong></td>
+</tr>
+</tbody>
+</table>
+<p>스케일이 <strong>log</strong>인 파라미터는 Optuna에서 <code class="language-text">log=True</code>, Random Search에서는 <code class="language-text">loguniform</code> 분포를 쓴다.</p>
+<hr>
+<h2>Nested CV: 튜닝과 평가를 분리하라</h2>
+<p>하이퍼파라미터 튜닝에 CV를 사용하고, 그 결과를 최종 성능으로 보고하면 <strong>데이터 누수</strong>가 발생한다. 튜닝 과정에서 검증 데이터를 이미 “보고” 최적화했기 때문이다. <a href="/ml/cross-validation/">교차 검증</a>에서 배운 원칙을 떠올려보자 — 평가 데이터는 학습 과정에 영향을 주면 안 된다.</p>
+<p>해결책은 <strong>Nested CV(중첩 교차 검증)</strong> 이다. 외부 루프에서 평가하고, 내부 루프에서 튜닝한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">외부 CV (평가용) — 5-Fold
+├── Fold 1: Train(2,3,4,5) / Test(1)
+│   └── 내부 CV (튜닝용) — 3-Fold
+│       └── GridSearchCV로 최적 하이퍼파라미터 탐색
+│       └── 최적 파라미터로 Train(2,3,4,5) 전체 학습 → Test(1) 평가
+├── Fold 2: Train(1,3,4,5) / Test(2)
+│   └── 내부 CV (튜닝용) — 3-Fold
+│       └── ...
+└── ...
+
+→ 외부 5개 Fold의 테스트 점수 평균 = 편향 없는 최종 성능</code></pre></div>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score<span class="token punctuation">,</span> GridSearchCV
+
+<span class="token comment"># 내부 CV: 하이퍼파라미터 튜닝</span>
+inner_cv <span class="token operator">=</span> GridSearchCV<span class="token punctuation">(</span>
+    estimator<span class="token operator">=</span>RandomForestClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    param_grid<span class="token operator">=</span><span class="token punctuation">{</span>
+        <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">,</span> <span class="token number">300</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+        <span class="token string">'max_depth'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">15</span><span class="token punctuation">]</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">,</span>
+    n_jobs<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token comment"># 외부 CV: 편향 없는 성능 평가</span>
+outer_scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>
+    inner_cv<span class="token punctuation">,</span>       <span class="token comment"># GridSearchCV 객체를 그대로 넣는다</span>
+    X<span class="token punctuation">,</span> y<span class="token punctuation">,</span>
+    cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>
+    scoring<span class="token operator">=</span><span class="token string">'accuracy'</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Nested CV 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>outer_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> ± </span><span class="token interpolation"><span class="token punctuation">{</span>outer_scores<span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>sklearn에서는 <code class="language-text">GridSearchCV</code> 객체를 <code class="language-text">cross_val_score</code>에 그대로 전달하면 Nested CV가 자동으로 구현된다. 외부 Fold마다 내부에서 최적 파라미터를 새로 탐색하므로, 각 외부 Fold의 테스트 점수는 <strong>튜닝 과정에 오염되지 않은</strong> 순수한 성능 추정치다.</p>
+<p>Nested CV는 연산 비용이 높다(내부 CV x 외부 CV). 실전에서는:</p>
+<ul>
+<li><strong>모델 선택 &#x26; 최종 성능 보고</strong>: Nested CV 사용</li>
+<li><strong>최종 모델 학습</strong>: 전체 데이터로 일반 CV 튜닝 후 학습</li>
+</ul>
+<hr>
+<h2>실전 팁</h2>
+<h3>1. Coarse-to-fine: 넓게 시작하고 좁혀라</h3>
+<p>처음부터 촘촘한 격자를 짜면 비효율적이다. 먼저 넓은 범위에서 Random Search로 유망 영역을 찾고, 그 근처에서 좁은 범위로 다시 탐색한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 1단계: 넓은 범위 탐색</span>
+param_dist_coarse <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'learning_rate'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">0.001</span><span class="token punctuation">,</span> <span class="token number">0.01</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">7</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">15</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">300</span><span class="token punctuation">,</span> <span class="token number">500</span><span class="token punctuation">,</span> <span class="token number">1000</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+<span class="token comment"># → 결과: learning_rate=0.1, max_depth=5 근처가 좋다</span>
+
+<span class="token comment"># 2단계: 유망 영역 정밀 탐색</span>
+param_dist_fine <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'learning_rate'</span><span class="token punctuation">:</span> uniform<span class="token punctuation">(</span><span class="token number">0.05</span><span class="token punctuation">,</span> <span class="token number">0.2</span><span class="token punctuation">)</span><span class="token punctuation">,</span>       <span class="token comment"># 0.05~0.25</span>
+    <span class="token string">'max_depth'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">8</span><span class="token punctuation">)</span><span class="token punctuation">,</span>                 <span class="token comment"># 4~7</span>
+    <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> randint<span class="token punctuation">(</span><span class="token number">200</span><span class="token punctuation">,</span> <span class="token number">600</span><span class="token punctuation">)</span><span class="token punctuation">,</span>           <span class="token comment"># 200~599</span>
+<span class="token punctuation">}</span></code></pre></div>
+<h3>2. 스케일이 넓으면 로그 스케일을 쓰자</h3>
+<p>learning_rate 범위가 0.001<del>1.0이면, 선형 균등 분포는 0.001</del>0.01 구간에서 1%밖에 탐색하지 않는다. 로그 스케일을 써야 각 자릿수에서 균등하게 탐색한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 나쁜 예: 선형 균등 분포</span>
+trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> <span class="token number">0.001</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">)</span>
+<span class="token comment"># → 0.5~1.0 구간에서 50% 샘플링</span>
+
+<span class="token comment"># 좋은 예: 로그 균등 분포</span>
+trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> <span class="token number">0.001</span><span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">,</span> log<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+<span class="token comment"># → 0.001~0.01, 0.01~0.1, 0.1~1.0 각 구간에서 ~33% 샘플링</span></code></pre></div>
+<h3>3. 탐색 순서를 정하자</h3>
+<p>모든 하이퍼파라미터를 한꺼번에 튜닝하면 탐색 공간이 폭발한다. 실전에서는 영향이 큰 것부터 순서대로 잡는다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">XGBoost 튜닝 순서 (권장):
+1. learning_rate, n_estimators  ← 가장 큰 영향
+2. max_depth, min_child_weight  ← 트리 복잡도
+3. subsample, colsample_bytree  ← 샘플링
+4. reg_lambda, reg_alpha        ← 규제</code></pre></div>
+<h3>4. Early Stopping과 함께 쓰자</h3>
+<p>XGBoost/LightGBM에서는 n_estimators를 크게 잡고 early stopping으로 자동 결정하면, 튜닝할 파라미터를 하나 줄일 수 있다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">objective</span><span class="token punctuation">(</span>trial<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    params <span class="token operator">=</span> <span class="token punctuation">{</span>
+        <span class="token string">'learning_rate'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_float<span class="token punctuation">(</span><span class="token string">'learning_rate'</span><span class="token punctuation">,</span> <span class="token number">0.01</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> log<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'max_depth'</span><span class="token punctuation">:</span> trial<span class="token punctuation">.</span>suggest_int<span class="token punctuation">(</span><span class="token string">'max_depth'</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">'n_estimators'</span><span class="token punctuation">:</span> <span class="token number">1000</span><span class="token punctuation">,</span>  <span class="token comment"># 충분히 크게</span>
+        <span class="token comment"># ...</span>
+    <span class="token punctuation">}</span>
+
+    model <span class="token operator">=</span> xgb<span class="token punctuation">.</span>XGBClassifier<span class="token punctuation">(</span><span class="token operator">**</span>params<span class="token punctuation">,</span> early_stopping_rounds<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">)</span>
+    model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>
+        X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span>
+        eval_set<span class="token operator">=</span><span class="token punctuation">[</span><span class="token punctuation">(</span>X_val<span class="token punctuation">,</span> y_val<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+        verbose<span class="token operator">=</span><span class="token boolean">False</span>
+    <span class="token punctuation">)</span>
+    <span class="token keyword">return</span> model<span class="token punctuation">.</span>best_score  <span class="token comment"># early stopping 시점의 점수</span></code></pre></div>
+<h3>5. 재현성을 확보하자</h3>
+<p><code class="language-text">random_state</code>를 고정하고, Optuna의 <code class="language-text">sampler</code>에도 seed를 설정한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">sampler <span class="token operator">=</span> optuna<span class="token punctuation">.</span>samplers<span class="token punctuation">.</span>TPESampler<span class="token punctuation">(</span>seed<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+study <span class="token operator">=</span> optuna<span class="token punctuation">.</span>create_study<span class="token punctuation">(</span>direction<span class="token operator">=</span><span class="token string">'maximize'</span><span class="token punctuation">,</span> sampler<span class="token operator">=</span>sampler<span class="token punctuation">)</span></code></pre></div>
+<hr>
+<h2>정리: 어떤 방법을 쓸 것인가</h2>
+<table>
+<thead>
+<tr>
+<th>방법</th>
+<th>장점</th>
+<th>단점</th>
+<th>추천 상황</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grid Search</td>
+<td>구현 간단, 완전 탐색</td>
+<td>차원의 저주, 격자만 탐색</td>
+<td>파라미터 2~3개, 후보 명확</td>
+</tr>
+<tr>
+<td>Random Search</td>
+<td>효율적, 구현 간단</td>
+<td>이전 결과 미활용</td>
+<td>범용 기본 선택</td>
+</tr>
+<tr>
+<td>Bayesian (Optuna)</td>
+<td>효율적, 이전 결과 활용</td>
+<td>구현 약간 복잡</td>
+<td>학습 비용 클 때, 최대 성능 필요</td>
+</tr>
+<tr>
+<td>Halving Search</td>
+<td>빠른 초기 탈락</td>
+<td>sklearn 실험적</td>
+<td>후보 많고 시간 제한</td>
+</tr>
+</tbody>
+</table>
+<p>실전 권장 흐름:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">1. 수동 튜닝으로 합리적인 탐색 범위 설정
+2. Random Search로 넓은 영역 탐색 (coarse)
+3. Optuna로 유망 영역 정밀 탐색 (fine)
+4. Nested CV로 최종 성능 보고</code></pre></div>
+<p>하이퍼파라미터 튜닝은 모델 자체를 바꾸는 것만큼 성능에 영향을 준다. <a href="/ml/random-forest/">랜덤 포레스트</a>의 기본 설정과 튜닝된 설정의 차이가 3~5%p인 경우는 흔하고, <a href="/ml/xgboost-vs-lightgbm/">XGBoost</a>에서는 그 이상이 되기도 한다. 모델 선택 → 하이퍼파라미터 튜닝 → 앙상블 순으로 성능을 끌어올리는 것이 정형 데이터 머신러닝의 표준 워크플로우다.</p>
+<hr>
+<p>다음 글에서는 이 시리즈의 실전 마무리로, <strong><a href="/ml/ml-practical-advice/">ML 실전 어드바이스</a></strong> 를 다룬다. 데이터 수집부터 모델 배포까지, 각 단계에서 자주 하는 실수와 체크리스트를 정리한다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/cross-validation/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">교차 검증(Cross-Validation): K-Fold, Stratified, Time Series Split</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/ml-practical-advice/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">머신러닝 실전 가이드: 학습 곡선, 오차 분석, 다음 스텝 결정법</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/hyperparameter-tuning/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-0694830708c73ec4e43c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="254eea8133c23796c6bc";</script><script src="/webpack-runtime-7755da4858a9a49e031a.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

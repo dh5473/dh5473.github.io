@@ -1,0 +1,607 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="정상 데이터의 분포를 학습해 이상치를 탐지하는 원리. 가우시안 모델부터 Isolation Forest, LOF까지 실전 이상 탐지 기법."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech"/><meta data-react-helmet="true" property="og:description" content="정상 데이터의 분포를 학습해 이상치를 탐지하는 원리. 가우시안 모델부터 Isolation Forest, LOF까지 실전 이상 탐지 기법."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/9c729a059e301c897d8bf224c3f7a2fc/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/anomaly-detection/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" property="og:locale" content="ko_KR"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="정상 데이터의 분포를 학습해 이상치를 탐지하는 원리. 가우시안 모델부터 Isolation Forest, LOF까지 실전 이상 탐지 기법."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/9c729a059e301c897d8bf224c3f7a2fc/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://donmain.dev/","inLanguage":"ko","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech","description":"정상 데이터의 분포를 학습해 이상치를 탐지하는 원리. 가우시안 모델부터 Isolation Forest, LOF까지 실전 이상 탐지 기법.","image":"https://donmain.dev/static/9c729a059e301c897d8bf224c3f7a2fc/thumbnail.png","url":"https://donmain.dev/ml/anomaly-detection/","inLanguage":"ko","datePublished":"2026-02-05","dateModified":"2026-02-05","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/anomaly-detection/"},"articleSection":"Machine Learning","wordCount":1509}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://donmain.dev/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://donmain.dev/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용 | dontech","item":"https://donmain.dev/ml/anomaly-detection/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/anomaly-detection/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="dontech RSS Feed" href="/rss.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" media="print"/><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" media="print"/><noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/></noscript><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:1185px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;661&#x27;%20width=&#x27;1185&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAABcSAAAXEgFnn9JSAAABqUlEQVR42n2TyU4CQRCG5/3fwWjc1+jNaOLJkycXYBAQ0EQYGJhVtqF7+vevWQQNsZLqLdVfbd1WmqZYLpf4JcZkmiQJxuMxwjBEEIVce/B9H1EUQe5xQKJ1dj/bUyzZiJERSCk0MmtONI1v3tuoeaPCX26bLhbwXRdDqjBms1kODIJgI7A8aYc+tiqPuGzVsdBqlQiBKTOYECQczXv/Rlie3H10cdKoYt+u4D0KcpgMkkWRailWHMebI2T9RGLOx69V7NSesF19xP3nxw8wK4vYrgMdx1kVeQ2YFsBm4GG39swIazisV3DRsjFXedpmU4TSSQH+jbAE3rIZAjon8LxpY4/wduDnTRGbv0BFb/Is1oGGQIH2p5MMdkbYKVXmI+6vu28/NTSbIpSmiDfNSNV0SpaC9xXjqtPAgf2S1bDUE+qu/YyHQQ9LdlnRsZ7PoCeTzIml6CViY74IHdVtDDsd9Lwx7P4nqoM+mqMhGiMXDZezO+A6n1+cHtpDB32m73Q78KgJs7VWn8MgpSql858ipSyKL04D/pI531tWO6ZZNlFSlrKZ4vwbvUdJEpam5N4AAAAASUVORK5CYII=" alt=""/><picture><source type="image/avif" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/4e9da/thumbnail.avif 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/8725f/thumbnail.avif 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/c0857/thumbnail.avif 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><source type="image/webp" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/53bd3/thumbnail.webp 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/64c92/thumbnail.webp 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/add52/thumbnail.webp 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1185px) 1185px, 100vw" decoding="async" loading="eager" src="/static/9c729a059e301c897d8bf224c3f7a2fc/cbb67/thumbnail.png" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/31215/thumbnail.png 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/ddc7b/thumbnail.png 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/cbb67/thumbnail.png 1185w" alt="이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용"/></picture><noscript><picture><source type="image/avif" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/4e9da/thumbnail.avif 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/8725f/thumbnail.avif 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/c0857/thumbnail.avif 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><source type="image/webp" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/53bd3/thumbnail.webp 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/64c92/thumbnail.webp 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/add52/thumbnail.webp 1185w" sizes="(min-width: 1185px) 1185px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 1185px) 1185px, 100vw" decoding="async" loading="eager" src="/static/9c729a059e301c897d8bf224c3f7a2fc/cbb67/thumbnail.png" srcSet="/static/9c729a059e301c897d8bf224c3f7a2fc/31215/thumbnail.png 750w,/static/9c729a059e301c897d8bf224c3f7a2fc/ddc7b/thumbnail.png 1080w,/static/9c729a059e301c897d8bf224c3f7a2fc/cbb67/thumbnail.png 1185w" alt="이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.02.05.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">36</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">37</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/pca/">PCA(주성분 분석): 차원 축소의 수학적 원리와 실전 활용</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">38</span><a class="css-dizrmv e4kcwtw5" href="/ml/dbscan-and-gmm/">DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">39</span><a class="css-dizrmv e4kcwtw5" href="/ml/tsne-and-umap/">t-SNE와 UMAP: 고차원 데이터 시각화 기법 비교</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">8<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><style data-emotion="css qht250">.css-qht250{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:11px;cursor:default;opacity:0.35;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-qht250:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button disabled="" class="css-qht250 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/kmeans-clustering/">이전 글</a>에서 K-Means 클러스터링을 다뤘다. 라벨 없이 데이터의 구조를 찾는 비지도 학습의 첫걸음이었다. K-Means는 데이터를 K개 그룹으로 묶었다 – “정상적인” 데이터끼리 뭉치는 패턴을 발견한 셈이다.</p>
+<p>그런데 실무에서는 정반대 질문이 더 자주 나온다. <strong>“이 데이터는 정상인가, 비정상인가?”</strong> 서버 로그에서 침입 시도를 잡아내고, 신용카드 거래에서 사기를 탐지하고, 제조 라인에서 불량품을 걸러낸다. 이것이 <strong>이상 탐지(Anomaly Detection)</strong> 다.</p>
+<hr>
+<h2>1. 이상 탐지 vs 분류: 왜 다른가</h2>
+<p>“사기 탐지면 이진 분류 아닌가? <a href="/ml/logistic-regression/">로지스틱 회귀</a>로 정상/사기를 분류하면 되지 않나?”</p>
+<p>직관적으로 맞는 것 같지만, 현실은 세 가지 이유로 분류가 어렵다.</p>
+<p><strong>1) 극단적 클래스 불균형</strong>: 신용카드 사기 비율은 전체 거래의 0.1~0.2%다. 정상 거래 99.8%, 사기 0.2%. <a href="/ml/classification-metrics/">분류 평가 지표 글</a>에서 다뤘듯이, 이런 데이터에서 “전부 정상”이라고 찍어도 Accuracy가 99.8%다. 분류 모델이 소수 클래스를 학습할 데이터가 절대적으로 부족하다.</p>
+<p><strong>2) 양성 라벨 확보의 어려움</strong>: 사기 사례를 대량 수집하는 것 자체가 어렵다. 새로운 유형의 사기는 기존 라벨에 없다. 반면 정상 거래는 수백만 건이 쌓여 있다.</p>
+<p><strong>3) 이상의 형태가 다양하다</strong>: 분류 모델은 “학습한 사기 패턴”만 잡을 수 있다. 하지만 이상은 예상하지 못한 형태로 나타난다. 이상 탐지는 “정상이 뭔지”를 학습하고, 정상에서 벗어나면 이상으로 판단한다 – 근본적으로 다른 접근이다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 핵심 발상의 전환</strong><br>
+  분류: "사기가 어떻게 생겼는지" 학습한다 → 사기 데이터가 많아야 한다<br>
+  이상 탐지: "정상이 어떻게 생겼는지" 학습한다 → 정상 데이터만 있으면 된다<br><br>
+  정상 데이터의 분포를 모델링한 뒤, 그 분포에서 확률이 매우 낮은 데이터를 이상으로 판단하는 것이다.
+</div>
+<hr>
+<h2>2. 이상의 세 가지 유형</h2>
+<p>이상(Anomaly)은 형태에 따라 세 가지로 분류된다.</p>
+<h3>Point Anomaly (점 이상)</h3>
+<p>개별 데이터 포인트가 전체 분포에서 극단적으로 벗어난 경우다. 가장 흔한 유형이다.</p>
+<ul>
+<li>평균 거래 금액이 5만 원인 카드에서 갑자기 500만 원 결제</li>
+<li>서버 CPU 사용률이 평소 30%인데 갑자기 99%로 급등</li>
+<li>체온이 37도인 환자군에서 41도가 관측됨</li>
+</ul>
+<h3>Contextual Anomaly (맥락 이상)</h3>
+<p>값 자체는 정상 범위지만, <strong>맥락을 고려하면</strong> 이상인 경우다.</p>
+<ul>
+<li>여름에 에어컨 전기 사용량 200kWh는 정상이지만, 겨울에 200kWh는 이상</li>
+<li>주말 새벽 3시에 회사 서버 접근 → 평일 오전이었으면 정상</li>
+<li>서울에서 결제 후 10분 뒤 부산에서 결제 → 각각은 정상이지만 시간적 맥락에서 이상</li>
+</ul>
+<h3>Collective Anomaly (집합 이상)</h3>
+<p>개별 데이터는 정상이지만, <strong>여러 데이터가 모이면</strong> 이상 패턴을 형성하는 경우다.</p>
+<ul>
+<li>심전도에서 개별 심박은 정상 범위지만, 특정 패턴이 연속되면 부정맥</li>
+<li>네트워크 트래픽에서 각 패킷은 정상이지만, 같은 포트로 짧은 시간에 수천 개가 집중되면 DDoS 공격</li>
+</ul>
+<p>이번 글에서는 <strong>Point Anomaly</strong>에 집중한다. 가장 기본적이면서도 가장 널리 쓰이는 유형이다.</p>
+<hr>
+<h2>3. 가우시안 모델 (Univariate)</h2>
+<p>가장 간단한 이상 탐지 방법은 데이터가 <strong>정규분포(가우시안 분포)</strong> 를 따른다고 가정하는 것이다. <a href="/ml/naive-bayes/">나이브 베이즈</a>에서 Gaussian NB를 다룰 때 본 것과 같은 분포다.</p>
+<h3>기본 아이디어</h3>
+<p>정상 데이터로부터 평균(mu)과 분산(sigma^2)을 구한다. 그리고 새로운 데이터 x에 대해 확률 밀도 p(x)를 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) = (1 / sqrt(2 * pi * sigma^2)) * exp(-(x - mu)^2 / (2 * sigma^2))</code></pre></div>
+<p>p(x)가 특정 임계값(epsilon) 미만이면 이상으로 판단한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) &lt; epsilon  →  이상(Anomaly)
+p(x) >= epsilon →  정상(Normal)</code></pre></div>
+<h3>구현</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+<span class="token comment"># 정상 데이터 생성 (평균 50, 표준편차 5)</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+normal_data <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span>loc<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">,</span> scale<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token number">1000</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 이상 데이터 추가</span>
+anomalies <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">15</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">80</span><span class="token punctuation">,</span> <span class="token number">85</span><span class="token punctuation">,</span> <span class="token number">90</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+all_data <span class="token operator">=</span> np<span class="token punctuation">.</span>concatenate<span class="token punctuation">(</span><span class="token punctuation">[</span>normal_data<span class="token punctuation">,</span> anomalies<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 가우시안 파라미터 추정 (정상 데이터로)</span>
+mu <span class="token operator">=</span> normal_data<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+sigma2 <span class="token operator">=</span> normal_data<span class="token punctuation">.</span>var<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"평균(mu): </span><span class="token interpolation"><span class="token punctuation">{</span>mu<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"분산(sigma^2): </span><span class="token interpolation"><span class="token punctuation">{</span>sigma2<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 평균(mu): 49.97</span>
+<span class="token comment"># 분산(sigma^2): 24.36</span>
+
+<span class="token comment"># 확률 밀도 함수</span>
+<span class="token keyword">def</span> <span class="token function">gaussian_pdf</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> mu<span class="token punctuation">,</span> sigma2<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">/</span> np<span class="token punctuation">.</span>sqrt<span class="token punctuation">(</span><span class="token number">2</span> <span class="token operator">*</span> np<span class="token punctuation">.</span>pi <span class="token operator">*</span> sigma2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span><span class="token punctuation">(</span>x <span class="token operator">-</span> mu<span class="token punctuation">)</span><span class="token operator">**</span><span class="token number">2</span> <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token number">2</span> <span class="token operator">*</span> sigma2<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 전체 데이터에 대해 확률 밀도 계산</span>
+p_values <span class="token operator">=</span> gaussian_pdf<span class="token punctuation">(</span>all_data<span class="token punctuation">,</span> mu<span class="token punctuation">,</span> sigma2<span class="token punctuation">)</span>
+
+<span class="token comment"># 임계값 설정</span>
+epsilon <span class="token operator">=</span> <span class="token number">1e-4</span>
+
+<span class="token comment"># 이상 탐지</span>
+is_anomaly <span class="token operator">=</span> p_values <span class="token operator">&lt;</span> epsilon
+detected <span class="token operator">=</span> all_data<span class="token punctuation">[</span>is_anomaly<span class="token punctuation">]</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n탐지된 이상치: </span><span class="token interpolation"><span class="token punctuation">{</span>detected<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"이상치 수: </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>detected<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 탐지된 이상치: [15. 20. 80. 85. 90.]</span>
+<span class="token comment"># 이상치 수: 5</span></code></pre></div>
+<p>5개의 이상 데이터를 모두 잡아냈다. 정상 데이터의 분포를 학습한 뒤, 그 분포에서 확률이 극히 낮은 데이터를 탐지한 것이다.</p>
+<h3>다변량으로의 확장 필요성</h3>
+<p>위 예시는 특성이 1개뿐인 단변량(univariate) 경우다. 현실 데이터는 특성이 수십~수백 개다. 각 특성을 독립적으로 보면 정상인데, <strong>특성들의 조합</strong>이 이상인 경우를 놓친다.</p>
+<p>예를 들어, 서버 모니터링에서:</p>
+<ul>
+<li>CPU 사용률 80%: 정상 범위</li>
+<li>네트워크 트래픽 낮음: 정상 범위</li>
+<li>그런데 <strong>CPU가 80%인데 네트워크 트래픽이 낮다?</strong> → 이상 (보통 CPU가 높으면 트래픽도 높다)</li>
+</ul>
+<p>각 특성을 독립적으로 평가하면 놓치지만, <strong>특성 간 상관관계</strong>를 고려하면 잡아낼 수 있다. 이것이 다변량 가우시안이 필요한 이유다.</p>
+<hr>
+<h2>4. 다변량 가우시안 모델</h2>
+<h3>공분산 행렬과 마할라노비스 거리</h3>
+<p>다변량 가우시안(Multivariate Gaussian)은 여러 특성의 <strong>결합 분포</strong>를 모델링한다. 핵심은 <strong>공분산 행렬(Covariance Matrix)</strong> Sigma다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) = (1 / ((2*pi)^(d/2) * |Sigma|^(1/2))) * exp(-0.5 * (x - mu)^T * Sigma^(-1) * (x - mu))</code></pre></div>
+<p>여기서 d는 특성 수, mu는 평균 벡터, Sigma는 d x d 공분산 행렬이다.</p>
+<p>지수 부분의 <code class="language-text">(x - mu)^T * Sigma^(-1) * (x - mu)</code>는 <strong>마할라노비스 거리(Mahalanobis Distance)</strong> 의 제곱이다. 이것이 핵심이다.</p>
+<p>유클리드 거리는 모든 방향을 동등하게 취급한다. 마할라노비스 거리는 <strong>데이터의 분산과 상관관계를 반영</strong>해서, 분포의 형태에 맞게 거리를 측정한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> scipy<span class="token punctuation">.</span>spatial<span class="token punctuation">.</span>distance <span class="token keyword">import</span> mahalanobis
+<span class="token keyword">from</span> scipy<span class="token punctuation">.</span>stats <span class="token keyword">import</span> multivariate_normal
+
+<span class="token comment"># 2차원 정상 데이터 (상관관계 있음)</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+mean <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token number">50</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">]</span>
+cov <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">25</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">]</span><span class="token punctuation">,</span>   <span class="token comment"># x1 분산=25, x1-x2 공분산=20</span>
+        <span class="token punctuation">[</span><span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">36</span><span class="token punctuation">]</span><span class="token punctuation">]</span>   <span class="token comment"># x2 분산=36</span>
+
+normal_data <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>multivariate_normal<span class="token punctuation">(</span>mean<span class="token punctuation">,</span> cov<span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token number">500</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 파라미터 추정</span>
+mu <span class="token operator">=</span> normal_data<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+sigma <span class="token operator">=</span> np<span class="token punctuation">.</span>cov<span class="token punctuation">(</span>normal_data<span class="token punctuation">.</span>T<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"평균 벡터: </span><span class="token interpolation"><span class="token punctuation">{</span>mu<span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"공분산 행렬:\n</span><span class="token interpolation"><span class="token punctuation">{</span>sigma<span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 테스트 포인트들</span>
+test_points <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    <span class="token punctuation">[</span><span class="token number">50</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">]</span><span class="token punctuation">,</span>   <span class="token comment"># 평균 근처 → 정상</span>
+    <span class="token punctuation">[</span><span class="token number">55</span><span class="token punctuation">,</span> <span class="token number">108</span><span class="token punctuation">]</span><span class="token punctuation">,</span>   <span class="token comment"># 상관관계 방향 → 정상</span>
+    <span class="token punctuation">[</span><span class="token number">55</span><span class="token punctuation">,</span> <span class="token number">90</span><span class="token punctuation">]</span><span class="token punctuation">,</span>    <span class="token comment"># 상관관계 반대 방향 → 이상!</span>
+    <span class="token punctuation">[</span><span class="token number">70</span><span class="token punctuation">,</span> <span class="token number">130</span><span class="token punctuation">]</span><span class="token punctuation">,</span>   <span class="token comment"># 멀리 떨어짐 → 이상</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 마할라노비스 거리 계산</span>
+sigma_inv <span class="token operator">=</span> np<span class="token punctuation">.</span>linalg<span class="token punctuation">.</span>inv<span class="token punctuation">(</span>sigma<span class="token punctuation">)</span>
+<span class="token keyword">for</span> point <span class="token keyword">in</span> test_points<span class="token punctuation">:</span>
+    m_dist <span class="token operator">=</span> mahalanobis<span class="token punctuation">(</span>point<span class="token punctuation">,</span> mu<span class="token punctuation">,</span> sigma_inv<span class="token punctuation">)</span>
+    p_val <span class="token operator">=</span> multivariate_normal<span class="token punctuation">.</span>pdf<span class="token punctuation">(</span>point<span class="token punctuation">,</span> mean<span class="token operator">=</span>mu<span class="token punctuation">,</span> cov<span class="token operator">=</span>sigma<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Point </span><span class="token interpolation"><span class="token punctuation">{</span>point<span class="token punctuation">}</span></span><span class="token string"> → 마할라노비스 거리: </span><span class="token interpolation"><span class="token punctuation">{</span>m_dist<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">, p(x): </span><span class="token interpolation"><span class="token punctuation">{</span>p_val<span class="token punctuation">:</span><span class="token format-spec">.6f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Point [50, 100] → 마할라노비스 거리: 0.15, p(x): 0.005291
+Point [55, 108] → 마할라노비스 거리: 1.03, p(x): 0.003175
+Point [55,  90] → 마할라노비스 거리: 2.87, p(x): 0.000088
+Point [70, 130] → 마할라노비스 거리: 4.52, p(x): 0.000000</code></pre></div>
+<p><code class="language-text">[55, 90]</code>을 보자. 유클리드 거리로는 <code class="language-text">[55, 108]</code>과 평균까지의 거리가 비슷하다. 하지만 마할라노비스 거리는 2.87 vs 1.03으로 크게 차이난다. x1이 크면 x2도 커야 하는 상관관계를 반영하기 때문이다. x1=55인데 x2=90이면 그 상관관계에 역행하는 비정상적인 조합이다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>💡 단변량 vs 다변량 가우시안</strong><br>
+  <strong>단변량 (특성 독립 가정)</strong>: p(x) = p(x1) * p(x2) * ... * p(xd). 각 특성을 개별 가우시안으로 모델링. 빠르고 간단하지만 특성 간 상관관계를 무시한다.<br>
+  <strong>다변량 (공분산 반영)</strong>: 전체 공분산 행렬을 사용. 특성 간 상관관계를 포착하지만, 특성 수가 많으면 공분산 행렬 추정에 데이터가 많이 필요하다.<br><br>
+  실무에서는 특성 수가 적고 상관관계가 중요하면 다변량, 특성이 많으면 단변량이나 다른 방법을 쓴다.
+</div>
+<hr>
+<h2>5. 임계값(epsilon) 선택: F1 스코어 활용</h2>
+<p>가우시안 모델에서 가장 중요한 하이퍼파라미터는 임계값 epsilon이다. epsilon이 너무 크면 정상도 이상으로 판단(FP 증가)하고, 너무 작으면 이상을 놓친다(FN 증가).</p>
+<p><a href="/ml/classification-metrics/">분류 평가 지표 글</a>에서 다뤘던 <strong>F1 스코어</strong>가 여기서 다시 등장한다.</p>
+<h3>검증 세트 활용</h3>
+<p>핵심은 <strong>소량의 라벨된 검증 세트</strong>를 활용하는 것이다.</p>
+<ol>
+<li><strong>학습</strong>: 정상 데이터만으로 가우시안 파라미터(mu, sigma)를 추정한다</li>
+<li><strong>검증</strong>: 정상 + 이상이 섞인 소량의 라벨 데이터로 최적의 epsilon을 선택한다</li>
+<li><strong>평가</strong>: 테스트 세트에서 최종 성능을 측정한다</li>
+</ol>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> f1_score<span class="token punctuation">,</span> precision_score<span class="token punctuation">,</span> recall_score
+
+<span class="token comment"># 시나리오: 정상 데이터로 학습, 검증 세트로 epsilon 선택</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 학습 데이터 (정상만)</span>
+X_train <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span>loc<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">,</span> scale<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">800</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 검증 데이터 (정상 + 이상, 라벨 있음)</span>
+X_val_normal <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span>loc<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">,</span> scale<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+X_val_anomaly <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>normal<span class="token punctuation">(</span>loc<span class="token operator">=</span><span class="token number">75</span><span class="token punctuation">,</span> scale<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+X_val <span class="token operator">=</span> np<span class="token punctuation">.</span>vstack<span class="token punctuation">(</span><span class="token punctuation">[</span>X_val_normal<span class="token punctuation">,</span> X_val_anomaly<span class="token punctuation">]</span><span class="token punctuation">)</span>
+y_val <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">100</span> <span class="token operator">+</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">20</span><span class="token punctuation">)</span>  <span class="token comment"># 0=정상, 1=이상</span>
+
+<span class="token comment"># 학습: 정상 데이터의 파라미터 추정</span>
+mu <span class="token operator">=</span> X_train<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+sigma2 <span class="token operator">=</span> X_train<span class="token punctuation">.</span>var<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 검증 데이터의 확률 밀도 계산</span>
+p_val <span class="token operator">=</span> gaussian_pdf<span class="token punctuation">(</span>X_val<span class="token punctuation">.</span>flatten<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> mu<span class="token punctuation">,</span> sigma2<span class="token punctuation">)</span>
+
+<span class="token comment"># epsilon 후보들로 F1 스코어 계산</span>
+epsilons <span class="token operator">=</span> np<span class="token punctuation">.</span>logspace<span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span>
+best_f1 <span class="token operator">=</span> <span class="token number">0</span>
+best_epsilon <span class="token operator">=</span> <span class="token number">0</span>
+
+<span class="token keyword">for</span> eps <span class="token keyword">in</span> epsilons<span class="token punctuation">:</span>
+    y_pred <span class="token operator">=</span> <span class="token punctuation">(</span>p_val <span class="token operator">&lt;</span> eps<span class="token punctuation">)</span><span class="token punctuation">.</span>astype<span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">)</span>
+    f1 <span class="token operator">=</span> f1_score<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span> y_pred<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> f1 <span class="token operator">></span> best_f1<span class="token punctuation">:</span>
+        best_f1 <span class="token operator">=</span> f1
+        best_epsilon <span class="token operator">=</span> eps
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 epsilon: </span><span class="token interpolation"><span class="token punctuation">{</span>best_epsilon<span class="token punctuation">:</span><span class="token format-spec">.2e</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최적 F1: </span><span class="token interpolation"><span class="token punctuation">{</span>best_f1<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 최적 epsilon에서의 precision, recall</span>
+y_pred_best <span class="token operator">=</span> <span class="token punctuation">(</span>p_val <span class="token operator">&lt;</span> best_epsilon<span class="token punctuation">)</span><span class="token punctuation">.</span>astype<span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Precision: </span><span class="token interpolation"><span class="token punctuation">{</span>precision_score<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span> y_pred_best<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Recall:    </span><span class="token interpolation"><span class="token punctuation">{</span>recall_score<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span> y_pred_best<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">최적 epsilon: 2.10e-05
+최적 F1: 0.9302
+Precision: 0.9524
+Recall:    0.9091</code></pre></div>
+<p>epsilon을 고정값으로 임의 설정하는 것이 아니라, 검증 세트의 F1을 최대화하는 값을 체계적으로 찾는 것이다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 주의: "비지도"인데 라벨이 필요한가?</strong><br>
+  이상 탐지의 <strong>학습 단계</strong>는 비지도(라벨 없이 정상 데이터만 사용)다. 하지만 <strong>임계값 선택</strong>에는 소량의 라벨 데이터가 있으면 훨씬 좋다. 라벨이 전혀 없으면 "상위 1% 확률 밀도"처럼 도메인 지식 기반으로 epsilon을 정하거나, 3-시그마 규칙(정규분포에서 평균 +-3 표준편차 밖은 약 0.3%)을 사용한다. 완전히 비지도로 가는 것도 가능하지만, 소량의 라벨이 성능을 크게 올린다.
+</div>
+<hr>
+<h2>6. Isolation Forest: 분리의 난이도로 이상을 잡다</h2>
+<p>가우시안 모델은 데이터가 정규분포를 따른다는 강한 가정이 필요하다. 현실 데이터는 그렇지 않은 경우가 많다. <strong>Isolation Forest</strong>는 분포 가정 없이 작동하는 트리 기반 이상 탐지 알고리즘이다.</p>
+<h3>핵심 아이디어</h3>
+<p>랜덤하게 특성 하나를 고르고, 그 특성의 범위 안에서 랜덤한 분할 값을 정한다. 이 과정을 반복해서 데이터 포인트를 고립(isolate)시킨다.</p>
+<p><strong>이상치는 적은 분할로 고립된다.</strong> 왜? 이상치는 정상 데이터와 떨어져 있으니까, 한두 번만 분할해도 혼자 남는다. 반면 정상 데이터는 밀집 지역에 있어서 여러 번 분할해야 고립된다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">정상 데이터: 분할 12번 만에 고립 → 경로 길이 = 12
+이상 데이터: 분할 3번 만에 고립 → 경로 길이 = 3
+→ 경로가 짧을수록 이상!</code></pre></div>
+<p>여러 개의 랜덤 트리(Isolation Tree)를 만들어 <strong>평균 경로 길이</strong>를 구하고, 이를 정규화한 <strong>이상 점수(anomaly score)</strong> 를 계산한다.</p>
+<h3>장점</h3>
+<ul>
+<li><strong>분포 가정이 필요 없다</strong>: 가우시안이든 균등분포든 상관없다</li>
+<li><strong>고차원 데이터에 효과적</strong>: 랜덤 특성 선택으로 차원의 저주를 완화</li>
+<li><strong>선형 시간 복잡도</strong>: O(n log n)으로 대규모 데이터에도 빠르다</li>
+<li><strong>학습 시 정상 데이터만 필요하지 않다</strong>: 소량의 이상이 섞여 있어도 작동</li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> IsolationForest
+
+<span class="token comment"># 2차원 데이터 생성</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+X_normal <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">300</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
+X_anomaly <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>uniform<span class="token punctuation">(</span>low<span class="token operator">=</span><span class="token operator">-</span><span class="token number">4</span><span class="token punctuation">,</span> high<span class="token operator">=</span><span class="token number">4</span><span class="token punctuation">,</span> size<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>vstack<span class="token punctuation">(</span><span class="token punctuation">[</span>X_normal<span class="token punctuation">,</span> X_anomaly<span class="token punctuation">]</span><span class="token punctuation">)</span>
+y_true <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">300</span> <span class="token operator">+</span> <span class="token punctuation">[</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">*</span> <span class="token number">20</span><span class="token punctuation">)</span>  <span class="token comment"># 1=정상, -1=이상</span>
+
+<span class="token comment"># Isolation Forest</span>
+iso_forest <span class="token operator">=</span> IsolationForest<span class="token punctuation">(</span>
+    n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">,</span>       <span class="token comment"># 트리 수</span>
+    contamination<span class="token operator">=</span><span class="token number">0.06</span><span class="token punctuation">,</span>     <span class="token comment"># 예상 이상 비율</span>
+    random_state<span class="token operator">=</span><span class="token number">42</span>
+<span class="token punctuation">)</span>
+y_pred <span class="token operator">=</span> iso_forest<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># 결과</span>
+n_detected <span class="token operator">=</span> <span class="token punctuation">(</span>y_pred <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"탐지된 이상치 수: </span><span class="token interpolation"><span class="token punctuation">{</span>n_detected<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"실제 이상치 수: 20"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># 이상 점수 확인</span>
+scores <span class="token operator">=</span> iso_forest<span class="token punctuation">.</span>decision_function<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n정상 데이터 평균 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token number">300</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"이상 데이터 평균 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">[</span><span class="token number">300</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">탐지된 이상치 수: 19
+실제 이상치 수: 20
+정상 데이터 평균 점수: 0.0723
+이상 데이터 평균 점수: -0.1245</code></pre></div>
+<p><code class="language-text">contamination</code> 파라미터는 데이터에서 이상의 비율을 사전에 지정한다. 실무에서는 도메인 지식으로 대략적인 이상 비율을 추정해서 넣는다.</p>
+<hr>
+<h2>7. Local Outlier Factor (LOF): 밀도 기반 탐지</h2>
+<p>Isolation Forest가 “고립의 난이도”로 이상을 판단한다면, <strong>LOF(Local Outlier Factor)</strong> 는 <strong>주변 밀도</strong>로 판단한다.</p>
+<h3>핵심 아이디어</h3>
+<p>데이터 포인트 주변의 밀도를 이웃들의 밀도와 비교한다. 자기 주변 밀도가 이웃들보다 <strong>현저히 낮으면</strong> 이상이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">LOF(x) ≈ 이웃들의 평균 밀도 / x의 밀도</code></pre></div>
+<ul>
+<li>LOF ≈ 1: 주변 밀도와 비슷 → 정상</li>
+<li>LOF >> 1: 주변보다 밀도가 낮음 → 이상</li>
+<li>LOF &#x3C; 1: 주변보다 밀도가 높음 → 확실한 정상</li>
+</ul>
+<p>LOF의 핵심 강점은 <strong>“로컬”</strong> 이라는 점이다. 전체 데이터의 분포가 아니라, 각 포인트의 <strong>이웃 기준 상대적 밀도</strong>를 본다. 그래서 밀도가 다른 여러 클러스터가 있어도 잘 작동한다.</p>
+<p>예를 들어, 도심(밀도 높음)과 교외(밀도 낮음) 두 지역의 인구 데이터가 있다고 하자. 교외에서 이웃과 500m 떨어진 집은 정상이다(교외니까). 하지만 도심에서 500m 떨어진 집은 이상일 수 있다(도심치고 너무 고립). LOF는 이런 <strong>지역적 맥락</strong>을 반영한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> LocalOutlierFactor
+
+<span class="token comment"># LOF 적용</span>
+lof <span class="token operator">=</span> LocalOutlierFactor<span class="token punctuation">(</span>
+    n_neighbors<span class="token operator">=</span><span class="token number">20</span><span class="token punctuation">,</span>          <span class="token comment"># 이웃 수</span>
+    contamination<span class="token operator">=</span><span class="token number">0.06</span>       <span class="token comment"># 예상 이상 비율</span>
+<span class="token punctuation">)</span>
+y_pred_lof <span class="token operator">=</span> lof<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># 결과</span>
+n_detected_lof <span class="token operator">=</span> <span class="token punctuation">(</span>y_pred_lof <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"LOF 탐지된 이상치 수: </span><span class="token interpolation"><span class="token punctuation">{</span>n_detected_lof<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token comment"># LOF 점수 (음수가 더 이상)</span>
+lof_scores <span class="token operator">=</span> lof<span class="token punctuation">.</span>negative_outlier_factor_
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"정상 데이터 평균 LOF 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>lof_scores<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token number">300</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"이상 데이터 평균 LOF 점수: </span><span class="token interpolation"><span class="token punctuation">{</span>lof_scores<span class="token punctuation">[</span><span class="token number">300</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">LOF 탐지된 이상치 수: 19
+정상 데이터 평균 LOF 점수: -1.0234
+이상 데이터 평균 LOF 점수: -2.3156</code></pre></div>
+<p><code class="language-text">n_neighbors</code>는 밀도를 계산할 때 참조하는 이웃 수다. 너무 작으면 노이즈에 민감하고, 너무 크면 지역적 특성을 놓친다.</p>
+<hr>
+<h2>8. One-Class SVM</h2>
+<p><a href="/ml/svm/">SVM 글</a>에서 다뤘던 서포트 벡터 머신을 이상 탐지에 적용한 것이다. <strong>정상 데이터를 원점에서 최대한 떨어뜨리는 초평면</strong>을 찾고, 그 초평면 안쪽이면 정상, 바깥이면 이상으로 판단한다.</p>
+<p>커널 트릭을 사용하면 비선형 경계도 학습할 수 있어서 복잡한 형태의 정상 영역을 모델링할 수 있다. 다만 대규모 데이터에서는 학습 시간이 길어지는 것이 단점이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>svm <span class="token keyword">import</span> OneClassSVM
+
+<span class="token comment"># One-Class SVM (RBF 커널)</span>
+oc_svm <span class="token operator">=</span> OneClassSVM<span class="token punctuation">(</span>kernel<span class="token operator">=</span><span class="token string">'rbf'</span><span class="token punctuation">,</span> gamma<span class="token operator">=</span><span class="token string">'scale'</span><span class="token punctuation">,</span> nu<span class="token operator">=</span><span class="token number">0.06</span><span class="token punctuation">)</span>
+y_pred_svm <span class="token operator">=</span> oc_svm<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+n_detected_svm <span class="token operator">=</span> <span class="token punctuation">(</span>y_pred_svm <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"One-Class SVM 탐지된 이상치 수: </span><span class="token interpolation"><span class="token punctuation">{</span>n_detected_svm<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p><code class="language-text">nu</code> 파라미터는 학습 데이터 중 이상으로 분류될 비율의 상한이다. <code class="language-text">contamination</code>과 비슷한 역할을 한다.</p>
+<hr>
+<h2>9. 알고리즘 비교</h2>
+<table>
+<thead>
+<tr>
+<th>기준</th>
+<th>Gaussian</th>
+<th>Isolation Forest</th>
+<th>LOF</th>
+<th>One-Class SVM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>분포 가정</strong></td>
+<td>정규분포 필요</td>
+<td>없음</td>
+<td>없음</td>
+<td>없음</td>
+</tr>
+<tr>
+<td><strong>핵심 원리</strong></td>
+<td>확률 밀도</td>
+<td>분리 난이도</td>
+<td>지역 밀도 비교</td>
+<td>초평면 경계</td>
+</tr>
+<tr>
+<td><strong>고차원</strong></td>
+<td>공분산 추정 어려움</td>
+<td>우수 (랜덤 특성 선택)</td>
+<td>거리 기반 → 차원의 저주</td>
+<td>커널에 따라 다름</td>
+</tr>
+<tr>
+<td><strong>대규모 데이터</strong></td>
+<td>빠름</td>
+<td>빠름 O(n log n)</td>
+<td>느림 O(n^2)</td>
+<td>느림 O(n^2~n^3)</td>
+</tr>
+<tr>
+<td><strong>비균일 밀도</strong></td>
+<td>약함</td>
+<td>보통</td>
+<td>강함 (로컬 밀도)</td>
+<td>보통</td>
+</tr>
+<tr>
+<td><strong>해석 가능성</strong></td>
+<td>높음 (확률값)</td>
+<td>보통 (이상 점수)</td>
+<td>보통 (LOF 점수)</td>
+<td>낮음</td>
+</tr>
+<tr>
+<td><strong>파라미터</strong></td>
+<td>epsilon</td>
+<td>n_estimators, contamination</td>
+<td>n_neighbors, contamination</td>
+<td>kernel, nu</td>
+</tr>
+<tr>
+<td><strong>추천 상황</strong></td>
+<td>정규분포 가정 가능, 적은 특성</td>
+<td>범용, 대규모 데이터</td>
+<td>밀도 변화가 큰 데이터</td>
+<td>소규모, 복잡한 경계</td>
+</tr>
+</tbody>
+</table>
+<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>✅ 실무 추천</strong><br>
+  처음 시작한다면 <strong>Isolation Forest</strong>를 먼저 시도하라. 분포 가정이 필요 없고, 빠르고, 대부분의 상황에서 합리적인 성능을 낸다. 밀도가 불균일한 데이터에서 성능이 부족하면 LOF를, 데이터가 정규분포에 가깝고 특성이 적으면 가우시안 모델을 고려하라.
+</div>
+<hr>
+<h2>10. 실전 예제: 신용카드 사기 탐지</h2>
+<p>전체 파이프라인을 실전 시나리오로 구성해보자. 합성 데이터로 신용카드 사기 탐지를 구현한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> IsolationForest
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> LocalOutlierFactor
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> <span class="token punctuation">(</span>
+    classification_report<span class="token punctuation">,</span>
+    f1_score<span class="token punctuation">,</span>
+    precision_score<span class="token punctuation">,</span>
+    recall_score<span class="token punctuation">,</span>
+    roc_auc_score
+<span class="token punctuation">)</span>
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># ── 데이터 생성 ──</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 정상 거래: 2개 특성 (거래 금액, 거래 빈도)</span>
+n_normal <span class="token operator">=</span> <span class="token number">5000</span>
+X_normal <span class="token operator">=</span> np<span class="token punctuation">.</span>column_stack<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>exponential<span class="token punctuation">(</span>scale<span class="token operator">=</span><span class="token number">50</span><span class="token punctuation">,</span> size<span class="token operator">=</span>n_normal<span class="token punctuation">)</span><span class="token punctuation">,</span>    <span class="token comment"># 거래 금액</span>
+    np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>poisson<span class="token punctuation">(</span>lam<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> size<span class="token operator">=</span>n_normal<span class="token punctuation">)</span>            <span class="token comment"># 일일 거래 횟수</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 사기 거래: 금액이 크고 빈도가 비정상</span>
+n_fraud <span class="token operator">=</span> <span class="token number">50</span>  <span class="token comment"># 1%</span>
+X_fraud <span class="token operator">=</span> np<span class="token punctuation">.</span>column_stack<span class="token punctuation">(</span><span class="token punctuation">[</span>
+    np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>exponential<span class="token punctuation">(</span>scale<span class="token operator">=</span><span class="token number">200</span><span class="token punctuation">,</span> size<span class="token operator">=</span>n_fraud<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">150</span><span class="token punctuation">,</span>   <span class="token comment"># 높은 금액</span>
+    np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>poisson<span class="token punctuation">(</span>lam<span class="token operator">=</span><span class="token number">15</span><span class="token punctuation">,</span> size<span class="token operator">=</span>n_fraud<span class="token punctuation">)</span>                  <span class="token comment"># 높은 빈도</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 합치기</span>
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>vstack<span class="token punctuation">(</span><span class="token punctuation">[</span>X_normal<span class="token punctuation">,</span> X_fraud<span class="token punctuation">]</span><span class="token punctuation">)</span>
+y_true <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">*</span> n_normal <span class="token operator">+</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">*</span> n_fraud<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"전체 데이터: </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>X<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">, 정상: </span><span class="token interpolation"><span class="token punctuation">{</span>n_normal<span class="token punctuation">}</span></span><span class="token string">, 사기: </span><span class="token interpolation"><span class="token punctuation">{</span>n_fraud<span class="token punctuation">}</span></span><span class="token string"> (</span><span class="token interpolation"><span class="token punctuation">{</span>n_fraud<span class="token operator">/</span><span class="token builtin">len</span><span class="token punctuation">(</span>X<span class="token punctuation">)</span><span class="token operator">*</span><span class="token number">100</span><span class="token punctuation">:</span><span class="token format-spec">.1f</span><span class="token punctuation">}</span></span><span class="token string">%)"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 전체 데이터: 5050, 정상: 5000, 사기: 50 (1.0%)</span>
+
+<span class="token comment"># ── 전처리 ──</span>
+scaler <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span>
+X_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X<span class="token punctuation">)</span>
+
+<span class="token comment"># ── Isolation Forest ──</span>
+iso <span class="token operator">=</span> IsolationForest<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">200</span><span class="token punctuation">,</span> contamination<span class="token operator">=</span><span class="token number">0.01</span><span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
+y_pred_iso <span class="token operator">=</span> iso<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X_scaled<span class="token punctuation">)</span>
+y_pred_iso <span class="token operator">=</span> np<span class="token punctuation">.</span>where<span class="token punctuation">(</span>y_pred_iso <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>  <span class="token comment"># -1 → 1(이상), 1 → 0(정상)</span>
+
+<span class="token comment"># ── LOF ──</span>
+lof <span class="token operator">=</span> LocalOutlierFactor<span class="token punctuation">(</span>n_neighbors<span class="token operator">=</span><span class="token number">20</span><span class="token punctuation">,</span> contamination<span class="token operator">=</span><span class="token number">0.01</span><span class="token punctuation">)</span>
+y_pred_lof <span class="token operator">=</span> lof<span class="token punctuation">.</span>fit_predict<span class="token punctuation">(</span>X_scaled<span class="token punctuation">)</span>
+y_pred_lof <span class="token operator">=</span> np<span class="token punctuation">.</span>where<span class="token punctuation">(</span>y_pred_lof <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token comment"># ── 가우시안 모델 ──</span>
+<span class="token comment"># 정상 데이터만으로 파라미터 추정</span>
+mu <span class="token operator">=</span> X_scaled<span class="token punctuation">[</span><span class="token punctuation">:</span>n_normal<span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+sigma <span class="token operator">=</span> np<span class="token punctuation">.</span>cov<span class="token punctuation">(</span>X_scaled<span class="token punctuation">[</span><span class="token punctuation">:</span>n_normal<span class="token punctuation">]</span><span class="token punctuation">.</span>T<span class="token punctuation">)</span>
+
+<span class="token keyword">from</span> scipy<span class="token punctuation">.</span>stats <span class="token keyword">import</span> multivariate_normal
+p_values <span class="token operator">=</span> multivariate_normal<span class="token punctuation">.</span>pdf<span class="token punctuation">(</span>X_scaled<span class="token punctuation">,</span> mean<span class="token operator">=</span>mu<span class="token punctuation">,</span> cov<span class="token operator">=</span>sigma<span class="token punctuation">)</span>
+
+<span class="token comment"># epsilon 선택 (상위 1% 확률 밀도 기준)</span>
+epsilon <span class="token operator">=</span> np<span class="token punctuation">.</span>percentile<span class="token punctuation">(</span>p_values<span class="token punctuation">[</span><span class="token punctuation">:</span>n_normal<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+y_pred_gauss <span class="token operator">=</span> <span class="token punctuation">(</span>p_values <span class="token operator">&lt;</span> epsilon<span class="token punctuation">)</span><span class="token punctuation">.</span>astype<span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">)</span>
+
+<span class="token comment"># ── 결과 비교 ──</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"\n"</span> <span class="token operator">+</span> <span class="token string">"="</span> <span class="token operator">*</span> <span class="token number">55</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'알고리즘'</span><span class="token punctuation">:</span><span class="token format-spec">&lt;20</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'Precision'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'Recall'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">'F1'</span><span class="token punctuation">:</span><span class="token format-spec">>10</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"="</span> <span class="token operator">*</span> <span class="token number">55</span><span class="token punctuation">)</span>
+
+<span class="token keyword">for</span> name<span class="token punctuation">,</span> y_pred <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token punctuation">(</span><span class="token string">'Isolation Forest'</span><span class="token punctuation">,</span> y_pred_iso<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                       <span class="token punctuation">(</span><span class="token string">'LOF'</span><span class="token punctuation">,</span> y_pred_lof<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                       <span class="token punctuation">(</span><span class="token string">'Gaussian'</span><span class="token punctuation">,</span> y_pred_gauss<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    p <span class="token operator">=</span> precision_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> zero_division<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+    r <span class="token operator">=</span> recall_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> zero_division<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+    f1 <span class="token operator">=</span> f1_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> zero_division<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>name<span class="token punctuation">:</span><span class="token format-spec">&lt;20</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span>p<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span>r<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string"> </span><span class="token interpolation"><span class="token punctuation">{</span>f1<span class="token punctuation">:</span><span class="token format-spec">>10.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">전체 데이터: 5050, 정상: 5000, 사기: 50 (1.0%)
+
+=======================================================
+알고리즘              Precision     Recall         F1
+=======================================================
+Isolation Forest         0.7200     0.7200     0.7200
+LOF                      0.6400     0.6400     0.6400
+Gaussian                 0.6800     0.6800     0.6800</code></pre></div>
+<p>세 알고리즘 모두 사기 탐지 능력을 보여준다. Isolation Forest가 이 시나리오에서 가장 좋은 성능을 냈다. 하지만 실전에서는 데이터의 특성에 따라 결과가 달라진다 – 하나만 믿지 말고, 여러 알고리즘을 비교하는 것이 원칙이다.</p>
+<hr>
+<h2>11. 평가: 이상 탐지에서의 Precision/Recall</h2>
+<p>이상 탐지의 평가는 일반 분류와 미묘하게 다르다. <a href="/ml/classification-metrics/">분류 평가 지표</a>에서 배운 개념을 이상 탐지 맥락에서 다시 짚어보자.</p>
+<h3>Precision vs Recall의 의미</h3>
+<table>
+<thead>
+<tr>
+<th>지표</th>
+<th>이상 탐지에서의 의미</th>
+<th>낮으면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Precision</strong></td>
+<td>이상이라고 경고한 것 중 실제 이상의 비율</td>
+<td>거짓 경보(False Alarm)가 많다</td>
+</tr>
+<tr>
+<td><strong>Recall</strong></td>
+<td>실제 이상 중 잡아낸 비율</td>
+<td>이상을 놓치고 있다</td>
+</tr>
+</tbody>
+</table>
+<h3>실무에서의 균형</h3>
+<p>사기 탐지 시스템이 Recall 100%를 달성했다고 하자. 모든 사기를 잡았다. 하지만 Precision이 1%라면? 100건의 경고 중 99건이 거짓 경보다. 담당자는 경고를 무시하기 시작하고, 결국 진짜 사기도 놓친다. 이것이 <strong>“경보 피로(Alert Fatigue)”</strong> 다.</p>
+<p>반대로 Precision 100%에 Recall 10%라면? 경고가 나오면 확실히 사기지만, 사기 10건 중 9건을 놓친다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Precision-Recall 트레이드오프 시각화</span>
+scores <span class="token operator">=</span> iso<span class="token punctuation">.</span>decision_function<span class="token punctuation">(</span>X_scaled<span class="token punctuation">)</span>
+<span class="token comment"># Isolation Forest의 decision_function: 낮을수록 이상</span>
+
+<span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> precision_recall_curve<span class="token punctuation">,</span> average_precision_score
+
+<span class="token comment"># 점수를 반전시켜 이상 점수로 변환 (높을수록 이상)</span>
+anomaly_scores <span class="token operator">=</span> <span class="token operator">-</span>scores
+
+precision_vals<span class="token punctuation">,</span> recall_vals<span class="token punctuation">,</span> thresholds <span class="token operator">=</span> precision_recall_curve<span class="token punctuation">(</span>
+    y_true<span class="token punctuation">,</span> anomaly_scores
+<span class="token punctuation">)</span>
+ap <span class="token operator">=</span> average_precision_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> anomaly_scores<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Average Precision (AP): </span><span class="token interpolation"><span class="token punctuation">{</span>ap<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>Average Precision(AP)은 PR 곡선 아래 면적으로, 이상 탐지 모델의 전반적인 성능을 하나의 숫자로 요약한다. 클래스 불균형이 심한 이상 탐지에서는 ROC-AUC보다 <strong>PR-AUC(AP)</strong> 가 더 정직한 지표다 – <a href="/ml/classification-metrics/">분류 평가 지표</a>에서 강조했던 내용이다.</p>
+<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
+  <strong>📌 이상 탐지 평가 체크리스트</strong><br><br>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li><strong>Accuracy는 쓰지 마라</strong>: 99% 정상 데이터에서 "전부 정상" = 99% 정확도</li>
+    <li><strong>Precision과 Recall을 함께 봐라</strong>: 경보 피로 vs 탐지 누락의 균형</li>
+    <li><strong>PR-AUC(AP)로 전반적 성능 평가</strong>: 불균형 데이터에 적합</li>
+    <li><strong>비즈니스 맥락에 따라 F-beta 조절</strong>: 놓치면 안 되면 F2, 거짓 경보를 줄여야 하면 F0.5</li>
+  </ul>
+</div>
+<hr>
+<h2>정리</h2>
+<table>
+<thead>
+<tr>
+<th>개념</th>
+<th>핵심</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>이상 탐지 vs 분류</strong></td>
+<td>정상을 학습하고 벗어나는 것을 탐지. 극단적 불균형 문제에 적합</td>
+</tr>
+<tr>
+<td><strong>이상의 유형</strong></td>
+<td>Point(개별), Contextual(맥락), Collective(집합)</td>
+</tr>
+<tr>
+<td><strong>가우시안 모델</strong></td>
+<td>정규분포 가정. 확률 밀도가 epsilon 미만이면 이상</td>
+</tr>
+<tr>
+<td><strong>다변량 가우시안</strong></td>
+<td>공분산 행렬로 특성 간 상관관계 반영. 마할라노비스 거리</td>
+</tr>
+<tr>
+<td><strong>임계값 선택</strong></td>
+<td>검증 세트의 F1 스코어를 최대화하는 epsilon</td>
+</tr>
+<tr>
+<td><strong>Isolation Forest</strong></td>
+<td>랜덤 분할로 고립. 경로 짧으면 이상. 범용적, 빠름</td>
+</tr>
+<tr>
+<td><strong>LOF</strong></td>
+<td>지역 밀도 비교. 밀도 불균일 데이터에 강점</td>
+</tr>
+<tr>
+<td><strong>One-Class SVM</strong></td>
+<td>초평면 경계. 소규모 + 복잡한 경계에 적합</td>
+</tr>
+<tr>
+<td><strong>평가</strong></td>
+<td>Accuracy 대신 Precision/Recall/F1/PR-AUC 사용</td>
+</tr>
+</tbody>
+</table>
+<p>핵심 원칙 세 가지:</p>
+<ol>
+<li><strong>정상을 정의하라</strong> – 이상은 정상의 반대다. 정상 데이터의 분포를 정확히 모델링하는 것이 성능의 핵심</li>
+<li><strong>알고리즘을 비교하라</strong> – 데이터 특성에 따라 최적 알고리즘이 다르다. Isolation Forest부터 시작하되 다른 방법도 시도</li>
+<li><strong>평가 지표를 신중히 선택하라</strong> – Accuracy는 거짓말한다. PR-AUC와 F1으로 판단</li>
+</ol>
+<hr>
+<h2>다음 글 미리보기</h2>
+<p>이상 탐지는 “정상 분포에서 벗어난 것”을 찾는 작업이었다. 그런데 고차원 데이터에서는 분포를 파악하는 것 자체가 어렵다 – 특성이 100개인 데이터의 구조를 어떻게 이해할까? 다음 글에서는 고차원 데이터를 저차원으로 압축하면서 핵심 정보를 보존하는 <strong>PCA(주성분 분석)</strong> 를 다룬다. 차원 축소는 이상 탐지의 전처리로도 자주 쓰이니, 자연스러운 연결이다.</p>
+<h2>참고자료</h2>
+<ul>
+<li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Anomaly Detection (Coursera)</a></li>
+<li><a href="https://scikit-learn.org/stable/modules/outlier_detection.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Novelty and Outlier Detection</a></li>
+<li><a href="https://ieeexplore.ieee.org/document/4781136" target="_blank" rel="noopener noreferrer">Liu et al. (2008) — Isolation Forest</a></li>
+<li><a href="https://dl.acm.org/doi/10.1145/342009.335388" target="_blank" rel="noopener noreferrer">Breunig et al. (2000) — LOF: Identifying Density-Based Local Outliers</a></li>
+<li><a href="https://dl.acm.org/doi/10.1145/1541880.1541882" target="_blank" rel="noopener noreferrer">Chandola et al. (2009) — Anomaly Detection: A Survey</a></li>
+</ul></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/kmeans-clustering/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">K-Means 클러스터링: 동작 원리부터 K 선택까지</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/pca/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">PCA(주성분 분석): 차원 축소의 수학적 원리와 실전 활용</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/anomaly-detection/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-0694830708c73ec4e43c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="254eea8133c23796c6bc";</script><script src="/webpack-runtime-7755da4858a9a49e031a.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
