@@ -234,7 +234,7 @@ x_hat = (x - running_mean) / sqrt(running_var + epsilon)
 y = gamma * x_hat + beta
 ```
 
-이것이 PyTorch에서 `model.train()`과 `model.set_eval_mode()`을 반드시 구분해야 하는 이유다. 추론 모드에서는 BatchNorm이 이동 평균을 사용한다.
+이것이 PyTorch에서 `model.train()`과 `model.eval()`을 반드시 구분해야 하는 이유다. 추론 모드에서는 BatchNorm이 이동 평균을 사용한다.
 
 ### Layer Normalization
 

@@ -511,7 +511,7 @@ for i, (W, b) in enumerate(zip(mlp.coefs_, mlp.intercepts_)):
     print(f"W[{i+1}] shape: {W.shape}, b[{i+1}] shape: {b.shape}")
     print(f"  파라미터 수: {W.size + b.size}")
 
-# W[1] shape: (2, 4), b[1] shape: (4,)   → 입력 2개 × 히든 4개
+# W[1] shape: (2, 4), b[1] shape: (4,)   → 입력 2개 × 히든 4개 (sklearn은 (입력, 출력) 순으로 저장)
 #   파라미터 수: 12
 # W[2] shape: (4, 1), b[2] shape: (1,)   → 히든 4개 × 출력 1개
 #   파라미터 수: 5

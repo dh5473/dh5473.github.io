@@ -423,6 +423,11 @@ x ─── [×w1] ─── z1 ─── [σ] ─── a1 ─── [×w2] ─
 양쪽으로 ε을 더하고 빼는 **중앙 차분(central difference)** 이 한쪽 차분보다 정확하다 (O(ε²) vs O(ε)).
 
 ```python
+def compute_loss(a2, y):
+    """Binary Cross-Entropy 손실"""
+    m = y.shape[1]
+    return -(1/m) * np.sum(y * np.log(a2 + 1e-15) + (1-y) * np.log(1-a2 + 1e-15))
+
 def gradient_check(X, y, W1, b1, W2, b2, epsilon=1e-7):
     """수치 미분과 역전파 기울기를 비교"""
     # 역전파로 기울기 계산
@@ -435,11 +440,11 @@ def gradient_check(X, y, W1, b1, W2, b2, epsilon=1e-7):
         for j in range(W1.shape[1]):
             W1_plus = W1.copy()
             W1_plus[i, j] += epsilon
-            loss_plus = compute_loss(*forward(X, W1_plus, b1, W2, b2)[:1], y)
+            loss_plus = compute_loss(forward(X, W1_plus, b1, W2, b2)[0], y)
 
             W1_minus = W1.copy()
             W1_minus[i, j] -= epsilon
-            loss_minus = compute_loss(*forward(X, W1_minus, b1, W2, b2)[:1], y)
+            loss_minus = compute_loss(forward(X, W1_minus, b1, W2, b2)[0], y)
 
             numerical_grads[i, j] = (loss_plus - loss_minus) / (2 * epsilon)
 

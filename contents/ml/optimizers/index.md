@@ -193,7 +193,7 @@ w = w - α × ∇J / √(s + ε)       ← 적응적 업데이트
 등고선이 심하게 찌그러진(elongated) 비용 함수를 생각해보자. Vanilla SGD는 좁은 방향으로 진동하면서 넓은 방향으로 느리게 전진한다. RMSprop은 좁은 방향(기울기 큰 쪽)의 학습률을 줄이고, 넓은 방향(기울기 작은 쪽)의 학습률을 키워서 균형 잡힌 수렴을 만든다.
 
 ```python
-def rmsprop(params, grads, cache, lr=0.001, beta=0.999, eps=1e-8):
+def rmsprop(params, grads, cache, lr=0.001, beta=0.9, eps=1e-8):
     """RMSprop 업데이트"""
     updated_params = []
     updated_cache = []
