@@ -1,5 +1,5 @@
 ---
-date: '2026-03-20'
+date: '2026-01-15'
 title: '앙상블 학습과 배깅(Bagging): 약한 모델을 강하게 만드는 법'
 category: 'Machine Learning'
 series: 'ml'

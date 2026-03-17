@@ -1,5 +1,5 @@
 ---
-date: '2026-03-23'
+date: '2026-01-18'
 title: 'XGBoost vs LightGBM: 실전 부스팅 모델, 어떤 걸 써야 할까'
 category: 'Machine Learning'
 series: 'ml'

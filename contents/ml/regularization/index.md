@@ -1,5 +1,5 @@
 ---
-date: '2026-03-14'
+date: '2026-01-09'
 title: '규제(Regularization): 과적합을 막는 Ridge, Lasso, ElasticNet'
 category: 'Machine Learning'
 series: 'ml'

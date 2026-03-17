@@ -1,5 +1,5 @@
 ---
-date: '2026-03-07'
+date: '2026-01-05'
 title: '경사하강법(Gradient Descent): 비용 함수의 바닥을 찾아가는 알고리즘'
 category: 'Machine Learning'
 series: 'ml'

@@ -1,5 +1,5 @@
 ---
-date: '2026-03-17'
+date: '2026-01-12'
 title: '서포트 벡터 머신(SVM): 마진을 최대화하는 분류의 기하학'
 category: 'Machine Learning'
 series: 'ml'

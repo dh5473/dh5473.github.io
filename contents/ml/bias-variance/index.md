@@ -1,5 +1,5 @@
 ---
-date: '2026-03-18'
+date: '2026-01-13'
 title: '편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인'
 category: 'Machine Learning'
 series: 'ml'

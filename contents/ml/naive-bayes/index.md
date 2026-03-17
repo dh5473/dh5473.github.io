@@ -1,5 +1,5 @@
 ---
-date: '2026-03-15'
+date: '2026-01-10'
 title: '나이브 베이즈(Naive Bayes): 베이즈 정리로 분류하는 확률적 접근'
 category: 'Machine Learning'
 series: 'ml'

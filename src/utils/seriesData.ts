@@ -20,7 +20,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'ml': {
     title: 'ML 기초',
-    description: '선형 회귀부터 로지스틱 회귀까지, 회귀와 분류의 기초',
+    description: '회귀, 분류, 앙상블, 클러스터링까지 머신러닝의 핵심 알고리즘',
     color: '#ff7f0e',
   },
   'llm': {

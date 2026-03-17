@@ -1,5 +1,5 @@
 ---
-date: '2026-02-28'
+date: '2026-01-01'
 title: '머신러닝이란 무엇인가: 지도학습, 비지도학습, 강화학습 한눈에 보기'
 category: 'Machine Learning'
 series: 'ml'

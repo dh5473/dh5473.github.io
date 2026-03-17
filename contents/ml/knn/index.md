@@ -1,5 +1,5 @@
 ---
-date: '2026-03-16'
+date: '2026-01-11'
 title: 'K-최근접 이웃(KNN): 거리로 분류하는 가장 직관적인 알고리즘'
 category: 'Machine Learning'
 series: 'ml'

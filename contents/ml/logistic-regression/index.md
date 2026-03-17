@@ -1,5 +1,5 @@
 ---
-date: '2026-03-12'
+date: '2026-01-07'
 title: '로지스틱 회귀(Logistic Regression): 분류 문제의 시작점'
 category: 'Machine Learning'
 series: 'ml'

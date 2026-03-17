@@ -1,5 +1,5 @@
 ---
-date: '2026-03-01'
+date: '2026-01-03'
 title: '선형 회귀(Linear Regression): 예측 모델의 시작점'
 category: 'Machine Learning'
 series: 'ml'

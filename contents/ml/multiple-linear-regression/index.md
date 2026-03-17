@@ -1,5 +1,5 @@
 ---
-date: '2026-03-11'
+date: '2026-01-06'
 title: '다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들'
 category: 'Machine Learning'
 series: 'ml'

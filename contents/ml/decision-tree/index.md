@@ -1,5 +1,5 @@
 ---
-date: '2026-03-19'
+date: '2026-01-14'
 title: '결정 트리(Decision Tree): 데이터를 질문으로 쪼개는 알고리즘'
 category: 'Machine Learning'
 series: 'ml'

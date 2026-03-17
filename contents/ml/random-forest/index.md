@@ -1,5 +1,5 @@
 ---
-date: '2026-03-21'
+date: '2026-01-16'
 title: '랜덤 포레스트(Random Forest): 특성 무작위성으로 상관관계를 깨다'
 category: 'Machine Learning'
 series: 'ml'

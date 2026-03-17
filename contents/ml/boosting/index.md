@@ -1,5 +1,5 @@
 ---
-date: '2026-03-22'
+date: '2026-01-17'
 title: '부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기'
 category: 'Machine Learning'
 series: 'ml'

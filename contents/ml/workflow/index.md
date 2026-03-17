@@ -1,5 +1,5 @@
 ---
-date: '2026-02-28'
+date: '2026-01-02'
 title: '머신러닝 프로젝트 전 과정: 데이터 수집부터 모델 배포까지'
 category: 'Machine Learning'
 series: 'ml'
