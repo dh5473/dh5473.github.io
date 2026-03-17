@@ -1,0 +1,594 @@
+<!DOCTYPE html><html lang="ko"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta name="generator" content="Gatsby 5.14.4"/><meta data-react-helmet="true" name="description" content="입력이 신경망을 통과해 예측값이 되기까지의 과정을 수식과 코드로 완전히 이해한다. 행렬 연산으로 효율적으로 계산하는 벡터화까지."/><meta data-react-helmet="true" name="viewport" content="width=device-width, initial-scale=1.0"/><meta data-react-helmet="true" http-equiv="Content-Type" content="text/html;charset=UTF-8"/><meta data-react-helmet="true" property="og:type" content="article"/><meta data-react-helmet="true" property="og:title" content="순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech"/><meta data-react-helmet="true" property="og:description" content="입력이 신경망을 통과해 예측값이 되기까지의 과정을 수식과 코드로 완전히 이해한다. 행렬 연산으로 효율적으로 계산하는 벡터화까지."/><meta data-react-helmet="true" property="og:image" content="https://donmain.dev/static/a782fbcba2b15824c0d3d36d1093d83a/thumbnail.png"/><meta data-react-helmet="true" property="og:url" content="https://donmain.dev/ml/forward-propagation/"/><meta data-react-helmet="true" property="og:site_name" content="dontech"/><meta data-react-helmet="true" property="og:locale" content="ko_KR"/><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"/><meta data-react-helmet="true" name="twitter:title" content="순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech"/><meta data-react-helmet="true" name="twitter:description" content="입력이 신경망을 통과해 예측값이 되기까지의 과정을 수식과 코드로 완전히 이해한다. 행렬 연산으로 효율적으로 계산하는 벡터화까지."/><meta data-react-helmet="true" name="twitter:image" content="https://donmain.dev/static/a782fbcba2b15824c0d3d36d1093d83a/thumbnail.png"/><meta data-react-helmet="true" name="twitter:image:alt" content="순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech"/><meta data-react-helmet="true" name="twitter:site" content="@dh5473"/><meta data-react-helmet="true" name="twitter:creator" content="@dh5473"/><meta data-react-helmet="true" name="google-site-verification" content="6XVBzencr6SkW_qtNsc8pZrsOARNn4-tPhVcPC9Vy0I"/><meta data-react-helmet="true" name="naver-site-verification" content="7ba00a2f54b28fc732e03fe4b645be26d4e5f4ed"/><style data-href="/styles.9e907bc32054b7771552.css" data-identity="gatsby-global-css">code[class*=language-],pre[class*=language-]{word-wrap:normal;background:none;color:#ccc;font-family:Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace;font-size:1em;-webkit-hyphens:none;hyphens:none;line-height:1.5;tab-size:4;text-align:left;white-space:pre;word-break:normal;word-spacing:normal}pre[class*=language-]{margin:.5em 0;overflow:auto;padding:1em}:not(pre)>code[class*=language-],pre[class*=language-]{background:#2d2d2d}:not(pre)>code[class*=language-]{border-radius:.3em;padding:.1em;white-space:normal}.token.block-comment,.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#999}.token.punctuation{color:#ccc}.token.attr-name,.token.deleted,.token.namespace,.token.tag{color:#e2777a}.token.function-name{color:#6196cc}.token.boolean,.token.function,.token.number{color:#f08d49}.token.class-name,.token.constant,.token.property,.token.symbol{color:#f8c555}.token.atrule,.token.builtin,.token.important,.token.keyword,.token.selector{color:#cc99cd}.token.attr-value,.token.char,.token.regex,.token.string,.token.variable{color:#7ec699}.token.entity,.token.operator,.token.url{color:#67cdcc}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}.token.inserted{color:green}</style><title data-react-helmet="true">순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech</title><link data-react-helmet="true" rel="icon" type="image/svg+xml" href="/favicon.svg"/><link data-react-helmet="true" rel="alternate icon" href="/favicon.ico"/><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"dontech","description":"Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그","url":"https://donmain.dev/","inLanguage":"ko","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"}}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech","description":"입력이 신경망을 통과해 예측값이 되기까지의 과정을 수식과 코드로 완전히 이해한다. 행렬 연산으로 효율적으로 계산하는 벡터화까지.","image":"https://donmain.dev/static/a782fbcba2b15824c0d3d36d1093d83a/thumbnail.png","url":"https://donmain.dev/ml/forward-propagation/","inLanguage":"ko","datePublished":"2026-01-20","dateModified":"2026-01-20","author":{"@type":"Person","name":"Donhyeok"},"publisher":{"@type":"Person","name":"Donhyeok"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://donmain.dev/ml/forward-propagation/"},"articleSection":"Machine Learning","wordCount":1150}</script><script data-react-helmet="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://donmain.dev/"},{"@type":"ListItem","position":2,"name":"Machine Learning","item":"https://donmain.dev/?category=Machine Learning"},{"@type":"ListItem","position":3,"name":"순전파(Forward Propagation): 신경망이 예측하는 과정 | dontech","item":"https://donmain.dev/ml/forward-propagation/"}]}</script><style>.gatsby-image-wrapper{position:relative;overflow:hidden}.gatsby-image-wrapper picture.object-fit-polyfill{position:static!important}.gatsby-image-wrapper img{bottom:0;height:100%;left:0;margin:0;max-width:none;padding:0;position:absolute;right:0;top:0;width:100%;object-fit:cover}.gatsby-image-wrapper [data-main-image]{opacity:0;transform:translateZ(0);transition:opacity .25s linear;will-change:opacity}.gatsby-image-wrapper-constrained{display:inline-block;vertical-align:top}</style><noscript><style>.gatsby-image-wrapper noscript [data-main-image]{opacity:1!important}.gatsby-image-wrapper [data-placeholder-image]{opacity:0!important}</style></noscript><script type="module">const e="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;e&&document.body.addEventListener("load",(function(e){const t=e.target;if(void 0===t.dataset.mainImage)return;if(void 0===t.dataset.gatsbyImageSsr)return;let a=null,n=t;for(;null===a&&n;)void 0!==n.parentNode.dataset.gatsbyImageWrapper&&(a=n.parentNode),n=n.parentNode;const o=a.querySelector("[data-placeholder-image]"),r=new Image;r.src=t.currentSrc,r.decode().catch((()=>{})).then((()=>{t.style.opacity=1,o&&(o.style.opacity=0,o.style.transition="opacity 500ms linear")}))}),!0);</script><link rel="canonical" href="https://donmain.dev/ml/forward-propagation/" data-baseprotocol="https:" data-basehost="donmain.dev"/><link rel="sitemap" type="application/xml" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="dontech RSS Feed" href="/rss.xml"/><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/><link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" media="print"/><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" media="print"/><noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap"/></noscript><script src="/theme-init.js"></script></head><body><div id="___gatsby"><div style="outline:none" tabindex="-1" id="gatsby-focus-wrapper"><style data-emotion="css 11pfcjj">.css-11pfcjj{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;min-height:100vh;}</style><main class="css-11pfcjj e1strnqo0"><style data-emotion="css-global 1mng9tx">:root{--bg:#fafaf8;--bg-subtle:#f5f4f2;--bg-muted:#eeecea;--text:#1c1917;--text-muted:#78716c;--primary:#0d9488;--primary-hov:#0f766e;--accent:#d97706;--border:#e7e5e4;--border-muted:#f0edeb;--code-bg:#1e1b18;}[data-theme='dark']{--bg:#171412;--bg-subtle:#211e1b;--bg-muted:#2d2926;--text:#f5f0eb;--text-muted:#a8a29e;--primary:#14b8a6;--primary-hov:#0d9488;--accent:#f59e0b;--border:#292524;--border-muted:#221f1c;--code-bg:#1e1b18;}*{padding:0;margin:0;box-sizing:border-box;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,Roboto,'Helvetica Neue','Segoe UI','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;}html,body,#___gatsby{height:100%;background:var(--bg);color:var(--text);}a,a:hover{color:inherit;-webkit-text-decoration:none;text-decoration:none;cursor:pointer;}code,pre,code[class*='language-'],pre[class*='language-']{font-family:'JetBrains Mono','Fira Code',Consolas,'Liberation Mono',Menlo,Courier,monospace!important;}</style><style data-emotion="css guakco">.css-guakco{position:relative;width:100%;height:400px;overflow:hidden;background:transparent;}@media (max-width: 768px){.css-guakco{height:300px;}}</style><div class="css-guakco e1opi4mu2"><style data-emotion="css k5hptt">.css-k5hptt{z-index:0;width:100%;height:400px;object-fit:cover;-webkit-filter:brightness(0.22);filter:brightness(0.22);}@media (max-width: 768px){.css-k5hptt{height:300px;}}</style><div data-gatsby-image-wrapper="" style="position:absolute" class="gatsby-image-wrapper gatsby-image-wrapper-constrained css-k5hptt e1opi4mu1"><div style="max-width:924px;display:block"><img alt="" role="presentation" aria-hidden="true" src="data:image/svg+xml;charset=utf-8,%3Csvg%20height=&#x27;485&#x27;%20width=&#x27;924&#x27;%20xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%20version=&#x27;1.1&#x27;%3E%3C/svg%3E" style="max-width:100%;display:block;position:static"/></div><img aria-hidden="true" data-placeholder-image="" style="opacity:1;transition:opacity 500ms linear;background-color:transparent;position:absolute;top:0;left:0;bottom:0;right:0" decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAA9hAAAPYQGoP6dpAAABW0lEQVR42oWSyXaCQBBF/Qy6gZbJAQeMHgGVZlJ3WWSV//+Ul6oiJzFRk0UdTg/cfu9VjfS4wNMyBVRygrNuoVKLP+9+1uh2oUwOx9/LV/aCAs6yhrNqhnOCq7SWh/4FukGJYGIRzWoEUwuXAfFhUDc9EbyEWnfQk+onhPbvgKxoTK8XpzeUVLZ7hwkIllBlLXR0gGLQ5gydHGlNtbtA+eTE2z9QSEA3PiJ4ucLQT+6KIOseKutIYSNAPSfr2wvMrkeS0np7xmRewrOv0GH5FcPoVrqXNlJm0cIngJpWg2V6THN2WQ+P1j6pdPMr/JCiWjSS9X1TzB5hXCGkHDlLj6OIvjPkZih6TGyyopmlqOiOlz+2rFnFqhNrtxeky8tBrSiMysFNMjTKj4onQB4Jyk7N7K85PEqOzqKWc80VHuByrjIdz+aQoWzH5HezxZYFuiTLG25WL9BH8/gBO2Mk3ZLRDn8AAAAASUVORK5CYII=" alt=""/><picture><source type="image/avif" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/df6ef/thumbnail.avif 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/8384a/thumbnail.webp 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/a782fbcba2b15824c0d3d36d1093d83a/43f69/thumbnail.png" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/68929/thumbnail.png 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/43f69/thumbnail.png 924w" alt="순전파(Forward Propagation): 신경망이 예측하는 과정"/></picture><noscript><picture><source type="image/avif" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/df6ef/thumbnail.avif 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/f383d/thumbnail.avif 924w" sizes="(min-width: 924px) 924px, 100vw"/><source type="image/webp" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/8384a/thumbnail.webp 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/3bdd3/thumbnail.webp 924w" sizes="(min-width: 924px) 924px, 100vw"/><img data-gatsby-image-ssr="" data-main-image="" style="opacity:0" sizes="(min-width: 924px) 924px, 100vw" decoding="async" loading="eager" src="/static/a782fbcba2b15824c0d3d36d1093d83a/43f69/thumbnail.png" srcSet="/static/a782fbcba2b15824c0d3d36d1093d83a/68929/thumbnail.png 750w,/static/a782fbcba2b15824c0d3d36d1093d83a/43f69/thumbnail.png 924w" alt="순전파(Forward Propagation): 신경망이 예측하는 과정"/></picture></noscript><script type="module">const t="undefined"!=typeof HTMLImageElement&&"loading"in HTMLImageElement.prototype;if(t){const t=document.querySelectorAll("img[data-main-image]");for(let e of t){e.dataset.src&&(e.setAttribute("src",e.dataset.src),e.removeAttribute("data-src")),e.dataset.srcset&&(e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset"));const t=e.parentNode.querySelectorAll("source[data-srcset]");for(let e of t)e.setAttribute("srcset",e.dataset.srcset),e.removeAttribute("data-srcset");e.complete&&(e.style.opacity=1,e.parentNode.parentNode.querySelector("[data-placeholder-image]").style.opacity=0)}}</script></div><style data-emotion="css 5injyz">.css-5injyz{position:absolute;inset:0;z-index:1;background:linear-gradient(
+    135deg,
+    rgba(13, 148, 136, 0.15) 0%,
+    transparent 60%
+  );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">순전파(Forward Propagation): 신경망이 예측하는 과정</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.20.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">24<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">16</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/random-forest/">랜덤 포레스트(Random Forest): 특성 무작위성으로 상관관계를 깨다</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">17</span><a class="css-dizrmv e4kcwtw5" href="/ml/boosting/">부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">18</span><a class="css-dizrmv e4kcwtw5" href="/ml/xgboost-vs-lightgbm/">XGBoost vs LightGBM: 실전 부스팅 모델, 어떤 걸 써야 할까</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">19</span><a class="css-dizrmv e4kcwtw5" href="/ml/neural-network-basics/">인공 신경망(ANN) 기초: 퍼셉트론에서 다층 신경망까지</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">20</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">순전파(Forward Propagation): 신경망이 예측하는 과정</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">4<!-- --> / <!-- -->5</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css 15s6bxr">.css-15s6bxr{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-15s6bxr p{padding:3px 0;margin-bottom:10px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:60px;}.css-15s6bxr hr+h1,.css-15s6bxr hr+h2,.css-15s6bxr hr+h3{margin-top:0;}.css-15s6bxr h1{font-size:34px;}.css-15s6bxr h2{font-size:28px;}.css-15s6bxr h3{font-size:22px;}.css-15s6bxr blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;font-weight:600;color:var(--text);}.css-15s6bxr ol,.css-15s6bxr ul{margin-left:20px;padding:20px 0;}.css-15s6bxr li{margin-bottom:6px;line-height:1.7;}.css-15s6bxr hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-15s6bxr a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-15s6bxr a:hover{color:var(--primary-hov);}.css-15s6bxr pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow:hidden;position:relative;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-15s6bxr pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-15s6bxr pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-15s6bxr pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-15s6bxr .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-15s6bxr pre[class*='language-']:hover .copy-button{opacity:1;}.css-15s6bxr .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-15s6bxr .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-15s6bxr code[class*='language-'],.css-15s6bxr pre[class*='language-']{tab-size:2;}.css-15s6bxr code:not([class*='language-']){background:var(--bg-muted);color:var(--text);padding:2px 6px;border-radius:4px;font-size:16px;border:1px solid var(--border);}.css-15s6bxr img{max-width:100%;border-radius:8px;}.css-15s6bxr table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;}.css-15s6bxr th,.css-15s6bxr td{padding:10px 14px;border:1px solid var(--border);text-align:left;}.css-15s6bxr th{background:var(--bg-subtle);font-weight:600;}.css-15s6bxr tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-15s6bxr{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-15s6bxr *+h1,.css-15s6bxr *+h2,.css-15s6bxr *+h3{margin-top:40px;}.css-15s6bxr h1,.css-15s6bxr h2,.css-15s6bxr h3{margin-bottom:16px;}.css-15s6bxr h1{font-size:26px;}.css-15s6bxr h2{font-size:23px;}.css-15s6bxr h3{font-size:19px;}.css-15s6bxr blockquote{font-size:15px;margin:16px 0;}.css-15s6bxr pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-15s6bxr pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-15s6bxr pre[class*='language-']:before{height:25px;}.css-15s6bxr pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-15s6bxr .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-15s6bxr code:not([class*='language-']){font-size:14px;}.css-15s6bxr img{width:100%;}.css-15s6bxr hr{margin:40px 0;}.css-15s6bxr table{font-size:13px;}.css-15s6bxr th,.css-15s6bxr td{padding:8px 10px;}}</style><div class="css-15s6bxr e1ijh0y10"><p><a href="/ml/neural-network-basics/">이전 글</a>에서 신경망의 구조를 배웠다. 퍼셉트론이 로지스틱 회귀와 같다는 것, 히든 레이어를 추가하면 XOR도 풀 수 있다는 것. 구조는 이해했다. 이제 핵심 질문 — <strong>입력 데이터가 이 구조를 통과해 출력이 되기까지 정확히 무슨 일이 벌어지는가?</strong></p>
+<p>신경망의 “예측” 과정, 즉 입력에서 출력 방향으로 데이터가 흐르는 것을 <strong>순전파(Forward Propagation)</strong> 라고 한다. 학습이든 추론이든, 신경망이 하는 첫 번째 일은 항상 순전파다. 이 과정을 수식과 코드로 완전히 이해해보자.</p>
+<hr>
+<h2>뉴런 하나의 순전파: 로지스틱 회귀 복습</h2>
+<p>신경망의 가장 작은 단위는 뉴런 하나다. 그리고 뉴런 하나의 계산은 <a href="/ml/logistic-regression/">로지스틱 회귀</a>에서 이미 다뤘다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">z = w₁x₁ + w₂x₂ + b       ← 선형 결합
+a = σ(z) = 1 / (1 + e⁻ᶻ)   ← 활성화 함수</code></pre></div>
+<p>두 단계로 나뉜다.</p>
+<ol>
+<li><strong>선형 결합</strong>: 입력(x)에 가중치(w)를 곱하고 편향(b)를 더한다 → z</li>
+<li><strong>활성화 함수</strong>: z에 비선형 함수를 적용한다 → a (출력)</li>
+</ol>
+<p>벡터로 쓰면 더 깔끔하다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">z = w⃗ · x⃗ + b    (벡터 내적)
+a = σ(z)</code></pre></div>
+<p>이건 <a href="/ml/multiple-linear-regression/">다중 선형 회귀</a>에서 봤던 벡터화 표기와 동일하다. 결국 뉴런 하나는 <strong>선형 회귀 + 활성화 함수</strong>다. 여기까지는 이미 아는 내용이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token keyword">def</span> <span class="token function">sigmoid</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span>z<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 뉴런 하나의 순전파</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0.5</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">]</span><span class="token punctuation">)</span>    <span class="token comment"># 입력 2개</span>
+w <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0.4</span><span class="token punctuation">,</span> <span class="token number">0.6</span><span class="token punctuation">]</span><span class="token punctuation">)</span>    <span class="token comment"># 가중치 2개</span>
+b <span class="token operator">=</span> <span class="token number">0.1</span>                      <span class="token comment"># 편향</span>
+
+z <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>w<span class="token punctuation">,</span> x<span class="token punctuation">)</span> <span class="token operator">+</span> b        <span class="token comment"># 0.4*0.5 + 0.6*0.3 + 0.1 = 0.48</span>
+a <span class="token operator">=</span> sigmoid<span class="token punctuation">(</span>z<span class="token punctuation">)</span>               <span class="token comment"># σ(0.48) = 0.6177</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"z = </span><span class="token interpolation"><span class="token punctuation">{</span>z<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">, a = </span><span class="token interpolation"><span class="token punctuation">{</span>a<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># z = 0.4800, a = 0.6177</span></code></pre></div>
+<p>핵심은 간단하다. <strong>곱하고 더하고(z), 비선형 함수 통과(a)</strong>. 신경망의 모든 뉴런이 이 두 단계를 반복한다.</p>
+<hr>
+<h2>레이어 하나의 순전파: 뉴런 여러 개</h2>
+<p>실제 신경망에서는 하나의 레이어에 뉴런이 여러 개 있다. 입력이 2개이고, 히든 레이어에 뉴런이 3개인 경우를 생각해보자.</p>
+<p><img src="./single-layer-forward.png" alt="레이어 하나의 순전파"></p>
+<p>각 뉴런은 <strong>같은 입력</strong>을 받지만, <strong>자신만의 가중치와 편향</strong>으로 서로 다른 z를 계산한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">뉴런 1: z₁ = w₁₁x₁ + w₁₂x₂ + b₁
+뉴런 2: z₂ = w₂₁x₁ + w₂₂x₂ + b₂
+뉴런 3: z₃ = w₃₁x₁ + w₃₂x₂ + b₃</code></pre></div>
+<p>이걸 하나씩 계산하면 비효율적이다. 행렬로 한 번에 처리할 수 있다.</p>
+<h3>행렬 표기</h3>
+<p>가중치를 행렬 W로, 편향을 벡터 b로 묶으면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">W = [[w₁₁, w₁₂],     b = [b₁,     x = [x₁,
+     [w₂₁, w₂₂],          b₂,          x₂]
+     [w₃₁, w₃₂]]          b₃]</code></pre></div>
+<p>그러면 레이어 전체의 순전파가 <strong>한 줄</strong>이 된다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">z = W · x + b       (행렬-벡터 곱 + 벡터 덧셈)
+a = g(z)             (원소별 활성화 함수 적용)</code></pre></div>
+<p>여기서 W의 shape은 <strong>(뉴런 수 × 입력 수)</strong> = (3, 2)이고, 결과 z의 shape은 <strong>(뉴런 수,)</strong> = (3,)이다.</p>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>표기법 정리</strong><br>
+  <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+    <li><strong>l</strong> — 레이어 번호 (입력층=0, 첫 번째 히든=1, ...)</li>
+    <li><strong>W[l]</strong> — l번째 레이어의 가중치 행렬</li>
+    <li><strong>b[l]</strong> — l번째 레이어의 편향 벡터</li>
+    <li><strong>z[l]</strong> — l번째 레이어의 선형 결합 결과</li>
+    <li><strong>a[l]</strong> — l번째 레이어의 활성화 출력 (a[0] = 입력 x)</li>
+    <li><strong>g</strong> — 활성화 함수 (sigmoid, ReLU 등)</li>
+  </ul>
+</div>
+<p>이 표기법을 쓰면, <strong>어떤 레이어든</strong> 순전파 공식은 동일하다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">z[l] = W[l] · a[l-1] + b[l]
+a[l] = g(z[l])</code></pre></div>
+<p>이 두 줄이 순전파의 전부다. 레이어가 아무리 깊어져도 이 공식을 반복할 뿐이다.</p>
+<hr>
+<h2>NumPy로 단일 레이어 순전파 구현</h2>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token keyword">def</span> <span class="token function">sigmoid</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span>z<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">relu</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> np<span class="token punctuation">.</span>maximum<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> z<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">forward_layer</span><span class="token punctuation">(</span>A_prev<span class="token punctuation">,</span> W<span class="token punctuation">,</span> b<span class="token punctuation">,</span> activation<span class="token operator">=</span><span class="token string">'relu'</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""
+    단일 레이어의 순전파
+
+    Parameters:
+        A_prev: 이전 레이어의 출력 (n_prev,)
+        W: 가중치 행렬 (n_current, n_prev)
+        b: 편향 벡터 (n_current,)
+        activation: 'relu' 또는 'sigmoid'
+
+    Returns:
+        A: 현재 레이어의 출력 (n_current,)
+        cache: (Z, A_prev, W) — 역전파에서 사용
+    """</span>
+    Z <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>W<span class="token punctuation">,</span> A_prev<span class="token punctuation">)</span> <span class="token operator">+</span> b        <span class="token comment"># 선형 결합</span>
+
+    <span class="token keyword">if</span> activation <span class="token operator">==</span> <span class="token string">'relu'</span><span class="token punctuation">:</span>
+        A <span class="token operator">=</span> relu<span class="token punctuation">(</span>Z<span class="token punctuation">)</span>
+    <span class="token keyword">elif</span> activation <span class="token operator">==</span> <span class="token string">'sigmoid'</span><span class="token punctuation">:</span>
+        A <span class="token operator">=</span> sigmoid<span class="token punctuation">(</span>Z<span class="token punctuation">)</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        A <span class="token operator">=</span> Z  <span class="token comment"># linear (활성화 없음)</span>
+
+    cache <span class="token operator">=</span> <span class="token punctuation">(</span>Z<span class="token punctuation">,</span> A_prev<span class="token punctuation">,</span> W<span class="token punctuation">)</span>           <span class="token comment"># 나중에 역전파에서 쓸 값들</span>
+    <span class="token keyword">return</span> A<span class="token punctuation">,</span> cache
+
+<span class="token comment"># 예시: 입력 2개 → 뉴런 3개</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0.5</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+W1 <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">0.2</span><span class="token punctuation">,</span> <span class="token number">0.4</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+               <span class="token punctuation">[</span><span class="token number">0.6</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+               <span class="token punctuation">[</span><span class="token number">0.3</span><span class="token punctuation">,</span> <span class="token number">0.7</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+b1 <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.2</span><span class="token punctuation">,</span> <span class="token number">0.05</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+A1<span class="token punctuation">,</span> cache <span class="token operator">=</span> forward_layer<span class="token punctuation">(</span>x<span class="token punctuation">,</span> W1<span class="token punctuation">,</span> b1<span class="token punctuation">,</span> activation<span class="token operator">=</span><span class="token string">'relu'</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Z = W·x + b = </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>W1<span class="token punctuation">,</span> x<span class="token punctuation">)</span> <span class="token operator">+</span> b1<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"A (ReLU 적용 후) = </span><span class="token interpolation"><span class="token punctuation">{</span>A1<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># Z = W·x + b = [0.32 0.53 0.36]</span>
+<span class="token comment"># A (ReLU 적용 후) = [0.32 0.53 0.36]</span></code></pre></div>
+<p>cache에 중간 계산값을 저장해두는 이유는 나중에 <a href="/ml/backpropagation/">역전파(Backpropagation)</a>에서 이 값들이 필요하기 때문이다. 지금은 무시해도 좋다.</p>
+<hr>
+<h2>전체 네트워크 순전파: 레이어를 연결하기</h2>
+<p>이제 레이어를 여러 개 쌓아서 전체 네트워크의 순전파를 해보자. 가장 기본적인 구조로 시작한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">입력(2) → 히든 레이어(3) → 출력(1)</code></pre></div>
+<p><img src="./full-network-forward.png" alt="전체 네트워크 순전파 흐름"></p>
+<h3>구체적인 숫자로 따라가기</h3>
+<p>입력 x = [1.0, 0.5]를 넣고, 각 레이어를 하나씩 통과시켜 보자.</p>
+<p><strong>레이어 1 (히든): 입력 2개 → 뉴런 3개, ReLU</strong></p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">W[1] = [[0.2, 0.4],      b[1] = [0.0,
+         [0.6, 0.1],              0.0,
+         [0.3, 0.7]]              0.0]
+
+z[1] = W[1] · x + b[1]
+     = [[0.2×1.0 + 0.4×0.5],     = [0.40,
+        [0.6×1.0 + 0.1×0.5],       0.65,
+        [0.3×1.0 + 0.7×0.5]]       0.65]
+
+a[1] = ReLU(z[1]) = [0.40, 0.65, 0.65]
+(모두 양수이므로 ReLU 통과 후 값이 그대로)</code></pre></div>
+<p><strong>레이어 2 (출력): 뉴런 3개 → 출력 1개, Sigmoid</strong></p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">W[2] = [[0.5, 0.3, 0.2]]    b[2] = [0.0]
+
+z[2] = W[2] · a[1] + b[2]
+     = 0.5×0.40 + 0.3×0.65 + 0.2×0.65 + 0.0
+     = 0.20 + 0.195 + 0.13
+     = 0.525
+
+a[2] = σ(0.525) = 0.6282</code></pre></div>
+<p>결과: 입력 [1.0, 0.5]에 대해 네트워크의 예측값은 <strong>0.6282</strong>. 이진 분류에서 threshold 0.5를 적용하면 <strong>클래스 1</strong>로 예측한다.</p>
+<h3>NumPy 전체 구현</h3>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token keyword">def</span> <span class="token function">sigmoid</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span>z<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">relu</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> np<span class="token punctuation">.</span>maximum<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> z<span class="token punctuation">)</span>
+
+<span class="token comment"># ── 네트워크 파라미터 초기화 ──</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+params <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'W1'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.5</span><span class="token punctuation">,</span>   <span class="token comment"># 히든 레이어: (3, 2)</span>
+    <span class="token string">'b1'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span>                     <span class="token comment"># (3,)</span>
+    <span class="token string">'W2'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.5</span><span class="token punctuation">,</span>   <span class="token comment"># 출력 레이어: (1, 3)</span>
+    <span class="token string">'b2'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>                     <span class="token comment"># (1,)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># ── 순전파 ──</span>
+<span class="token keyword">def</span> <span class="token function">forward</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> params<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""
+    2층 신경망 전체 순전파
+    x: 입력 벡터 (2,)
+    """</span>
+    <span class="token comment"># 레이어 1: 히든 (ReLU)</span>
+    z1 <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>params<span class="token punctuation">[</span><span class="token string">'W1'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> x<span class="token punctuation">)</span> <span class="token operator">+</span> params<span class="token punctuation">[</span><span class="token string">'b1'</span><span class="token punctuation">]</span>
+    a1 <span class="token operator">=</span> relu<span class="token punctuation">(</span>z1<span class="token punctuation">)</span>
+
+    <span class="token comment"># 레이어 2: 출력 (Sigmoid)</span>
+    z2 <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>params<span class="token punctuation">[</span><span class="token string">'W2'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> a1<span class="token punctuation">)</span> <span class="token operator">+</span> params<span class="token punctuation">[</span><span class="token string">'b2'</span><span class="token punctuation">]</span>
+    a2 <span class="token operator">=</span> sigmoid<span class="token punctuation">(</span>z2<span class="token punctuation">)</span>
+
+    caches <span class="token operator">=</span> <span class="token punctuation">{</span>
+        <span class="token string">'z1'</span><span class="token punctuation">:</span> z1<span class="token punctuation">,</span> <span class="token string">'a1'</span><span class="token punctuation">:</span> a1<span class="token punctuation">,</span>
+        <span class="token string">'z2'</span><span class="token punctuation">:</span> z2<span class="token punctuation">,</span> <span class="token string">'a2'</span><span class="token punctuation">:</span> a2<span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> a2<span class="token punctuation">,</span> caches
+
+<span class="token comment"># ── 실행 ──</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1.0</span><span class="token punctuation">,</span> <span class="token number">0.5</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+prediction<span class="token punctuation">,</span> caches <span class="token operator">=</span> forward<span class="token punctuation">(</span>x<span class="token punctuation">,</span> params<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"=== 순전파 과정 ==="</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"입력:        x  = </span><span class="token interpolation"><span class="token punctuation">{</span>x<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"히든 z:     z1 = </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'z1'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"히든 a:     a1 = </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'a1'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"출력 z:     z2 = </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'z2'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"출력 a:     a2 = </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'a2'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string"> ← 최종 예측"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>흐름을 정리하면:</p>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>연산</th>
+<th>입력 shape</th>
+<th>출력 shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>레이어 1 선형</td>
+<td>z[1] = W[1]·x + b[1]</td>
+<td>(3,2)·(2,) + (3,)</td>
+<td>(3,)</td>
+</tr>
+<tr>
+<td>레이어 1 활성화</td>
+<td>a[1] = ReLU(z[1])</td>
+<td>(3,)</td>
+<td>(3,)</td>
+</tr>
+<tr>
+<td>레이어 2 선형</td>
+<td>z[2] = W[2]·a[1] + b[2]</td>
+<td>(1,3)·(3,) + (1,)</td>
+<td>(1,)</td>
+</tr>
+<tr>
+<td>레이어 2 활성화</td>
+<td>a[2] = σ(z[2])</td>
+<td>(1,)</td>
+<td>(1,)</td>
+</tr>
+</tbody>
+</table>
+<p>매 레이어에서 W의 shape은 <strong>(현재 뉴런 수, 이전 뉴런 수)</strong> 다. 이 규칙만 기억하면 레이어가 아무리 많아도 shape이 헷갈리지 않는다.</p>
+<hr>
+<h2>왜 행렬 곱셈인가: 벡터화의 위력</h2>
+<p>“for문으로 뉴런 하나씩 계산하면 안 되나?” 물론 된다. 하지만 <strong>느리다</strong>.</p>
+<p><a href="/ml/multiple-linear-regression/">다중 선형 회귀</a>에서 벡터화의 장점을 이미 봤다. 신경망에서는 그 차이가 더 극적이다. NumPy의 행렬 연산은 내부적으로 C로 작성된 BLAS 라이브러리를 호출하기 때문에, 파이썬 루프보다 <strong>수십~수백 배</strong> 빠르다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">import</span> time
+
+n_inputs <span class="token operator">=</span> <span class="token number">1000</span>    <span class="token comment"># 입력 크기</span>
+n_neurons <span class="token operator">=</span> <span class="token number">500</span>    <span class="token comment"># 뉴런 수</span>
+n_samples <span class="token operator">=</span> <span class="token number">10000</span>  <span class="token comment"># 데이터 수</span>
+
+X <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span>n_samples<span class="token punctuation">,</span> n_inputs<span class="token punctuation">)</span>
+W <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span>n_neurons<span class="token punctuation">,</span> n_inputs<span class="token punctuation">)</span>
+b <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span>n_neurons<span class="token punctuation">)</span>
+
+<span class="token comment"># ── 방법 1: 파이썬 루프 ──</span>
+start <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span>
+Z_loop <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token punctuation">(</span>n_samples<span class="token punctuation">,</span> n_neurons<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>n_samples<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> j <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>n_neurons<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        Z_loop<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">]</span> <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>W<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">,</span> X<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">+</span> b<span class="token punctuation">[</span>j<span class="token punctuation">]</span>
+loop_time <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> start
+
+<span class="token comment"># ── 방법 2: 벡터화 (행렬 곱) ──</span>
+start <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span>
+Z_vec <span class="token operator">=</span> X @ W<span class="token punctuation">.</span>T <span class="token operator">+</span> b    <span class="token comment"># (10000, 1000) @ (1000, 500) + (500,)</span>
+vec_time <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> start
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"루프: </span><span class="token interpolation"><span class="token punctuation">{</span>loop_time<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">초"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"벡터화: </span><span class="token interpolation"><span class="token punctuation">{</span>vec_time<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">초"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"속도 차이: </span><span class="token interpolation"><span class="token punctuation">{</span>loop_time <span class="token operator">/</span> vec_time<span class="token punctuation">:</span><span class="token format-spec">.0f</span><span class="token punctuation">}</span></span><span class="token string">배"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 루프: 23.415초</span>
+<span class="token comment"># 벡터화: 0.0312초</span>
+<span class="token comment"># 속도 차이: 750배</span></code></pre></div>
+<p>750배. 이게 벡터화의 위력이다. 실제 딥러닝에서 레이어 수십 개, 뉴런 수천 개, 데이터 수백만 개를 다루는데, 루프로 계산하면 학습에 며칠이 걸릴 것을 벡터화로 몇 시간으로 줄인다. GPU가 빠른 이유도 본질적으로 같다 — 행렬 곱을 수천 개 코어에서 동시에 처리하기 때문이다.</p>
+<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>배치 처리와 벡터화</strong><br>
+  위 코드에서 <code>X @ W.T</code>는 데이터 10,000개를 <strong>한 번에</strong> 계산한다. 이것을 <strong>배치(batch) 연산</strong>이라고 한다. 데이터 하나씩 for문을 돌리는 것과 행렬 한 번 곱하는 것의 차이가 바로 750배다.
+</div>
+<hr>
+<h2>계산 그래프: 순전파를 시각화하다</h2>
+<p>순전파의 흐름을 <strong>계산 그래프(Computation Graph)</strong> 로 그리면 각 연산의 관계가 명확해진다.</p>
+<p><img src="./computation-graph.png" alt="순전파 계산 그래프"></p>
+<p>2층 네트워크의 계산 그래프를 글로 표현하면:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">x ──→ [W[1]·x + b[1]] ──→ z[1] ──→ [ReLU] ──→ a[1]
+                                                   │
+a[1] ──→ [W[2]·a[1] + b[2]] ──→ z[2] ──→ [σ] ──→ a[2] ──→ [Loss] ──→ L
+                                                              ↑
+                                                              y (정답)</code></pre></div>
+<p>왼쪽에서 오른쪽으로 데이터가 흐른다 — 그래서 <strong>순전파(forward)</strong> 다.</p>
+<p>이 그래프를 그려두는 이유는 <a href="/ml/backpropagation/">역전파(Backpropagation)</a>를 이해하기 위해서다. 역전파는 이 그래프를 <strong>오른쪽에서 왼쪽으로</strong> 거슬러 올라가면서, 각 파라미터가 Loss에 얼마나 기여했는지(= 기울기)를 계산한다. 순전파의 중간 결과(z, a)를 cache에 저장해둔 이유가 여기에 있다 — 역전파에서 이 값들이 그대로 쓰인다.</p>
+<p>지금은 “순전파의 각 단계를 기록해두면, 나중에 기울기 계산이 가능하다” 정도만 기억하자.</p>
+<hr>
+<h2>출력 레이어 설계: 문제에 따라 달라지는 마지막 레이어</h2>
+<p>히든 레이어는 보통 ReLU를 쓴다. 하지만 <strong>출력 레이어</strong>는 풀려는 문제에 따라 활성화 함수가 달라진다.</p>
+<table>
+<thead>
+<tr>
+<th>문제 유형</th>
+<th>출력 뉴런 수</th>
+<th>활성화 함수</th>
+<th>출력 범위</th>
+<th>예시</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>이진 분류</td>
+<td>1</td>
+<td>Sigmoid</td>
+<td>(0, 1)</td>
+<td>스팸 여부</td>
+</tr>
+<tr>
+<td>다중 클래스 분류</td>
+<td>K</td>
+<td>Softmax</td>
+<td>각각 (0,1), 합=1</td>
+<td>숫자 인식 (0~9)</td>
+</tr>
+<tr>
+<td>회귀</td>
+<td>1 (또는 n)</td>
+<td>없음 (Linear)</td>
+<td>(-inf, +inf)</td>
+<td>집값 예측</td>
+</tr>
+</tbody>
+</table>
+<h3>이진 분류: Sigmoid</h3>
+<p><a href="/ml/logistic-regression/">로지스틱 회귀</a>와 동일하다. 출력 뉴런 1개에 Sigmoid를 적용해서 확률을 출력한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">a = σ(z) = 1 / (1 + e⁻ᶻ)</code></pre></div>
+<p>출력이 0.5 이상이면 클래스 1, 미만이면 클래스 0으로 판단한다.</p>
+<h3>다중 클래스 분류: Softmax</h3>
+<p><a href="/ml/decision-boundary/">결정 경계 글</a>에서 다뤘던 Softmax다. K개 클래스 각각의 점수(z)를 확률로 변환한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">softmax(zᵢ) = e^zᵢ / (e^z₁ + e^z₂ + ... + e^zₖ)</code></pre></div>
+<p>K개 출력의 합이 정확히 1이 된다. 가장 높은 확률의 클래스를 예측값으로 선택한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">softmax</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""수치적으로 안정한 Softmax"""</span>
+    exp_z <span class="token operator">=</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span>z <span class="token operator">-</span> np<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment"># overflow 방지</span>
+    <span class="token keyword">return</span> exp_z <span class="token operator">/</span> np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>exp_z<span class="token punctuation">)</span>
+
+<span class="token comment"># 숫자 인식 (0~9): 출력 뉴런 10개</span>
+z_output <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">2.1</span><span class="token punctuation">,</span> <span class="token number">0.5</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">,</span> <span class="token number">8.2</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.4</span><span class="token punctuation">,</span> <span class="token number">0.2</span><span class="token punctuation">,</span> <span class="token number">1.1</span><span class="token punctuation">,</span> <span class="token number">0.7</span><span class="token punctuation">,</span> <span class="token number">0.3</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+probs <span class="token operator">=</span> softmax<span class="token punctuation">(</span>z_output<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"각 클래스 확률: </span><span class="token interpolation"><span class="token punctuation">{</span>probs<span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"예측 클래스: </span><span class="token interpolation"><span class="token punctuation">{</span>np<span class="token punctuation">.</span>argmax<span class="token punctuation">(</span>probs<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"확률 합: </span><span class="token interpolation"><span class="token punctuation">{</span>probs<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token comment"># 각 클래스 확률: [0.0022 0.0004 0.0004 0.9928 0.0003 0.0004 0.0003 0.0008 0.0005 0.0004]</span>
+<span class="token comment"># 예측 클래스: 3</span>
+<span class="token comment"># 확률 합: 1.0000</span></code></pre></div>
+<h3>회귀: Linear (활성화 없음)</h3>
+<p>집값 예측 같은 회귀 문제에서는 출력에 활성화 함수를 적용하지 않는다. z 값 자체가 예측값이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">a = z    (활성화 함수 없음)</code></pre></div>
+<p>출력 범위에 제한이 없어야 하기 때문이다. 집값이 -100만 원이 나올 수도 있고 10억이 나올 수도 있다.</p>
+<hr>
+<h2>신경망의 손실 함수</h2>
+<p>순전파의 마지막 단계는 <strong>예측값(a)과 정답(y)의 차이를 하나의 숫자로 측정</strong>하는 것이다. 이 숫자가 <strong>손실(Loss)</strong> 이고, 이 손실을 줄이는 방향으로 파라미터를 업데이트하는 것이 <a href="/ml/gradient-descent/">경사하강법</a>이었다.</p>
+<p>출력 레이어와 마찬가지로, 손실 함수도 문제 유형에 따라 달라진다.</p>
+<h3>이진 교차 엔트로피 (Binary Cross-Entropy)</h3>
+<p>이진 분류에서 사용한다. <a href="/ml/logistic-regression/">로지스틱 회귀</a>에서 봤던 Log Loss와 동일하다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">L = -[y × log(a) + (1-y) × log(1-a)]</code></pre></div>
+<ul>
+<li>y=1일 때: L = -log(a). 예측이 1에 가까울수록 Loss가 0에 가까워진다.</li>
+<li>y=0일 때: L = -log(1-a). 예측이 0에 가까울수록 Loss가 0에 가까워진다.</li>
+</ul>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">binary_cross_entropy</span><span class="token punctuation">(</span>y<span class="token punctuation">,</span> a<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    epsilon <span class="token operator">=</span> <span class="token number">1e-15</span>  <span class="token comment"># log(0) 방지</span>
+    a <span class="token operator">=</span> np<span class="token punctuation">.</span>clip<span class="token punctuation">(</span>a<span class="token punctuation">,</span> epsilon<span class="token punctuation">,</span> <span class="token number">1</span> <span class="token operator">-</span> epsilon<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token operator">-</span><span class="token punctuation">(</span>y <span class="token operator">*</span> np<span class="token punctuation">.</span>log<span class="token punctuation">(</span>a<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span>log<span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> a<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># y=1인데 예측이 0.9 → 낮은 Loss</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"y=1, a=0.9: L = </span><span class="token interpolation"><span class="token punctuation">{</span>binary_cross_entropy<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0.9</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>   <span class="token comment"># 0.1054</span>
+
+<span class="token comment"># y=1인데 예측이 0.1 → 높은 Loss</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"y=1, a=0.1: L = </span><span class="token interpolation"><span class="token punctuation">{</span>binary_cross_entropy<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>   <span class="token comment"># 2.3026</span></code></pre></div>
+<h3>범주형 교차 엔트로피 (Categorical Cross-Entropy)</h3>
+<p>다중 클래스 분류에서 사용한다. 정답 클래스의 예측 확률에만 관심이 있다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">L = -Σ yₖ × log(aₖ)    (k = 1, ..., K)</code></pre></div>
+<p>원-핫 인코딩에서 정답 클래스만 y=1이므로, 결국 <strong>정답 클래스의 log 확률</strong>에 마이너스를 붙인 것이다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">categorical_cross_entropy</span><span class="token punctuation">(</span>y_onehot<span class="token punctuation">,</span> probs<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    epsilon <span class="token operator">=</span> <span class="token number">1e-15</span>
+    probs <span class="token operator">=</span> np<span class="token punctuation">.</span>clip<span class="token punctuation">(</span>probs<span class="token punctuation">,</span> epsilon<span class="token punctuation">,</span> <span class="token number">1.0</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token operator">-</span>np<span class="token punctuation">.</span><span class="token builtin">sum</span><span class="token punctuation">(</span>y_onehot <span class="token operator">*</span> np<span class="token punctuation">.</span>log<span class="token punctuation">(</span>probs<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 정답: 클래스 3 (원-핫)</span>
+y <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 좋은 예측 (클래스 3에 높은 확률)</span>
+good_pred <span class="token operator">=</span> softmax<span class="token punctuation">(</span>np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">5.0</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"좋은 예측 Loss: </span><span class="token interpolation"><span class="token punctuation">{</span>categorical_cross_entropy<span class="token punctuation">(</span>y<span class="token punctuation">,</span> good_pred<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>  <span class="token comment"># 0.0154</span>
+
+<span class="token comment"># 나쁜 예측 (클래스 3에 낮은 확률)</span>
+bad_pred <span class="token operator">=</span> softmax<span class="token punctuation">(</span>np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">3.0</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">,</span> <span class="token number">0.1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"나쁜 예측 Loss: </span><span class="token interpolation"><span class="token punctuation">{</span>categorical_cross_entropy<span class="token punctuation">(</span>y<span class="token punctuation">,</span> bad_pred<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>   <span class="token comment"># 3.4512</span></code></pre></div>
+<h3>MSE (Mean Squared Error)</h3>
+<p>회귀 문제에서 사용한다. <a href="/ml/cost-function/">비용 함수 글</a>에서 다뤘던 바로 그것이다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">L = (y - a)²</code></pre></div>
+<p>예측값과 정답의 차이를 제곱한다. 단순하지만 회귀에서는 여전히 강력하다.</p>
+<table>
+<thead>
+<tr>
+<th>문제 유형</th>
+<th>출력 활성화</th>
+<th>손실 함수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>이진 분류</td>
+<td>Sigmoid</td>
+<td>Binary Cross-Entropy</td>
+</tr>
+<tr>
+<td>다중 클래스</td>
+<td>Softmax</td>
+<td>Categorical Cross-Entropy</td>
+</tr>
+<tr>
+<td>회귀</td>
+<td>Linear</td>
+<td>MSE</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>전체 순전파: 입력부터 Loss까지</h2>
+<p>지금까지 배운 모든 것을 합쳐서, 입력이 들어와서 Loss가 계산되기까지의 <strong>완전한 순전파</strong>를 구현해보자. 이진 분류 문제로 가정한다.</p>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+
+<span class="token comment"># ── 활성화 함수 ──</span>
+<span class="token keyword">def</span> <span class="token function">sigmoid</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> np<span class="token punctuation">.</span>exp<span class="token punctuation">(</span><span class="token operator">-</span>z<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">relu</span><span class="token punctuation">(</span>z<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> np<span class="token punctuation">.</span>maximum<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> z<span class="token punctuation">)</span>
+
+<span class="token comment"># ── 손실 함수 ──</span>
+<span class="token keyword">def</span> <span class="token function">binary_cross_entropy</span><span class="token punctuation">(</span>y<span class="token punctuation">,</span> a<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    epsilon <span class="token operator">=</span> <span class="token number">1e-15</span>
+    a <span class="token operator">=</span> np<span class="token punctuation">.</span>clip<span class="token punctuation">(</span>a<span class="token punctuation">,</span> epsilon<span class="token punctuation">,</span> <span class="token number">1</span> <span class="token operator">-</span> epsilon<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token operator">-</span><span class="token punctuation">(</span>y <span class="token operator">*</span> np<span class="token punctuation">.</span>log<span class="token punctuation">(</span>a<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> y<span class="token punctuation">)</span> <span class="token operator">*</span> np<span class="token punctuation">.</span>log<span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> a<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># ── 네트워크 정의 ──</span>
+<span class="token comment"># 구조: 입력(2) → 히든1(4, ReLU) → 히든2(3, ReLU) → 출력(1, Sigmoid)</span>
+np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
+params <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'W1'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.5</span><span class="token punctuation">,</span>
+    <span class="token string">'b1'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'W2'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.5</span><span class="token punctuation">,</span>
+    <span class="token string">'b2'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token string">'W3'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">0.5</span><span class="token punctuation">,</span>
+    <span class="token string">'b3'</span><span class="token punctuation">:</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># ── 전체 순전파 ──</span>
+<span class="token keyword">def</span> <span class="token function">forward_full</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> params<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""
+    입력 → 히든1 → 히든2 → 출력 → Loss
+    """</span>
+    <span class="token comment"># 레이어 1</span>
+    z1 <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>params<span class="token punctuation">[</span><span class="token string">'W1'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> x<span class="token punctuation">)</span> <span class="token operator">+</span> params<span class="token punctuation">[</span><span class="token string">'b1'</span><span class="token punctuation">]</span>
+    a1 <span class="token operator">=</span> relu<span class="token punctuation">(</span>z1<span class="token punctuation">)</span>
+
+    <span class="token comment"># 레이어 2</span>
+    z2 <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>params<span class="token punctuation">[</span><span class="token string">'W2'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> a1<span class="token punctuation">)</span> <span class="token operator">+</span> params<span class="token punctuation">[</span><span class="token string">'b2'</span><span class="token punctuation">]</span>
+    a2 <span class="token operator">=</span> relu<span class="token punctuation">(</span>z2<span class="token punctuation">)</span>
+
+    <span class="token comment"># 레이어 3 (출력)</span>
+    z3 <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>params<span class="token punctuation">[</span><span class="token string">'W3'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> a2<span class="token punctuation">)</span> <span class="token operator">+</span> params<span class="token punctuation">[</span><span class="token string">'b3'</span><span class="token punctuation">]</span>
+    a3 <span class="token operator">=</span> sigmoid<span class="token punctuation">(</span>z3<span class="token punctuation">)</span>
+
+    <span class="token comment"># 손실 계산</span>
+    loss <span class="token operator">=</span> binary_cross_entropy<span class="token punctuation">(</span>y<span class="token punctuation">,</span> a3<span class="token punctuation">)</span>
+
+    caches <span class="token operator">=</span> <span class="token punctuation">{</span>
+        <span class="token string">'z1'</span><span class="token punctuation">:</span> z1<span class="token punctuation">,</span> <span class="token string">'a1'</span><span class="token punctuation">:</span> a1<span class="token punctuation">,</span>
+        <span class="token string">'z2'</span><span class="token punctuation">:</span> z2<span class="token punctuation">,</span> <span class="token string">'a2'</span><span class="token punctuation">:</span> a2<span class="token punctuation">,</span>
+        <span class="token string">'z3'</span><span class="token punctuation">:</span> z3<span class="token punctuation">,</span> <span class="token string">'a3'</span><span class="token punctuation">:</span> a3<span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> a3<span class="token punctuation">,</span> loss<span class="token punctuation">,</span> caches
+
+<span class="token comment"># ── 실행 ──</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1.5</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">0.7</span><span class="token punctuation">]</span><span class="token punctuation">)</span>   <span class="token comment"># 입력</span>
+y <span class="token operator">=</span> <span class="token number">1</span>                        <span class="token comment"># 정답 레이블</span>
+
+prediction<span class="token punctuation">,</span> loss<span class="token punctuation">,</span> caches <span class="token operator">=</span> forward_full<span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">,</span> params<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"=== 전체 순전파 결과 ==="</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"입력: </span><span class="token interpolation"><span class="token punctuation">{</span>x<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"히든1 출력: </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'a1'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"히든2 출력: </span><span class="token interpolation"><span class="token punctuation">{</span>caches<span class="token punctuation">[</span><span class="token string">'a2'</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token builtin">round</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"최종 예측: </span><span class="token interpolation"><span class="token punctuation">{</span>prediction<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"정답: </span><span class="token interpolation"><span class="token punctuation">{</span>y<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Loss: </span><span class="token interpolation"><span class="token punctuation">{</span>loss<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
+<p>출력을 보면 데이터가 어떻게 흘러가는지 한눈에 보인다:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">입력 [1.5, -0.7]
+  → 히든1 (4개 뉴런, ReLU) → [0.2480, 0.0000, 0.0000, 0.6423]
+  → 히든2 (3개 뉴런, ReLU) → [0.0000, 0.2195, 0.0000]
+  → 출력 (1개 뉴런, Sigmoid) → 0.4728
+  → Loss = 0.7487</code></pre></div>
+<p>예측이 0.4728이고 정답은 1이니, 모델이 틀렸다. Loss가 0.7487로 꽤 높다. 이제 이 Loss를 줄이기 위해 W와 b를 업데이트해야 하는데 — 그게 바로 역전파다.</p>
+<hr>
+<h2>자주 발생하는 차원 불일치 문제</h2>
+<p>순전파를 직접 구현하다 보면 가장 많이 만나는 에러가 <code class="language-text">shapes not aligned</code>이다. 행렬 곱에서 차원이 맞지 않으면 발생한다.</p>
+<h3>차원 규칙 정리</h3>
+<p>행렬 곱 <code class="language-text">A @ B</code>가 가능하려면 <strong>A의 열 수 = B의 행 수</strong>여야 한다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">(m, n) @ (n, p) = (m, p)
+  ↑         ↑
+  이 둘이 같아야 함</code></pre></div>
+<p>신경망에서:</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">W[l]의 shape  = (현재 레이어 뉴런 수, 이전 레이어 뉴런 수)
+a[l-1]의 shape = (이전 레이어 뉴런 수,)
+b[l]의 shape   = (현재 레이어 뉴런 수,)</code></pre></div>
+<h3>자주 하는 실수와 해결법</h3>
+<table>
+<thead>
+<tr>
+<th>실수</th>
+<th>에러 메시지</th>
+<th>해결</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W shape을 (입력, 뉴런)으로 설정</td>
+<td><code class="language-text">shapes (2,3) and (2,) not aligned</code></td>
+<td>W를 (뉴런, 입력)으로 바꾸거나 W.T 사용</td>
+</tr>
+<tr>
+<td>b의 크기가 뉴런 수와 불일치</td>
+<td><code class="language-text">operands could not be broadcast</code></td>
+<td>b의 shape을 현재 뉴런 수에 맞춤</td>
+</tr>
+<tr>
+<td>배치 차원을 빼먹음</td>
+<td>단일 샘플은 동작하지만 배치에서 에러</td>
+<td>입력을 (batch, features)로 reshape</td>
+</tr>
+</tbody>
+</table>
+<div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 잘못된 예</span>
+W <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span>  <span class="token comment"># (입력, 뉴런) — 거꾸로!</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1.0</span><span class="token punctuation">,</span> <span class="token number">0.5</span><span class="token punctuation">]</span><span class="token punctuation">)</span>   <span class="token comment"># (2,)</span>
+<span class="token comment"># np.dot(W, x) → 에러! (2,3) @ (2,) 불가</span>
+
+<span class="token comment"># ✅ 올바른 예</span>
+W <span class="token operator">=</span> np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>randn<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>  <span class="token comment"># (뉴런, 입력)</span>
+x <span class="token operator">=</span> np<span class="token punctuation">.</span>array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1.0</span><span class="token punctuation">,</span> <span class="token number">0.5</span><span class="token punctuation">]</span><span class="token punctuation">)</span>   <span class="token comment"># (2,)</span>
+z <span class="token operator">=</span> np<span class="token punctuation">.</span>dot<span class="token punctuation">(</span>W<span class="token punctuation">,</span> x<span class="token punctuation">)</span>            <span class="token comment"># (3,2) @ (2,) = (3,) ✓</span></code></pre></div>
+<div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>디버깅 팁</strong><br>
+  순전파에서 에러가 나면, 각 레이어마다 <code>print(f"W{l}.shape={W.shape}, a.shape={a.shape}")</code>를 찍어보자. shape을 눈으로 확인하면 어디서 차원이 꼬였는지 바로 보인다. PyTorch나 TensorFlow 같은 프레임워크에서도 디버깅의 90%는 shape 확인이다.
+</div>
+<hr>
+<h2>순전파 정리</h2>
+<p>전체 흐름을 한 번 더 정리하자.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">입력 x
+  ↓
+[z[1] = W[1]·x + b[1]]  →  [a[1] = ReLU(z[1])]     ← 히든 레이어 1
+  ↓
+[z[2] = W[2]·a[1] + b[2]]  →  [a[2] = ReLU(z[2])]   ← 히든 레이어 2
+  ↓
+[z[L] = W[L]·a[L-1] + b[L]]  →  [a[L] = σ(z[L])]    ← 출력 레이어
+  ↓
+Loss = L(y, a[L])                                       ← 손실 계산</code></pre></div>
+<p><strong>핵심 세 가지:</strong></p>
+<ol>
+<li><strong>모든 레이어의 순전파 공식은 동일하다</strong>: z = W·a + b, a = g(z)</li>
+<li><strong>행렬 연산으로 벡터화하면 수백 배 빠르다</strong>: 루프 대신 <code class="language-text">np.dot</code> 한 줄</li>
+<li><strong>중간 결과(z, a)를 저장해둔다</strong>: 역전파에서 기울기 계산에 필요</li>
+</ol>
+<p>순전파 자체는 어렵지 않다. 곱하고, 더하고, 활성화 함수 통과 — 이걸 레이어 수만큼 반복할 뿐이다. 진짜 어려운 건 다음이다: 이 순전파의 결과(Loss)를 보고, <strong>각 가중치를 얼마나, 어떤 방향으로 바꿔야 하는가?</strong></p>
+<hr>
+<h2>다음 글 미리보기</h2>
+<p>순전파로 예측하고, Loss를 계산했다. 이제 남은 건 <strong>Loss를 줄이기 위해 W와 b를 업데이트</strong>하는 것이다. 경사하강법의 원리는 이미 안다 — 기울기(gradient)를 구해서 반대 방향으로 이동하면 된다.</p>
+<p>문제는, 신경망에서 기울기를 구하는 게 단순하지 않다는 것이다. 레이어가 여러 개 쌓여 있으니, 출력의 Loss가 첫 번째 레이어의 가중치에 어떤 영향을 미쳤는지 알려면 <strong>체인룰(chain rule)</strong> 로 층층이 거슬러 올라가야 한다.</p>
+<p>다음 글에서는 이 과정 — <strong><a href="/ml/backpropagation/">역전파(Backpropagation)</a></strong> — 을 수식과 코드로 완전히 분해한다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/neural-network-basics/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">인공 신경망(ANN) 기초: 퍼셉트론에서 다층 신경망까지</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/backpropagation/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">역전파(Backpropagation): 신경망이 학습하는 원리</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
+    window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
+      'G-WSM9M8LZ1S'
+    );
+    window.GATSBY_GTAG_PLUGIN_ANONYMIZE = true;
+
+    var options = {
+      send_page_view: false
+    };
+    if (true) {
+      options.anonymize_ip = true;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-WSM9M8LZ1S', options);
+  </script><script id="gatsby-script-loader">/*<![CDATA[*/window.pagePath="/ml/forward-propagation/";/*]]>*/</script><!-- slice-start id="_gatsby-scripts-1" -->
+          <script
+            id="gatsby-chunk-mapping"
+          >
+            window.___chunkMapping="{\"app\":[\"/app-e18b45fa0351f0c8ff38.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-655c2446431e23728913.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-fa0539a8a346da0e3b41.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-ad651534cff1184f2fc9.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-0694830708c73ec4e43c.js\"]}";
+          </script>
+        <script>window.___webpackCompilationHash="254eea8133c23796c6bc";</script><script src="/webpack-runtime-7755da4858a9a49e031a.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-e18b45fa0351f0c8ff38.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
