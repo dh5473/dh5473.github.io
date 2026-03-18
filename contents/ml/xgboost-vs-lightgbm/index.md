@@ -115,6 +115,8 @@ Leaf-wise (LightGBM):
   단점: 불균형한 트리, 과적합 위험 높음 (특히 작은 데이터)
 ```
 
+![Level-wise vs Leaf-wise 트리 성장 전략 비교](./tree-growth.png)
+
 같은 수의 리프를 사용한다면, Leaf-wise가 항상 더 낮은 훈련 손실을 달성한다. 손실 감소가 가장 큰 곳에 자원을 집중하기 때문이다. 다만 이 "탐욕적" 전략이 과적합으로 이어질 수 있어서, `num_leaves`를 보수적으로 설정해야 한다.
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
@@ -324,6 +326,8 @@ LightGBM      0.4611       0.4123s
 
 16,000개 수준에서 이미 **3배 속도 차이**가 난다. 정확도는 거의 동일하다. 데이터가 100만 개를 넘어가면 이 격차는 10배 이상으로 벌어진다.
 
+![XGBoost, LightGBM, CatBoost 데이터셋 크기별 학습 시간 비교](./training-speed.png)
+
 <div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>✅ 실전 팁: 탐색은 LightGBM, 최종 제출은 XGBoost</strong><br>
   Kaggle 상위권에서 자주 쓰는 전략이다. 피처 엔지니어링과 하이퍼파라미터 탐색은 빠른 LightGBM으로 돌리고, 최종 제출에서는 XGBoost로 정확도를 미세하게 올린다. 둘 다 Gradient Boosting 기반이라 피처 중요도나 학습 곡선 패턴이 대체로 일치한다.
@@ -384,7 +388,7 @@ XGBoost와 LightGBM만 비교하기엔, 2017년 Yandex가 내놓은 **CatBoost**
 | 범주형 처리 | **Ordered Target Statistics** — 타겟 누출 없이 범주형을 수치로 변환 |
 | 부스팅 전략 | **Ordered Boosting** — 순열 기반으로 타겟 누출 방지 |
 | 특별한 장점 | 기본 파라미터로도 성능이 좋다. 튜닝 부담이 적다 |
-| 추론 속도 | XGBoost/LightGBM 대비 **30-60배 빠름** |
+| 추론 속도 | XGBoost/LightGBM 대비 **2-10배 빠름 (oblivious tree 구조 덕분에 배치 추론 시)** |
 
 **대칭 트리**가 추론 속도의 비밀이다. 같은 깊이의 모든 노드가 동일한 특성과 임계값으로 분할하기 때문에, 예측이 단순한 비트 연산으로 변환된다. 실시간 API에서 부스팅 모델을 서빙해야 한다면 CatBoost가 유리하다.
 
@@ -444,7 +448,7 @@ CatBoost 테스트: 0.9737
   <strong>📌 프로덕션 환경에서의 선택</strong><br><br>
   학습 속도만 중요한 게 아니다. <strong>추론 속도</strong>(예측 한 건에 걸리는 시간)도 중요하다면:
   <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-    <li><strong>실시간 서빙 (< 10ms)</strong>: CatBoost — 대칭 트리 덕분에 30-60배 빠른 추론</li>
+    <li><strong>실시간 서빙 (< 10ms)</strong>: CatBoost — 대칭 트리(oblivious tree) 덕분에 2-10배 빠른 배치 추론</li>
     <li><strong>배치 파이프라인</strong>: LightGBM — 학습/추론 모두 빠르고 메모리 효율적</li>
     <li><strong>정확도가 최우선</strong>: XGBoost — 정규화와 2차 근사로 마지막 0.1% 쥐어짜기</li>
   </ul>
