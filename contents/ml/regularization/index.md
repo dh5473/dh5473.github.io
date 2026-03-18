@@ -88,6 +88,8 @@ Ridge는 가중치의 **제곱 합**을 패널티로 사용한다.
 J(w, b) = (1/m) Σ(ŷᵢ - yᵢ)² + λ Σwⱼ²
 ```
 
+왜 이렇게 되는가? 이 식은 두 가지 힘의 줄다리기다. 앞의 MSE는 "데이터를 정확히 맞춰라"고 밀고, 뒤의 λΣwⱼ²은 "가중치를 작게 유지해라"고 당긴다. 경사하강법은 두 힘의 균형점을 찾아간다.
+
 가중치가 클수록 제곱으로 인해 패널티가 급격히 커진다. 결과적으로 **모든 가중치를 고르게 작게 만든다.** 어떤 가중치도 정확히 0이 되지는 않는다 — 모든 변수를 조금씩 사용한다.
 
 ### 직접 구현
@@ -365,7 +367,12 @@ ridge_zero = Ridge(alpha=0)
 
 ### 3. 규제가 필요 없는 모델에 적용한다
 
-트리 기반 모델(Decision Tree, Random Forest, XGBoost)은 규제 방식이 근본적으로 다르다. L1/L2 규제는 **경사하강법으로 학습하는 선형 모델**에 적용하는 기법이다. 트리 모델은 가지치기(pruning), max_depth 같은 자체 규제 메커니즘을 사용한다.
+트리 기반 모델(Decision Tree, Random Forest, XGBoost)은 규제 방식이 근본적으로 다르다. L1/L2 규제는 **경사하강법으로 학습하는 선형 모델**에 적용하는 기법이다. 트리 모델은 가지치기(pruning), max_depth 같은 자체 규제 메커니즘을 사용한다 — [결정 트리 글](/ml/decision-tree/)에서 이를 다룬다.
+
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 흔한 오해: "규제를 적용하면 항상 성능이 좋아진다"</strong><br>
+  규제는 과적합을 줄이는 도구이지, 마법이 아니다. 데이터 수에 비해 특성 수가 적고 과적합 징후가 없다면, 규제를 적용해도 성능이 개선되지 않거나 오히려 나빠진다. 먼저 <a href="/ml/bias-variance/">학습 곡선</a>으로 과적합 여부를 진단하고, 필요한 경우에만 규제를 적용하자.
+</div>
 
 <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
   <strong>📌 핵심 요약</strong><br><br>
@@ -383,9 +390,7 @@ ridge_zero = Ridge(alpha=0)
 
 ## 마치며
 
-규제의 핵심은 "모델에게 겸손함을 강제하는 것"이다. 데이터를 완벽하게 맞추려는 욕심을 억제하고, 약간의 훈련 오차를 감수하는 대신 새 데이터에 대한 예측력을 지킨다. 여기까지가 선형 모델의 기본기 — [선형 회귀](/ml/linear-regression/)부터 [로지스틱 회귀](/ml/logistic-regression/)까지, 비용 함수, 경사하강법, Feature Scaling, 규제가 하나의 흐름으로 연결된다.
-
-여기까지가 선형 모델의 기본기다. 선형 회귀, 로지스틱 회귀, 그리고 과적합을 막는 규제까지. 다음 글에서는 로지스틱 회귀 외에 다른 분류 접근법을 만나본다 — 확률로 분류하는 [나이브 베이즈(Naive Bayes)](/ml/naive-bayes/)다.
+규제의 핵심은 "모델에게 겸손함을 강제하는 것"이다. 데이터를 완벽하게 맞추려는 욕심을 억제하고, 약간의 훈련 오차를 감수하는 대신 새 데이터에 대한 예측력을 지킨다. 여기까지가 선형 모델의 기본기다 — [선형 회귀](/ml/linear-regression/)부터 [로지스틱 회귀](/ml/logistic-regression/)까지, 비용 함수, 경사하강법, Feature Scaling, 규제가 하나의 흐름으로 연결된다. 다음 글에서는 로지스틱 회귀 외에 다른 분류 접근법을 만나본다 — 확률로 분류하는 [나이브 베이즈(Naive Bayes)](/ml/naive-bayes/)다.
 
 ## 참고자료
 

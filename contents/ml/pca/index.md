@@ -408,20 +408,21 @@ X_swiss, color = make_swiss_roll(n_samples=1500, noise=0.5, random_state=42)
 pca_swiss = PCA(n_components=2)
 X_swiss_pca = pca_swiss.fit_transform(X_swiss)
 
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+fig = plt.figure(figsize=(14, 5))
 
 # 원본 3D
-ax = fig.add_subplot(121, projection='3d')
-ax.scatter(X_swiss[:, 0], X_swiss[:, 1], X_swiss[:, 2],
-           c=color, cmap='Spectral', s=10)
-ax.set_title('Swiss Roll (3D)')
+ax1 = fig.add_subplot(121, projection='3d')
+ax1.scatter(X_swiss[:, 0], X_swiss[:, 1], X_swiss[:, 2],
+            c=color, cmap='Spectral', s=10)
+ax1.set_title('Swiss Roll (3D)')
 
 # PCA 2D
-axes[1].scatter(X_swiss_pca[:, 0], X_swiss_pca[:, 1],
-                c=color, cmap='Spectral', s=10)
-axes[1].set_title('PCA 2D Projection')
-axes[1].set_xlabel('PC1')
-axes[1].set_ylabel('PC2')
+ax2 = fig.add_subplot(122)
+ax2.scatter(X_swiss_pca[:, 0], X_swiss_pca[:, 1],
+            c=color, cmap='Spectral', s=10)
+ax2.set_title('PCA 2D Projection')
+ax2.set_xlabel('PC1')
+ax2.set_ylabel('PC2')
 
 plt.tight_layout()
 plt.show()
@@ -686,7 +687,7 @@ PCA의 전체 흐름을 다시 한번 정리하자.
 | 스케일링 | PCA 전 StandardScaler 필수 |
 | 한계 | 선형 구조만 포착 (비선형 → Kernel PCA) |
 
-PCA는 단순하지만 강력하다. 수학적으로는 공분산 행렬의 고유값 분해라는 깔끔한 원리 위에 서 있고, 실전에서는 시각화, 전처리, 과적합 방지, 속도 개선까지 다양하게 활용된다. 다만 모든 상황에 만능은 아니다 — 비선형 구조, 트리 기반 모델, 해석성이 중요한 경우에는 다른 접근이 필요하다.
+PCA의 매력은 "가장 중요한 방향부터 순서대로 뽑아준다"는 데 있다. 이 단순한 원리 하나로 시각화, 전처리, 노이즈 제거, 속도 개선까지 다양한 문제를 풀 수 있다. 물론 한계도 있다. 직선 방향의 분산만 보기 때문에 Swiss Roll 같은 비선형 구조는 잡지 못하고, 새로운 축의 의미를 해석하기도 쉽지 않다. PCA가 답이 아닌 상황을 아는 것도 PCA를 잘 쓰는 능력이다.
 
 ---
 

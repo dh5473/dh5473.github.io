@@ -397,8 +397,9 @@ axes[0].set_title('Ground Truth')
 axes[1].scatter(X[:, 0], X[:, 1], c=km_labels, cmap='viridis', s=15)
 axes[1].set_title('K-Means (K=2)')
 
-colors = ['viridis' if l != -1 else 'gray' for l in db_labels]
-axes[2].scatter(X[:, 0], X[:, 1], c=db_labels, cmap='viridis', s=15)
+mask = db_labels != -1
+axes[2].scatter(X[mask, 0], X[mask, 1], c=db_labels[mask], cmap='viridis', s=15)
+axes[2].scatter(X[~mask, 0], X[~mask, 1], c='gray', s=10, alpha=0.5, label='Noise')
 axes[2].set_title(f'DBSCAN (clusters: {len(set(db_labels) - {-1})})')
 
 plt.tight_layout()
@@ -514,7 +515,7 @@ print(f"BIC 최소: k={K_range[np.argmin(bics)]}")
 | 노이즈 처리 | 없음 (강제 할당) | 명시적 (-1) | 없음 (강제 할당) |
 | 주요 파라미터 | K | eps, min_samples | K, covariance_type |
 | 파라미터 선택 | 엘보/실루엣 | k-distance graph | BIC/AIC |
-| 시간 복잡도 | O(nKt) | O(n log n)~O(n²) | O(nK²d²t) |
+| 시간 복잡도 | O(nKt) | O(n log n)~O(n²) | O(nKd²t) |
 | 고차원 | 보통 | 약함 | 보통 |
 | 해석 용이성 | 높음 | 보통 | 보통 |
 
@@ -542,7 +543,9 @@ print(f"BIC 최소: k={K_range[np.argmin(bics)]}")
 
 ## 마치며
 
-K-Means의 세 가지 한계 — 구형만 가능, K 필요, 노이즈 취약 — 를 DBSCAN과 GMM이 각각 다른 철학으로 극복하는 것을 봤다. DBSCAN은 밀도라는 직관적 개념으로 형태 제약을 깨고, GMM은 확률 분포로 경직된 할당을 부드럽게 만든다. 다음 글에서는 클러스터링과 차원 축소를 결합해, 고차원 데이터를 2D로 시각화하는 **t-SNE와 UMAP**을 다룬다.
+결국 클러스터링 알고리즘을 고르는 건 "데이터에 대한 가정"을 고르는 것이다. K-Means는 "클러스터가 동그랗고 크기가 비슷하다"고 가정한다. DBSCAN은 "밀도가 높은 곳이 클러스터다"라고 본다. GMM은 "데이터가 여러 가우시안의 혼합에서 나왔다"고 생각한다. 어떤 가정이 내 데이터에 맞는지 — 그 판단이 알고리즘 선택보다 중요하다.
+
+다음 글에서는 클러스터링 결과를 눈으로 확인하는 문제를 다룬다. 피처가 수십, 수백 개인 고차원 데이터를 2D 평면에 펼치는 **[t-SNE와 UMAP](/ml/tsne-and-umap/)** 이다.
 
 ## 참고자료
 

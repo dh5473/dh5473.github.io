@@ -433,13 +433,13 @@ RandomForest를 추정기로 쓰면 missForest라고 불리는 방법이 된다.
 
 ```python
 # Forward Fill: 직전 값으로 채움
-df['temperature'] = df['temperature'].fillna(method='ffill')
+df['temperature'] = df['temperature'].ffill()
 
 # Backward Fill: 다음 값으로 채움
-df['temperature'] = df['temperature'].fillna(method='bfill')
+df['temperature'] = df['temperature'].bfill()
 
 # 둘 다 적용: forward fill 후 남은 결측을 backward fill
-df['temperature'] = df['temperature'].fillna(method='ffill').fillna(method='bfill')
+df['temperature'] = df['temperature'].ffill().bfill()
 ```
 
 ```
@@ -643,10 +643,6 @@ y = (titanic.target == '1').astype(int)
 
 # 전략별 Pipeline 정의
 strategies = {
-    'Drop Rows': Pipeline([
-        ('imputer', SimpleImputer(strategy='mean')),  # dropna 대용
-        ('model', LogisticRegression(max_iter=1000))
-    ]),
     'Mean': Pipeline([
         ('imputer', SimpleImputer(strategy='mean')),
         ('model', LogisticRegression(max_iter=1000))
