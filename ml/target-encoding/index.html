@@ -96,7 +96,7 @@ df<span class="token punctuation">[</span><span class="token string">'city_encod
 <td>50</td>
 <td>0.60</td>
 <td>100</td>
-<td>0.467</td>
+<td>0.413</td>
 <td>범주 평균과 전역 평균의 중간</td>
 </tr>
 <tr>
@@ -104,7 +104,7 @@ df<span class="token punctuation">[</span><span class="token string">'city_encod
 <td>3</td>
 <td>1.00</td>
 <td>100</td>
-<td>0.330</td>
+<td>0.340</td>
 <td>전역 평균(0.32)에 가까움</td>
 </tr>
 </tbody>
@@ -237,7 +237,7 @@ model<span class="token punctuation">.</span>fit<span class="token punctuation">
 범주 B: 타겟=1: 10명, 타겟=0: 90명
   %Events = 10/300 = 0.033
   %Non    = 90/700 = 0.129
-  WoE = ln(0.033/0.129) = -1.364 (강한 음의 지표)</code></pre></div>
+  WoE = ln(0.033/0.129) = -1.350 (강한 음의 지표)</code></pre></div>
 <p>WoE의 장점:</p>
 <ul>
 <li><strong>로지스틱 회귀와 궁합이 좋다</strong>: 로지스틱 회귀의 로그 오즈에 선형으로 더해지므로, WoE 변환 후의 계수가 해석 가능하다</li>

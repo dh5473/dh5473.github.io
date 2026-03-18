@@ -200,11 +200,11 @@ Epoch  1000 | Cost: 0.0693</code></pre></div>
 <tr>
 <td><strong>수렴 시점</strong></td>
 <td>수렴 못 함</td>
-<td>~268 epoch</td>
+<td>~400 epoch</td>
 </tr>
 </tbody>
 </table>
-<p>학습률을 <strong>1,000배</strong> 키울 수 있고, 268 epoch 만에 수렴한다. 스케일링 없이는 5,000번을 돌려도 못 닿는 cost(0.069)에 말이다.</p>
+<p>학습률을 <strong>1,000배</strong> 키울 수 있고, 수백 epoch 만에 수렴한다. 스케일링 없이는 5,000번을 돌려도 못 닿는 cost(0.069)에 말이다.</p>
 <h3>스케일링 후 가중치 해석</h3>
 <p>스케일링 후의 가중치 <code class="language-text">[0.856, 0.645, 0.178]</code>은 원래 단위가 아니라 <strong>표준화된 단위</strong>다. 원래 스케일로 되돌리려면:</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 스케일링된 가중치 → 원래 스케일</span>
@@ -221,6 +221,10 @@ b_original <span class="token operator">=</span> b <span class="token operator">
 <li><strong>층수</strong> 1층 증가 → 가격 약 <strong>0.026억(260만원)</strong> 상승</li>
 </ul>
 <p>방 수의 영향이 면적이나 층수보다 훨씬 크다. 스케일링 전 가중치(<code class="language-text">[0.04, 0.13, 0.05]</code>)로는 이 사실을 알 수 없었다.</p>
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+  <strong>⚠️ 흔한 오해: "가중치가 크면 중요한 변수다"</strong><br>
+  스케일링 <strong>전</strong>의 가중치로 변수 중요도를 비교하면 안 된다. 면적(42~156)은 값이 크기 때문에 가중치가 작게 나오고, 방 수(1~5)는 값이 작기 때문에 가중치가 크게 나온다. 변수의 상대적 중요도를 비교하려면 반드시 스케일링 후의 가중치를 봐야 한다.
+</div>
 <hr>
 <h2>sklearn으로 한 번에</h2>
 <p>위에서 직접 구현한 건 원리를 이해하기 위해서였다. 실전에서는 sklearn의 <code class="language-text">Pipeline</code>으로 스케일링과 학습을 한 번에 처리한다.</p>
