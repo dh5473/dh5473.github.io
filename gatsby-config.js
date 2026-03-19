@@ -82,6 +82,14 @@ module.exports = {
             },
           },
 
+          // 수학 수식 렌더링 (KaTeX)
+          {
+            resolve: 'gatsby-remark-katex',
+            options: {
+              strict: 'ignore',
+            },
+          },
+
           // 코드 하이라이팅
           {
             resolve: 'gatsby-remark-prismjs',
