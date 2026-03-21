@@ -2,7 +2,7 @@
 date: '2026-02-12'
 title: '이산확률분포 총정리: 베르누이, 이항, 포아송, 기하, 초기하'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 4
 tags: ['이산분포', 'Discrete Distribution', '베르누이', '이항분포', '포아송', '기하분포', '초기하분포', 'scipy.stats']
 summary: 'ML에서 가장 자주 만나는 이산확률분포 5가지 — 베르누이, 이항, 포아송, 기하, 초기하 — 의 수학적 원리와 분포 간 관계를 scipy.stats 실습으로 완전 정리한다.'

@@ -2,7 +2,7 @@
 date: '2026-02-13'
 title: '연속확률분포 총정리: 균일, 정규, 지수, 감마, 베타 분포'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 5
 tags: ['연속분포', 'Continuous Distribution', '정규분포', 'Normal Distribution', '지수분포', '감마분포', '베타분포', 'scipy.stats']
 summary: 'ML의 핵심 가정인 정규분포를 포함한 연속확률분포 5가지 — 균일, 정규, 지수, 감마, 베타 — 의 PDF, 기댓값, 분산, 분포 간 관계를 scipy.stats 시각화로 완전 정리한다.'

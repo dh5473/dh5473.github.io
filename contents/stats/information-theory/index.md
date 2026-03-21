@@ -2,7 +2,7 @@
 date: '2026-02-15'
 title: '정보이론: 엔트로피, KL 발산, 교차 엔트로피 — DL 손실함수의 수학적 기반'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 7
 tags: ['정보이론', 'Information Theory', '엔트로피', 'Entropy', 'KL Divergence', '교차 엔트로피', 'Cross-Entropy', '상호정보량']
 summary: '결정 트리의 Information Gain, 분류 모델의 Cross-Entropy Loss, LLM의 Perplexity — 이 모든 것의 수학적 기반인 정보이론의 핵심 개념을 Python 코드와 시각화로 완전 이해한다.'
@@ -711,11 +711,11 @@ print(f"   → 모델 Q를 진짜 분포 P에 맞추는 것!")
 
 ## 마치며: 확률에서 정보이론까지, 그리고 그 너머로
 
-stats-probability 시리즈의 마지막 글이다. [확률의 공리](/stats/probability-fundamentals/)에서 출발해서, [조건부 확률과 베이즈 정리](/stats/conditional-probability-bayes/)를 거쳐, 이번 글에서 정보이론에 도달했다. 돌이켜 보면 하나의 일관된 이야기가 있었다 — **불확실성을 어떻게 정량화하고, 새로운 정보로 어떻게 업데이트하는가**.
+확률론 파트의 마지막 글이다. [확률의 공리](/stats/probability-fundamentals/)에서 출발해서, [조건부 확률과 베이즈 정리](/stats/conditional-probability-bayes/)를 거쳐, 이번 글에서 정보이론에 도달했다. 돌이켜 보면 하나의 일관된 이야기가 있었다 — **불확실성을 어떻게 정량화하고, 새로운 정보로 어떻게 업데이트하는가**.
 
 정보이론은 이 질문에 가장 정밀한 답을 준다. 엔트로피는 불확실성 자체를 측정하고, 교차 엔트로피와 KL 발산은 모델의 예측이 현실에서 얼마나 벗어났는지 측정한다. [결정 트리](/ml/decision-tree/)가 데이터를 쪼갤 때도, [로지스틱 회귀](/ml/logistic-regression/)가 가중치를 갱신할 때도, GPT가 다음 토큰을 예측할 때도, 그 밑바닥에는 동일한 수학이 흐르고 있다.
 
-수학적 기반을 다졌으니, 이제 그 위에 통계적 추론을 세울 차례다. 다음 시리즈(stats-inference)에서는 점추정, 구간추정, 가설검정 — 데이터에서 결론을 이끌어내는 체계적 방법을 다룬다. 정보이론의 관점이 통계적 추론에서도 어떻게 활용되는지 확인하게 될 것이다.
+수학적 기반을 다졌으니, 이제 그 위에 통계적 추론을 세울 차례다. 다음 글부터는 점추정, 구간추정, 가설검정 — 데이터에서 결론을 이끌어내는 체계적 방법을 다룬다. 정보이론의 관점이 통계적 추론에서도 어떻게 활용되는지 확인하게 될 것이다.
 
 ---
 

@@ -2,7 +2,7 @@
 date: '2026-02-09'
 title: '확률의 기초: 표본공간, 사건, 확률 공리부터 셈 원리까지'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 1
 tags: ['확률', 'Probability', '표본공간', '확률 공리', '셈 원리', '조합', '순열']
 summary: '머신러닝의 수학적 기반인 확률론을 처음부터 다진다. 표본공간, 확률 공리, 셈 원리(순열·조합)까지 Python 시뮬레이션과 함께 직관적으로 이해하는 확률 입문 가이드.'

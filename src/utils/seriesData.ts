@@ -28,9 +28,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: 'LLM 아키텍처, 추론, 파인튜닝',
     color: '#7c3aed',
   },
-  'stats-probability': {
-    title: '확률과 정보이론',
-    description: '확률 공리부터 정보이론까지, ML/DL의 수학적 기반',
+  'stats': {
+    title: '확률과 통계',
+    description: '확률론, 통계적 추론, 응용 통계 — ML/DL의 수학적 기반',
     color: '#6366f1',
   },
 }

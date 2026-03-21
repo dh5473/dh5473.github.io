@@ -2,7 +2,7 @@
 date: '2026-02-14'
 title: '큰 수의 법칙과 중심극한정리: 통계학이 작동하는 이유'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 6
 tags: ['큰 수의 법칙', 'Law of Large Numbers', '중심극한정리', 'Central Limit Theorem', 'CLT', 'LLN', '표본 평균']
 summary: '표본 평균이 모평균에 수렴하는 큰 수의 법칙과, 어떤 분포든 표본 평균이 정규분포를 따르는 중심극한정리 — 통계학과 ML이 작동하는 수학적 근거를 시뮬레이션으로 체감한다.'

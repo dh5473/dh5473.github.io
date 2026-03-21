@@ -2,7 +2,7 @@
 date: '2026-02-11'
 title: '확률변수와 기댓값: PMF, PDF, CDF, 기댓값, 분산의 핵심 원리'
 category: 'Statistics'
-series: 'stats-probability'
+series: 'stats'
 seriesOrder: 3
 tags: ['확률변수', 'Random Variable', 'PMF', 'PDF', 'CDF', '기댓값', '분산', 'Expected Value']
 summary: '사건의 확률을 숫자로 변환하는 확률변수 개념부터 PMF, PDF, CDF, 기댓값, 분산, 공분산까지 — ML 모델링의 수학적 언어를 Python 코드와 시각화로 완전 이해한다.'
