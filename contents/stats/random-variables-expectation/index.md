@@ -194,7 +194,7 @@ $$P(a < X < b) = \int_a^b f(x) \, dx$$
 
 1. **비음수성**: $f(x) \geq 0$
 2. **전체 적분 = 1**: $\int_{-\infty}^{\infty} f(x) \, dx = 1$
-3. **$f(x)$는 확률이 아니다** — 밀도다
+3. <strong>$f(x)$는 확률이 아니다</strong> — 밀도다
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>PDF 값은 1을 넘을 수 있다. 예를 들어 평균 0, 표준편차 0.1인 정규분포의 꼭짓점에서 $f(0) \approx 3.99$다. 이것은 확률이 아니라 <strong>밀도(density)</strong>이기 때문이다. 확률은 넓이(적분)로만 구해지고, 넓이는 항상 0과 1 사이다.</div>
 
