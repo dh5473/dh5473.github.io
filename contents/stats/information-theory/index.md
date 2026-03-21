@@ -111,7 +111,7 @@ print(f"균일 분포: H = {entropy(uniform):.3f} bits")    # 2.322 bits
 
 # 집중된 분포
 peaked = [0.7, 0.1, 0.1, 0.05, 0.05]
-print(f"집중 분포: H = {entropy(peaked):.3f} bits")     # 1.356 bits
+print(f"집중 분포: H = {entropy(peaked):.3f} bits")     # 1.457 bits
 
 # 확정적 분포
 certain = [1.0, 0.0, 0.0, 0.0, 0.0]
@@ -198,18 +198,18 @@ parent = [0.5, 0.5]
 # 포함(60%): 80% 스팸, 20% 정상 → 잘 분리됨!
 # 미포함(40%): 10% 스팸, 90% 정상
 ig_a = information_gain(parent, [[0.8, 0.2], [0.1, 0.9]], [0.6, 0.4])
-print(f"'무료' 단어 기준 분할: IG = {ig_a:.4f} bits")  # 0.3959
+print(f"'무료' 단어 기준 분할: IG = {ig_a:.4f} bits")  # 0.3792
 
 # 분할 B: 이메일 길이 기준 (별로 유용하지 않은 특성)
 # 긴 이메일(50%): 45% 스팸, 55% 정상
 # 짧은 이메일(50%): 55% 스팸, 45% 정상
 ig_b = information_gain(parent, [[0.45, 0.55], [0.55, 0.45]], [0.5, 0.5])
-print(f"이메일 길이 기준 분할: IG = {ig_b:.4f} bits")   # 0.0050
+print(f"이메일 길이 기준 분할: IG = {ig_b:.4f} bits")   # 0.0072
 
 print(f"\n→ '무료' 단어 기준이 {ig_a/ig_b:.0f}배 더 유용한 분할!")
 ```
 
-결과를 보면 "무료"라는 단어의 포함 여부가 이메일 길이보다 약 79배 더 유용한 분할 기준이라는 것을 IG가 정량적으로 알려준다. ID3, C4.5 같은 결정 트리 알고리즘이 바로 이 원리로 동작한다.
+결과를 보면 "무료"라는 단어의 포함 여부가 이메일 길이보다 약 52배 더 유용한 분할 기준이라는 것을 IG가 정량적으로 알려준다. ID3, C4.5 같은 결정 트리 알고리즘이 바로 이 원리로 동작한다.
 
 <div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>scikit-learn의 <code>DecisionTreeClassifier(criterion='entropy')</code>로 설정하면 Information Gain 기반 분할을 사용한다. 기본값인 <code>'gini'</code>는 지니 불순도를 사용하는데, 실제 성능 차이는 대부분의 경우 미미하다.</div>
 
@@ -343,19 +343,19 @@ def kl_divergence(p, q, base=np.e):
     mask = p > 0
     return np.sum(p[mask] * np.log(p[mask] / q[mask])) / np.log(base)
 
-P = [0.4, 0.3, 0.2, 0.1]
-Q = [0.1, 0.2, 0.3, 0.4]
+P = [0.5, 0.3, 0.2]
+Q = [0.1, 0.3, 0.6]
 
 kl_pq = kl_divergence(P, Q, base=2)
 kl_qp = kl_divergence(Q, P, base=2)
 
-print(f"D_KL(P || Q) = {kl_pq:.4f} bits")
-print(f"D_KL(Q || P) = {kl_qp:.4f} bits")
+print(f"D_KL(P || Q) = {kl_pq:.4f} bits")  # 0.8440
+print(f"D_KL(Q || P) = {kl_qp:.4f} bits")  # 0.7188
 print(f"차이: {abs(kl_pq - kl_qp):.4f} bits")
 print(f"→ 비대칭! D_KL(P||Q) ≠ D_KL(Q||P)")
 
 # P = Q일 때
-R = [0.25, 0.25, 0.25, 0.25]
+R = [1/3, 1/3, 1/3]
 print(f"\nD_KL(R || R) = {kl_divergence(R, R, base=2):.4f} bits")  # 0
 ```
 
@@ -569,17 +569,17 @@ $$
 
 이 다이어그램 하나에 정보이론의 핵심 관계가 모두 담겨 있다:
 
-- **$H(X)$**: 왼쪽 원 전체 = $H(X|Y) + I(X;Y)$
-- **$H(Y)$**: 오른쪽 원 전체 = $H(Y|X) + I(X;Y)$
-- **$I(X;Y)$**: 두 원의 교집합 = 공유 정보량
-- **$H(X, Y)$**: 두 원의 합집합 = $H(X) + H(Y) - I(X;Y)$
+- <strong>$H(X)$</strong>: 왼쪽 원 전체 = $H(X|Y) + I(X;Y)$
+- <strong>$H(Y)$</strong>: 오른쪽 원 전체 = $H(Y|X) + I(X;Y)$
+- <strong>$I(X;Y)$</strong>: 두 원의 교집합 = 공유 정보량
+- <strong>$H(X, Y)$</strong>: 두 원의 합집합 = $H(X) + H(Y) - I(X;Y)$
 
 ### 상호정보량의 핵심 성질
 
-1. **$I(X; Y) \geq 0$**: KL 발산이므로 항상 비음수
-2. **$I(X; Y) = I(Y; X)$**: KL 발산은 비대칭이지만, 상호정보량은 대칭!
-3. **$I(X; Y) = 0 \iff X \perp Y$**: 독립일 때만 0
-4. **$I(X; Y) \leq \min(H(X), H(Y))$**: 공유 정보는 개별 정보량을 초과할 수 없다
+1. <strong>$I(X; Y) \geq 0$</strong>: KL 발산이므로 항상 비음수
+2. <strong>$I(X; Y) = I(Y; X)$</strong>: KL 발산은 비대칭이지만, 상호정보량은 대칭!
+3. <strong>$I(X; Y) = 0 \iff X \perp Y$</strong>: 독립일 때만 0
+4. <strong>$I(X; Y) \leq \min(H(X), H(Y))$</strong>: 공유 정보는 개별 정보량을 초과할 수 없다
 
 ```python
 import numpy as np
@@ -614,7 +614,7 @@ print(f"날씨-동전 (독립):     I(X;Y) = {mutual_information(joint_ind):.4f}
 print(f"Y=X (완전 의존):      I(X;Y) = {mutual_information(joint_same):.4f} bits")
 ```
 
-날씨와 우산 사이에는 상당한 상호정보량이 있지만, 날씨와 동전 던지기 사이에는 0이다. 그리고 변수가 자기 자신과의 상호정보량은 자신의 엔트로피와 같다 — $I(X; X) = H(X)$. 이래서 엔트로피를 "자기 정보(self-information)"라 부르기도 한다.
+날씨와 우산 사이에는 상당한 상호정보량이 있지만, 날씨와 동전 던지기 사이에는 0이다. 그리고 변수가 자기 자신과의 상호정보량은 자신의 엔트로피와 같다 — $I(X; X) = H(X)$. 상호정보량 관점에서 엔트로피를 "자기 자신에 대한 상호정보량"으로 해석할 수 있는 셈이다.
 
 ### Feature Selection에서의 활용
 

@@ -48,7 +48,7 @@ $$P(|\bar{X}_n - \mu| \geq \epsilon) \leq \frac{\sigma^2}{n\epsilon^2}$$
 
 $n \to \infty$이면 우변이 $0$으로 간다. 끝이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이 증명이 작동하려면 <strong>분산이 유한</strong>해야 한다. 코시 분포(Cauchy Distribution)처럼 분산이 존재하지 않는 분포에서는 큰 수의 법칙이 성립하지 않는다. 코시 분포에서 표본 평균을 아무리 많이 모아도 수렴하지 않는다는 사실은 꽤 반직관적이다.</div>
+<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이 증명이 작동하려면 <strong>분산이 유한</strong>해야 한다. 코시 분포(Cauchy Distribution)처럼 평균과 분산이 모두 존재하지 않는 분포에서는 큰 수의 법칙이 성립하지 않는다. 코시 분포에서 표본 평균을 아무리 많이 모아도 수렴하지 않는다는 사실은 꽤 반직관적이다.</div>
 
 ```python
 import numpy as np
