@@ -185,15 +185,6 @@ const MarkdownRenderer = styled.div`
     tab-size: 2;
   }
 
-  /* Inline code */
-  code:not([class*='language-']) {
-    background: ${c.bgMuted};
-    color: ${c.text};
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 16px;
-    border: 1px solid ${c.border};
-  }
 
   /* Images */
   img {
@@ -291,10 +282,6 @@ const MarkdownRenderer = styled.div`
       right: 8px;
       padding: 3px 6px;
       font-size: 11px;
-    }
-
-    code:not([class*='language-']) {
-      font-size: 14px;
     }
 
     img {

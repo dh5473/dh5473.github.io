@@ -79,6 +79,17 @@ const defaultStyle = css`
       'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', Menlo,
       Courier, monospace !important;
   }
+
+  /* 인라인 코드: prism-tomorrow 테마 덮어쓰기 */
+  :not(pre) > code,
+  :not(pre) > code[class*='language-'] {
+    background: none !important;
+    color: var(--primary) !important;
+    padding: 0 !important;
+    text-shadow: none !important;
+    white-space: normal !important;
+    font-size: 0.88em !important;
+  }
 `
 
 const GlobalStyle: FunctionComponent = function () {
