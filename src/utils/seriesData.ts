@@ -34,8 +34,8 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     color: '#6366f1',
   },
   'airflow': {
-    title: 'Airflow 실전 트러블슈팅',
-    description: '데이터 파이프라인 운영에서 마주친 Airflow 문제 해결기',
+    title: 'Airflow',
+    description: '데이터 파이프라인 운영에서 쌓은 Airflow 실전 경험',
     color: '#017cee',
   },
 }
