@@ -199,7 +199,7 @@ def api_heavy_task(data):
     return call_external_api(data)
 ```
 
-[이전 글](/airflow/airflow-dag-hash/)에서 다룬 것처럼, 이런 설정들은 반드시 `@task` 데코레이터 안에서 정의해야 합니다. DAG 최상위에서 외부 리소스에 접근하면 `dag_hash` 불안정 문제가 발생할 수 있습니다.
+[이전 글](/airflow/airflow-dag-hash/)에서 다뤘듯이, `Variable.get()`이나 외부 API 호출 같은 동적 리소스 접근은 반드시 Task 함수 본문 안에서 해야 합니다. DAG 최상위에서 호출하면 `dag_hash` 불안정 문제가 발생할 수 있습니다.
 
 <br>
 
@@ -225,7 +225,7 @@ $ airflow dags details <dag_id> | grep max_active_runs
 **메모리 부족이 발생한다면:**
 - `max_map_length`를 줄이거나
 - 청크 기반 처리로 전환하여 Task 수 자체를 줄이는 것을 고려해야 합니다
-- Webserver 자체의 메모리 누수가 의심되면 [Airflow 메모리 누수 추적기](/airflow/airflow-memory-leak/)도 참고해보세요
+- Webserver 자체의 메모리 누수가 의심되면 Gunicorn worker 설정도 함께 점검해보세요
 
 **API Rate Limit에 걸린다면:**
 - `max_active_tis_per_dag`를 줄이고
