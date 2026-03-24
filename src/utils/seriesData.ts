@@ -33,4 +33,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: '확률론, 통계적 추론, 응용 통계 — ML/DL의 수학적 기반',
     color: '#6366f1',
   },
+  'airflow': {
+    title: 'Airflow 실전 트러블슈팅',
+    description: '데이터 파이프라인 운영에서 마주친 Airflow 문제 해결기',
+    color: '#017cee',
+  },
 }
