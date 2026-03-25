@@ -63,7 +63,7 @@ const PostHead: FunctionComponent<PostHeadProps> = function ({
 }) {
   return (
     <PostHeadWrapper hasThumbnail={!!thumbnail}>
-      {thumbnail && <BackgroundImage image={thumbnail} alt={title} loading="eager" />}
+      {thumbnail && <BackgroundImage image={thumbnail} alt={title} />}
       <GradientOverlay />
       <PostHeadInfo title={title} date={date} category={category} />
     </PostHeadWrapper>
