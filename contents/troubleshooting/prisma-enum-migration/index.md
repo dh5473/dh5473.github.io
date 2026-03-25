@@ -4,7 +4,6 @@ title: 'Prisma P3006 에러 해결: PostgreSQL enum의 트랜잭션 제약과 Sh
 category: 'Troubleshooting'
 summary: 'prisma migrate dev의 P3006 에러 원인과, Shadow DB를 우회하는 수동 마이그레이션 해결법을 정리합니다.'
 thumbnail: './thumbnail.png'
-featured: 5
 tags: ['Prisma', 'PostgreSQL', 'Migration', 'Shadow Database']
 ---
 

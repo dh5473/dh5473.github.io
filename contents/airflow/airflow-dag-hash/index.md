@@ -7,7 +7,6 @@ seriesOrder: 1
 tags: ['Airflow', 'DAG Hash', 'Variable', 'DAG Serialization', 'dag-processor']
 summary: 'Airflow DAG Hash가 30초마다 바뀌면서 Task가 실패하는 원인과, Variable.get()을 Task 실행 시점으로 옮겨 해결하는 방법을 정리합니다.'
 thumbnail: './thumbnail.png'
-featured: 2
 ---
 
 TTS 배치 DAG의 Task들이 간헐적으로 실패하기 시작했습니다. 30개짜리 [Dynamic Task Mapping](/airflow/airflow-dynamic-task-mapping/) 중 앞쪽 13개는 성공하고, 뒤쪽 17개가 한꺼번에 실패하는 패턴이었습니다.

@@ -375,11 +375,17 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     ? edges.filter(({ node }) => node.frontmatter.series === selectedSeries)
     : edges
 
-  // Featured posts for carousel: use manually featured posts if available, otherwise latest 5
-  const manualFeatured = edges
-    .filter(({ node }) => node.frontmatter.featured != null)
-    .sort((a, b) => a.node.frontmatter.featured! - b.node.frontmatter.featured!)
-  const featuredPosts = manualFeatured.length > 0 ? manualFeatured : edges.slice(0, 5)
+  // Featured posts for carousel: manually curated by slug
+  const FEATURED_SLUGS = [
+    'fastapi/dependency-injection',
+    'airflow/airflow-dag-hash',
+    'stats/conditional-probability-bayes',
+    'ml/xgboost-vs-lightgbm',
+    'troubleshooting/prisma-enum-migration',
+  ]
+  const featuredPosts = FEATURED_SLUGS
+    .map(slug => edges.find(({ node }) => node.fields.slug.includes(slug)))
+    .filter((v): v is (typeof edges)[number] => v != null)
 
   return (
     <Template
@@ -504,7 +510,6 @@ export const getPostList = graphql`
             category
             series
             seriesOrder
-            featured
             thumbnail {
               childImageSharp {
                 gatsbyImageData(width: 768, height: 400)

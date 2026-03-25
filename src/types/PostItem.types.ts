@@ -13,7 +13,6 @@ export type PostFrontmatterType = {
   } | null
   series?: string | null
   seriesOrder?: number | null
-  featured?: number | null
 }
 
 export type PostListItemType = {

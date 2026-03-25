@@ -6,7 +6,6 @@ series: 'fastapi'
 seriesOrder: 3
 summary: '의존성 주입(DI)의 개념과 원리를 이해하고, 실제 코드에 적용하는 방법을 알아봅니다.'
 thumbnail: './fastapi-logo.png'
-featured: 1
 ---
 
 의존성 주입(Dependency Injection, DI)은 자주 언급되는 용어지만, 완전히 이해하고 설계로 연결하기가 꽤 어려운 주제입니다. 특히 Python 기반 프레임워크를 사용할 때는 더욱 그렇습니다. 자바 진영인 스프링에서는 프레임워크 단에서 DI가 설계되어 있기 때문에 주도적으로 사용이 가능하지만, FastAPI 같은 프레임워크에서는 사실상 함수 기능만 제공하고 있기 때문입니다.
