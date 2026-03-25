@@ -7,6 +7,7 @@ seriesOrder: 18
 tags: ['XGBoost', 'LightGBM', 'CatBoost', 'Gradient Boosting', '부스팅', '머신러닝']
 summary: 'XGBoost의 정규화와 분할 알고리즘, LightGBM의 Leaf-wise 성장과 GOSS/EFB를 비교한다. CatBoost까지 포함한 실전 선택 기준.'
 thumbnail: './thumbnail.png'
+featured: 4
 ---
 
 [이전 글](/ml/boosting/)에서 Gradient Boosting의 원리를 배웠다. 잔차를 순차적으로 학습하면서 편향을 줄이는 아이디어는 간결하고 강력했다. 그런데 `sklearn.ensemble.GradientBoostingClassifier`로 대규모 데이터를 돌려본 경험이 있다면 알 것이다 — 느리다.

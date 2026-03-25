@@ -375,8 +375,11 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     ? edges.filter(({ node }) => node.frontmatter.series === selectedSeries)
     : edges
 
-  // Featured posts for carousel: latest 3 (or 5 if available)
-  const featuredPosts = edges.slice(0, 5)
+  // Featured posts for carousel: use manually featured posts if available, otherwise latest 5
+  const manualFeatured = edges
+    .filter(({ node }) => node.frontmatter.featured != null)
+    .sort((a, b) => a.node.frontmatter.featured! - b.node.frontmatter.featured!)
+  const featuredPosts = manualFeatured.length > 0 ? manualFeatured : edges.slice(0, 5)
 
   return (
     <Template
@@ -501,6 +504,7 @@ export const getPostList = graphql`
             category
             series
             seriesOrder
+            featured
             thumbnail {
               childImageSharp {
                 gatsbyImageData(width: 768, height: 400)

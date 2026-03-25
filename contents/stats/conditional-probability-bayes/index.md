@@ -7,6 +7,7 @@ seriesOrder: 2
 tags: ['조건부 확률', 'Conditional Probability', '베이즈 정리', 'Bayes Theorem', '전확률 공식', '독립']
 summary: '조건부 확률의 정의부터 베이즈 정리까지, ML의 핵심 도구인 확률 업데이트 메커니즘을 Monty Hall 시뮬레이션과 의료 검사 예제로 완전 이해하는 가이드.'
 thumbnail: './thumbnail.png'
+featured: 3
 ---
 
 ## 들어가며: 정보가 확률을 바꾼다
