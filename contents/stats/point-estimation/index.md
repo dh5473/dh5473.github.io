@@ -25,7 +25,7 @@ thumbnail: './thumbnail.png'
 
 예를 들어, 어떤 공장에서 생산되는 볼트의 길이를 측정한다고 하자. 측정값 $X_1, X_2, \ldots, X_n$이 있을 때, 이 데이터가 정규분포 $N(\mu, \sigma^2)$를 따른다고 가정한다. 여기서 $\mu$와 $\sigma^2$가 바로 **모수(Parameter)**다.
 
-**모수(Parameter, $\theta$)** — 확률분포의 형태를 결정하는 미지의 상수. 이 값은 모집단의 특성을 완전히 규정하지만, 우리는 그 참값을 직접 알 수 없다.
+<strong>모수(Parameter, $\theta$)</strong> — 확률분포의 형태를 결정하는 미지의 상수. 이 값은 모집단의 특성을 완전히 규정하지만, 우리는 그 참값을 직접 알 수 없다.
 
 | 분포 | 모수 | 의미 |
 |---|---|---|
@@ -38,7 +38,7 @@ thumbnail: './thumbnail.png'
 
 ### 모수 공간
 
-모수가 취할 수 있는 모든 값의 집합을 **모수 공간(Parameter Space, $\Theta$)**이라 한다.
+모수가 취할 수 있는 모든 값의 집합을 <strong>모수 공간(Parameter Space, $\Theta$)</strong>이라 한다.
 
 - $\text{Bernoulli}(p)$: $\Theta = [0, 1]$
 - $N(\mu, \sigma^2)$: $\Theta = \mathbb{R} \times (0, \infty)$
