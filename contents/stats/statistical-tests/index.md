@@ -81,7 +81,13 @@ $$t = \frac{\bar{X} - \mu_0}{s / \sqrt{n}}$$
 
 여기서 $s$는 표본 표준편차, $n$은 표본 크기다. 귀무가설 $H_0: \mu = \mu_0$ 하에서, 이 통계량은 자유도 $n - 1$인 [t-분포](/stats/continuous-distributions/)를 따른다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>왜 z가 아니라 t인가?</strong><br>모분산 $\sigma^2$를 모르기 때문이다. $\sigma$ 대신 표본 표준편차 $s$를 쓰면 불확실성이 한 겹 더 추가되고, 이를 반영한 분포가 t-분포다. 표본이 커지면 t-분포는 정규분포에 수렴한다.</div>
+:::info
+
+**왜 z가 아니라 t인가?**
+
+모분산 $\sigma^2$를 모르기 때문이다. $\sigma$ 대신 표본 표준편차 $s$를 쓰면 불확실성이 한 겹 더 추가되고, 이를 반영한 분포가 t-분포다. 표본이 커지면 t-분포는 정규분포에 수렴한다.
+
+:::
 
 배터리 수명 데이터로 확인해보자. 사양서의 기준값 1000시간에 대해 검정한다.
 
@@ -125,7 +131,13 @@ p-value가 0.30으로, 사양과 다르다는 근거가 부족하다. 그런데 
 
 $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$$
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>실전 팁</strong><br>특별한 이유가 없다면 항상 Welch's t-test를 쓰자. 등분산이 실제로 성립해도 Welch's t-test의 성능 손실은 미미하지만, 등분산 가정이 깨졌을 때 Student's t-test는 심각하게 잘못된 결론을 낼 수 있다. scipy의 <code>ttest_ind</code>에서 <code>equal_var=False</code>가 Welch 버전이다.</div>
+:::warning
+
+**실전 팁**
+
+특별한 이유가 없다면 항상 Welch's t-test를 쓰자. 등분산이 실제로 성립해도 Welch's t-test의 성능 손실은 미미하지만, 등분산 가정이 깨졌을 때 Student's t-test는 심각하게 잘못된 결론을 낼 수 있다. scipy의 `ttest_ind`에서 `equal_var=False`가 Welch 버전이다.
+
+:::
 
 두 교육 방법의 시험 점수를 비교하는 예제로 확인해보자.
 
@@ -187,7 +199,13 @@ print(f"p-value:  {p_value:.4f}")
 
 p-value가 0.0001 미만으로, 운동 프로그램의 혈압 감소 효과가 통계적으로 매우 유의하다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>독립 vs 대응, 왜 구분이 중요한가?</strong><br>대응 표본에 독립 표본 t-검정을 쓰면, 개인 간 변동(사람마다 혈압이 다른 것)이 노이즈로 들어가 검정력이 크게 떨어진다. 대응 검정은 쌍별 차이만 보기 때문에 개인 간 변동을 제거하고, 처치 효과를 더 민감하게 잡아낸다.</div>
+:::info
+
+**독립 vs 대응, 왜 구분이 중요한가?**
+
+대응 표본에 독립 표본 t-검정을 쓰면, 개인 간 변동(사람마다 혈압이 다른 것)이 노이즈로 들어가 검정력이 크게 떨어진다. 대응 검정은 쌍별 차이만 보기 때문에 개인 간 변동을 제거하고, 처치 효과를 더 민감하게 잡아낸다.
+
+:::
 
 ---
 
@@ -298,7 +316,13 @@ print(f"p-value: {p_value:.4f}")
 # → 공정한 주사위라는 귀무가설을 기각하지 못한다
 ```
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>기대 빈도 주의</strong><br>카이제곱 검정은 <strong>기대 빈도가 5 이상</strong>일 때 근사가 신뢰할 수 있다. 기대 빈도가 너무 작은 범주가 있으면, 인접 범주를 합치거나 Fisher의 정확 검정을 고려해야 한다.</div>
+:::warning
+
+**기대 빈도 주의**
+
+카이제곱 검정은 **기대 빈도가 5 이상**일 때 근사가 신뢰할 수 있다. 기대 빈도가 너무 작은 범주가 있으면, 인접 범주를 합치거나 Fisher의 정확 검정을 고려해야 한다.
+
+:::
 
 적합도 검정은 하나의 변수에 대한 분포를 확인한다. 그렇다면 두 범주형 변수 사이의 관계는 어떻게 검정할까?
 
@@ -358,7 +382,13 @@ print(f"p-value: {p_value:.4f}")
 | 대응 표본 t-검정 | **Wilcoxon signed-rank** | 대응 2집단 비교 |
 | 일원 ANOVA | **Kruskal-Wallis** | 독립 3집단+ 비교 |
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>비모수 = 무조건 안전?</strong><br>비모수 검정은 가정이 적은 대신 <strong>검정력(Power)이 낮다</strong>. 데이터가 실제로 정규분포를 따르는데 비모수 검정을 쓰면, 같은 효과를 탐지하는 데 더 많은 표본이 필요하다. 정규성이 성립하면 모수적 검정이 더 강력하다.</div>
+:::info
+
+**비모수 = 무조건 안전?**
+
+비모수 검정은 가정이 적은 대신 **검정력(Power)이 낮다**. 데이터가 실제로 정규분포를 따르는데 비모수 검정을 쓰면, 같은 효과를 탐지하는 데 더 많은 표본이 필요하다. 정규성이 성립하면 모수적 검정이 더 강력하다.
+
+:::
 
 ### Mann-Whitney U 검정
 

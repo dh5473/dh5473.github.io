@@ -39,8 +39,13 @@ thumbnail: './thumbnail.png'
 
 베이지안은 표본이 적을 때, 사전 지식이 풍부할 때, 또는 불확실성의 전체 분포가 필요할 때 강점을 발휘한다. 임상시험의 적응적 설계(adaptive design), 추천 시스템의 콜드 스타트 문제, A/B 테스트의 조기 종료 판단 같은 영역에서 베이지안 접근이 자연스럽다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 "빈도주의 vs 베이지안"은 종교 전쟁이 아니다</strong><br>
-실무에서는 두 접근을 도구로서 선택한다. "이 문제에서 사전 정보가 유용한가? 사후분포 전체가 필요한가? 계산 비용은 감당 가능한가?" — 이런 질문에 따라 적절한 도구를 고르면 된다. 이 글의 목표도 베이지안이 더 우월하다고 주장하는 것이 아니라, 여러분의 도구 상자에 하나를 더 추가하는 것이다.</div>
+:::info
+
+**💡 "빈도주의 vs 베이지안"은 종교 전쟁이 아니다**
+
+실무에서는 두 접근을 도구로서 선택한다. "이 문제에서 사전 정보가 유용한가? 사후분포 전체가 필요한가? 계산 비용은 감당 가능한가?" — 이런 질문에 따라 적절한 도구를 고르면 된다. 이 글의 목표도 베이지안이 더 우월하다고 주장하는 것이 아니라, 여러분의 도구 상자에 하나를 더 추가하는 것이다.
+
+:::
 
 ---
 
@@ -102,8 +107,13 @@ $$
 
 이전 연구 결과나 전문가 판단 등 구체적인 사전 지식을 반영한다. 약물의 효과에 대한 기존 메타분석 결과를 사전분포로 사용하는 것이 대표적이다. 데이터가 적을 때 강력하지만, 잘못된 사전분포는 결과를 왜곡할 수 있으므로 민감도 분석(sensitivity analysis)이 필수다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 사전분포 민감도(Prior Sensitivity)</strong><br>
-사전분포의 선택이 결론을 크게 바꾼다면, 그 분석은 데이터보다 사전 가정에 의존하고 있다는 신호다. 서로 다른 합리적 사전분포를 넣어보고 결론이 일관되는지 확인하는 민감도 분석을 반드시 수행해야 한다. 사후분포가 사전분포에 둔감하다면(robust), 그 결론은 신뢰할 수 있다.</div>
+:::warning
+
+**⚠️ 사전분포 민감도(Prior Sensitivity)**
+
+사전분포의 선택이 결론을 크게 바꾼다면, 그 분석은 데이터보다 사전 가정에 의존하고 있다는 신호다. 서로 다른 합리적 사전분포를 넣어보고 결론이 일관되는지 확인하는 민감도 분석을 반드시 수행해야 한다. 사후분포가 사전분포에 둔감하다면(robust), 그 결론은 신뢰할 수 있다.
+
+:::
 
 ---
 
@@ -163,8 +173,13 @@ $$
 
 사전분포의 $\alpha$에 성공 횟수 $k$를 더하고, $\beta$에 실패 횟수 $n-k$를 더하면 사후분포가 된다. 이렇게 보면 사전분포의 하이퍼파라미터 $\alpha, \beta$는 **"가상의 사전 관측"**으로 해석할 수 있다. $\text{Beta}(2, 5)$는 "이전에 2번 성공, 5번 실패를 관측한 것과 같은 사전 믿음"인 셈이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 사전 관측(Pseudo-counts) 해석</strong><br>
-$\text{Beta}(\alpha, \beta)$ 사전분포에서 $\alpha + \beta$는 사전 "유효 표본 크기"다. 이 값이 클수록 사전분포가 강하게 작용하고, 작을수록 데이터가 사후분포를 지배한다. $\text{Beta}(1, 1) = \text{Uniform}(0,1)$은 사전 유효 표본 크기가 2로, 가장 약한 정보적 사전분포 중 하나다.</div>
+:::info
+
+**💡 사전 관측(Pseudo-counts) 해석**
+
+$\text{Beta}(\alpha, \beta)$ 사전분포에서 $\alpha + \beta$는 사전 "유효 표본 크기"다. 이 값이 클수록 사전분포가 강하게 작용하고, 작을수록 데이터가 사후분포를 지배한다. $\text{Beta}(1, 1) = \text{Uniform}(0,1)$은 사전 유효 표본 크기가 2로, 가장 약한 정보적 사전분포 중 하나다.
+
+:::
 
 ---
 
@@ -407,12 +422,18 @@ print(f"해석해 95% CI: [{exact_ci[0]:.4f}, {exact_ci[1]:.4f}]")
 
 MCMC 결과와 해석해가 매우 가까울 것이다. 5만 개의 샘플(번인 5,000 제거)이면 1차원 문제에서는 충분하다. 다만 고차원 문제에서는 수렴 진단이 필수적인데, 이에 대해서는 마지막 섹션에서 정리한다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실무에서의 MCMC 도구</strong><br>
-직접 구현은 학습용이다. 실무에서는 검증된 라이브러리를 사용한다:<br>
-• <strong>PyMC</strong> — Python 베이지안 모델링의 표준. NUTS(No-U-Turn Sampler) 기반으로 고차원에서도 효율적이다.<br>
-• <strong>Stan (PyStan/CmdStanPy)</strong> — HMC(Hamiltonian Monte Carlo) 기반. 산업계와 학계 모두에서 널리 사용된다.<br>
-• <strong>emcee</strong> — 앙상블 샘플러. 천문학 커뮤니티에서 시작해 범용으로 확산되었다.<br>
-이들은 자동 미분, 수렴 진단, 사후 예측 검사 등을 기본 제공하므로, MCMC의 원리를 이해한 뒤에는 이런 도구로 넘어가는 것이 바람직하다.</div>
+:::info
+
+**💡 실무에서의 MCMC 도구**
+
+직접 구현은 학습용이다. 실무에서는 검증된 라이브러리를 사용한다:
+- **PyMC** — Python 베이지안 모델링의 표준. NUTS(No-U-Turn Sampler) 기반으로 고차원에서도 효율적이다.
+- **Stan (PyStan/CmdStanPy)** — HMC(Hamiltonian Monte Carlo) 기반. 산업계와 학계 모두에서 널리 사용된다.
+- **emcee** — 앙상블 샘플러. 천문학 커뮤니티에서 시작해 범용으로 확산되었다.
+
+이들은 자동 미분, 수렴 진단, 사후 예측 검사 등을 기본 제공하므로, MCMC의 원리를 이해한 뒤에는 이런 도구로 넘어가는 것이 바람직하다.
+
+:::
 
 ---
 
@@ -526,8 +547,13 @@ print(f"P(0.45 < p < 0.55 | data) = {prob_fair:.4f}")
 - <strong>$\hat{R}$ (R-hat)</strong>: 여러 체인 간 분산과 체인 내 분산의 비율. $\hat{R} < 1.01$이면 수렴으로 판단
 - **유효 표본 크기(ESS)**: 자기상관을 고려한 실질적 독립 표본 수. 최소 수백 이상 확보
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 수렴하지 않은 MCMC는 쓰레기다</strong><br>
-"5만 개 샘플을 뽑았으니 충분하다"는 위험한 가정이다. 체인이 사후분포의 일부 영역에만 갇혀 있을 수 있다(multi-modality). 반드시 trace plot을 확인하고, 서로 다른 시작점의 여러 체인을 돌려서 $\hat{R}$을 계산하라. PyMC와 Stan은 이 진단을 자동으로 수행한다.</div>
+:::warning
+
+**⚠️ 수렴하지 않은 MCMC는 쓰레기다**
+
+"5만 개 샘플을 뽑았으니 충분하다"는 위험한 가정이다. 체인이 사후분포의 일부 영역에만 갇혀 있을 수 있다(multi-modality). 반드시 trace plot을 확인하고, 서로 다른 시작점의 여러 체인을 돌려서 $\hat{R}$을 계산하라. PyMC와 Stan은 이 진단을 자동으로 수행한다.
+
+:::
 
 **사전분포와 우도의 스케일 불일치** 역시 주의해야 한다. 사전분포가 우도와 완전히 다른 영역을 커버하면 MCMC가 효율적으로 탐색하지 못한다. 데이터가 $\theta \approx 100$ 근처를 가리키는데 사전분포가 $N(0, 1)$이면 사후분포의 밀도가 극히 낮은 영역만 헤매게 된다.
 

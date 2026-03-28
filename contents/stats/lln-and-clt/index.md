@@ -48,7 +48,13 @@ $$P(|\bar{X}_n - \mu| \geq \epsilon) \leq \frac{\sigma^2}{n\epsilon^2}$$
 
 $n \to \infty$이면 우변이 $0$으로 간다. 끝이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이 증명이 작동하려면 <strong>분산이 유한</strong>해야 한다. 코시 분포(Cauchy Distribution)처럼 평균과 분산이 모두 존재하지 않는 분포에서는 큰 수의 법칙이 성립하지 않는다. 코시 분포에서 표본 평균을 아무리 많이 모아도 수렴하지 않는다는 사실은 꽤 반직관적이다.</div>
+:::info
+
+**💡 참고**
+
+이 증명이 작동하려면 **분산이 유한**해야 한다. 코시 분포(Cauchy Distribution)처럼 평균과 분산이 모두 존재하지 않는 분포에서는 큰 수의 법칙이 성립하지 않는다. 코시 분포에서 표본 평균을 아무리 많이 모아도 수렴하지 않는다는 사실은 꽤 반직관적이다.
+
+:::
 
 ```python
 import numpy as np
@@ -91,7 +97,13 @@ $$P\left(\lim_{n \to \infty} \bar{X}_n = \mu\right) = 1$$
 
 약한 법칙은 "한 시점의 스냅샷"에 대한 진술이고, 강한 법칙은 "전체 시퀀스"에 대한 진술이다. 강한 법칙이 성립하면 약한 법칙도 자동으로 성립한다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>실전에서 WLLN과 SLLN의 구분이 문제가 되는 경우는 거의 없다. ML/통계 응용에서는 "표본 크기가 크면 표본 평균이 모평균에 수렴한다"는 사실 자체가 중요하지, 수렴의 종류까지 따질 일은 드물다. 다만 이론적 증명에서는 이 구분이 결정적인 역할을 하기도 한다.</div>
+:::tip
+
+**✅ 팁**
+
+실전에서 WLLN과 SLLN의 구분이 문제가 되는 경우는 거의 없다. ML/통계 응용에서는 "표본 크기가 크면 표본 평균이 모평균에 수렴한다"는 사실 자체가 중요하지, 수렴의 종류까지 따질 일은 드물다. 다만 이론적 증명에서는 이 구분이 결정적인 역할을 하기도 한다.
+
+:::
 
 강한 법칙의 증명은 체비셰프 부등식만으로는 부족하고, 보렐-칸텔리 보조정리(Borel-Cantelli Lemma) 같은 측도론적 도구가 필요하다. 이 글의 범위를 벗어나므로 결과만 받아들이자.
 
@@ -175,7 +187,17 @@ $$\bar{X}_n \overset{d}{\approx} N\left(\mu, \frac{\sigma^2}{n}\right) \quad \te
 
 말로 풀면: **원래 분포가 무엇이든** — 균일이든, 지수든, 베르누이든, 아무 괴상한 분포든 — 표본 평균을 표준화하면 표준정규분포에 수렴한다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br><strong>CLT의 조건을 정확히 기억하자.</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>i.i.d.</strong>: 독립이고 동일한 분포를 따라야 한다.</li><li><strong>유한 분산</strong>: $\sigma^2 < \infty$여야 한다. 코시 분포처럼 분산이 발산하면 CLT가 성립하지 않는다.</li><li><strong>n이 "충분히" 커야</strong> 한다. 얼마나 커야 하는지는 원래 분포의 비대칭도(skewness)에 달렸다. 대칭 분포면 n=10도 충분할 수 있고, 극단적으로 치우친 분포면 n=100도 부족할 수 있다.</li></ul></div>
+:::warning
+
+**⚠️ 주의**
+
+**CLT의 조건을 정확히 기억하자.**
+
+- **i.i.d.**: 독립이고 동일한 분포를 따라야 한다.
+- **유한 분산**: $\sigma^2 < \infty$여야 한다. 코시 분포처럼 분산이 발산하면 CLT가 성립하지 않는다.
+- **n이 "충분히" 커야** 한다. 얼마나 커야 하는지는 원래 분포의 비대칭도(skewness)에 달렸다. 대칭 분포면 n=10도 충분할 수 있고, 극단적으로 치우친 분포면 n=100도 부족할 수 있다.
+
+:::
 
 ### LLN과 CLT의 관계
 
@@ -295,7 +317,15 @@ plt.savefig('clt-bernoulli.png', bbox_inches='tight', dpi=150)
 
 $n = 1$일 때는 0과 1에만 막대가 서 있다. $n = 5$에서는 0, 0.2, 0.4, 0.6, 0.8, 1.0의 6개 값만 가능하므로 여전히 듬성듬성하다. 하지만 $n = 30$부터 연속적인 히스토그램이 정규분포 곡선을 따라 형성된다. 이산 분포에서 연속적인 종 모양이 나타나는 이 전환은 CLT의 마법 같은 측면이다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li>직사각형(균일), 감소 곡선(지수), 점 두 개(베르누이) — 원래 분포의 모양이 전혀 달라도 표본 평균은 정규분포로 수렴한다.</li><li>대칭 분포(균일)는 n=5에서 이미 수렴이 눈에 보이고, 비대칭 분포(지수)는 n=30~100이 필요하다.</li><li>"n ≥ 30이면 정규 가정 가능"이라는 경험 법칙의 수학적 근거가 바로 여기에 있다.</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- 직사각형(균일), 감소 곡선(지수), 점 두 개(베르누이) — 원래 분포의 모양이 전혀 달라도 표본 평균은 정규분포로 수렴한다.
+- 대칭 분포(균일)는 n=5에서 이미 수렴이 눈에 보이고, 비대칭 분포(지수)는 n=30~100이 필요하다.
+- "n ≥ 30이면 정규 가정 가능"이라는 경험 법칙의 수학적 근거가 바로 여기에 있다.
+
+:::
 
 ---
 
@@ -377,7 +407,13 @@ $$\nabla \hat{L} \sim N\left(\nabla L, \frac{\sigma^2_{\nabla}}{B}\right)$$
 
 미니배치 그래디언트의 노이즈가 $\frac{1}{\sqrt{B}}$에 비례한다는 것이다. 배치 크기를 4배로 늘리면 노이즈는 절반으로 줄어든다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이것이 <a href="/ml/gradient-descent/">경사하강법</a> 글에서 "배치 크기를 키우면 학습이 안정적이지만 일반화 성능이 떨어질 수 있다"고 했던 이유다. CLT에 의해 큰 배치는 노이즈가 작아 손실 곡면의 sharp minima에 빠지기 쉽다. 적당한 노이즈(작은 배치)가 오히려 flat minima로 이끌어 일반화에 유리하다는 것이 현재의 이해다.</div>
+:::info
+
+**💡 참고**
+
+이것이 [경사하강법](/ml/gradient-descent/) 글에서 "배치 크기를 키우면 학습이 안정적이지만 일반화 성능이 떨어질 수 있다"고 했던 이유다. CLT에 의해 큰 배치는 노이즈가 작아 손실 곡면의 sharp minima에 빠지기 쉽다. 적당한 노이즈(작은 배치)가 오히려 flat minima로 이끌어 일반화에 유리하다는 것이 현재의 이해다.
+
+:::
 
 ### 교차 검증 점수의 분포
 
@@ -521,7 +557,13 @@ $$\hat{p} = \frac{X}{n} \overset{d}{\approx} N\left(p, \frac{p(1-p)}{n}\right)$$
 
 두 그룹의 전환율 차이 $\hat{p}_A - \hat{p}_B$의 분포를 정규분포로 근사해서 $z$-검정을 수행하는 것이다. CLT 없이는 A/B 테스트의 통계적 유의성을 계산할 수 없다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>실무에서 A/B 테스트를 설계할 때 필요한 <strong>최소 표본 크기</strong>도 이 정규 근사에서 나온다. 원하는 유의수준($\alpha$), 검정력($1 - \beta$), 최소 검출 효과($\delta$)를 정하면, CLT 기반 공식으로 필요한 $n$을 역산할 수 있다.</div>
+:::tip
+
+**✅ 팁**
+
+실무에서 A/B 테스트를 설계할 때 필요한 **최소 표본 크기**도 이 정규 근사에서 나온다. 원하는 유의수준($\alpha$), 검정력($1 - \beta$), 최소 검출 효과($\delta$)를 정하면, CLT 기반 공식으로 필요한 $n$을 역산할 수 있다.
+
+:::
 
 ---
 
@@ -568,7 +610,18 @@ print(f"Sample mean skewness: {skew(means):.4f}")  # ≈ 0.28 (거의 대칭)
 
 이 두 정리가 통계적 추론, 신뢰구간, 가설 검정, SGD, A/B 테스트 — 데이터 사이언스의 거의 모든 도구 — 를 수학적으로 정당화한다. "왜 표본으로 모집단을 추정할 수 있는가?"에 대한 답이 LLN이고, "왜 정규분포를 가정해도 되는가?"에 대한 답이 CLT다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>WLLN</strong>: 표본 평균이 모평균에 확률 수렴한다. 체비셰프 부등식으로 간결하게 증명된다.</li><li><strong>SLLN</strong>: 각 궤적이 거의 확실하게 수렴한다. 실전에서는 WLLN과 구분할 필요가 거의 없다.</li><li><strong>CLT</strong>: i.i.d. + 유한 분산 조건 하에서, $\bar{X}_n$의 표준화가 $N(0,1)$에 분포 수렴한다.</li><li><strong>원래 분포가 뭐든 상관없다</strong> — 균일, 지수, 베르누이 모두 표본 평균은 정규분포로 수렴한다.</li><li><strong>이항 분포의 정규 근사</strong>: $np \geq 5$, $n(1-p) \geq 5$일 때 유효하며, 연속성 보정으로 정확도를 높일 수 있다.</li><li><strong>ML 연결</strong>: SGD 미니배치의 수렴(LLN), 그래디언트 노이즈의 분포(CLT), CV 점수의 신뢰구간(CLT).</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **WLLN**: 표본 평균이 모평균에 확률 수렴한다. 체비셰프 부등식으로 간결하게 증명된다.
+- **SLLN**: 각 궤적이 거의 확실하게 수렴한다. 실전에서는 WLLN과 구분할 필요가 거의 없다.
+- **CLT**: i.i.d. + 유한 분산 조건 하에서, $\bar{X}_n$의 표준화가 $N(0,1)$에 분포 수렴한다.
+- **원래 분포가 뭐든 상관없다** — 균일, 지수, 베르누이 모두 표본 평균은 정규분포로 수렴한다.
+- **이항 분포의 정규 근사**: $np \geq 5$, $n(1-p) \geq 5$일 때 유효하며, 연속성 보정으로 정확도를 높일 수 있다.
+- **ML 연결**: SGD 미니배치의 수렴(LLN), 그래디언트 노이즈의 분포(CLT), CV 점수의 신뢰구간(CLT).
+
+:::
 
 다음 글에서는 **정보 이론(Information Theory)**으로 넘어간다. 확률분포의 "불확실성"을 정량화하는 엔트로피 개념 — 이것이 결정 트리, 교차 엔트로피 손실 함수, KL 발산 같은 ML 핵심 도구의 수학적 기반이다.
 

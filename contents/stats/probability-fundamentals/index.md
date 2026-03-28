@@ -32,7 +32,13 @@ thumbnail: './thumbnail.png'
 
 경험상, 확률 기초가 탄탄한 사람과 그렇지 않은 사람의 차이는 "수식을 읽을 수 있느냐"에서 가장 크게 드러난다. 논문이나 교재에서 P(Y|X), E[X], Var(X) 같은 표기가 나왔을 때, 기호 하나하나가 무엇을 뜻하는지 바로 파악할 수 있어야 한다. 그래야 수식을 "해석"하는 게 아니라 "읽는" 수준이 된다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 시리즈 안내</strong><br>이 시리즈는 <strong>확률과 정보이론</strong>을 다루며, ML 시리즈와 병행해서 읽으면 좋다. 특히 <a href="/ml/naive-bayes/">나이브 베이즈</a>나 MLE 관련 글에서 여기의 개념이 직접 사용된다.</div>
+:::info
+
+**💡 시리즈 안내**
+
+이 시리즈는 **확률과 정보이론**을 다루며, ML 시리즈와 병행해서 읽으면 좋다. 특히 [나이브 베이즈](/ml/naive-bayes/)나 MLE 관련 글에서 여기의 개념이 직접 사용된다.
+
+:::
 
 ---
 
@@ -100,7 +106,13 @@ print(f"적어도 1번 앞면: 사건 크기 = {len(event_at_least_one_head)}")
 
 "이 환자가 특정 질병에 걸렸을 확률은 70%"라고 의사가 말할 때, 그건 동전을 70번 던져본 게 아니다. 기존 지식과 증거를 종합한 **주관적 믿음**이다. 베이지안 통계의 핵심이 바로 이 관점이고, 새로운 데이터가 들어올 때마다 믿음을 업데이트한다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 실전 팁</strong><br>ML에서는 세 관점이 모두 쓰인다. MLE(최대 우도 추정)는 빈도론적, MAP/베이지안 최적화는 주관적 확률 관점이다. 어느 하나가 "맞다"는 게 아니라 문제에 따라 적절한 관점을 선택하는 것이다.</div>
+:::tip
+
+**✅ 실전 팁**
+
+ML에서는 세 관점이 모두 쓰인다. MLE(최대 우도 추정)는 빈도론적, MAP/베이지안 최적화는 주관적 확률 관점이다. 어느 하나가 "맞다"는 게 아니라 문제에 따라 적절한 관점을 선택하는 것이다.
+
+:::
 
 ### Python Monte Carlo로 빈도론 확인하기
 
@@ -236,7 +248,13 @@ print(f"P(하트 ∪ 페이스) = {P_A_or_B:.4f}")
 
 포함-배제를 쓰지 않고 단순히 P(A) + P(B) = 0.4808로 계산하면, 하트 J/Q/K 3장이 이중 계산되어 틀린 답이 나온다. 실수하기 쉬운 부분이니 항상 겹침을 확인하는 습관이 중요하다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 흔한 실수</strong><br>"P(A 또는 B)"를 구할 때 무조건 P(A) + P(B)를 하는 건 A와 B가 배반(mutually exclusive)일 때만 성립한다. 두 사건이 겹칠 수 있다면 반드시 포함-배제를 써야 한다.</div>
+:::warning
+
+**⚠️ 흔한 실수**
+
+"P(A 또는 B)"를 구할 때 무조건 P(A) + P(B)를 하는 건 A와 B가 배반(mutually exclusive)일 때만 성립한다. 두 사건이 겹칠 수 있다면 반드시 포함-배제를 써야 한다.
+
+:::
 
 **단조성(Monotonicity):**
 
@@ -362,7 +380,17 @@ print(f"MISSISSIPPI 배열 수: {result:,}")
 
 "MISSISSIPPI"처럼 중복된 문자가 있는 문자열의 배열 수를 구하는 전형적인 문제에서 다항 계수가 쓰인다. 11!은 약 4천만인데, 같은 문자끼리 자리를 바꿔도 구분이 안 되니까 중복을 나눠주는 것이다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 셈 원리 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>곱의 법칙</strong>: 독립적인 단계의 선택을 곱한다</li><li><strong>순열 P(n,k)</strong>: 순서 O → n!/(n-k)!</li><li><strong>조합 C(n,k)</strong>: 순서 X → n!/(k!(n-k)!)</li><li><strong>다항 계수</strong>: 여러 그룹으로 분할 → n!/(k₁!k₂!...kₘ!)</li><li>핵심 질문: <strong>"순서가 중요한가?"</strong> → Yes면 순열, No면 조합</li></ul></div>
+:::summary
+
+**📌 셈 원리 요약**
+
+- **곱의 법칙**: 독립적인 단계의 선택을 곱한다
+- **순열 P(n,k)**: 순서 O → n!/(n-k)!
+- **조합 C(n,k)**: 순서 X → n!/(k!(n-k)!)
+- **다항 계수**: 여러 그룹으로 분할 → n!/(k₁!k₂!...kₘ!)
+- 핵심 질문: **"순서가 중요한가?"** → Yes면 순열, No면 조합
+
+:::
 
 ---
 
@@ -454,7 +482,13 @@ for n in [10, 23, 30, 50]:
 
 이론 곡선과 시뮬레이션 결과가 거의 정확히 겹친다. Monte Carlo가 얼마나 강력한 검증 도구인지 다시 한번 확인할 수 있다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실전에서의 Birthday Problem</strong><br>이 문제는 단순한 수학 퀴즈가 아니다. 해시 충돌(Hash Collision) 분석에 직접 적용된다. 해시 함수의 출력 크기가 n비트라면, 약 2^(n/2)개의 입력만으로 충돌이 발생할 확률이 50%를 넘는다. 이것이 "Birthday Attack"이고, 암호학에서 해시 크기를 결정할 때 핵심 근거가 된다.</div>
+:::info
+
+**💡 실전에서의 Birthday Problem**
+
+이 문제는 단순한 수학 퀴즈가 아니다. 해시 충돌(Hash Collision) 분석에 직접 적용된다. 해시 함수의 출력 크기가 n비트라면, 약 2^(n/2)개의 입력만으로 충돌이 발생할 확률이 50%를 넘는다. 이것이 "Birthday Attack"이고, 암호학에서 해시 크기를 결정할 때 핵심 근거가 된다.
+
+:::
 
 ---
 
@@ -492,7 +526,13 @@ print(f"적어도 하나가 6일 확률: {p_at_least_one_six:.4f}")
 
 여사건으로 풀면 한 줄이다. 사실 이 문제는 역사적으로도 유명한데, 17세기 도박사 슈발리에 드 메레(Chevalier de Méré)가 파스칼에게 물어본 바로 그 문제의 변형이다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>"적어도 하나"가 나오면 <strong>여사건</strong>부터 떠올리자. 직접 경우를 나누면 거의 항상 더 복잡해지고 실수할 확률(!)도 높아진다.</div>
+:::warning
+
+**⚠️ 주의**
+
+"적어도 하나"가 나오면 **여사건**부터 떠올리자. 직접 경우를 나누면 거의 항상 더 복잡해지고 실수할 확률(!)도 높아진다.
+
+:::
 
 ---
 
@@ -500,7 +540,17 @@ print(f"적어도 하나가 6일 확률: {p_at_least_one_six:.4f}")
 
 이 글에서 다룬 내용을 정리하면 다음과 같다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>표본공간(Ω)</strong>은 가능한 모든 결과의 집합, <strong>사건</strong>은 그 부분집합</li><li>확률의 세 관점: 고전적(등확률), 빈도론적(상대 빈도), 주관적(믿음의 정도)</li><li><strong>콜모고로프 공리</strong> 3가지: 비음성, 정규성, 가산 가법성 → 여기서 여사건, 포함-배제 등 모든 성질이 파생</li><li><strong>셈 원리</strong>: 순서가 중요하면 순열, 아니면 조합. "순서가 중요한가?"가 핵심 질문</li><li><strong>Birthday Problem</strong>: 직관이 틀릴 수 있다 → 시뮬레이션으로 검증하는 습관이 중요</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **표본공간(Ω)**은 가능한 모든 결과의 집합, **사건**은 그 부분집합
+- 확률의 세 관점: 고전적(등확률), 빈도론적(상대 빈도), 주관적(믿음의 정도)
+- **콜모고로프 공리** 3가지: 비음성, 정규성, 가산 가법성 → 여기서 여사건, 포함-배제 등 모든 성질이 파생
+- **셈 원리**: 순서가 중요하면 순열, 아니면 조합. "순서가 중요한가?"가 핵심 질문
+- **Birthday Problem**: 직관이 틀릴 수 있다 → 시뮬레이션으로 검증하는 습관이 중요
+
+:::
 
 여기까지가 확률론의 "알파벳"이다. 표본공간과 사건으로 상황을 정의하고, 공리로 확률을 계산하고, 셈 원리로 경우의 수를 세는 것. 이 기본기가 있어야 다음 단계로 넘어갈 수 있다.
 

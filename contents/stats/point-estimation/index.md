@@ -87,7 +87,13 @@ print(f"참값 μ = {true_mu}")
 
 같은 추정량(표본 평균)이라도, 표본이 달라지면 추정값이 달라진다. 추정량은 하나지만, 추정값은 표본마다 다른 숫자가 나온다. 이 "표본마다 달라지는 정도"가 곧 추정량의 분산이고, 이것이 추정량의 품질을 따지는 출발점이 된다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br><strong>통계량(Statistic)</strong>이란 표본의 함수 중 모수에 의존하지 않는 것을 말한다. 표본 평균 $\bar{X} = \frac{1}{n}\sum X_i$는 모수 $\mu$를 포함하지 않으므로 통계량이다. 추정량은 특별히 "모수를 추정하는 목적으로 사용하는 통계량"이다.</div>
+:::info
+
+**💡 참고**
+
+**통계량(Statistic)**이란 표본의 함수 중 모수에 의존하지 않는 것을 말한다. 표본 평균 $\bar{X} = \frac{1}{n}\sum X_i$는 모수 $\mu$를 포함하지 않으므로 통계량이다. 추정량은 특별히 "모수를 추정하는 목적으로 사용하는 통계량"이다.
+
+:::
 
 ---
 
@@ -149,7 +155,13 @@ print(f"E[S²] (n-1로 나눔): {np.mean(unbiased_estimates):.4f}")
 
 $n$으로 나눈 $\tilde{S}^2$의 평균은 3.60 — 참값 4보다 체계적으로 작다. $n-1$로 나눈 $S^2$는 거의 정확히 4에 수렴한다. 이것이 `numpy`에서 `ddof=1`을 명시해야 하는 이유다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>Python에서 <code>np.var()</code>의 기본값은 <code>ddof=0</code>(n으로 나눔)이고, <code>np.std()</code>도 마찬가지다. 통계적 추정 목적으로 사용할 때는 반드시 <code>ddof=1</code>을 지정해야 한다. 반면 pandas의 <code>.var()</code>와 <code>.std()</code>는 기본값이 <code>ddof=1</code>이다.</div>
+:::warning
+
+**⚠️ 주의**
+
+Python에서 `np.var()`의 기본값은 `ddof=0`(n으로 나눔)이고, `np.std()`도 마찬가지다. 통계적 추정 목적으로 사용할 때는 반드시 `ddof=1`을 지정해야 한다. 반면 pandas의 `.var()`와 `.std()`는 기본값이 `ddof=1`이다.
+
+:::
 
 ---
 
@@ -174,7 +186,13 @@ $$\text{Bias}(\hat{\theta}) = E[\hat{\theta}] - \theta$$
 - $n$으로 나눈 표본분산 $\tilde{S}^2$: $E[\tilde{S}^2] = \frac{n-1}{n}\sigma^2$ → **편향** ✗
 - $n-1$로 나눈 표본분산 $S^2$: $E[S^2] = \sigma^2$ → **비편향** ✓
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>비편향성이 항상 최선은 아니다. 뒤에서 다룰 MSE 분해에서 보겠지만, 약간의 편향을 허용하면 분산이 크게 줄어들어 전체적으로 더 나은 추정을 할 수 있다. 이것이 ML에서 <a href="/ml/regularization/">규제(Regularization)</a>가 작동하는 원리이기도 하다.</div>
+:::info
+
+**💡 참고**
+
+비편향성이 항상 최선은 아니다. 뒤에서 다룰 MSE 분해에서 보겠지만, 약간의 편향을 허용하면 분산이 크게 줄어들어 전체적으로 더 나은 추정을 할 수 있다. 이것이 ML에서 [규제(Regularization)](/ml/regularization/)가 작동하는 원리이기도 하다.
+
+:::
 
 ### 일치성 (Consistency)
 
@@ -248,7 +266,13 @@ $$I(\theta) = E\left[\left(\frac{\partial}{\partial\theta} \log f(X; \theta)\rig
 
 이 하한에 정확히 도달하는 추정량을 **효율적 추정량(Efficient Estimator)** 또는 **최적 비편향 추정량**이라 한다. 정규분포에서 $\bar{X}$는 $\mu$에 대한 효율적 추정량이다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>크래머-라오 하한의 실전적 의미: "이보다 더 정밀한 비편향 추정은 불가능하다." 물론 편향을 허용하면 이 한계를 넘길 수 있다 — 이것이 정규화(규제)의 수학적 정당성이기도 하다.</div>
+:::tip
+
+**✅ 팁**
+
+크래머-라오 하한의 실전적 의미: "이보다 더 정밀한 비편향 추정은 불가능하다." 물론 편향을 허용하면 이 한계를 넘길 수 있다 — 이것이 정규화(규제)의 수학적 정당성이기도 하다.
+
+:::
 
 ---
 
@@ -348,7 +372,13 @@ print("=" * 50)
 
 $n$이 작을수록 이 차이가 두드러지고, $n$이 커지면 편향이 0에 수렴하면서 두 추정량의 MSE가 비슷해진다. **"비편향이 항상 좋다"는 편견을 버려야 한다.**
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 ML에서의 편향-분산 트레이드오프</strong><br>이 MSE 분해는 ML에서 <a href="/ml/regularization/">규제(Regularization)</a>의 수학적 근거다. Ridge 회귀에서 가중치에 페널티를 부과하면 추정량에 편향이 생기지만, 분산이 크게 줄어든다. 결과적으로 MSE(= 테스트 오차)가 줄어든다. <a href="/ml/bias-variance/">편향-분산 트레이드오프</a>가 실은 이 공식에서 출발한 것이다.</div>
+:::info
+
+**💡 ML에서의 편향-분산 트레이드오프**
+
+이 MSE 분해는 ML에서 [규제(Regularization)](/ml/regularization/)의 수학적 근거다. Ridge 회귀에서 가중치에 페널티를 부과하면 추정량에 편향이 생기지만, 분산이 크게 줄어든다. 결과적으로 MSE(= 테스트 오차)가 줄어든다. [편향-분산 트레이드오프](/ml/bias-variance/)가 실은 이 공식에서 출발한 것이다.
+
+:::
 
 ---
 
@@ -425,7 +455,19 @@ print(f"두 추정값 동일? {estimate_from_T == estimate_from_data}")
 
 100개의 0/1 데이터 대신 "70"이라는 숫자 하나만 있으면 $p$를 추정하기에 충분하다. 데이터를 100차원에서 1차원으로 압축했지만, 모수 추정에 필요한 정보는 하나도 잃지 않았다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>모수(Parameter)</strong>: 확률분포를 결정하는 미지의 상수. 직접 관측할 수 없고, 데이터로 추정해야 한다.</li><li><strong>추정량 vs 추정값</strong>: 추정량은 함수(확률변수), 추정값은 구체적인 숫자. 추정량의 성질(편향, 분산)을 따질 수 있다.</li><li><strong>비편향성</strong>: $E[\hat{\theta}] = \theta$. 평균적으로 참값을 맞추지만, 한 번의 추정이 정확하다는 보장은 아니다.</li><li><strong>일치성</strong>: $n \to \infty$이면 추정량이 참값에 수렴. 데이터가 충분하면 결국 정답에 도달한다.</li><li><strong>MSE = Bias² + Var</strong>: 편향을 약간 허용해서 분산을 크게 줄이면 전체 오차가 감소할 수 있다. ML 규제의 수학적 근거.</li><li><strong>베셀 보정</strong>: 표본 분산에서 $n-1$로 나누는 이유. 자유도가 $n-1$이기 때문이다.</li><li><strong>충분 통계량</strong>: 모수 추정에 필요한 모든 정보를 담고 있는 데이터 요약. Fisher-Neyman 분해 정리로 찾을 수 있다.</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **모수(Parameter)**: 확률분포를 결정하는 미지의 상수. 직접 관측할 수 없고, 데이터로 추정해야 한다.
+- **추정량 vs 추정값**: 추정량은 함수(확률변수), 추정값은 구체적인 숫자. 추정량의 성질(편향, 분산)을 따질 수 있다.
+- **비편향성**: $E[\hat{\theta}] = \theta$. 평균적으로 참값을 맞추지만, 한 번의 추정이 정확하다는 보장은 아니다.
+- **일치성**: $n \to \infty$이면 추정량이 참값에 수렴. 데이터가 충분하면 결국 정답에 도달한다.
+- **MSE = Bias² + Var**: 편향을 약간 허용해서 분산을 크게 줄이면 전체 오차가 감소할 수 있다. ML 규제의 수학적 근거.
+- **베셀 보정**: 표본 분산에서 $n-1$로 나누는 이유. 자유도가 $n-1$이기 때문이다.
+- **충분 통계량**: 모수 추정에 필요한 모든 정보를 담고 있는 데이터 요약. Fisher-Neyman 분해 정리로 찾을 수 있다.
+
+:::
 
 ---
 

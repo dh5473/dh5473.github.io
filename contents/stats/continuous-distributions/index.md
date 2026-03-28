@@ -27,7 +27,13 @@ $$P(a \leq X \leq b) = \int_a^b f(x) \, dx$$
 
 PDF $f(x)$는 확률 그 자체가 아니라 **밀도**다. 확률은 그 밀도를 구간 위에서 적분해야 나온다. 이 차이가 연속분포를 다루는 전체 사고방식을 결정한다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>PDF의 <strong>두 가지 조건</strong>: (1) 모든 $x$에 대해 $f(x) \geq 0$, (2) $\int_{-\infty}^{\infty} f(x) \, dx = 1$. 이산에서 PMF의 합이 1인 것과 같은 원리다.</div>
+:::info
+
+**💡 참고**
+
+PDF의 **두 가지 조건**: (1) 모든 $x$에 대해 $f(x) \geq 0$, (2) $\int_{-\infty}^{\infty} f(x) \, dx = 1$. 이산에서 PMF의 합이 1인 것과 같은 원리다.
+
+:::
 
 이제 가장 단순한 분포부터 시작해서, 점점 풍부한 구조를 가진 분포로 올라가보자.
 
@@ -186,7 +192,13 @@ print(f"Z 점수: {z_scores.round(3)}")
 
 가장 근본적인 이유는 **중심극한정리(CLT)**다 — 어떤 분포든 충분히 많이 더하면 정규 분포에 수렴한다. 이 강력한 정리는 [다음 글](/stats/lln-and-clt/)에서 자세히 다룬다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>"데이터가 정규 분포를 따른다"는 가정은 강력하지만 위험하기도 하다. 소득 분포, 주가 수익률, 네트워크 트래픽처럼 <strong>두꺼운 꼬리(heavy tail)</strong>를 가진 데이터에 정규 분포를 무작정 적용하면 극단값의 확률을 심각하게 과소평가하게 된다.</div>
+:::warning
+
+**⚠️ 주의**
+
+"데이터가 정규 분포를 따른다"는 가정은 강력하지만 위험하기도 하다. 소득 분포, 주가 수익률, 네트워크 트래픽처럼 **두꺼운 꼬리(heavy tail)**를 가진 데이터에 정규 분포를 무작정 적용하면 극단값의 확률을 심각하게 과소평가하게 된다.
+
+:::
 
 ---
 
@@ -221,7 +233,13 @@ $$P(X > s + t \mid X > s) = P(X > t)$$
 
 풀어서 말하면: "이미 $s$시간 동안 사건이 안 일어났다고 해서, 앞으로 $t$시간 안에 일어날 확률이 달라지지 않는다." 콜센터에서 10분 넘게 대기했다고 해서 다음 1분 안에 연결될 확률이 높아지지 않는다는 뜻이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이산분포에서 무기억성을 가진 분포는 <strong>기하 분포</strong>뿐이었다. 지수 분포는 기하 분포의 연속 버전이라고 할 수 있다. 둘 다 포아송 과정에서 파생되며, 둘 다 무기억성을 가진다.</div>
+:::info
+
+**💡 참고**
+
+이산분포에서 무기억성을 가진 분포는 **기하 분포**뿐이었다. 지수 분포는 기하 분포의 연속 버전이라고 할 수 있다. 둘 다 포아송 과정에서 파생되며, 둘 다 무기억성을 가진다.
+
+:::
 
 ### 포아송-지수 연결
 
@@ -321,7 +339,13 @@ assert np.allclose(chi2_rv.pdf(x), gamma_equiv.pdf(x))
 print(f"✓ χ²({k}) = Gamma({k/2}, 2) 확인!")
 ```
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>scipy에서 감마 분포의 파라미터 이름에 주의하자. <code>stats.gamma(a=α, scale=β)</code>에서 <code>a</code>가 형태 파라미터 α이고, <code>scale</code>이 척도 파라미터 β다. 일부 교재에서는 rate 파라미터 λ = 1/β를 사용하므로, 어떤 파라미터화(parameterization)를 쓰는지 항상 확인해야 한다.</div>
+:::tip
+
+**✅ 팁**
+
+scipy에서 감마 분포의 파라미터 이름에 주의하자. `stats.gamma(a=α, scale=β)`에서 `a`가 형태 파라미터 α이고, `scale`이 척도 파라미터 β다. 일부 교재에서는 rate 파라미터 λ = 1/β를 사용하므로, 어떤 파라미터화(parameterization)를 쓰는지 항상 확인해야 한다.
+
+:::
 
 ---
 
@@ -390,7 +414,13 @@ print(f"95% 신용구간: [{posterior.ppf(0.025):.4f}, {posterior.ppf(0.975):.4f
 # 데이터가 사전 믿음(5%)을 7.1%로 업데이트했다
 ```
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>$\alpha + \beta$의 크기가 "확신의 강도"를 나타낸다. $\text{Beta}(2, 38)$은 총 40번의 가상 시행에 기반한 약한 사전 지식이고, 데이터 200개가 추가되면 사후분포의 $\alpha + \beta = 240$으로, 데이터의 영향이 사전분포를 압도한다.</div>
+:::info
+
+**💡 참고**
+
+$\alpha + \beta$의 크기가 "확신의 강도"를 나타낸다. $\text{Beta}(2, 38)$은 총 40번의 가상 시행에 기반한 약한 사전 지식이고, 데이터 200개가 추가되면 사후분포의 $\alpha + \beta = 240$으로, 데이터의 영향이 사전분포를 압도한다.
+
+:::
 
 ---
 
@@ -487,7 +517,13 @@ print(f"✓ Binom(1000, 0.3) vs Normal 근사: CDF 최대 차이 = {max_diff:.6f
 
 이 패밀리 트리를 머릿속에 그려두면, 새로운 분포를 만났을 때 "이건 어디서 파생된 건가?"라는 질문으로 빠르게 이해할 수 있다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>위 관계도에서 가장 중요한 연결 두 가지를 꼽자면: (1) <strong>Poisson ↔ Exponential</strong> — 같은 현상의 이산/연속 관점, (2) <strong>Binomial → Normal (CLT)</strong> — 이산분포가 충분히 반복되면 연속분포로 수렴한다는 대정리. 이 두 연결을 이해하면 나머지는 자연스럽게 따라온다.</div>
+:::info
+
+**💡 참고**
+
+위 관계도에서 가장 중요한 연결 두 가지를 꼽자면: (1) **Poisson ↔ Exponential** — 같은 현상의 이산/연속 관점, (2) **Binomial → Normal (CLT)** — 이산분포가 충분히 반복되면 연속분포로 수렴한다는 대정리. 이 두 연결을 이해하면 나머지는 자연스럽게 따라온다.
+
+:::
 
 ---
 
@@ -544,7 +580,13 @@ print(f"Shapiro-Wilk p-value: {p_value:.4f}")  # >> 0.05: 정규 분포!
 
 왜 이 변환이 동작하는가? $U_1$에 $-\ln$을 취하면 지수 분포가 되고, $\sqrt{2 \cdot (\cdot)}$를 적용하면 Rayleigh 분포가 된다. 여기에 $U_2$에서 나온 균일한 각도 $\theta = 2\pi U_2$를 결합하면, 2차원 표준정규 분포의 극좌표 표현과 정확히 일치한다. 이것이 Box-Muller의 핵심 아이디어다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>실제로 NumPy의 <code>np.random.normal()</code>은 Box-Muller 변환의 개선 버전인 <strong>Ziggurat 알고리즘</strong>을 사용한다. 원리는 같지만 삼각함수 연산을 피해 더 빠르다.</div>
+:::tip
+
+**✅ 팁**
+
+실제로 NumPy의 `np.random.normal()`은 Box-Muller 변환의 개선 버전인 **Ziggurat 알고리즘**을 사용한다. 원리는 같지만 삼각함수 연산을 피해 더 빠르다.
+
+:::
 
 ---
 
@@ -578,13 +620,30 @@ P_tail = 1 - rv.cdf(x)               # P(X > x) — 상위 꼬리
 x_95 = rv.ppf(0.95)                   # 상위 5% 시작점
 ```
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>scipy의 파라미터 이름은 교재와 다를 수 있다. 특히 지수 분포에서 <code>scale = 1/λ</code>이고, 감마 분포에서 <code>a = α</code>인 점을 매번 확인해야 한다. 잘못된 파라미터화는 결과를 완전히 뒤집는다.</div>
+:::warning
+
+**⚠️ 주의**
+
+scipy의 파라미터 이름은 교재와 다를 수 있다. 특히 지수 분포에서 `scale = 1/λ`이고, 감마 분포에서 `a = α`인 점을 매번 확인해야 한다. 잘못된 파라미터화는 결과를 완전히 뒤집는다.
+
+:::
 
 ---
 
 ## 마치며
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>균일 분포</strong>: 모든 값이 동등. 난수 생성의 출발점이자 무정보 사전분포.</li><li><strong>정규 분포</strong>: ML의 기본 가정. 68-95-99.7 법칙, Z 변환, CLT의 귀결.</li><li><strong>지수 분포</strong>: 포아송 과정의 대기 시간. 유일한 연속 무기억 분포.</li><li><strong>감마 분포</strong>: 지수의 일반화. α번째 사건 대기. 카이제곱 분포의 모체.</li><li><strong>베타 분포</strong>: [0,1] 구간의 만능 분포. 베이지안 켤레 사전분포의 핵심.</li><li>분포들은 고립되지 않고 <strong>패밀리 트리</strong>로 연결된다. 특수 경우, 극한 수렴, 켤레 관계를 이해하면 새로운 분포도 빠르게 파악할 수 있다.</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **균일 분포**: 모든 값이 동등. 난수 생성의 출발점이자 무정보 사전분포.
+- **정규 분포**: ML의 기본 가정. 68-95-99.7 법칙, Z 변환, CLT의 귀결.
+- **지수 분포**: 포아송 과정의 대기 시간. 유일한 연속 무기억 분포.
+- **감마 분포**: 지수의 일반화. α번째 사건 대기. 카이제곱 분포의 모체.
+- **베타 분포**: [0,1] 구간의 만능 분포. 베이지안 켤레 사전분포의 핵심.
+- 분포들은 고립되지 않고 **패밀리 트리**로 연결된다. 특수 경우, 극한 수렴, 켤레 관계를 이해하면 새로운 분포도 빠르게 파악할 수 있다.
+
+:::
 
 이산분포에서 연속분포까지, 확률분포의 핵심 레퍼토리를 완성했다. 하지만 하나의 근본적인 질문이 남아 있다 — **왜 어디서나 정규 분포가 나타나는가?**
 

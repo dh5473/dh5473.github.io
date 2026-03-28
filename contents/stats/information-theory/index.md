@@ -69,7 +69,13 @@ print(f"1% 확률 사건:     {self_information(0.01):.2f} bits")     # 6.64 bit
 
 공정한 동전의 앞면이 나왔다는 정보는 정확히 1비트다. 사실 비트(bit)라는 단위 자체가 "이진 선택 하나의 정보량"에서 유래한 것이다. 주사위의 특정 눈이 나왔다는 정보는 약 2.58비트 — 이진 질문 약 2~3개에 해당하는 정보량이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>로그의 밑에 따라 단위가 달라진다. base=2이면 비트(bit), base=e이면 냇(nat), base=10이면 하틀리(hartley)다. ML에서 손실 함수에 쓸 때는 주로 자연로그(nat)를 사용하는데, 밑이 달라져도 상수 배 차이일 뿐 본질은 같다.</div>
+:::info
+
+**💡 참고**
+
+로그의 밑에 따라 단위가 달라진다. base=2이면 비트(bit), base=e이면 냇(nat), base=10이면 하틀리(hartley)다. ML에서 손실 함수에 쓸 때는 주로 자연로그(nat)를 사용하는데, 밑이 달라져도 상수 배 차이일 뿐 본질은 같다.
+
+:::
 
 ---
 
@@ -124,7 +130,13 @@ print(f"공정 동전: H = {entropy(fair_coin):.3f} bits")  # 1.000 bits
 
 5개 값을 가진 균일 분포의 엔트로피는 $\log_2 5 \approx 2.322$ 비트다. 일반적으로 $n$개 값을 가진 균일 분포의 엔트로피는 $\log_2 n$이며, 이것이 해당 값의 개수에서 달성 가능한 **최대 엔트로피**다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>$0 \cdot \log 0$은 수학적으로 정의되지 않지만, 극한 $\lim_{p \to 0^+} p \log p = 0$이므로 정보이론에서는 관례적으로 $0 \log 0 = 0$으로 정의한다. 코드에서는 확률이 0인 항을 필터링하면 된다.</div>
+:::warning
+
+**⚠️ 주의**
+
+$0 \cdot \log 0$은 수학적으로 정의되지 않지만, 극한 $\lim_{p \to 0^+} p \log p = 0$이므로 정보이론에서는 관례적으로 $0 \log 0 = 0$으로 정의한다. 코드에서는 확률이 0인 항을 필터링하면 된다.
+
+:::
 
 ### 연속 확률 변수의 미분 엔트로피
 
@@ -211,7 +223,13 @@ print(f"\n→ '무료' 단어 기준이 {ig_a/ig_b:.0f}배 더 유용한 분할!
 
 결과를 보면 "무료"라는 단어의 포함 여부가 이메일 길이보다 약 52배 더 유용한 분할 기준이라는 것을 IG가 정량적으로 알려준다. ID3, C4.5 같은 결정 트리 알고리즘이 바로 이 원리로 동작한다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>scikit-learn의 <code>DecisionTreeClassifier(criterion='entropy')</code>로 설정하면 Information Gain 기반 분할을 사용한다. 기본값인 <code>'gini'</code>는 지니 불순도를 사용하는데, 실제 성능 차이는 대부분의 경우 미미하다.</div>
+:::tip
+
+**✅ 팁**
+
+scikit-learn의 `DecisionTreeClassifier(criterion='entropy')`로 설정하면 Information Gain 기반 분할을 사용한다. 기본값인 `'gini'`는 지니 불순도를 사용하는데, 실제 성능 차이는 대부분의 경우 미미하다.
+
+:::
 
 ---
 
@@ -359,7 +377,13 @@ R = [1/3, 1/3, 1/3]
 print(f"\nD_KL(R || R) = {kl_divergence(R, R, base=2):.4f} bits")  # 0
 ```
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>$Q(x) = 0$인 곳에서 $P(x) > 0$이면 $D_{KL}(P \| Q) = \infty$가 된다. 실제 구현에서는 $Q$에 아주 작은 값(smoothing)을 더하거나, $P$의 support가 $Q$의 support에 포함되도록 보장해야 한다.</div>
+:::warning
+
+**⚠️ 주의**
+
+$Q(x) = 0$인 곳에서 $P(x) > 0$이면 $D_{KL}(P \| Q) = \infty$가 된다. 실제 구현에서는 $Q$에 아주 작은 값(smoothing)을 더하거나, $P$의 support가 $Q$의 support에 포함되도록 보장해야 한다.
+
+:::
 
 ---
 
@@ -465,7 +489,16 @@ for pred, label in zip(predictions, labels):
 
 코드를 실행해 보면, 모델이 자신 있게 틀렸을 때(예측 0.01, 정답 1) CE Loss는 MSE Loss보다 수십 배 더 큰 페널티를 부과한다. 이 "자비 없는" 페널티 구조가 분류 모델을 빠르고 효과적으로 학습시키는 비결이다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li>Cross-Entropy Loss 최소화 = KL Divergence 최소화 = 모델 분포를 진짜 분포에 가깝게</li><li>시그모이드 + CE 조합: 그래디언트에서 σ'(z) 소거 → 그래디언트 소실 없음</li><li>시그모이드 + MSE 조합: σ'(z) 항이 남아 → 극단적 예측에서 학습 정체</li><li>CE Loss = 베르누이 분포의 음의 로그 우도 → MLE와 수학적으로 동치</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- Cross-Entropy Loss 최소화 = KL Divergence 최소화 = 모델 분포를 진짜 분포에 가깝게
+- 시그모이드 + CE 조합: 그래디언트에서 σ'(z) 소거 → 그래디언트 소실 없음
+- 시그모이드 + MSE 조합: σ'(z) 항이 남아 → 극단적 예측에서 학습 정체
+- CE Loss = 베르누이 분포의 음의 로그 우도 → MLE와 수학적으로 동치
+
+:::
 
 ---
 
@@ -536,7 +569,13 @@ $$
 
 $\beta$가 너무 작으면 모델이 보상을 해킹하고, 너무 크면 원래 모델에서 벗어나지 못한다. KL 발산이 이 균형을 정량적으로 조절하는 것이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>이렇게 보면, 정보이론은 ML/DL의 "공용어"라 할 수 있다. 결정 트리부터 LLM까지, 모델이 "얼마나 잘/못 예측하는가"를 측정하는 거의 모든 지표가 엔트로피, KL 발산, 교차 엔트로피라는 동일한 수학적 프레임워크에서 나온다.</div>
+:::info
+
+**💡 참고**
+
+이렇게 보면, 정보이론은 ML/DL의 "공용어"라 할 수 있다. 결정 트리부터 LLM까지, 모델이 "얼마나 잘/못 예측하는가"를 측정하는 거의 모든 지표가 엔트로피, KL 발산, 교차 엔트로피라는 동일한 수학적 프레임워크에서 나온다.
+
+:::
 
 ---
 
@@ -644,7 +683,13 @@ for i, score in enumerate(mi_scores):
 
 scikit-learn의 `mutual_info_classif`는 연속 변수에 대해 k-최근접 이웃 기반 추정을 사용해서 상호정보량을 계산한다. 상관 계수(correlation)가 선형 관계만 포착하는 것과 달리, 상호정보량은 **비선형 의존성까지 포착**할 수 있다는 장점이 있다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>상호정보량은 상관 계수의 "상위 호환"이라고 볼 수 있다. 상관 계수가 0이어도 상호정보량이 높을 수 있다 (예: Y = X²처럼 비선형 관계). 다만 추정이 더 어렵고 샘플이 많이 필요하다는 trade-off가 있다.</div>
+:::tip
+
+**✅ 팁**
+
+상호정보량은 상관 계수의 "상위 호환"이라고 볼 수 있다. 상관 계수가 0이어도 상호정보량이 높을 수 있다 (예: Y = X²처럼 비선형 관계). 다만 추정이 더 어렵고 샘플이 많이 필요하다는 trade-off가 있다.
+
+:::
 
 ---
 
@@ -705,7 +750,18 @@ print(f"   H(P)는 상수이므로, min H(P,Q) ⟺ min D_KL(P||Q)")
 print(f"   → 모델 Q를 진짜 분포 P에 맞추는 것!")
 ```
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>정보량</strong> I(x) = −log p(x): 놀라움의 크기</li><li><strong>엔트로피</strong> H(X) = E[I(X)]: 평균 놀라움 = 불확실성</li><li><strong>KL 발산</strong> D_KL(P||Q): P 대신 Q를 쓸 때의 추가 비용 (비대칭, ≥0)</li><li><strong>교차 엔트로피</strong> H(P,Q) = H(P) + D_KL(P||Q): 잘못된 분포의 인코딩 비용</li><li><strong>상호정보량</strong> I(X;Y) = H(X) − H(X|Y): 공유 정보 (대칭, ≥0)</li><li>CE Loss 최소화 ↔ KL Divergence 최소화 ↔ 모델 분포를 진짜 분포에 맞추기</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **정보량** I(x) = −log p(x): 놀라움의 크기
+- **엔트로피** H(X) = E[I(X)]: 평균 놀라움 = 불확실성
+- **KL 발산** D_KL(P||Q): P 대신 Q를 쓸 때의 추가 비용 (비대칭, ≥0)
+- **교차 엔트로피** H(P,Q) = H(P) + D_KL(P||Q): 잘못된 분포의 인코딩 비용
+- **상호정보량** I(X;Y) = H(X) − H(X|Y): 공유 정보 (대칭, ≥0)
+- CE Loss 최소화 ↔ KL Divergence 최소화 ↔ 모델 분포를 진짜 분포에 맞추기
+
+:::
 
 ---
 

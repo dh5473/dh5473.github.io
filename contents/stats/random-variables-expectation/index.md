@@ -27,7 +27,13 @@ $$X: \Omega \rightarrow \mathbb{R}$$
 
 주사위 예시라면, $X(⚀) = 1$, $X(⚁) = 2$, ..., $X(⚅) = 6$으로 대응시킨다. 이제 $X + Y$같은 연산이 가능해진다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>"변수"라는 이름 때문에 혼동하기 쉽지만, 확률변수는 변수가 아니라 <strong>함수</strong>다. 표본공간의 원소를 입력받아 숫자를 출력하는 함수. 다만 역사적 관습으로 "변수"라 부른다.</div>
+:::info
+
+**💡 참고**
+
+"변수"라는 이름 때문에 혼동하기 쉽지만, 확률변수는 변수가 아니라 **함수**다. 표본공간의 원소를 입력받아 숫자를 출력하는 함수. 다만 역사적 관습으로 "변수"라 부른다.
+
+:::
 
 ### 이산 vs 연속
 
@@ -196,7 +202,13 @@ $$P(a < X < b) = \int_a^b f(x) \, dx$$
 2. **전체 적분 = 1**: $\int_{-\infty}^{\infty} f(x) \, dx = 1$
 3. <strong>$f(x)$는 확률이 아니다</strong> — 밀도다
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>PDF 값은 1을 넘을 수 있다. 예를 들어 평균 0, 표준편차 0.1인 정규분포의 꼭짓점에서 $f(0) \approx 3.99$다. 이것은 확률이 아니라 <strong>밀도(density)</strong>이기 때문이다. 확률은 넓이(적분)로만 구해지고, 넓이는 항상 0과 1 사이다.</div>
+:::warning
+
+**⚠️ 주의**
+
+PDF 값은 1을 넘을 수 있다. 예를 들어 평균 0, 표준편차 0.1인 정규분포의 꼭짓점에서 $f(0) \approx 3.99$다. 이것은 확률이 아니라 **밀도(density)**이기 때문이다. 확률은 넓이(적분)로만 구해지고, 넓이는 항상 0과 1 사이다.
+
+:::
 
 ```python
 from scipy import stats
@@ -320,7 +332,13 @@ print(f"E[X] + E[Y] = {3.5 + 3.5}")  # 7.0
 print(f"E[X + Y] 시뮬레이션 = {(rolls + rolls_2).mean():.4f}")  # ≈ 7.0
 ```
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>기댓값의 선형성은 ML에서 광범위하게 쓰인다. 손실 함수의 기댓값을 분석할 때, 편향-분산 분해(Bias-Variance Decomposition)를 유도할 때, 그리고 확률적 경사하강법(SGD)에서 미니배치 그래디언트가 전체 그래디언트의 불편 추정량(unbiased estimator)임을 증명할 때 핵심적으로 사용된다.</div>
+:::info
+
+**💡 참고**
+
+기댓값의 선형성은 ML에서 광범위하게 쓰인다. 손실 함수의 기댓값을 분석할 때, 편향-분산 분해(Bias-Variance Decomposition)를 유도할 때, 그리고 확률적 경사하강법(SGD)에서 미니배치 그래디언트가 전체 그래디언트의 불편 추정량(unbiased estimator)임을 증명할 때 핵심적으로 사용된다.
+
+:::
 
 ---
 
@@ -422,7 +440,16 @@ print(f"표준편차 σ = {sigma:.4f}")  # 1.7078
 print(f"np.std 결과 = {rolls.std():.4f}")  # ≈ 1.708
 ```
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br>NumPy의 <code>np.var()</code>와 <code>np.std()</code>는 기본적으로 <strong>모분산</strong>($N$으로 나눔)을 계산한다. 표본 분산($N-1$로 나눔, 불편 추정량)을 원하면 <code>ddof=1</code>을 명시해야 한다.<br><br><code>np.var(data, ddof=1)</code>  # 표본 분산<br><code>np.std(data, ddof=1)</code>  # 표본 표준편차</div>
+:::warning
+
+**⚠️ 주의**
+
+NumPy의 `np.var()`와 `np.std()`는 기본적으로 **모분산**($N$으로 나눔)을 계산한다. 표본 분산($N-1$로 나눔, 불편 추정량)을 원하면 `ddof=1`을 명시해야 한다.
+
+`np.var(data, ddof=1)`  # 표본 분산
+`np.std(data, ddof=1)`  # 표본 표준편차
+
+:::
 
 ---
 
@@ -502,7 +529,13 @@ print(f"X와 Y는 독립? 아니다. Y = X²이므로 완전히 종속적이다.
 
 이 예시에서 $Y = X^2$이므로 $X$를 알면 $Y$가 결정된다. 명백히 종속적이다. 그런데 공분산은 0에 가깝다. $X$가 양수일 때와 음수일 때 $Y$가 같은 방향으로 움직이기 때문에 **선형적**으로는 상쇄되기 때문이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>공분산 행렬(Covariance Matrix)은 여러 변수 쌍의 공분산을 정사각 행렬로 정리한 것이다. <a href="/ml/pca/">PCA(주성분 분석)</a>는 바로 이 공분산 행렬의 고유벡터를 찾는 과정이다. 분산이 가장 큰 방향을 찾아 차원을 축소하는 원리와 직접적으로 연결된다.</div>
+:::info
+
+**💡 참고**
+
+공분산 행렬(Covariance Matrix)은 여러 변수 쌍의 공분산을 정사각 행렬로 정리한 것이다. [PCA(주성분 분석)](/ml/pca/)는 바로 이 공분산 행렬의 고유벡터를 찾는 과정이다. 분산이 가장 큰 방향을 찾아 차원을 축소하는 원리와 직접적으로 연결된다.
+
+:::
 
 ### 분산의 덧셈 정리
 
@@ -587,7 +620,20 @@ print(f"표본 σ    = {samples.std():.4f}")
 
 ## 핵심 공식 치트시트
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>확률변수</strong>: 표본공간 → 실수로의 함수. 이산(PMF) vs 연속(PDF)</li><li><strong>PMF</strong>: $P(X = x)$ — 이산 확률변수의 각 값에 대한 확률</li><li><strong>PDF</strong>: $f(x)$ — 연속 확률변수의 밀도. 확률은 넓이(적분)로 구한다</li><li><strong>CDF</strong>: $F(x) = P(X \leq x)$ — 이산·연속 공통. 구간 확률 = $F(b) - F(a)$</li><li><strong>기댓값</strong>: $E[X]$ — 확률 가중 평균. 선형성이 핵심: $E[aX+b] = aE[X]+b$</li><li><strong>분산</strong>: $\text{Var}(X) = E[X^2] - (E[X])^2$ — 흩어진 정도. 표준편차 $\sigma = \sqrt{\text{Var}}$</li><li><strong>공분산</strong>: $\text{Cov}(X,Y) = E[XY] - E[X]E[Y]$ — 두 변수의 선형 관계. 독립 → Cov=0 (역 거짓)</li><li><strong>상관계수</strong>: $\rho = \text{Cov} / (\sigma_X \sigma_Y)$ — 단위 무관한 선형 관계 강도. $[-1, 1]$ 범위</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **확률변수**: 표본공간 → 실수로의 함수. 이산(PMF) vs 연속(PDF)
+- **PMF**: $P(X = x)$ — 이산 확률변수의 각 값에 대한 확률
+- **PDF**: $f(x)$ — 연속 확률변수의 밀도. 확률은 넓이(적분)로 구한다
+- **CDF**: $F(x) = P(X \leq x)$ — 이산·연속 공통. 구간 확률 = $F(b) - F(a)$
+- **기댓값**: $E[X]$ — 확률 가중 평균. 선형성이 핵심: $E[aX+b] = aE[X]+b$
+- **분산**: $\text{Var}(X) = E[X^2] - (E[X])^2$ — 흩어진 정도. 표준편차 $\sigma = \sqrt{\text{Var}}$
+- **공분산**: $\text{Cov}(X,Y) = E[XY] - E[X]E[Y]$ — 두 변수의 선형 관계. 독립 → Cov=0 (역 거짓)
+- **상관계수**: $\rho = \text{Cov} / (\sigma_X \sigma_Y)$ — 단위 무관한 선형 관계 강도. $[-1, 1]$ 범위
+
+:::
 
 ---
 

@@ -64,7 +64,15 @@ $$P_\theta(L(\mathbf{X}) \leq \theta \leq U(\mathbf{X})) \geq 1 - \alpha \quad \
 
 "95% 신뢰구간"의 뜻: **동일한 모집단에서 같은 크기의 표본을 반복 추출하여 매번 신뢰구간을 구성하면, 그 구간들 중 약 95%가 참 모수를 포함한다.**
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의: 가장 흔한 오해</strong><br>"모수 $\theta$가 95% 확률로 이 구간 안에 있다"는 <strong>틀린 해석</strong>이다. 이미 관측된 구간 $[3.2, 5.8]$에 대해, $\theta$는 이 안에 있거나 없거나 둘 중 하나다 — 확률이 아니다. 빈도주의에서 모수는 확률변수가 아니므로, "모수가 어디에 있을 확률"이라는 표현 자체가 성립하지 않는다.<br><br>모수에 확률을 부여하고 싶다면 베이지안 프레임워크의 <strong>신용구간(Credible Interval)</strong>이 필요하다.</div>
+:::warning
+
+**⚠️ 주의: 가장 흔한 오해**
+
+"모수 $\theta$가 95% 확률로 이 구간 안에 있다"는 **틀린 해석**이다. 이미 관측된 구간 $[3.2, 5.8]$에 대해, $\theta$는 이 안에 있거나 없거나 둘 중 하나다 — 확률이 아니다. 빈도주의에서 모수는 확률변수가 아니므로, "모수가 어디에 있을 확률"이라는 표현 자체가 성립하지 않는다.
+
+모수에 확률을 부여하고 싶다면 베이지안 프레임워크의 **신용구간(Credible Interval)**이 필요하다.
+
+:::
 
 ### 커버리지 시뮬레이션으로 확인
 
@@ -163,7 +171,13 @@ for conf_level in [0.90, 0.95, 0.99]:
 
 신뢰 수준이 올라갈수록 구간은 넓어진다. 더 확실하게 모수를 포착하려면 더 넓은 그물을 던져야 하는 셈이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 "σ를 안다"는 가정은 현실적인가?</strong><br>거의 아니다. 모평균 $\mu$를 모르면서 모표준편차 $\sigma$를 안다는 것은 매우 특수한 상황이다. 공정 관리에서 공정 분산이 오랜 기록으로 확립된 경우 정도가 해당된다. 대부분의 실전에서는 다음 절의 t-분포 기반 신뢰구간을 사용한다.</div>
+:::info
+
+**💡 "σ를 안다"는 가정은 현실적인가?**
+
+거의 아니다. 모평균 $\mu$를 모르면서 모표준편차 $\sigma$를 안다는 것은 매우 특수한 상황이다. 공정 관리에서 공정 분산이 오랜 기록으로 확립된 경우 정도가 해당된다. 대부분의 실전에서는 다음 절의 t-분포 기반 신뢰구간을 사용한다.
+
+:::
 
 ---
 
@@ -231,7 +245,14 @@ print(f"z-기반 95% CI: [{ci_z[0]:.2f}, {ci_z[1]:.2f}]  (폭: {ci_z[1]-ci_z[0]:
 
 $n = 12$일 때 t 임계값은 2.201로, z 임계값 1.960보다 상당히 크다. t-기반 구간이 약 12% 더 넓은데, 이 차이가 곧 $\sigma$ 대신 $S$를 사용하면서 발생하는 **추가 불확실성**이다. $n$이 커지면 $S \to \sigma$이고 $t_{n-1} \to N(0,1)$이므로 두 구간은 수렴한다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 scipy의 편리한 함수</strong><br><code>stats.t.interval(confidence, df, loc, scale)</code>을 사용하면 한 줄로 t-기반 CI를 구할 수 있다:<br><code>stats.t.interval(0.95, df=n-1, loc=x_bar, scale=se)</code></div>
+:::info
+
+**💡 scipy의 편리한 함수**
+
+`stats.t.interval(confidence, df, loc, scale)`을 사용하면 한 줄로 t-기반 CI를 구할 수 있다:
+`stats.t.interval(0.95, df=n-1, loc=x_bar, scale=se)`
+
+:::
 
 ---
 
@@ -306,7 +327,13 @@ for x in [1, 5, 10, 15, 19]:
 
 $\hat{p} = 0.05$ ($x = 1$)일 때 Wald는 하한이 0으로 잘리지만, Wilson과 Clopper-Pearson은 합리적인 구간을 제시한다. 극단적인 비율일수록 방법 선택이 중요해진다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 A/B 테스트에서의 선택</strong><br>전환율처럼 비율이 극단적으로 작거나 큰 경우가 흔한 상황에서는 Wilson 구간이 사실상 표준이다. R의 <code>prop.test()</code>나 Python의 <code>statsmodels.stats.proportion.proportion_confint(method='wilson')</code>이 이를 지원한다.</div>
+:::info
+
+**💡 A/B 테스트에서의 선택**
+
+전환율처럼 비율이 극단적으로 작거나 큰 경우가 흔한 상황에서는 Wilson 구간이 사실상 표준이다. R의 `prop.test()`나 Python의 `statsmodels.stats.proportion.proportion_confint(method='wilson')`이 이를 지원한다.
+
+:::
 
 ### 분산의 신뢰구간: 카이제곱 분포 활용
 
@@ -349,7 +376,13 @@ print(f"참값 σ² = {true_sigma2:.2f}")
 
 분산의 신뢰구간은 꽤 넓다. 편차의 제곱을 다루는 특성상 극단값에 민감하기 때문에, 분산 추정은 본질적으로 평균 추정보다 어려운 문제다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의: 정규성 가정의 민감성</strong><br>분산의 카이제곱 기반 CI는 <strong>정규분포 가정에 매우 민감</strong>하다. 모집단이 정규가 아니면 커버리지가 크게 어긋날 수 있다. 이 경우 부트스트랩(bootstrap) 방법이 더 신뢰할 만하다.</div>
+:::warning
+
+**⚠️ 주의: 정규성 가정의 민감성**
+
+분산의 카이제곱 기반 CI는 **정규분포 가정에 매우 민감**하다. 모집단이 정규가 아니면 커버리지가 크게 어긋날 수 있다. 이 경우 부트스트랩(bootstrap) 방법이 더 신뢰할 만하다.
+
+:::
 
 ---
 
@@ -449,7 +482,17 @@ print(f"참값 λ = {true_lambda}")
 
 피셔 정보량이 클수록 $1/\sqrt{nI(\theta)}$가 작아져 신뢰구간이 좁아진다. "데이터 한 개가 모수에 대해 담고 있는 정보의 양"이 크면 불확실성이 줄어드는 것이니, 직관과 정확히 맞아떨어진다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약: 주요 신뢰구간 공식</strong><br><br><ul><li>모평균 (σ 기지): $\bar{X} \pm z_{\alpha/2} \cdot \sigma / \sqrt{n}$</li><li>모평균 (σ 미지): $\bar{X} \pm t_{\alpha/2, n-1} \cdot S / \sqrt{n}$</li><li>모비율 (Wilson): $\frac{\hat{p} + z^2/(2n)}{1 + z^2/n} \pm \frac{z}{1+z^2/n}\sqrt{\hat{p}(1-\hat{p})/n + z^2/(4n^2)}$</li><li>모분산: $\left[\frac{(n-1)S^2}{\chi^2_{\alpha/2}}, \frac{(n-1)S^2}{\chi^2_{1-\alpha/2}}\right]$</li><li>MLE 일반: $\hat{\theta} \pm z_{\alpha/2} / \sqrt{nI(\hat{\theta})}$</li></ul></div>
+:::summary
+
+**📌 핵심 요약: 주요 신뢰구간 공식**
+
+- 모평균 (σ 기지): $\bar{X} \pm z_{\alpha/2} \cdot \sigma / \sqrt{n}$
+- 모평균 (σ 미지): $\bar{X} \pm t_{\alpha/2, n-1} \cdot S / \sqrt{n}$
+- 모비율 (Wilson): $\frac{\hat{p} + z^2/(2n)}{1 + z^2/n} \pm \frac{z}{1+z^2/n}\sqrt{\hat{p}(1-\hat{p})/n + z^2/(4n^2)}$
+- 모분산: $\left[\frac{(n-1)S^2}{\chi^2_{\alpha/2}}, \frac{(n-1)S^2}{\chi^2_{1-\alpha/2}}\right]$
+- MLE 일반: $\hat{\theta} \pm z_{\alpha/2} / \sqrt{nI(\hat{\theta})}$
+
+:::
 
 ---
 
@@ -475,7 +518,13 @@ print(f"참값 λ = {true_lambda}")
 
 모든 CI 공식은 표본의 독립성(또는 최소한 명시적인 의존 구조)을 가정한다. 시계열 데이터에 iid 기반 CI를 적용하면 구간이 지나치게 좁아지고, 커버리지가 명목 수준에 한참 못 미치게 된다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 가장 위험한 실수</strong><br>$n$이 충분히 크면 CLT에 의해 CI가 작동한다 — 이것은 맞다. 하지만 "충분히 큰 $n$"이 얼마인지는 <strong>모집단의 분포에 따라 다르다</strong>. 대칭 분포면 $n = 30$도 충분하지만, 극단적으로 치우친 분포(로그정규, 파레토 등)에서는 $n = 100$도 부족할 수 있다. 항상 분포의 모양을 먼저 확인하자.</div>
+:::warning
+
+**⚠️ 가장 위험한 실수**
+
+$n$이 충분히 크면 CLT에 의해 CI가 작동한다 — 이것은 맞다. 하지만 "충분히 큰 $n$"이 얼마인지는 **모집단의 분포에 따라 다르다**. 대칭 분포면 $n = 30$도 충분하지만, 극단적으로 치우친 분포(로그정규, 파레토 등)에서는 $n = 100$도 부족할 수 있다. 항상 분포의 모양을 먼저 확인하자.
+
+:::
 
 ---
 

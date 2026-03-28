@@ -52,7 +52,17 @@ $$
 
 두 사건의 교집합 확률을 구할 때 매우 유용한 공식이다. 특히 순차적으로 일어나는 사건을 다룰 때 자연스럽다. "먼저 B가 일어나고(P(B)), 그다음 B가 일어난 상태에서 A가 일어날(P(A|B)) 확률"로 읽으면 된다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>곱셈 규칙은 세 개 이상의 사건으로 확장할 수 있다:<br><br>$P(A \cap B \cap C) = P(A) \cdot P(B|A) \cdot P(C|A \cap B)$<br><br>이를 <strong>연쇄 규칙(Chain Rule of Probability)</strong>이라 하며, 확률적 그래프 모델의 기초가 된다.</div>
+:::info
+
+**💡 참고**
+
+곱셈 규칙은 세 개 이상의 사건으로 확장할 수 있다:
+
+$P(A \cap B \cap C) = P(A) \cdot P(B|A) \cdot P(C|A \cap B)$
+
+이를 **연쇄 규칙(Chain Rule of Probability)**이라 하며, 확률적 그래프 모델의 기초가 된다.
+
+:::
 
 ### 간단한 예제: 카드 뽑기
 
@@ -88,7 +98,18 @@ $$
 
 B가 일어났든 아니든 A의 확률이 변하지 않으면, A와 B는 독립이다. 주사위 두 개를 동시에 던질 때, 첫 번째 주사위 결과와 두 번째 주사위 결과가 독립인 것은 직관적으로 자명하다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ 주의</strong><br><strong>독립 ≠ 배반(상호 배타)</strong>. 많은 학생이 이 둘을 혼동한다.<br><br>• <strong>배반(Mutually Exclusive)</strong>: $P(A \cap B) = 0$ — 두 사건이 동시에 일어날 수 없다<br>• <strong>독립(Independent)</strong>: $P(A \cap B) = P(A)P(B)$ — 한 사건이 다른 사건 확률에 영향을 주지 않는다<br><br>$P(A) > 0$이고 $P(B) > 0$인 배반 사건은 <em>절대로</em> 독립이 아니다. A가 일어나면 B가 일어날 수 없으므로 $P(B|A) = 0 \neq P(B)$이기 때문이다.</div>
+:::warning
+
+**⚠️ 주의**
+
+**독립 ≠ 배반(상호 배타)**. 많은 학생이 이 둘을 혼동한다.
+
+- **배반(Mutually Exclusive)**: $P(A \cap B) = 0$ — 두 사건이 동시에 일어날 수 없다
+- **독립(Independent)**: $P(A \cap B) = P(A)P(B)$ — 한 사건이 다른 사건 확률에 영향을 주지 않는다
+
+$P(A) > 0$이고 $P(B) > 0$인 배반 사건은 *절대로* 독립이 아니다. A가 일어나면 B가 일어날 수 없으므로 $P(B|A) = 0 \neq P(B)$이기 때문이다.
+
+:::
 
 ### 조건부 독립
 
@@ -218,7 +239,13 @@ $$
 
 이것이 베이즈 정리의 힘이다. 사전 믿음(Prior)에 새로운 증거의 우도(Likelihood)를 곱해서 사후 믿음(Posterior)을 계산한다. 증거가 누적될수록 확률은 점점 더 정확해진다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>✅ 팁</strong><br>스팸 필터가 여러 단어를 순차적으로 관측할 때, 첫 번째 단어로 얻은 Posterior가 두 번째 단어를 처리할 때의 Prior가 된다. 이렇게 <strong>반복적으로 업데이트</strong>하는 것이 베이지안 추론의 핵심 패턴이다.</div>
+:::tip
+
+**✅ 팁**
+
+스팸 필터가 여러 단어를 순차적으로 관측할 때, 첫 번째 단어로 얻은 Posterior가 두 번째 단어를 처리할 때의 Prior가 된다. 이렇게 **반복적으로 업데이트**하는 것이 베이지안 추론의 핵심 패턴이다.
+
+:::
 
 ---
 
@@ -262,7 +289,13 @@ $$
 
 이 현상을 **기저율 무시(Base Rate Neglect)**라 하며, 인간이 빠지기 쉬운 인지적 편향 중 하나다. 베이즈 정리는 이 함정에서 벗어나게 해주는 정량적 도구인 셈이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br>유병률이 올라가면 PPV도 급격히 올라간다. 유병률이 10%이면 PPV ≈ 68.8%, 50%이면 PPV ≈ 95.2%가 된다. 따라서 의료 검사는 <strong>고위험군(유병률이 높은 집단)</strong>을 대상으로 시행할 때 훨씬 유용하다.</div>
+:::info
+
+**💡 참고**
+
+유병률이 올라가면 PPV도 급격히 올라간다. 유병률이 10%이면 PPV ≈ 68.8%, 50%이면 PPV ≈ 95.2%가 된다. 따라서 의료 검사는 **고위험군(유병률이 높은 집단)**을 대상으로 시행할 때 훨씬 유용하다.
+
+:::
 
 ### Python으로 확인하기
 
@@ -409,7 +442,18 @@ Stay 전략 승률:   0.3386
 
 이런 연결 고리를 알고 있으면, 왜 정규화가 과적합을 방지하는지에 대한 더 깊은 직관을 얻을 수 있다. "모수가 극단적인 값을 갖지 않을 것이다"라는 사전 믿음을 수학적으로 표현한 것이 정규화인 셈이다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 참고</strong><br><strong>판별적(Discriminative) vs 생성적(Generative) 모델</strong>의 구분도 조건부 확률과 관련이 깊다.<br><br>• <strong>판별적 모델</strong>: $P(Y|X)$를 직접 모델링 — 로지스틱 회귀, SVM, 신경망<br>• <strong>생성적 모델</strong>: $P(X|Y)P(Y)$를 모델링하고 베이즈 정리로 $P(Y|X)$ 계산 — 나이브 베이즈, GMM<br><br>자세한 비교는 <a href="/ml/logistic-regression/">로지스틱 회귀 글</a>에서 다룬다.</div>
+:::info
+
+**💡 참고**
+
+**판별적(Discriminative) vs 생성적(Generative) 모델**의 구분도 조건부 확률과 관련이 깊다.
+
+- **판별적 모델**: $P(Y|X)$를 직접 모델링 — 로지스틱 회귀, SVM, 신경망
+- **생성적 모델**: $P(X|Y)P(Y)$를 모델링하고 베이즈 정리로 $P(Y|X)$ 계산 — 나이브 베이즈, GMM
+
+자세한 비교는 [로지스틱 회귀 글](/ml/logistic-regression/)에서 다룬다.
+
+:::
 
 ---
 
@@ -504,7 +548,18 @@ $0.2 = 0.2$ ✓ 이므로 **A와 B는 독립이다.**
 
 이번 글에서 다룬 내용을 요약하면:
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;"><strong>📌 핵심 요약</strong><br><br><ul style="margin: 0; padding-left: 20px;"><li><strong>조건부 확률</strong>: P(A|B)는 B가 일어났을 때 A의 확률 — 표본공간이 B로 축소된다</li><li><strong>독립</strong>: P(A∩B) = P(A)P(B)일 때 독립이며, 배반과는 전혀 다른 개념이다</li><li><strong>전확률 공식</strong>: 표본공간을 분할하여 복잡한 확률을 분해 계산한다</li><li><strong>베이즈 정리</strong>: Prior × Likelihood / Evidence = Posterior. 새로운 증거로 믿음을 업데이트한다</li><li><strong>기저율의 중요성</strong>: 유병률이 낮으면 좋은 검사도 양성 예측도가 낮다 (의료 검사 예시)</li><li><strong>빈도론 vs 베이지안</strong>: 확률의 두 해석이 ML에서 MLE와 MAP으로 이어진다</li></ul></div>
+:::summary
+
+**📌 핵심 요약**
+
+- **조건부 확률**: P(A|B)는 B가 일어났을 때 A의 확률 — 표본공간이 B로 축소된다
+- **독립**: P(A∩B) = P(A)P(B)일 때 독립이며, 배반과는 전혀 다른 개념이다
+- **전확률 공식**: 표본공간을 분할하여 복잡한 확률을 분해 계산한다
+- **베이즈 정리**: Prior × Likelihood / Evidence = Posterior. 새로운 증거로 믿음을 업데이트한다
+- **기저율의 중요성**: 유병률이 낮으면 좋은 검사도 양성 예측도가 낮다 (의료 검사 예시)
+- **빈도론 vs 베이지안**: 확률의 두 해석이 ML에서 MLE와 MAP으로 이어진다
+
+:::
 
 조건부 확률과 베이즈 정리는 단순한 수학 공식이 아니다. **정보가 주어졌을 때 불확실성을 업데이트하는 체계적 방법론**이며, 나이브 베이즈부터 베이지안 딥러닝까지 머신러닝 전반에 스며들어 있다.
 
