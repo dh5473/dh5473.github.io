@@ -90,6 +90,82 @@ const defaultStyle = css`
     white-space: normal !important;
     font-size: 0.88em !important;
   }
+
+  /* ─── Callout Blocks ───────────────────────────────────────────── */
+
+  .callout {
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+    line-height: 1.7;
+  }
+
+  .callout > p:first-of-type {
+    margin-top: 0;
+  }
+
+  .callout > p:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .callout ul,
+  .callout ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  .callout-info {
+    background: #f0f4ff;
+    border-left: 4px solid #3182f6;
+  }
+
+  .callout-warning {
+    background: #fff3f0;
+    border-left: 4px solid #ff6b6b;
+  }
+
+  .callout-tip {
+    background: #f0fff4;
+    border-left: 4px solid #51cf66;
+  }
+
+  .callout-summary {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    margin: 24px 0;
+    border-radius: 8px;
+  }
+
+  .callout-note {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+  }
+
+  [data-theme='dark'] .callout-info {
+    background: rgba(49, 130, 246, 0.1);
+    border-left-color: #5b9cf6;
+  }
+
+  [data-theme='dark'] .callout-warning {
+    background: rgba(255, 107, 107, 0.1);
+    border-left-color: #ff8a8a;
+  }
+
+  [data-theme='dark'] .callout-tip {
+    background: rgba(81, 207, 102, 0.1);
+    border-left-color: #6ed88a;
+  }
+
+  [data-theme='dark'] .callout-summary {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #3a3735;
+  }
+
+  [data-theme='dark'] .callout-note {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: #f5b731;
+  }
 `
 
 const GlobalStyle: FunctionComponent = function () {
