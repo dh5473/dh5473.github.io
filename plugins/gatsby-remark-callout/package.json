@@ -1,0 +1,6 @@
+{
+  "name": "gatsby-remark-callout",
+  "version": "1.0.0",
+  "description": "Converts :::type callout blocks to styled HTML divs",
+  "main": "index.js"
+}

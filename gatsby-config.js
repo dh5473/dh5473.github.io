@@ -90,6 +90,12 @@ module.exports = {
             },
           },
 
+          // 콜아웃 블록 (katex 이후에 실행)
+          {
+            resolve: 'gatsby-remark-callout',
+            options: {},
+          },
+
           // 코드 하이라이팅
           {
             resolve: 'gatsby-remark-prismjs',
