@@ -34,7 +34,7 @@ export const sections: Array<{
   {
     id: 'experience',
     name: 'Experience',
-    categories: ['Troubleshooting'],
+    categories: ['Troubleshooting', 'Issue'],
   },
 ]
 
