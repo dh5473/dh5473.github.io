@@ -198,6 +198,9 @@ const MarkdownRenderer = styled.div`
     border-collapse: collapse;
     margin: 20px 0;
     font-size: 15px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   th,
@@ -205,6 +208,7 @@ const MarkdownRenderer = styled.div`
     padding: 10px 14px;
     border: 1px solid ${c.border};
     text-align: left;
+    word-break: keep-all;
   }
 
   th {
