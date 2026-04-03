@@ -33,6 +33,17 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
   }
 }
 
+// Define optional frontmatter fields for backward compatibility
+exports.createSchemaCustomization = ({ actions }) => {
+  const { createTypes } = actions
+  createTypes(`
+    type MarkdownRemarkFrontmatter {
+      keywords: [String]
+      dateModified: Date @dateformat
+    }
+  `)
+}
+
 // Generate Post Page Through Markdown Data
 exports.createPages = async ({ actions, graphql, reporter }) => {
   const { createPage } = actions

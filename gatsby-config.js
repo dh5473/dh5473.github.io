@@ -11,8 +11,16 @@ module.exports = {
   siteMetadata: {
     title: `dontech`,
     description: `Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그`,
-    author: `Donhyeok`,
+    author: `Donhyeok Kang`,
     siteUrl: `https://donmain.dev/`,
+    authorSocial: {
+      github: `https://github.com/dh5473`,
+    },
+    logo: `/favicon.svg`,
+    ogDefaultImage: {
+      width: 1200,
+      height: 630,
+    },
   },
   plugins: [
     // Google Analytics 4
@@ -233,6 +241,8 @@ module.exports = {
                 url: site.siteMetadata.siteUrl + node.fields.slug,
                 guid: site.siteMetadata.siteUrl + node.fields.slug,
                 categories: [node.frontmatter.category],
+                author: 'Donhyeok Kang',
+                custom_elements: [{ 'content:encoded': node.html }],
               }))
             },
             query: `
@@ -241,6 +251,7 @@ module.exports = {
                   sort: { frontmatter: { date: DESC } }
                 ) {
                   nodes {
+                    html
                     fields { slug }
                     frontmatter {
                       title
