@@ -14,6 +14,8 @@ type StructuredDataProps = {
   category?: string
   wordCount?: number
   keywords?: string[]
+  authorSocial?: { github: string }
+  logo?: string
 }
 
 const StructuredData: FunctionComponent<StructuredDataProps> = function ({
@@ -23,30 +25,52 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
   url,
   image,
   siteUrl,
-  author = 'Donhyeok',
+  author = 'Donhyeok Kang',
   datePublished,
   dateModified,
   category,
   wordCount,
   keywords,
+  authorSocial,
+  logo,
 }) {
   const baseUrl = siteUrl.replace(/\/$/, '')
+
+  const authorObject = {
+    '@type': 'Person' as const,
+    name: author,
+    url: `${baseUrl}/`,
+    ...(authorSocial
+      ? {
+          sameAs: [authorSocial.github].filter(Boolean),
+        }
+      : {}),
+  }
+
+  const publisherObject = {
+    '@type': 'Organization' as const,
+    name: 'dontech',
+    url: `${baseUrl}/`,
+    ...(logo
+      ? {
+          logo: {
+            '@type': 'ImageObject' as const,
+            url: `${baseUrl}${logo}`,
+          },
+        }
+      : {}),
+  }
 
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'dontech',
-    description: 'Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그',
+    description:
+      'Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그',
     url: `${baseUrl}/`,
     inLanguage: 'ko',
-    author: {
-      '@type': 'Person',
-      name: 'Donhyeok',
-    },
-    publisher: {
-      '@type': 'Person',
-      name: 'Donhyeok',
-    },
+    author: authorObject,
+    publisher: publisherObject,
   }
 
   const articleSchema = {
@@ -59,21 +83,16 @@ const StructuredData: FunctionComponent<StructuredDataProps> = function ({
     inLanguage: 'ko',
     datePublished: datePublished,
     dateModified: dateModified || datePublished,
-    author: {
-      '@type': 'Person',
-      name: author,
-    },
-    publisher: {
-      '@type': 'Person',
-      name: author,
-    },
+    author: authorObject,
+    publisher: publisherObject,
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': url,
     },
     articleSection: category,
+    isAccessibleForFree: true,
     ...(wordCount ? { wordCount } : {}),
-    ...(keywords && keywords.length > 0 ? { keywords: keywords.join(', ') } : {}),
+    ...(keywords && keywords.length > 0 ? { keywords } : {}),
   }
 
   const breadcrumbSchema = {

@@ -16,6 +16,15 @@ type PostTemplateProps = {
         title: string
         description: string
         siteUrl: string
+        author: string
+        authorSocial: {
+          github: string
+        }
+        logo: string
+        ogDefaultImage: {
+          width: number
+          height: number
+        }
       }
     }
     allMarkdownRemark: {
@@ -34,9 +43,16 @@ type PostTemplateProps = {
             date: string
             rawDate: string
             category: string
+            series: string | null
+            keywords: string[] | null
+            dateModified: string | null
             thumbnail: {
               childImageSharp: {
                 gatsbyImageData: IGatsbyImageData
+                resize: {
+                  width: number
+                  height: number
+                } | null
               }
               publicURL: string
             } | null
@@ -59,7 +75,7 @@ type PostTemplateProps = {
 const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
   data: {
     site: {
-      siteMetadata: { title: siteTitle, siteUrl },
+      siteMetadata: { title: siteTitle, siteUrl, author, authorSocial, logo, ogDefaultImage },
     },
     allMarkdownRemark: { edges },
   },
@@ -69,7 +85,11 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     node: {
       html,
       fields: { slug },
-      frontmatter: { title, summary, date, rawDate, category, thumbnail },
+      frontmatter: {
+        title, summary, date, rawDate, category, series,
+        keywords: frontmatterKeywords, dateModified: frontmatterDateModified,
+        thumbnail,
+      },
       wordCount: { words },
     },
   } = edges[0]
@@ -83,6 +103,14 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
   const absoluteImage = publicURL
     ? `${baseUrl}${publicURL}`
     : `${baseUrl}/hero-image.jpg`
+
+  const derivedKeywords: string[] =
+    frontmatterKeywords && frontmatterKeywords.length > 0
+      ? frontmatterKeywords
+      : [category, series].filter(Boolean) as string[]
+  const resolvedDateModified = frontmatterDateModified || rawDate
+  const ogImageWidth = thumbnail?.childImageSharp?.resize?.width ?? ogDefaultImage.width
+  const ogImageHeight = thumbnail?.childImageSharp?.resize?.height ?? ogDefaultImage.height
 
   const seriesMeta = seriesId ? seriesMetadata[seriesId] : undefined
   const hasSeriesNav = !!(
@@ -100,9 +128,16 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       image={absoluteImage}
       siteUrl={siteUrl}
       type="article"
+      author={author}
       datePublished={rawDate}
+      dateModified={resolvedDateModified}
       category={category}
       wordCount={words}
+      keywords={derivedKeywords}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
+      authorSocial={authorSocial}
+      logo={logo}
     >
       <PostHead
         title={title}
@@ -144,6 +179,15 @@ export const queryMarkdownDataBySlug = graphql`
         title
         description
         siteUrl
+        author
+        authorSocial {
+          github
+        }
+        logo
+        ogDefaultImage {
+          width
+          height
+        }
       }
     }
     allMarkdownRemark(filter: { fields: { slug: { eq: $slug } } }) {
@@ -162,9 +206,16 @@ export const queryMarkdownDataBySlug = graphql`
             date(formatString: "YYYY.MM.DD.")
             rawDate: date
             category
+            series
+            keywords
+            dateModified
             thumbnail {
               childImageSharp {
                 gatsbyImageData
+                resize(width: 1200) {
+                  width
+                  height
+                }
               }
               publicURL
             }
