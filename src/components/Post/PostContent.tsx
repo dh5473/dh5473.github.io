@@ -100,7 +100,7 @@ const MarkdownRenderer = styled.div`
     font-size: 16px;
     background: var(--code-bg) !important;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
     position: relative;
 
     ::-webkit-scrollbar {
