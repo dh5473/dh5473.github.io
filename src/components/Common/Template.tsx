@@ -19,6 +19,10 @@ type TemplateProps = {
   category?: string
   wordCount?: number
   keywords?: string[]
+  ogImageWidth?: number
+  ogImageHeight?: number
+  authorSocial?: { github: string }
+  logo?: string
 }
 
 const Container = styled.main`
@@ -35,12 +39,16 @@ const Template: FunctionComponent<TemplateProps> = function ({
   siteUrl,
   children,
   type = 'website',
-  author = 'Donhyeok',
+  author = 'Donhyeok Kang',
   datePublished,
   dateModified,
   category,
   wordCount,
   keywords,
+  ogImageWidth,
+  ogImageHeight,
+  authorSocial,
+  logo,
 }) {
   return (
     <Container>
@@ -58,9 +66,33 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
+        {ogImageWidth && (
+          <meta property="og:image:width" content={String(ogImageWidth)} />
+        )}
+        {ogImageHeight && (
+          <meta property="og:image:height" content={String(ogImageHeight)} />
+        )}
+        <meta property="og:image:alt" content={title} />
         <meta property="og:url" content={url} />
         <meta property="og:site_name" content="dontech" />
         <meta property="og:locale" content="ko_KR" />
+
+        {type === 'article' && datePublished && (
+          <meta property="article:published_time" content={datePublished} />
+        )}
+        {type === 'article' && dateModified && (
+          <meta property="article:modified_time" content={dateModified} />
+        )}
+        {type === 'article' && author && (
+          <meta property="article:author" content={author} />
+        )}
+        {type === 'article' && category && (
+          <meta property="article:section" content={category} />
+        )}
+
+        {keywords && keywords.length > 0 && (
+          <meta name="keywords" content={keywords.join(', ')} />
+        )}
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
@@ -93,6 +125,8 @@ const Template: FunctionComponent<TemplateProps> = function ({
         category={category}
         wordCount={wordCount}
         keywords={keywords}
+        authorSocial={authorSocial}
+        logo={logo}
       />
 
       <GlobalStyle />
