@@ -126,7 +126,7 @@ A/B 테스트의 지표는 세 종류로 나뉜다.
 
 $$n = \left(\frac{z_{\alpha/2} + z_{\beta}}{\delta}\right)^2 \cdot \left[\bar{p}(1 - \bar{p}) \cdot 2\right]$$
 
-여기서 $\bar{p} = (p_A + p_B) / 2$는 통합 비율, $\delta = p_B - p_A$는 MDE다.
+여기서 $\bar{p} = (p_A + p_B) / 2$는 통합 비율, $\delta = p_B - p_A$는 MDE다. 이 공식은 $H_0$과 $H_1$ 하의 분산을 동일하게 $\bar{p}(1-\bar{p})$로 놓은 **근사 공식**이다. MDE가 작을 때는 정밀 공식과 거의 차이가 없어 실무에서 널리 사용된다.
 
 ### Python으로 검정력 분석
 
