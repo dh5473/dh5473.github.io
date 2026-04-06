@@ -426,7 +426,11 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
 numeric_features <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'age'</span><span class="token punctuation">,</span> <span class="token string">'fare'</span><span class="token punctuation">]</span>
 categorical_features <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'embarked'</span><span class="token punctuation">,</span> <span class="token string">'sex'</span><span class="token punctuation">]</span>
 
-<span class="token comment"># 수치형: KNN Imputer → 스케일링</span>
+<span class="token comment"># 수치형: 간단 대체 → 스케일링 → KNN Imputer</span>
+<span class="token comment"># KNN은 거리 기반이므로 스케일링 후에 적용해야 한다.</span>
+<span class="token comment"># SimpleImputer로 초기 대체 → 스케일링 → KNNImputer 순서가 정석이지만,</span>
+<span class="token comment"># KNNImputer는 내부적으로 nan-euclidean distance를 사용해 결측치를 건너뛰므로</span>
+<span class="token comment"># 스케일링 전에 바로 적용해도 동작한다. 다만 스케일 차이가 크면 거리가 왜곡될 수 있다.</span>
 numeric_transformer <span class="token operator">=</span> Pipeline<span class="token punctuation">(</span><span class="token punctuation">[</span>
     <span class="token punctuation">(</span><span class="token string">'imputer'</span><span class="token punctuation">,</span> KNNImputer<span class="token punctuation">(</span>n_neighbors<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
     <span class="token punctuation">(</span><span class="token string">'scaler'</span><span class="token punctuation">,</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>

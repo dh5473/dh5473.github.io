@@ -212,14 +212,14 @@ p_value <span class="token operator">=</span> <span class="token number">2</span
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span></span>를 설정한다는 것은 곧 <strong>틀릴 가능성을 감수한다</strong>는 뜻이다. 가설검정이 이분법적 결정인 이상, 두 가지 종류의 오류는 피할 수 없다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">                              실제 상태
                      ┌──────────────┬──────────────┐
-                     │  H₀ 참       │  H₁ 참       │
-         ┌───────────┼──────────────┼──────────────┤
-  검정   │ H₀ 기각   │ 1종 오류(α)  │ ✅ 올바른 기각│
-  결과   │ 안 함     │  (False +)   │   (Power)    │
-         ├───────────┼──────────────┼──────────────┤
-         │ H₀ 기각   │ ✅ 올바른    │ 2종 오류(β)  │
-         │ 안 함     │   판단       │  (False -)   │
-         └───────────┴──────────────┴──────────────┘</code></pre></div>
+                     │  H₀ 참        │  H₁ 참        │
+         ┌───────────┼───────────────┼───────────────┤
+  검정   │ H₀ 기각   │ 1종 오류(α)   │ ✅ 올바른 기각 │
+  결과   │           │  (False +)    │   (Power)     │
+         ├───────────┼───────────────┼───────────────┤
+         │ H₀ 기각   │ ✅ 올바른     │ 2종 오류(β)   │
+         │ 안 함     │   판단        │  (False -)    │
+         └───────────┴───────────────┴───────────────┘</code></pre></div>
 <p>위 ASCII 도표를 좀 더 명확하게 정리하면 다음과 같다.</p>
 <table>
 <thead>

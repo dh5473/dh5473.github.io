@@ -91,7 +91,7 @@ best_k <span class="token operator">=</span> k_range<span class="token punctuati
 <p>일반적으로 K가 작을 때는 과적합으로 정확도가 불안정하고, K가 커지면서 안정되다가, 너무 커지면 다시 떨어진다. 교차 검증(Cross-Validation)으로 최적 K를 찾는 것이 정석이다.</p>
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ K는 홀수로 설정하자</strong><br>
-  이진 분류에서 K가 짝수면 동점(tie)이 발생할 수 있다. K=4일 때 클래스 A 2개, 클래스 B 2개가 나오면 결정할 수 없다. 홀수로 설정하면 동점을 원천적으로 방지한다.
+  이진 분류에서 K가 짝수면 동점(tie)이 발생할 수 있다. K=4일 때 클래스 A 2개, 클래스 B 2개가 나오면 결정할 수 없다. 홀수로 설정하면 이진 분류에서는 동점을 원천적으로 방지한다. 다만 3개 이상의 클래스를 분류할 때는 홀수 K로도 동점이 발생할 수 있다 (예: 3클래스, K=3일 때 각 클래스 1표).
 </div>
 <hr>
 <h2>피처 스케일링이 필수인 이유</h2>
