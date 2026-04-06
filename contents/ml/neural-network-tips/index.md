@@ -170,7 +170,7 @@ Epoch 2: 2번째 층 입력 분포 → 평균 -1.2, 분산 0.3
 Epoch 3: 2번째 층 입력 분포 → 평균 3.7, 분산 8.1
 ```
 
-이러면 각 층이 매번 변하는 입력 분포에 적응하느라 학습이 느려진다. 이 현상을 **Internal Covariate Shift**라 한다. 2015년 Ioffe & Szegedy가 이 문제를 해결하기 위해 Batch Normalization(BatchNorm)을 제안했다.
+이러면 각 층이 매번 변하는 입력 분포에 적응하느라 학습이 느려진다. 이 현상을 **Internal Covariate Shift**라 한다. 2015년 Ioffe & Szegedy가 이 문제를 해결하기 위해 Batch Normalization(BatchNorm)을 제안했다. 다만 이후 연구(Santurkar et al., 2018)에서는 BatchNorm의 실제 효과가 ICS 해결이 아니라 **loss landscape를 부드럽게 만들어** 학습을 안정시키는 것이라는 반론이 제기되었다. 정확한 작동 원리에 대해서는 아직 논의가 진행 중이지만, BatchNorm이 학습을 크게 개선한다는 사실 자체는 확고하다.
 
 ### 핵심 아이디어
 

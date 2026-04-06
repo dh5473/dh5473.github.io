@@ -339,7 +339,11 @@ print(f"\n혼동 행렬:\n{confusion_matrix(y_test, y_pred)}")
 - **FP (False Positive)**: 실제 악성인데 양성으로 잘못 예측 → 2개
 - **FN (False Negative)**: 실제 양성인데 악성으로 잘못 예측 → 1개
 
-97%라는 높은 정확도에도 3건의 오류가 존재한다. 이 오류 유형을 더 체계적으로 분석하는 방법은 [분류 모델 평가 지표 글](/ml/classification-metrics/)에서 Precision, Recall, F1-Score로 상세히 다룬다. 여기서 가장 위험한 건 **FP=2** — 실제로 악성 종양인데 양성으로 오진한 사례다. 암을 놓치는 것이므로 의료 진단에서 치명적이다. 반면 FN=1은 양성 종양을 악성으로 잘못 판단한 것으로, 불필요한 추가 검사로 이어지지만 생명에 직결되지는 않는다. 이런 오류 유형 간 균형은 threshold 조정으로 바꿀 수 있는데, "흔한 실수" 섹션에서 다시 다룬다.
+97%라는 높은 정확도에도 3건의 오류가 존재한다. 이 오류 유형을 더 체계적으로 분석하는 방법은 [분류 모델 평가 지표 글](/ml/classification-metrics/)에서 Precision, Recall, F1-Score로 상세히 다룬다.
+
+> **Positive 정의에 주의**: sklearn의 `load_breast_cancer`에서는 1=benign(양성, 정상), 0=malignant(악성, 암)이다. 즉 여기서 Positive는 "정상"이고, 의료 도메인에서 흔히 쓰는 "Positive=질병"과 **반대**다. 아래 해석은 이 데이터셋의 정의를 따른다.
+
+여기서 가장 위험한 건 **FP=2** — 실제로 악성 종양인데 양성으로 오진한 사례다. 암을 놓치는 것이므로 의료 진단에서 치명적이다. 반면 FN=1은 양성 종양을 악성으로 잘못 판단한 것으로, 불필요한 추가 검사로 이어지지만 생명에 직결되지는 않는다. 이런 오류 유형 간 균형은 threshold 조정으로 바꿀 수 있는데, "흔한 실수" 섹션에서 다시 다룬다.
 
 <div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>✅ C 파라미터</strong><br>

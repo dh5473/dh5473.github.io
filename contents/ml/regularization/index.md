@@ -142,6 +142,8 @@ print(f"w = {np.round(w, 4)}")  # [0.7818, 0.5918, 0.1767]
 
 규제 없는 버전의 가중치 `[0.856, 0.645, 0.178]`과 비교하면, 모든 가중치가 조금씩 줄었다. 특히 가장 큰 가중치인 면적(w₁)이 0.856에서 0.782로 줄어든 게 보인다. λ를 키울수록 더 강하게 줄어든다.
 
+> 아래 sklearn Ridge의 결과(`[0.8169, 0.6173, 0.1775]`)와 위 직접 구현의 결과가 다른 이유: sklearn은 비용함수를 `(1/2n) × Σ(error²) + alpha/2 × Σ(w²)` 형태로 정의하고, 여기서는 `(1/n) × Σ(error²) + lam × Σ(w²)`을 썼기 때문이다. `lam=0.1`과 `alpha=1.0`은 규제 스케일이 다르므로 가중치도 다르게 나온다.
+
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ b는 왜 규제하지 않을까?</strong><br>
   편향(b)은 입력 변수와 무관하게 출력을 일정하게 올리거나 내리는 역할이다. b를 규제하면 데이터의 평균적인 수준을 잡아내는 능력을 억제하게 되어 오히려 성능이 나빠진다. 규제의 목적은 <strong>특성 간 관계의 복잡도</strong>를 줄이는 것이지, 출력의 전체 수준을 낮추는 게 아니다.
@@ -244,11 +246,12 @@ for alpha in [0.01, 0.1, 0.5, 1.0]:
 Ridge의 안정성과 Lasso의 변수 선택을 동시에 원한다면? ElasticNet이 두 패널티를 결합한다.
 
 ```
-J(w, b) = MSE + α × [ρ × Σ|wⱼ| + (1-ρ)/2 × Σwⱼ²]
+J(w, b) = MSE + α × [ρ × Σ|wⱼ| + (1-ρ)/2 × Σwⱼ²]    ← sklearn 정의를 따른 수식
 ```
 
 - `α` (alpha): 전체 규제 강도
 - `ρ` (l1_ratio): L1과 L2의 비율 (1이면 Lasso, 0이면 Ridge)
+- L2 항에만 `1/2`이 붙는 이유: sklearn의 구현 관습이다. 미분 시 2와 상쇄되어 gradient가 깔끔해진다
 
 ```python
 from sklearn.linear_model import ElasticNet

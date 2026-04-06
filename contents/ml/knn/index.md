@@ -130,7 +130,7 @@ print(f"최적 K: {best_k}, 정확도: {max(scores):.4f}")
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ K는 홀수로 설정하자</strong><br>
-  이진 분류에서 K가 짝수면 동점(tie)이 발생할 수 있다. K=4일 때 클래스 A 2개, 클래스 B 2개가 나오면 결정할 수 없다. 홀수로 설정하면 동점을 원천적으로 방지한다.
+  이진 분류에서 K가 짝수면 동점(tie)이 발생할 수 있다. K=4일 때 클래스 A 2개, 클래스 B 2개가 나오면 결정할 수 없다. 홀수로 설정하면 이진 분류에서는 동점을 원천적으로 방지한다. 다만 3개 이상의 클래스를 분류할 때는 홀수 K로도 동점이 발생할 수 있다 (예: 3클래스, K=3일 때 각 클래스 1표).
 </div>
 
 ---
