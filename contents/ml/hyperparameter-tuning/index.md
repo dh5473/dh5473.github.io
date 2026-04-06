@@ -316,7 +316,6 @@ def objective(trial):
         **params,
         tree_method='hist',
         random_state=42,
-        use_label_encoder=False,
         eval_metric='logloss'
     )
 

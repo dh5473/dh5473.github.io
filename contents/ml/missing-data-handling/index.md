@@ -591,7 +591,11 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 numeric_features = ['age', 'fare']
 categorical_features = ['embarked', 'sex']
 
-# 수치형: KNN Imputer → 스케일링
+# 수치형: 간단 대체 → 스케일링 → KNN Imputer
+# KNN은 거리 기반이므로 스케일링 후에 적용해야 한다.
+# SimpleImputer로 초기 대체 → 스케일링 → KNNImputer 순서가 정석이지만,
+# KNNImputer는 내부적으로 nan-euclidean distance를 사용해 결측치를 건너뛰므로
+# 스케일링 전에 바로 적용해도 동작한다. 다만 스케일 차이가 크면 거리가 왜곡될 수 있다.
 numeric_transformer = Pipeline([
     ('imputer', KNNImputer(n_neighbors=5)),
     ('scaler', StandardScaler())

@@ -207,7 +207,7 @@ model = lgb.LGBMClassifier(
 
 | 항목 | XGBoost | LightGBM |
 |------|---------|----------|
-| 트리 성장 | Level-wise (깊이 우선) | Leaf-wise (손실 우선) |
+| 트리 성장 | Level-wise (레벨 단위) | Leaf-wise (손실 우선) |
 | 기본 분할 방법 | 히스토그램 (`hist`, v2.0+) | 히스토그램 (처음부터) |
 | 데이터 샘플링 | `subsample` | GOSS + `bagging_fraction` |
 | 특성 최적화 | — | EFB (배타적 특성 번들링) |
@@ -217,7 +217,7 @@ model = lgb.LGBMClassifier(
 | 학습 속도 | 보통 | 빠름 (~2-10배) |
 | 메모리 사용 | 높음 | 낮음 (40-60% 적음) |
 | 과적합 위험 | 상대적으로 낮음 | Leaf-wise로 인해 높음 |
-| 정규화 | 목적함수 내장 (γ, λ, α) | 외부 파라미터 (`lambda_l1`/`l2`) |
+| 정규화 | 목적함수 내장 (γ, λ, α) | 목적함수 내장 (`lambda_l1`/`l2`) |
 
 ---
 

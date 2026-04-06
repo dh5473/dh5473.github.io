@@ -374,7 +374,7 @@ lim_{B->inf} Var(T_bar) = rho * sigma^2
 
 ## 흔한 실수
 
-### 1. 개별 모델이 약해야 한다는 사실을 모른다
+### 1. 개별 모델의 분산이 높아야 효과가 있다는 사실을 모른다
 
 ```python
 from sklearn.ensemble import BaggingClassifier
