@@ -1,9 +1,7 @@
 ---
 date: '2026-04-07'
 title: 'FastAPI 422? 라우팅 순서부터 확인하기'
-category: 'FastAPI'
-series: 'fastapi'
-seriesOrder: 5
+category: 'Troubleshooting'
 tags: ['FastAPI', 'Routing', 'Path Parameter', 'Starlette', 'Python']
 summary: 'FastAPI는 라우트를 위에서 아래로 매칭한다. path parameter가 고정 경로를 삼키는 문제, {id}와 {id:int}의 결정적 차이, 405와 422 에러의 원인까지 실전 라우팅 함정을 총정리한다.'
 thumbnail: './fastapi-logo.png'
