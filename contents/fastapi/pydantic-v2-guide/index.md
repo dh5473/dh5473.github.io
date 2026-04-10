@@ -537,7 +537,7 @@ users = users_adapter.validate_json(json_str)
 | `.parse_obj(data)` | `.model_validate(data)` | 메서드명 변경 |
 | `.parse_raw(json_str)` | `.model_validate_json(json_str)` | 메서드명 변경 |
 | `@validator` | `@field_validator` | `@classmethod` 필수 |
-| `@root_validator` | `@model_validator` | before/after mode |
+| `@root_validator` | `@model_validator` | 이름 변경 + `pre=True/False` → `mode="before"/"after"` |
 | `from pydantic import BaseSettings` | `from pydantic_settings import BaseSettings` | 별도 패키지 분리 |
 | `schema_extra` | `json_schema_extra` | JSON Schema 커스터마이징 |
 | `orm_mode = True` | `from_attributes = True` | ORM 객체 → 모델 변환 |

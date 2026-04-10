@@ -3,7 +3,7 @@ date: '2026-04-07'
 title: 'FastAPI 422? 라우팅 순서부터 확인하기'
 category: 'Troubleshooting'
 tags: ['FastAPI', 'Routing', 'Path Parameter', 'Starlette', 'Python']
-summary: 'FastAPI는 라우트를 위에서 아래로 매칭한다. path parameter가 고정 경로를 삼키는 문제, {id}와 {id:int}의 결정적 차이, 405와 422 에러의 원인까지 실전 라우팅 함정을 총정리한다.'
+summary: 'FastAPI는 라우트를 위에서 아래로 매칭한다. path parameter가 고정 경로를 삼키는 문제, {id}와 {id:int}의 결정적 차이, 404·405·422 에러의 원인까지 실전 라우팅 함정을 총정리한다.'
 thumbnail: './fastapi-logo.png'
 ---
 
@@ -175,17 +175,19 @@ async def get_session(session_id: int):
 # 프론트엔드가 보낸 요청 (쿼리 매개변수)
 $ curl http://localhost:8000/sessions?session_id=6
 
-# 결과: 405 Method Not Allowed
+# 결과: 404 Not Found
 ```
 
-왜 405가 뜰까요? 프론트엔드가 보낸 URL은 `/sessions?session_id=6`이지만, 정의된 라우트는 `/sessions/{session_id}`입니다. 이 둘은 **완전히 다른 경로**입니다.
+왜 404가 뜰까요? 프론트엔드가 보낸 URL은 `/sessions?session_id=6`이지만, 정의된 라우트는 `/sessions/{session_id}`입니다. 이 둘은 **완전히 다른 경로**입니다.
 
 | 방식 | URL 형태 | FastAPI 정의 |
 |------|----------|-------------|
 | **경로** 매개변수 | `/sessions/6` | `@app.get("/sessions/{session_id}")` |
 | **쿼리** 매개변수 | `/sessions?session_id=6` | `@app.get("/sessions")` + 함수 파라미터 |
 
-`/sessions?session_id=6`은 경로 부분이 `/sessions`입니다. `/sessions/{session_id}` 패턴과 매칭하려면 `/sessions/` 다음에 값이 있어야 하는데 없으니까 매칭이 안 됩니다. 만약 다른 HTTP 메서드(예: POST)로 `/sessions`가 정의되어 있다면 경로는 매칭되지만 메서드가 달라서 405가 뜨고, 아무것도 없으면 404가 됩니다.
+`/sessions?session_id=6`은 경로 부분이 `/sessions`입니다. `/sessions/{session_id}` 패턴과 매칭하려면 `/sessions/` 다음에 값이 있어야 하는데 없으니까 매칭 자체가 실패합니다. 등록된 라우트가 위 예시처럼 `/sessions/{session_id}` 하나뿐이라면 결과는 **404**입니다.
+
+한편 405는 조금 다른 상황에서 나옵니다. 만약 다른 HTTP 메서드(예: `POST /sessions`)로 이미 `/sessions` 경로가 등록되어 있다면, 경로는 매칭되지만 메서드가 달라 **405 Method Not Allowed**가 반환됩니다. 즉, 404는 "경로 자체가 없음", 405는 "경로는 있는데 메서드가 없음"이라는 신호입니다.
 
 ### 해결: 요청 형태에 맞는 정의
 
