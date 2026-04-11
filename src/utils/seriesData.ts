@@ -38,4 +38,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: '데이터 파이프라인 운영에서 쌓은 Airflow 실전 경험',
     color: '#017cee',
   },
+  'postgres': {
+    title: 'PostgreSQL',
+    description: '내부 구조부터 실전 DBA까지, 쿼리가 느린 이유를 원리로 설명',
+    color: '#336791',
+  },
 }
