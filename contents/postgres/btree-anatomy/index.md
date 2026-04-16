@@ -1,6 +1,6 @@
 ---
-date: '2026-04-14'
-title: 'PostgreSQL B-tree 인덱스의 해부학'
+date: '2026-04-16'
+title: 'PostgreSQL B-tree 인덱스 뜯어보기'
 category: 'Database'
 series: 'postgres'
 seriesOrder: 4
