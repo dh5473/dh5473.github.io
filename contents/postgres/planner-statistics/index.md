@@ -36,6 +36,8 @@ cost를 만드는 데 쓰이는 주요 파라미터는 네 개뿐입니다.
 
 `random_page_cost`가 `seq_page_cost`보다 4배 비싸다는 설정은 HDD 시절의 유산입니다. SSD 환경에서는 이 차이가 거의 없어서 4.0을 그대로 두면 플래너가 인덱스를 지나치게 기피합니다. 요즘 운영 환경은 대부분 `random_page_cost`를 1.1~1.5 정도로 내려서 씁니다.
 
+그런데 이 cost 공식 자체는 단순해 보여도, 여기서 `rows` 자리에 들어갈 숫자를 어떻게 구하는지가 진짜 핵심입니다. 플래너가 "몇 행이 남을 것"이라고 추정하는 근거가 다음 절의 주제입니다.
+
 ## pg_statistic: cost의 원료
 
 cost를 계산하려면 "조건을 걸었을 때 몇 행이 남는가"를 먼저 알아야 합니다. 이걸 **selectivity**라 부릅니다. 플래너는 실제 테이블을 읽지 않고 `pg_statistic`에 저장된 표본 기반 통계로 selectivity를 추정합니다.
@@ -46,7 +48,7 @@ cost를 계산하려면 "조건을 걸었을 때 몇 행이 남는가"를 먼저
 - **MCV**(most_common_vals): 가장 자주 나오는 값 상위 100개(기본)와 각 값의 빈도.
 - **histogram**: MCV에 뽑히지 않은 나머지 값을 같은 개수 구간으로 나눈 경계선들.
 
-조건이 MCV 안에 들어 있으면 그 값의 빈도를 바로 쓰고, MCV 밖이면 histogram bucket 위치로 비율을 추정하는 식입니다.
+등치 조건(`=`)이 MCV 안에 들어 있으면 그 값의 빈도를 바로 씁니다. MCV 밖이면 "MCV에 포함되지 않은 나머지 비율"을 전체 고유값 수로 나눠 추정합니다. 범위 조건(`>`, `<`, `BETWEEN`)은 histogram 경계선을 따라 어느 위치까지 포함되는지를 보간해 비율을 계산합니다. MCV는 주로 카디널리티 낮은 범주형에서 위력을 발휘하고, histogram은 연속형 숫자·날짜 범위 조건을 받쳐주는 역할입니다.
 
 말로만 보면 잘 와닿지 않으니 직접 뜯어봅니다.
 
@@ -57,7 +59,7 @@ CREATE TABLE orders (
     amount numeric
 );
 
--- 대부분 completed, 일부 pending, 극소수 refunded
+-- 약 85% completed, 약 15% pending, 극소수 refunded
 INSERT INTO orders (status, amount)
 SELECT
     CASE
@@ -121,7 +123,7 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 
 `actual time=0.013..8.421`의 앞 숫자는 첫 행이 나오기까지 걸린 시간, 뒷 숫자는 마지막 행까지 걸린 시간(ms)입니다. `rows=49872`는 실제로 반환된 행 수, `loops=1`은 이 노드가 한 번만 실행됐다는 뜻입니다.
 
-추정치 50123 vs 실제 49872. 오차는 0.5% 수준입니다. 이 정도면 건강한 추정입니다.
+추정치 50123 vs 실제 49872. 오차는 0.5% 수준입니다. 이 정도면 추정이 잘 맞은 편입니다.
 
 버퍼 캐시 상황까지 보려면 `BUFFERS`를 추가합니다.
 
@@ -139,9 +141,9 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE amount > 500;
 
 `read` 값이 크면 워밍업이 안 된 상태거나 `shared_buffers`가 작은 것입니다. "EXPLAIN만 봤을 땐 빨라 보였는데 실제로는 느리다"는 상황은 거의 이 `read` 값 때문입니다.
 
-## JOIN이 섞이면 이렇게 읽습니다
+## JOIN이 섞인 plan 읽는 법
 
-`orders` 옆에 `users`를 붙여 조인해봅니다.
+단일 테이블 plan을 읽었으니 JOIN이 추가됐을 때 출력이 어떻게 달라지는지 이어서 봅니다. `orders` 옆에 `users`를 붙여 조인해봅니다.
 
 ```sql
 CREATE TABLE users (
@@ -183,9 +185,9 @@ plan 트리를 읽는 규칙은 두 가지입니다.
 - **안쪽(들여쓰기 깊은 노드)이 먼저 실행됩니다.** 바깥 노드는 안쪽의 출력을 입력으로 받습니다.
 - **`loops`는 바깥 노드가 이 노드를 몇 번 호출했는지**입니다. Nested Loop에서 안쪽 노드의 실제 비용은 `actual time × loops`로 대략 계산합니다.
 
-여기서는 `users`에서 1행(id=42)을 뽑고, 그 1행마다 `orders` 인덱스를 한 번 타서 9행을 가져온 것입니다. 추정 10행 vs 실제 9행, 이쪽도 건강한 편입니다.
+여기서는 `users`에서 1행(id=42)을 뽑고, 그 1행마다 `orders` 인덱스를 한 번 타서 9행을 가져온 것입니다. 추정 10행 vs 실제 9행, 이쪽도 추정이 잘 맞았습니다.
 
-플래너가 Nested Loop를 고른 이유는 바깥이 1행으로 줄어들 것임을 `users_pkey` 통계로 알았기 때문입니다. 바깥이 만 행이었다면 Hash Join이 이깁니다. 이 선택 과정은 다음 글에서 다룹니다.
+플래너가 Nested Loop를 고른 이유는 바깥이 1행으로 줄어들 것임을 `users_pkey` 통계로 알았기 때문입니다. 바깥이 만 행 규모였다면 Nested Loop의 cost가 선형으로 불어나면서 Hash Join이나 Merge Join이 유리한 지점으로 넘어갑니다. 이 선택 과정은 다음 글에서 다룹니다.
 
 ## 추정치가 틀어질 때
 
@@ -201,7 +203,7 @@ FROM pg_stat_user_tables
 WHERE relname = 'orders';
 ```
 
-`last_autoanalyze`가 며칠 전이고 그 사이에 대량 INSERT/UPDATE가 있었다면, 수동으로 `ANALYZE orders;`부터 돌려봅니다. 이 한 줄로 plan이 정상으로 돌아오는 경우가 많습니다.
+`last_autoanalyze`가 며칠 전이고 그 사이에 대량 INSERT/UPDATE가 있었다면, 수동으로 `ANALYZE orders;`부터 돌려봅니다. 이 한 줄로 plan이 정상으로 돌아오는 경우가 많습니다. 도입부에서 언급한 "어제는 Index Scan, 오늘은 Seq Scan" 같은 상황이 설명되는 지점이 여기입니다. 코드도 스키마도 그대로인데 중간에 autoanalyze가 돌면서 MCV나 histogram이 바뀌면, 같은 WHERE 절이라도 selectivity 추정이 달라져 plan이 뒤집힙니다.
 
 ### 2. 상관된 두 컬럼
 
