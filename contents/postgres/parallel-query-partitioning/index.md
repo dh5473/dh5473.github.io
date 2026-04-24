@@ -193,7 +193,7 @@ SELECT COUNT(*) FROM logs WHERE created_at >= '2026-04-15';
 
 3, 4, 5월 세 파티션 중 `logs_2026_03`이 plan에서 제외됐습니다. 플래너가 "3월 파티션은 `< 2026-04-01`이니 `>= 2026-04-15` 조건과 겹치지 않는다"고 판단한 결과입니다. 이게 **plan-time pruning**입니다.
 
-PG 11부터는 **execution-time pruning**도 붙었습니다. 파라미터 바인딩되는 값이 실행 시점에 정해지는 prepared statement나 `EXISTS` 서브쿼리에서, 플래너가 미리 파티션을 확정할 수 없어도 실행 도중에 제외가 일어납니다. `EXPLAIN ANALYZE`에서 `Subplans Removed: N` 같은 라인으로 관찰할 수 있습니다.
+PG 11부터는 **execution-time pruning**도 붙었습니다. 파라미터 바인딩되는 값이 실행 시점에 정해지는 prepared statement나 `EXISTS` 서브쿼리에서, 플래너가 미리 파티션을 확정할 수 없어도 실행 도중에 제외가 일어납니다. `EXPLAIN ANALYZE`에서 제외된 파티션의 노드에 `never executed`가 표시되는 것으로 관찰할 수 있습니다(plan-time pruning은 해당 파티션이 plan에서 아예 빠지고, `Subplans Removed: N`으로 요약됩니다).
 
 ### Pruning이 안 되는 흔한 함정
 

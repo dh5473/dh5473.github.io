@@ -159,7 +159,7 @@ inner: [2, 3, 5, 8, 9]
         → (3,3), (5,5), (9,9)
 ```
 
-cost는 `sort_cost_outer + sort_cost_inner + merge_cost`입니다. 양쪽이 이미 B-tree 인덱스로 정렬돼 있거나 `ORDER BY`가 따라붙으면 Sort 비용이 0에 가까워지면서 경쟁력이 생기지만, 그런 상황이 아니면 Sort 비용 때문에 Hash Join에 밀리는 경우가 많습니다. 실전에서는 세 알고리즘 중 가장 적게 보이고, range JOIN 같은 특수 상황에서 쓰입니다. 일반적인 equality JOIN 튜닝에서는 Merge Join 자체를 크게 신경 쓸 일이 많지 않습니다.
+cost는 `sort_cost_outer + sort_cost_inner + merge_cost`입니다. 양쪽이 이미 B-tree 인덱스로 정렬돼 있거나 `ORDER BY`가 따라붙으면 Sort 비용이 0에 가까워지면서 경쟁력이 생기지만, 그런 상황이 아니면 Sort 비용 때문에 Hash Join에 밀리는 경우가 많습니다. 실전에서는 세 알고리즘 중 가장 적게 보이고, 양쪽 인덱스가 이미 정렬을 제공하거나 non-equality 조인(`a.val BETWEEN b.lo AND b.hi`) 같은 특수 상황에서 쓰입니다. 일반적인 equality JOIN 튜닝에서는 Merge Join 자체를 크게 신경 쓸 일이 많지 않습니다.
 
 ## 플래너는 어떻게 고르는가
 

@@ -59,16 +59,17 @@ CREATE TABLE orders (
     amount numeric
 );
 
--- 약 85% completed, 약 15% pending, 극소수 refunded
+-- 약 85% completed, 약 13% pending, 약 2% refunded
 INSERT INTO orders (status, amount)
 SELECT
     CASE
-        WHEN random() < 0.85 THEN 'completed'
-        WHEN random() < 0.98 THEN 'pending'
+        WHEN r < 0.85 THEN 'completed'
+        WHEN r < 0.98 THEN 'pending'
         ELSE 'refunded'
     END,
     (random() * 1000)::numeric(10, 2)
-FROM generate_series(1, 100000);
+FROM generate_series(1, 100000),
+     LATERAL (SELECT random() AS r) sub;
 
 ANALYZE orders;
 
@@ -80,12 +81,12 @@ WHERE tablename = 'orders' AND attname = 'status';
 ```
  attname | n_distinct |        most_common_vals         |    most_common_freqs
 ---------+------------+---------------------------------+--------------------------
- status  |          3 | {completed,pending,refunded}    | {0.849,0.1478,0.0032}
+ status  |          3 | {completed,pending,refunded}    | {0.8504,0.1296,0.02}
 ```
 
-고유값은 3개, 그중 `completed`가 약 85%를 차지한다는 사실이 숫자로 박혀 있습니다. 이 테이블에 `WHERE status = 'completed'`를 걸면 플래너는 "10만 행 중 8만 5천 행쯤 남겠다"고 추정합니다. 인덱스를 만들어둬도 이 쿼리는 Seq Scan이 이깁니다. 전체의 85%를 읽어야 하는 상황에서 인덱스 트리를 타고 다시 힙으로 가는 건 오히려 느립니다.
+고유값은 3개, 그중 `completed`가 약 85%를 차지한다는 사실이 숫자로 박혀 있습니다. 이 테이블에 `WHERE status = 'completed'`를 걸면 플래너는 "10만 행 중 8만 5천 행쯤 남겠다"고 추정합니다. 설령 `status`에 인덱스를 만들어둬도 이 쿼리는 Seq Scan이 이깁니다. 전체의 85%를 읽어야 하는 상황에서 인덱스 트리를 타고 다시 힙으로 가는 건 오히려 느립니다.
 
-반면 `WHERE status = 'refunded'`는 0.3%만 남으니 Index Scan이 훨씬 낫습니다. **같은 컬럼이어도 조건 값에 따라 plan이 달라지는 이유**가 이 통계에 있습니다.
+반면 `WHERE status = 'refunded'`는 2%만 남으니 Index Scan이 훨씬 낫습니다. **같은 컬럼이어도 조건 값에 따라 plan이 달라지는 이유**가 이 통계에 있습니다.
 
 ## EXPLAIN 출력 한 줄 해석하기
 
