@@ -70,7 +70,7 @@ const PostList: FunctionComponent<PostListProps> = function ({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedSection, selectedCategory])
+  }, [selectedSection, selectedCategory, posts])
 
   const filteredPosts = posts.filter(
     ({
