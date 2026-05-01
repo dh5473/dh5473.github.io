@@ -27,7 +27,7 @@ WAL의 핵심 규칙은 단순합니다.
 
 실제로 WAL record는 먼저 shared memory의 **WAL buffer**에 기록된 뒤, COMMIT 시점이나 walwriter에 의해 디스크(`pg_wal/`)로 flush됩니다. [아키텍처 글](/postgres/architecture-overview/)에서 봤던 shared memory 구성 요소 중 하나입니다.
 
-WAL이 없는 대안을 생각해보면 이 설계의 이유가 선명해집니다. 매번 COMMIT할 때마다 변경된 모든 data page를 디스크에 fsync하는 방식도 가능하지만, 수십 개 페이지에 흩어진 변경을 매 트랜잭션마다 random I/O로 쓰는 건 현실적으로 감당하기 어렵습니다. 반면 WAL은 **순차 쓰기(sequential write)**입니다. 변경 내용을 한 줄로 쭉 이어서 append하기 때문에 I/O 비용이 훨씬 낮습니다.
+WAL이 없는 대안을 생각해보면 이 설계의 이유가 선명해집니다. 매번 COMMIT할 때마다 변경된 모든 data page를 디스크에 fsync하는 방식도 가능하지만, 수십 개 페이지에 흩어진 변경을 매 트랜잭션마다 random I/O로 쓰는 건 현실적으로 감당하기 어렵습니다. 반면 WAL은 **순차 쓰기**(sequential write)입니다. 변경 내용을 한 줄로 쭉 이어서 append하기 때문에 I/O 비용이 훨씬 낮습니다.
 
 ## WAL record와 LSN
 
@@ -74,7 +74,7 @@ rmgr: Transaction len (rec/tot):    34/    34, tx:  736, lsn: 0/01A00180,
 
 ### LSN: WAL 내의 절대 위치
 
-**LSN(Log Sequence Number)**은 WAL 스트림 전체에서의 바이트 위치를 나타내는 64비트 값입니다. `0/01A00100`처럼 상위/하위 32비트를 슬래시로 구분해 표기합니다. 이 값 자체는 WAL의 시작점으로부터의 절대 바이트 오프셋이고, 어떤 세그먼트 파일의 몇 바이트 위치인지는 세그먼트 크기(기본 16MB)로 나누어 계산합니다.
+**LSN**(Log Sequence Number)은 WAL 스트림 전체에서의 바이트 위치를 나타내는 64비트 값입니다. `0/01A00100`처럼 상위/하위 32비트를 슬래시로 구분해 표기합니다. 이 값 자체는 WAL의 시작점으로부터의 절대 바이트 오프셋이고, 어떤 세그먼트 파일의 몇 바이트 위치인지는 세그먼트 크기(기본 16MB)로 나누어 계산합니다.
 
 LSN이 중요한 이유는 **모든 데이터 페이지가 자신의 마지막 변경 LSN을 기억하고 있기** 때문입니다. [힙 페이지 글](/postgres/heap-page-tuple/)에서 봤던 PageHeaderData의 `pd_lsn` 필드가 바로 이것입니다. crash recovery 시 WAL record의 LSN과 페이지의 `pd_lsn`을 비교해서, WAL record의 LSN이 더 크면 "이 변경은 아직 페이지에 반영 안 됐다"고 판단하고 redo를 적용합니다. 이미 반영된 변경은 건너뜁니다.
 
@@ -107,11 +107,11 @@ ls -la pg_wal/
 
 WAL의 write-ahead 원칙만으로는 한 가지 문제가 해결되지 않습니다. PostgreSQL은 8KB 페이지 단위로 데이터를 관리하지만, 대부분의 OS와 파일 시스템은 **512바이트 또는 4KB 섹터** 단위로 디스크에 씁니다. checkpointer가 8KB 페이지를 디스크에 쓰는 도중 crash가 발생하면, 앞 4KB는 새 내용이고 뒤 4KB는 옛 내용인 **torn page**가 만들어질 수 있습니다.
 
-이 상태에서 WAL redo를 적용하면 어떻게 될까요? WAL record는 "페이지의 offset X에 Y를 쓴다"는 식의 **차분(diff)** 정보입니다. 페이지 자체가 반쪽짜리로 깨져 있으면, 차분을 적용해도 올바른 결과가 나오지 않습니다.
+이 상태에서 WAL redo를 적용하면 어떻게 될까요? WAL record는 "페이지의 offset X에 Y를 쓴다"는 식의 **차분**(diff) 정보입니다. 페이지 자체가 반쪽짜리로 깨져 있으면, 차분을 적용해도 올바른 결과가 나오지 않습니다.
 
 ### FPW(Full Page Write)의 해결 방식
 
-PostgreSQL의 해결책은 **Full Page Write(FPW)**입니다. checkpoint 직후 특정 페이지가 처음으로 변경될 때, 차분만이 아니라 **페이지 전체 8KB 이미지를 WAL에 기록**합니다. 이 이미지를 **Full Page Image(FPI)** 또는 **backup block**이라고 부릅니다.
+PostgreSQL의 해결책은 **Full Page Write**(FPW)입니다. checkpoint 직후 특정 페이지가 처음으로 변경될 때, 차분만이 아니라 **페이지 전체 8KB 이미지를 WAL에 기록**합니다. 이 이미지를 **Full Page Image**(FPI) 또는 **backup block**이라고 부릅니다.
 
 ```
 checkpoint 발생
@@ -226,7 +226,7 @@ LOG:  checkpoint complete: wrote 12847 buffers (9.8%); 0 WAL file(s) added,
 6. 정상 운영 모드 전환
 ```
 
-3단계의 LSN 비교가 핵심입니다. 이 비교 덕분에 crash recovery는 **멱등(idempotent)**합니다. 같은 WAL을 두 번 적용해도 결과는 동일합니다. recovery 도중 다시 crash가 나더라도, 재시작하면 같은 과정이 반복되어 결국 올바른 상태에 도달합니다.
+3단계의 LSN 비교가 핵심입니다. 이 비교 덕분에 crash recovery는 **멱등**(idempotent)합니다. 같은 WAL을 두 번 적용해도 결과는 동일합니다. recovery 도중 다시 crash가 나더라도, 재시작하면 같은 과정이 반복되어 결국 올바른 상태에 도달합니다.
 
 FPW가 있으면 torn page도 문제되지 않습니다. FPI가 페이지 전체를 복원한 뒤 이후 record를 순서대로 적용하면 됩니다. 반대로 FPW 없이 torn page 위에 차분을 적용하면 결과가 비결정적이 되어 멱등성이 깨집니다. crash recovery의 멱등성은 LSN 비교와 FPW가 함께 만드는 것입니다.
 

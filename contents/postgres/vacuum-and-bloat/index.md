@@ -92,7 +92,7 @@ VACUUM은 세 단계로 동작합니다.
 
 ### 1단계: dead tuple TID 수집
 
-VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID(block 번호 + offset)**를 메모리에 수집합니다. 여기서 "dead"의 기준은 **현재 활성 중인 모든 snapshot에서 보이지 않는 튜플**입니다. 어떤 트랜잭션이든 하나라도 이 튜플을 볼 가능성이 있으면 아직 dead가 아닙니다.
+VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID**(block 번호 + offset)를 메모리에 수집합니다. 여기서 "dead"의 기준은 **현재 활성 중인 모든 snapshot에서 보이지 않는 튜플**입니다. 어떤 트랜잭션이든 하나라도 이 튜플을 볼 가능성이 있으면 아직 dead가 아닙니다.
 
 수집할 수 있는 TID 수의 상한은 `maintenance_work_mem`에 의해 결정됩니다. PG 17부터는 TID를 radix tree 기반의 TidStore에 저장해서 메모리 효율이 크게 개선되었고, 이전 버전에 있던 1GB 상한 제한도 제거되었습니다. 테이블이 매우 크면 이 한도를 넘겨서 여러 패스로 나뉩니다. 한 패스가 끝나면 2-3단계를 수행하고 다시 남은 구간을 스캔합니다.
 
@@ -106,8 +106,8 @@ PG 12부터는 dead tuple 수가 적을 때 인덱스 정리를 생략하는 최
 
 인덱스에서 참조가 사라졌으니, 이제 힙에서 dead tuple을 실제로 정리합니다. 튜플의 line pointer를 `LP_DEAD`에서 `LP_UNUSED`로 바꿔서 **새 INSERT가 그 자리를 재사용할 수 있게** 만듭니다. 그리고 두 가지 보조 구조를 갱신합니다.
 
-- **FSM(Free Space Map)**: 페이지별 여유 공간 정보를 갱신합니다. 새 INSERT가 들어올 때 여유 공간이 있는 페이지를 빨리 찾기 위한 맵입니다
-- **VM(Visibility Map)**: 페이지의 모든 튜플이 모든 트랜잭션에게 보이는 상태이면 all-visible 비트를 세웁니다. [B-tree 글에서 다룬 Index-Only Scan](/postgres/btree-anatomy/)이 이 비트에 의존합니다
+- **FSM**(Free Space Map): 페이지별 여유 공간 정보를 갱신합니다. 새 INSERT가 들어올 때 여유 공간이 있는 페이지를 빨리 찾기 위한 맵입니다
+- **VM**(Visibility Map): 페이지의 모든 튜플이 모든 트랜잭션에게 보이는 상태이면 all-visible 비트를 세웁니다. [B-tree 글에서 다룬 Index-Only Scan](/postgres/btree-anatomy/)이 이 비트에 의존합니다
 
 전체 과정을 그림으로 보면 이렇습니다.
 
@@ -153,7 +153,7 @@ SELECT pg_size_pretty(pg_relation_size('bloat_demo'));
 
 ### HOT update와 VACUUM 부담 감소
 
-[힙 페이지 글](/postgres/heap-page-tuple/)에서 다뤘던 **HOT(Heap-Only Tuple) update**는 VACUUM의 부담을 크게 줄여주는 메커니즘입니다. 인덱스 컬럼이 변경되지 않고, 새 튜플이 같은 페이지 안에 들어갈 수 있으면, 인덱스 엔트리를 새로 만들지 않고 기존 엔트리가 체인으로 새 튜플을 가리킵니다. 인덱스에 dead 엔트리가 안 생기니 VACUUM의 2단계(인덱스 정리)가 가벼워지고, 심지어 pruning(흔히 micro-vacuum이라 불리는)이라는 페이지 내 정리가 일반 SELECT/UPDATE 도중에도 일어납니다.
+[힙 페이지 글](/postgres/heap-page-tuple/)에서 다뤘던 **HOT**(Heap-Only Tuple) update는 VACUUM의 부담을 크게 줄여주는 메커니즘입니다. 인덱스 컬럼이 변경되지 않고, 새 튜플이 같은 페이지 안에 들어갈 수 있으면, 인덱스 엔트리를 새로 만들지 않고 기존 엔트리가 체인으로 새 튜플을 가리킵니다. 인덱스에 dead 엔트리가 안 생기니 VACUUM의 2단계(인덱스 정리)가 가벼워지고, 심지어 pruning(흔히 micro-vacuum이라 불리는)이라는 페이지 내 정리가 일반 SELECT/UPDATE 도중에도 일어납니다.
 
 HOT update의 조건을 충족시키려면 페이지에 빈 공간이 필요하고, `FILLFACTOR`를 100 미만(예: 80-90)으로 설정하면 INSERT 시 각 페이지에 여유를 남겨둡니다. UPDATE가 잦은 테이블에서 효과적입니다.
 

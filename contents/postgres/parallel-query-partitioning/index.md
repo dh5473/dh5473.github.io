@@ -58,7 +58,7 @@ thumbnail: './thumbnail.png'
 병렬 쿼리는 **자동으로 켜지거나 꺼집니다**. 결정은 플래너가 합니다. 켜지는 조건은 크게 세 가지입니다.
 
 1. **대상 테이블 크기 ≥ `min_parallel_table_scan_size`** (기본 8MB). 인덱스 스캔이면 `min_parallel_index_scan_size`(기본 512kB)를 봅니다.
-2. **병렬로 추가된 오버헤드(`parallel_setup_cost=1000`, `parallel_tuple_cost=0.1`)를 감수할 만큼 총 cost가 크다고 추정됨.**
+2. **병렬로 추가된 오버헤드를 감수할 만큼 총 cost가 크다고 추정됨.** `parallel_setup_cost`(기본 1000)와 `parallel_tuple_cost`(기본 0.1)가 반영된 병렬 plan의 cost가 직렬보다 낮아야 합니다.
 3. **해당 쿼리 노드가 병렬 안전함** (`PARALLEL SAFE` 함수만 사용 등).
 
 세 조건이 AND로 붙어서 하나라도 빠지면 병렬이 꺼집니다. 그래서 "같은 쿼리가 어느 날은 병렬, 어느 날은 단일"인 상황이 생깁니다. 추정 결과가 작으면 병렬이 해제되고, 통계가 갱신되거나 데이터가 불어나면 다시 켜집니다.

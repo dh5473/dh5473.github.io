@@ -40,7 +40,7 @@ PostgreSQL은 이렇게 "프로세스 덩어리"로 돌아갑니다. MySQL에서
 
 Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 
-> **하나의 부모(postmaster)가 있고, 커넥션마다 자식을 fork한다. 그리고 공통 작업을 하는 background 프로세스 몇 개가 옆에서 돌아간다.**
+> **하나의 부모가 있고, 커넥션마다 자식을 fork한다. 그리고 공통 작업을 하는 background 프로세스 몇 개가 옆에서 돌아간다.** 여기서 부모가 postmaster입니다.
 
 왜 thread가 아니라 process일까요? Postgres 코드베이스가 처음 설계되던 1980년대 후반~90년대 초반에는 쓸 만한 thread 라이브러리가 없었다는 역사적 이유도 있지만, 지금까지 이 모델을 유지하는 건 **fault isolation** 때문입니다.
 
@@ -140,7 +140,7 @@ WHERE backend_type = 'client backend';
 
 `state`가 `active`면 지금 쿼리를 돌리는 중, `idle`이면 트랜잭션 없이 커넥션만 붙잡고 있는 상태, `idle in transaction`은 트랜잭션을 연 채로 아무것도 안 하고 있는 위험한 상태입니다. 세 번째 상태는 실제로 운영 환경에서 자주 문제가 되는데, 이유는 이렇습니다. 트랜잭션이 열려 있는 동안 해당 backend의 `backend_xmin`이 고정되면서 시스템 전체의 xmin horizon을 뒤로 끌어당깁니다. autovacuum은 xmin horizon보다 뒤에 있는 dead tuple을 "다른 트랜잭션이 여전히 볼 가능성이 있다"는 이유로 회수하지 못하고, 결과적으로 bloat가 누적됩니다. 애플리케이션 코드에서 예외 경로로 commit/rollback이 빠지거나, ORM이 트랜잭션을 암묵적으로 열어둔 채 long-running 작업을 도는 경우가 대표적인 시나리오입니다.
 
-backend가 쓰는 메모리는 두 종류입니다. **private 메모리**(해당 프로세스만 쓰는 work_mem, catalog cache 등)와 **shared memory**(다른 backend와 공유하는 버퍼 풀, WAL 버퍼 등). 다음 섹션은 이 shared memory 이야기입니다.
+backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해당 프로세스만 쓰는 work_mem, catalog cache 등이고, **shared memory**는 다른 backend와 공유하는 버퍼 풀, WAL 버퍼 등입니다. 다음 섹션은 이 shared memory 이야기입니다.
 
 ## Shared memory: 프로세스들이 만나는 광장
 
@@ -178,7 +178,7 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**(해당
 
 **WAL buffers**는 트랜잭션이 write한 WAL 레코드가 디스크로 flush되기 전 잠깐 머무는 공간입니다. 기본값 `-1`은 "자동 계산"을 의미하고, 실제 공식은 `shared_buffers`의 1/32, 단 최소 64kB, 최대 WAL 세그먼트 크기(보통 16MB)입니다. 대부분의 환경에서 기본값 그대로 두면 됩니다.
 
-**CLOG(commit log, 파일 시스템상 경로는 `pg_xact`)**는 "트랜잭션 N번은 커밋됐나, 롤백됐나, 아직 진행 중인가"를 2비트로 기록한 테이블입니다. MVCC 가시성을 판정할 때마다 이 테이블을 참조합니다. 과거에는 `pg_clog`라는 이름이었는데, 일반 테이블인 `pg_class` 같은 이름과 혼동된다는 이유로 PG 10부터 `pg_xact`로 개명됐습니다.
+**CLOG**(commit log, 파일 시스템상 경로는 `pg_xact`)는 "트랜잭션 N번은 커밋됐나, 롤백됐나, 아직 진행 중인가"를 2비트로 기록한 테이블입니다. MVCC 가시성을 판정할 때마다 이 테이블을 참조합니다. 과거에는 `pg_clog`라는 이름이었는데, 일반 테이블인 `pg_class` 같은 이름과 혼동된다는 이유로 PG 10부터 `pg_xact`로 개명됐습니다.
 
 실제로 지금 서버의 shared memory 할당 상태는 `pg_shmem_allocations` 뷰로 직접 들여다볼 수 있는데, 이 뷰의 사용 예시는 뒤쪽 실험 섹션에서 다룹니다.
 

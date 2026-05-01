@@ -216,17 +216,17 @@ SELECT * FROM doctors;
 
 ## Serializable과 SSI
 
-Write skew를 막으려면 **Serializable** 격리 수준이 필요합니다. PostgreSQL의 Serializable은 RR의 snapshot에 **SSI(Serializable Snapshot Isolation)**라는 메커니즘을 추가한 것입니다.
+Write skew를 막으려면 **Serializable** 격리 수준이 필요합니다. PostgreSQL의 Serializable은 RR의 snapshot에 **SSI**(Serializable Snapshot Isolation)라는 메커니즘을 추가한 것입니다.
 
 ### SSI의 핵심: rw-conflict
 
-SSI는 트랜잭션들 사이의 **rw-conflict(읽기-쓰기 의존성)**을 추적합니다. rw-conflict란 "T1이 읽은 데이터를 T2가 수정했다"는 관계입니다.
+SSI는 트랜잭션들 사이의 **rw-conflict**(읽기-쓰기 의존성)을 추적합니다. rw-conflict란 "T1이 읽은 데이터를 T2가 수정했다"는 관계입니다.
 
 위 당직 예제에서:
 - Session A가 `doctors` 테이블을 읽었고(on_call = true인 행 전부), Session B가 id=2를 수정 → **Session A → Session B 방향의 rw-conflict**
 - Session B가 `doctors` 테이블을 읽었고, Session A가 id=1을 수정 → **Session B → Session A 방향의 rw-conflict**
 
-SSI는 이 rw-conflict 엣지들 중에서 **"dangerous structure"**를 감지합니다. dangerous structure란 **연속 두 개의 rw-conflict가 하나의 트랜잭션(pivot)을 거쳐 이어지는 패턴**(T_in → T_pivot → T_out)입니다. 위 예제에서는 두 트랜잭션이 서로를 향한 rw-conflict를 가지므로 각각이 상대방의 pivot이 되어 dangerous structure가 즉시 성립합니다. SSI는 이 구조를 감지하면 한쪽을 abort합니다.
+SSI는 이 rw-conflict 엣지들 중에서 **"dangerous structure"**를 감지합니다. dangerous structure란 **연속 두 개의 rw-conflict가 하나의 트랜잭션을 거쳐 이어지는 패턴**(pivot)(T_in → T_pivot → T_out)입니다. 위 예제에서는 두 트랜잭션이 서로를 향한 rw-conflict를 가지므로 각각이 상대방의 pivot이 되어 dangerous structure가 즉시 성립합니다. SSI는 이 구조를 감지하면 한쪽을 abort합니다.
 
 Serializable로 같은 실험을 돌려봅시다.
 

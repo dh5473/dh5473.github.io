@@ -40,7 +40,7 @@ SELECT ctid, id, email FROM users WHERE id = 2;
 
 ## ctid가 가리키는 곳
 
-`ctid`는 PostgreSQL의 시스템 컬럼으로, 한 row가 디스크상의 어느 위치에 있는지를 가리키는 **(블록 번호, offset 번호) 쌍**입니다. `(0,2)`라면 "0번 블록의 2번째 슬롯". 블록 번호는 0부터 시작하고, offset 번호는 1부터 시작합니다.
+`ctid`는 PostgreSQL의 시스템 컬럼으로, 한 row가 디스크상의 어느 위치에 있는지를 가리키는 **블록 번호, offset 번호 쌍**입니다. `(0,2)`라면 "0번 블록의 2번째 슬롯". 블록 번호는 0부터 시작하고, offset 번호는 1부터 시작합니다.
 
 ```sql
 SELECT ctid, id FROM users ORDER BY id;

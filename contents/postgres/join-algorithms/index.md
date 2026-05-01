@@ -180,7 +180,7 @@ PostgreSQL은 MySQL의 `STRAIGHT_JOIN`이나 Oracle의 `/*+ USE_NL */` 같은 **
 
 **1. `EXPLAIN ANALYZE`에서 각 JOIN 노드의 추정 행 vs 실제 행을 먼저 본다.** 두 값이 10배 넘게 벌어진 노드가 있으면 문제는 조인 알고리즘이 아니라 **통계**입니다. 선행 작업은 `ANALYZE` 또는 `CREATE STATISTICS`입니다.
 
-**2. Hash Join에서 `Batches: N (N≥2)`가 보이면 work_mem 부족.** 해당 쿼리만 올려보고 싶으면 세션 단위로 `SET work_mem = '...'`를 걸어 plan이 바뀌는지 확인합니다. 전역으로 올릴 때는 커넥션 수 × JOIN 노드 수를 곱한 메모리 상한을 계산해보고 바꿉니다.
+**2. Hash Join에서 `Batches`가 2 이상이면 work_mem 부족.** 해당 쿼리만 올려보고 싶으면 세션 단위로 `SET work_mem = '...'`를 걸어 plan이 바뀌는지 확인합니다. 전역으로 올릴 때는 커넥션 수 × JOIN 노드 수를 곱한 메모리 상한을 계산해보고 바꿉니다.
 
 **3. Nested Loop인데 outer 실제 행이 크게 나오면 가장 위험한 상태.** outer estimate가 1로 찍혀 있지만 실제로 수만 행이면, 안쪽 인덱스를 그만큼 반복해서 탑니다. 이 경우 `ANALYZE` 갱신과 상관 컬럼 보정이 우선입니다.
 
