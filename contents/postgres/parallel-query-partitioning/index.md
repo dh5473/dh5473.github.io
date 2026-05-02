@@ -137,7 +137,7 @@ SELECT level, COUNT(*) FROM logs GROUP BY level;
 | `min_parallel_table_scan_size` | 8MB | 이 크기 이하 테이블은 병렬 후보 제외 |
 | `parallel_setup_cost` | 1000 | worker 시작 오버헤드 cost 반영값 |
 
-운영 현장에서 자주 만지는 건 `max_parallel_workers_per_gather`입니다. 기본 2가 보수적이라 집계 쿼리가 많은 OLAP성 워크로드에서는 4~8로 올려 쓰는 경우가 많습니다. 단, 커넥션 수 × per_gather × `Gather` 노드 수가 서버 전체 `max_parallel_workers`를 넘으면 뒷 쿼리들은 worker 요청이 거절돼 단일로 떨어집니다.
+운영 현장에서 자주 만지는 건 `max_parallel_workers_per_gather`입니다. 기본 2가 보수적이라 집계 쿼리가 많은 OLAP성 워크로드에서는 4\~8로 올려 쓰는 경우가 많습니다. 단, 커넥션 수 × per_gather × `Gather` 노드 수가 서버 전체 `max_parallel_workers`를 넘으면 뒷 쿼리들은 worker 요청이 거절돼 단일로 떨어집니다.
 
 ## 파티셔닝
 
@@ -253,7 +253,7 @@ WHERE created_at >= '2026-04-15'::date;
 
 **2. "파티션 pruning이 안 된다" → `EXPLAIN`의 Append 밑 자식 노드 개수 확인.** 파티션 키에 함수/CAST가 씌워졌는지, prepared statement의 generic plan 때문인지, 파티션 키가 조건에 등장은 하는지 순서로 봅니다.
 
-**3. "파티션을 몇 개로 쪼갤까" → 한 파티션이 수 GB 범위, 총 개수는 수십~100여 개가 일반적.** 수백 개를 넘기면 plan 시간을 확인해야 하고, 일 단위로 쪼개면 1년만 지나도 365개가 되어 planning 오버헤드가 체감됩니다.
+**3. "파티션을 몇 개로 쪼갤까" → 한 파티션이 수 GB 범위, 총 개수는 수십\~100여 개가 일반적.** 수백 개를 넘기면 plan 시간을 확인해야 하고, 일 단위로 쪼개면 1년만 지나도 365개가 되어 planning 오버헤드가 체감됩니다.
 
 **4. "병렬이 켜졌는데도 기대만큼 안 빠르다" → I/O 병목 의심.** worker 4명이 있어도 디스크 I/O가 병목이면 선형 scaling이 안 됩니다. `EXPLAIN (ANALYZE, BUFFERS)`의 `shared read` 값, iostat 결과를 같이 봅니다.
 

@@ -329,7 +329,7 @@ WHERE pg_blocking_pids(pid) != '{}';
 ## 실전에서는
 
 1. **`idle in transaction` 세션이 락을 오래 잡고 있으면 뒤의 DML/DDL이 줄줄이 대기한다.** `idle_in_transaction_session_timeout`을 설정해서 자동 종료시키는 것이 권장된다
-2. **DDL 실행 전에 `lock_timeout`을 짧게 설정한다.** ALTER TABLE이 `AccessExclusiveLock`을 기다리며 대기하면 그 뒤의 모든 쿼리가 줄줄이 멈춘다. 3~5초 안에 락을 못 잡으면 빠져나와서 나중에 재시도하는 것이 안전하다
+2. **DDL 실행 전에 `lock_timeout`을 짧게 설정한다.** ALTER TABLE이 `AccessExclusiveLock`을 기다리며 대기하면 그 뒤의 모든 쿼리가 줄줄이 멈춘다. 3\~5초 안에 락을 못 잡으면 빠져나와서 나중에 재시도하는 것이 안전하다
 3. **Serializable을 쓰면 재시도 로직이 필수다.** SSI가 false positive으로 abort할 수 있으므로, 에러 코드 `40001`을 잡아서 자동 재시도하는 wrapper가 애플리케이션에 있어야 한다. 대부분의 OLTP에서는 Read Committed로 충분하고, write skew가 비즈니스 규칙을 깨뜨리는 특정 시나리오에서만 Serializable을 쓰는 것이 현실적이다
 4. **deadlock은 감지 + 재시도로 대응한다.** 완전히 방지하려면 모든 트랜잭션이 같은 순서로 행을 잠그면 되지만, 복잡한 비즈니스 로직에서는 현실적으로 어렵다. deadlock이 간헐적으로 발생하는 것은 정상이고, 빈번하면 트랜잭션 설계를 점검한다
 

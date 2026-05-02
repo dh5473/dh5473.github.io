@@ -90,7 +90,7 @@ SELECT pg_current_wal_insert_lsn(),
 
 ### WAL 세그먼트 파일
 
-WAL은 물리적으로 `pg_wal/` 디렉토리 안의 세그먼트 파일로 저장됩니다. 기본 세그먼트 크기는 **16MB**이고, `initdb --wal-segsize`로 변경할 수 있습니다(1MB~1GB). 파일명은 `000000010000000000000001` 같은 24자리 16진수로, timeline ID + segment number로 구성됩니다.
+WAL은 물리적으로 `pg_wal/` 디렉토리 안의 세그먼트 파일로 저장됩니다. 기본 세그먼트 크기는 **16MB**이고, `initdb --wal-segsize`로 변경할 수 있습니다(1MB\~1GB). 파일명은 `000000010000000000000001` 같은 24자리 16진수로, timeline ID + segment number로 구성됩니다.
 
 ```bash
 ls -la pg_wal/
@@ -307,7 +307,7 @@ crash 시 **마지막으로 flush된 시점 이후의 committed 트랜잭션이 
 
 ## 실전에서는
 
-**checkpoint_timeout과 max_wal_size 튜닝.** 기본값(5분, 1GB)은 write가 적은 환경에 맞춰져 있습니다. write 워크로드가 큰 시스템에서는 `max_wal_size`를 4~16GB로, `checkpoint_timeout`을 10~15분으로 늘려서 checkpoint 빈도를 낮추는 것이 일반적입니다. 단, checkpoint 간격이 길어지면 crash recovery 시간도 그만큼 늘어납니다.
+**checkpoint_timeout과 max_wal_size 튜닝.** 기본값(5분, 1GB)은 write가 적은 환경에 맞춰져 있습니다. write 워크로드가 큰 시스템에서는 `max_wal_size`를 4\~16GB로, `checkpoint_timeout`을 10\~15분으로 늘려서 checkpoint 빈도를 낮추는 것이 일반적입니다. 단, checkpoint 간격이 길어지면 crash recovery 시간도 그만큼 늘어납니다.
 
 **log_checkpoints=on은 필수.** checkpoint가 언제, 얼마나 자주, 얼마나 많은 page를 쓰는지 기록해줍니다. "checkpoints are occurring too frequently" 경고가 반복된다면 `max_wal_size`를 올려야 하고, checkpoint당 write 시간이 `checkpoint_timeout`에 육박한다면 다음 checkpoint와 겹치기 직전이므로 역시 간격을 넓혀야 합니다.
 
@@ -319,7 +319,7 @@ crash 시 **마지막으로 flush된 시점 이후의 committed 트랜잭션이 
 
 **"VACUUM은 WAL을 많이 만들지 않는다."** VACUUM도 페이지를 수정하므로 WAL을 생성합니다. 특히 checkpoint 직후에 VACUUM이 돌면 수정하는 모든 페이지에 FPW가 발생합니다. 대량 VACUUM 후 WAL 볼륨이 예상보다 크다면 FPW 때문입니다. VACUUM이 visibility map과 free space map을 갱신하는 것도 각각 WAL record를 남깁니다.
 
-**"checkpoint가 자주 돌면 안전하다."** crash recovery 시간은 짧아지지만, 정상 운영 중 I/O 부담이 커집니다. checkpoint마다 모든 dirty page를 flush하고, FPW가 다시 시작되어 WAL 볼륨도 늘어납니다. 안전성과 성능은 트레이드오프 관계이고, 대부분의 운영 환경에서는 checkpoint_timeout 10~15분이 균형점입니다.
+**"checkpoint가 자주 돌면 안전하다."** crash recovery 시간은 짧아지지만, 정상 운영 중 I/O 부담이 커집니다. checkpoint마다 모든 dirty page를 flush하고, FPW가 다시 시작되어 WAL 볼륨도 늘어납니다. 안전성과 성능은 트레이드오프 관계이고, 대부분의 운영 환경에서는 checkpoint_timeout 10\~15분이 균형점입니다.
 
 **"synchronous_commit=off면 데이터가 날아간다."** crash가 발생한 경우에만, 그것도 최대 수백ms 분량만 유실됩니다. 정상 종료(`pg_ctl stop`의 smart/fast 모드)나 일반적인 재시작에서는 shutdown checkpoint가 모든 WAL과 dirty page를 flush한 후 종료되므로 유실이 없습니다. 단, `pg_ctl stop -m immediate`는 crash와 동일하게 동작합니다. 그리고 유실되는 것은 committed 트랜잭션이 통째로 사라지는 것이지, 반쪽짜리 트랜잭션이 적용되는 것이 아닙니다.
 

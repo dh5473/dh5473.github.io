@@ -42,7 +42,7 @@ Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 
 > **하나의 부모가 있고, 커넥션마다 자식을 fork한다. 그리고 공통 작업을 하는 background 프로세스 몇 개가 옆에서 돌아간다.** 여기서 부모가 postmaster입니다.
 
-왜 thread가 아니라 process일까요? Postgres 코드베이스가 처음 설계되던 1980년대 후반~90년대 초반에는 쓸 만한 thread 라이브러리가 없었다는 역사적 이유도 있지만, 지금까지 이 모델을 유지하는 건 **fault isolation** 때문입니다.
+왜 thread가 아니라 process일까요? Postgres 코드베이스가 처음 설계되던 1980년대 후반\~90년대 초반에는 쓸 만한 thread 라이브러리가 없었다는 역사적 이유도 있지만, 지금까지 이 모델을 유지하는 건 **fault isolation** 때문입니다.
 
 프로세스 하나가 segfault로 죽어도 OS가 그 프로세스의 메모리를 회수해줍니다. 다른 커넥션들은 영향을 받지 않고, postmaster가 문제를 감지해 공유 메모리를 정리한 뒤 나머지 backend를 안전하게 재시작시킵니다. thread 모델이라면 한 세션이 메모리를 밟는 순간 프로세스 전체가 함께 무너집니다. "DB는 절대 죽지 않아야 한다"는 Postgres 설계 철학에서, 이 격리는 양보할 수 없는 지점이었습니다.
 
@@ -52,7 +52,7 @@ Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 - **커넥션당 메모리**: 각 backend는 `work_mem`, catalog cache, plan cache 등으로 수 MB의 private 메모리를 가집니다. 커넥션 1,000개면 단순 계산으로도 수 GB입니다.
 - **proc array 경합**: 동시에 살아있는 모든 backend의 상태를 담는 `proc array`는 트랜잭션이 스냅샷을 취할 때(`GetSnapshotData`)마다 선형으로 스캔됩니다. 커넥션이 많아질수록 스냅샷 한 번에 훑어야 할 slot이 늘어나고, 동시에 proc array에 걸리는 lock 경합도 심해집니다.
 
-그래서 Postgres의 `max_connections`는 MySQL의 `max_connections`와 같은 단위로 생각하면 안 됩니다. 수천 개의 동시 커넥션은 현실적이지 않고, 애플리케이션 앞에 **PgBouncer 같은 connection pooler**를 두어서 수천 개의 클라이언트 연결을 수십~수백 개의 backend로 multiplex하는 게 표준 구성입니다.
+그래서 Postgres의 `max_connections`는 MySQL의 `max_connections`와 같은 단위로 생각하면 안 됩니다. 수천 개의 동시 커넥션은 현실적이지 않고, 애플리케이션 앞에 **PgBouncer 같은 connection pooler**를 두어서 수천 개의 클라이언트 연결을 수십\~수백 개의 backend로 multiplex하는 게 표준 구성입니다.
 
 ## postmaster와 background 프로세스들
 

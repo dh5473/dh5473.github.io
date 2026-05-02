@@ -293,7 +293,7 @@ LIMIT 5;
 
 **"VACUUM FULL을 주기적으로 돌려야 한다."** 일반 VACUUM으로 충분합니다. VACUUM FULL은 AccessExclusiveLock을 잡아서 해당 테이블에 모든 읽기/쓰기가 차단됩니다. 주기적으로 돌리면 매번 서비스가 중단되는 것이나 다름없습니다. bloat가 심각하게 쌓인 예외적 상황에서만 한 번 쓰는 것이고, 근본 해법은 autovacuum이 잘 돌게 만드는 겁니다.
 
-**"autovacuum이 켜져 있으니 bloat 걱정 없다."** 기본 `scale_factor`가 0.2(20%)라서, 큰 테이블은 dead tuple이 수천만 개 쌓인 뒤에야 반응합니다. 그 사이에 Seq Scan 성능은 이미 크게 떨어질 수 있습니다. 대용량 테이블은 테이블별로 `scale_factor`를 0.01~0.05 수준으로 낮춰야 합니다.
+**"autovacuum이 켜져 있으니 bloat 걱정 없다."** 기본 `scale_factor`가 0.2(20%)라서, 큰 테이블은 dead tuple이 수천만 개 쌓인 뒤에야 반응합니다. 그 사이에 Seq Scan 성능은 이미 크게 떨어질 수 있습니다. 대용량 테이블은 테이블별로 `scale_factor`를 0.01\~0.05 수준으로 낮춰야 합니다.
 
 **"VACUUM은 느리니까 끄는 게 낫다."** autovacuum을 끄면 dead tuple이 무한히 쌓이고, 결국 TXID wraparound까지 갑니다. wraparound가 임박하면 PostgreSQL이 강제로 anti-wraparound VACUUM을 돌리는데, 이 VACUUM은 `autovacuum_enabled = off` 설정을 무시하고 실행되며 취소할 수 없습니다. 그래도 처리가 따라잡지 못하면 PG 14 이후에는 `vacuum_failsafe_age`(기본 16억)에 도달했을 때 cost-based throttling까지 해제하고 인덱스 정리도 건너뛴 채 전력으로 동작합니다. 일상적으로 조금씩 돌리는 게 이런 비상 상황보다 훨씬 낫습니다.
 

@@ -224,7 +224,7 @@ Serializable 격리 수준은 Repeatable Read의 snapshot에 SSI(Serializable Sn
 
 ## xid Wraparound와 Freeze
 
-xid가 32비트이므로 전체 공간은 약 42.9억입니다. modular arithmetic으로 과거/미래를 구분하기 때문에 실제로 사용 가능한 "과거" 범위는 약 21억(2^31)입니다. write가 잦은 서비스에서 하루에 수백만~수천만 xid를 소비한다면, 수백 일이면 21억에 도달합니다.
+xid가 32비트이므로 전체 공간은 약 42.9억입니다. modular arithmetic으로 과거/미래를 구분하기 때문에 실제로 사용 가능한 "과거" 범위는 약 21억(2^31)입니다. write가 잦은 서비스에서 하루에 수백만\~수천만 xid를 소비한다면, 수백 일이면 21억에 도달합니다.
 
 그 시점에 아무런 조치가 없으면 **wraparound**가 일어납니다. 과거에 committed된 트랜잭션의 xid가 modular arithmetic 상 "미래"로 뒤집어지면서, 해당 트랜잭션이 만든 모든 튜플이 갑자기 안 보이게 됩니다. 데이터가 실제로 사라지는 건 아니지만, 가시성 판정에서 "미래의 트랜잭션이 만든 것"으로 분류되면 SELECT 결과에 나오지 않습니다. 사실상의 데이터 유실입니다.
 

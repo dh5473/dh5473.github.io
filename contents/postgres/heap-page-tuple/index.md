@@ -242,7 +242,7 @@ HOT update의 두 번째 조건이 "같은 페이지에 빈 자리가 있어야 
 | SP-GiST 인덱스 | 80 |
 | GIN, BRIN | (옵션 미지원) |
 
-테이블 기본값이 100인 이유는 read-only 또는 append-only 테이블이 일반적이기 때문입니다. UPDATE가 잦은 좁은 row 테이블에는 80~90 정도로 낮춰두는 게 일반적인 권장입니다.
+테이블 기본값이 100인 이유는 read-only 또는 append-only 테이블이 일반적이기 때문입니다. UPDATE가 잦은 좁은 row 테이블에는 80\~90 정도로 낮춰두는 게 일반적인 권장입니다.
 
 ```sql
 ALTER TABLE users SET (fillfactor = 80);
