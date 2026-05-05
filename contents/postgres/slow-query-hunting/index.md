@@ -11,11 +11,11 @@ thumbnail: './thumbnail.png'
 
 "DB가 느려요."
 
-개발팀에서 이 말을 들었을 때 가장 먼저 무엇을 봐야 할까요? EXPLAIN을 찍어보자니 어떤 쿼리가 문제인지 모르고, 서버 메트릭을 봐도 CPU와 IO가 전체적으로 높다는 것 외에는 단서가 없습니다.
+이 말을 들었을 때 가장 먼저 무엇을 봐야 할까요? EXPLAIN을 찍어보자니 어떤 쿼리가 문제인지 모르고, 서버 메트릭을 봐도 CPU와 IO가 전체적으로 높다는 것 외에는 단서가 없습니다.
 
 느린 쿼리를 잡는 일은 **범위를 좁혀가는 과정**입니다. 전체 워크로드에서 병목을 찾고, 그 쿼리의 실행 계획을 확인하고, 지금 이 순간 무엇에 막혀 있는지를 확인합니다. 이 글에서는 그 과정에서 쓰는 도구들을 순서대로 따라갑니다.
 
-## "느리다"의 두 가지 유형
+## "느리다"의 네 가지 유형
 
 추적 방법을 고르기 전에, "느리다"가 어떤 상황인지를 먼저 분류해야 합니다.
 
@@ -154,7 +154,7 @@ SELECT * FROM large_table WHERE some_condition;
 
 ## pg_stat_activity: 지금 무엇에 막혀 있는가
 
-`pg_stat_statements`가 "과거에 무엇이 느렸는가"를 보여준다면, `pg_stat_activity`는 **"지금 이 순간 무엇이 일어나고 있는가"**를 보여줍니다.
+`pg_stat_statements`가 "과거에 무엇이 느렸는가"를 보여준다면, `pg_stat_activity`는 "**지금 이 순간 무엇이 일어나고 있는가**"를 보여줍니다.
 
 ### 활성 세션 확인
 
@@ -359,7 +359,7 @@ PostgreSQL은 [프로세스 기반 아키텍처](/postgres/architecture-overview
 
 ## 참고자료
 
-- [PostgreSQL 18 공식 문서: Chapter 28. Monitoring Database Activity](https://www.postgresql.org/docs/18/monitoring.html)
+- [PostgreSQL 18 공식 문서: Chapter 27. Monitoring Database Activity](https://www.postgresql.org/docs/18/monitoring.html)
 - [F.32. pg_stat_statements — execution statistics tracking](https://www.postgresql.org/docs/18/pgstatstatements.html)
 - [F.3. auto_explain — log execution plans of slow queries](https://www.postgresql.org/docs/18/auto-explain.html)
 - [pg_stat_activity view](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY-VIEW)
