@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 14편에 걸쳐 확률의 공리부터 [베이지안 추론](/stats/bayesian-inference/)까지, 통계적 추론의 이론 체계를 쌓아왔다. 이제 도구 상자는 꽤 두둑하다. 그런데 현업에서 데이터 파일을 처음 건네받았을 때, 가장 먼저 하는 일이 MLE를 돌리거나 가설검정을 설계하는 것일까? 아니다. **데이터를 들여다보는 것**이다. 열은 몇 개인지, 결측치는 얼마나 되는지, 분포가 어떤 모양인지 — 이 탐색 과정을 건너뛰고 모델을 세우는 건, 지도를 보지 않고 등산을 시작하는 것과 다름없다.
 
-이 글은 stats-applied 시리즈의 첫 번째 편으로, **기술통계(Descriptive Statistics)**와 **탐색적 데이터 분석(Exploratory Data Analysis, EDA)**의 핵심 도구를 체계적으로 정리한다.
+이 글은 stats-applied 시리즈의 첫 번째 편으로, **기술통계**(Descriptive Statistics)와 **탐색적 데이터 분석**(Exploratory Data Analysis, EDA)의 핵심 도구를 체계적으로 정리한다.
 
 ---
 
@@ -19,7 +19,7 @@ thumbnail: './thumbnail.png'
 
 ### Tukey의 EDA 철학
 
-**탐색적 데이터 분석(EDA)**이라는 용어를 처음 체계화한 사람은 통계학자 John Tukey다. 1977년 저서 *Exploratory Data Analysis*에서 그는 "데이터가 무엇을 말하고 있는지 경청하라"고 강조했다. 가설을 세우고 검증하는 **확인적 분석(Confirmatory Data Analysis, CDA)** — 우리가 [가설검정](/stats/hypothesis-testing/)에서 다뤘던 바로 그것 — 과 대비되는 접근이다.
+**탐색적 데이터 분석**(EDA)이라는 용어를 처음 체계화한 사람은 통계학자 John Tukey다. 1977년 저서 *Exploratory Data Analysis*에서 그는 "데이터가 무엇을 말하고 있는지 경청하라"고 강조했다. 가설을 세우고 검증하는 **확인적 분석(Confirmatory Data Analysis, CDA)** — 우리가 [가설검정](/stats/hypothesis-testing/)에서 다뤘던 바로 그것 — 과 대비되는 접근이다.
 
 | 구분 | 확인적 분석(CDA) | 탐색적 분석(EDA) |
 |------|----------------|----------------|
@@ -129,7 +129,7 @@ for name, data in [("A", A), ("B", B)]:
 
 ### 첨도(Kurtosis)
 
-꼬리의 두꺼운 정도를 측정한다. 정규분포의 첨도를 기준(0)으로 삼는 **초과 첨도(Excess Kurtosis)**를 주로 사용한다.
+꼬리의 두꺼운 정도를 측정한다. 정규분포의 첨도를 기준(0)으로 삼는 **초과 첨도**(Excess Kurtosis)를 주로 사용한다.
 
 - **첨도 = 0**: 정규분포와 유사한 꼬리
 - **첨도 > 0**: 꼬리가 두꺼움 (극단값이 정규분포보다 자주 발생)

@@ -19,7 +19,7 @@ thumbnail: './thumbnail.png'
 
 ### 정의
 
-**베르누이 분포(Bernoulli Distribution)**는 가장 단순한 이산분포다. 결과가 딱 두 가지 — 성공(1) 또는 실패(0) — 인 시행 하나를 모델링한다.
+**베르누이 분포**(Bernoulli Distribution)는 가장 단순한 이산분포다. 결과가 딱 두 가지 — 성공(1) 또는 실패(0) — 인 시행 하나를 모델링한다.
 
 $$X \sim \text{Bernoulli}(p)$$
 
@@ -86,7 +86,7 @@ print(f"샘플 평균 = {samples.mean():.4f}")  # ≈ 0.70
 
 ### 정의
 
-**이항 분포(Binomial Distribution)**는 독립적인 베르누이 시행을 $n$번 반복했을 때, 성공 횟수의 분포다.
+**이항 분포**(Binomial Distribution)는 독립적인 베르누이 시행을 $n$번 반복했을 때, 성공 횟수의 분포다.
 
 $$X \sim \text{Binomial}(n, p)$$
 
@@ -153,7 +153,7 @@ print(f"P(5≤X≤15) = {rv.cdf(15) - rv.cdf(4):.4f}")  # 0.9292
 
 ### 정의
 
-**포아송 분포(Poisson Distribution)**는 일정한 시간 또는 공간 내에서 사건이 발생하는 횟수를 모델링한다.
+**포아송 분포**(Poisson Distribution)는 일정한 시간 또는 공간 내에서 사건이 발생하는 횟수를 모델링한다.
 
 $$X \sim \text{Poisson}(\lambda)$$
 
@@ -264,7 +264,7 @@ print(f"99th percentile = {rv.ppf(0.99):.0f}")  # 11건
 
 ### 정의
 
-**기하 분포(Geometric Distribution)**는 독립적인 베르누이 시행을 반복할 때, 처음으로 성공할 때까지의 시행 횟수를 모델링한다.
+**기하 분포**(Geometric Distribution)는 독립적인 베르누이 시행을 반복할 때, 처음으로 성공할 때까지의 시행 횟수를 모델링한다.
 
 $$X \sim \text{Geometric}(p)$$
 
@@ -284,7 +284,7 @@ $$\text{Var}(X) = \frac{1-p}{p^2}$$
 ![Geometric PMF and memoryless property](./geometric-pmf.png)
 <p align="center" style="color: #888; font-size: 13px;"><em>왼쪽: 기하 분포의 PMF / 오른쪽: 무기억성 — 3번 실패 후의 조건부 분포가 원래 분포와 동일</em></p>
 
-기하 분포의 가장 독특한 성질은 **무기억성(Memoryless Property)**이다.
+기하 분포의 가장 독특한 성질은 **무기억성**(Memoryless Property)이다.
 
 $$P(X > s + t \mid X > s) = P(X > t)$$
 
@@ -356,7 +356,7 @@ P(X > 2)             = 0.040000
 
 ### 정의
 
-**초기하 분포(Hypergeometric Distribution)**는 유한 모집단에서 **비복원 추출**할 때의 분포다. 이항 분포와의 결정적 차이는 추출 후 원래대로 돌려놓지 않는다는 점이다.
+**초기하 분포**(Hypergeometric Distribution)는 유한 모집단에서 **비복원 추출**할 때의 분포다. 이항 분포와의 결정적 차이는 추출 후 원래대로 돌려놓지 않는다는 점이다.
 
 전체 $N$개 중 성공 범주 $K$개가 있는 모집단에서, $n$개를 비복원 추출할 때 성공 횟수 $X$의 분포:
 
@@ -372,7 +372,7 @@ $$E[X] = n \cdot \frac{K}{N}$$
 
 $$\text{Var}(X) = n \cdot \frac{K}{N} \cdot \frac{N-K}{N} \cdot \frac{N-n}{N-1}$$
 
-이항 분포의 분산 $np(1-p)$와 비교하면, 끝에 $\frac{N-n}{N-1}$이라는 **유한 모집단 보정 계수(Finite Population Correction)**가 붙는다. $N$이 $n$에 비해 충분히 크면 이 값은 1에 가까워지고, 초기하 분포는 이항 분포로 수렴한다.
+이항 분포의 분산 $np(1-p)$와 비교하면, 끝에 $\frac{N-n}{N-1}$이라는 **유한 모집단 보정 계수**(Finite Population Correction)가 붙는다. $N$이 $n$에 비해 충분히 크면 이 값은 1에 가까워지고, 초기하 분포는 이항 분포로 수렴한다.
 
 ### 품질 검사 예시
 
@@ -572,7 +572,7 @@ Geometric(0.4)           2.500     2.505     3.750     3.773
 Hypergeom(50,10,5)       1.000     0.999     0.735     0.735
 ```
 
-10만 개 샘플이면 이론값과 소수점 둘째 자리까지 일치한다. 이것이 **큰 수의 법칙(Law of Large Numbers)**이 작동하는 모습이다.
+10만 개 샘플이면 이론값과 소수점 둘째 자리까지 일치한다. 이것이 **큰 수의 법칙**(Law of Large Numbers)이 작동하는 모습이다.
 
 ---
 

@@ -74,7 +74,7 @@ $$\alpha_{\text{adjusted}} = \frac{\alpha}{m}$$
 
 20개 검정이면 $\alpha = 0.05/20 = 0.0025$. 직관적이고 구현이 쉽지만, 지나치게 보수적이라 진짜 효과까지 놓칠 수 있다(검정력 손실).
 
-**FDR 제어 (Benjamini-Hochberg)**: 모든 거짓 양성을 차단하는 대신, **거짓 발견 비율(False Discovery Rate)**을 일정 수준 이하로 유지하는 전략이다. 탐색적 분석에서 Bonferroni보다 훨씬 실용적이다.
+**FDR 제어 (Benjamini-Hochberg)**: 모든 거짓 양성을 차단하는 대신, **거짓 발견 비율**(False Discovery Rate)을 일정 수준 이하로 유지하는 전략이다. 탐색적 분석에서 Bonferroni보다 훨씬 실용적이다.
 
 ```python
 import numpy as np
@@ -219,7 +219,7 @@ for name, (xt, yt) in transforms.items():
 
 ### 방어: 사전 등록(Pre-registration)
 
-p-hacking의 가장 강력한 방어책은 **사전 등록(Pre-registration)**이다. 데이터 수집 전에 가설, 분석 방법, 표본 크기, 유의수준을 공개적으로 등록한다. 사후적 분석 조작의 여지를 원천 차단하는 것이다.
+p-hacking의 가장 강력한 방어책은 **사전 등록**(Pre-registration)이다. 데이터 수집 전에 가설, 분석 방법, 표본 크기, 유의수준을 공개적으로 등록한다. 사후적 분석 조작의 여지를 원천 차단하는 것이다.
 
 - [OSF Registries](https://osf.io/registries) — 학술 연구 사전 등록 플랫폼
 - [AsPredicted.org](https://aspredicted.org) — 간소화된 사전 등록
@@ -405,7 +405,7 @@ print(f"양성 중 실제 환자 비율: {true_positive/(true_positive+false_pos
 
 **⚠️ 실무에서의 기저율 무시**
 
-이 함정은 의료 검사만의 문제가 아니다. 스팸 필터, 사기 탐지, 이상 탐지 등 **"희귀 사건을 탐지하는 모든 시스템"**에 동일하게 적용된다. 사기 거래 비율이 0.01%인 시스템에서 99% 정확도를 자랑해도, 양성 판정의 대부분은 거짓 양성이다. 모델 성능을 정확도(accuracy)만으로 판단하면 안 되는 이유가 여기에 있다.
+이 함정은 의료 검사만의 문제가 아니다. 스팸 필터, 사기 탐지, 이상 탐지 등 "**희귀 사건을 탐지하는 모든 시스템**"에 동일하게 적용된다. 사기 거래 비율이 0.01%인 시스템에서 99% 정확도를 자랑해도, 양성 판정의 대부분은 거짓 양성이다. 모델 성능을 정확도(accuracy)만으로 판단하면 안 되는 이유가 여기에 있다.
 
 :::
 
