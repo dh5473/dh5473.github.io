@@ -43,4 +43,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: '내부 구조부터 실전 DBA까지, 쿼리가 느린 이유를 원리로 설명',
     color: '#336791',
   },
+  'clickhouse': {
+    title: 'ClickHouse',
+    description: '컬럼 지향 OLAP 엔진의 설계 원리부터 실전 운영까지',
+    color: '#FFCC00',
+  },
 }
