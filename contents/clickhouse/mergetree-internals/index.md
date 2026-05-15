@@ -133,10 +133,11 @@ price.bin 내부:
 
 Granule은 논리적 개념이고, 데이터는 압축 블록 안에 들어 있습니다. "Granule N을 읽고 싶다"를 "`.bin` 파일의 몇 번째 바이트부터 읽어라"로 변환하는 것이 **Mark 파일(`.mrk2`)**의 역할입니다.
 
-`.mrk2` 파일은 비압축 flat 배열입니다. Granule 하나당 엔트리 하나. 각 엔트리에는 두 개의 오프셋이 기록됩니다.
+`.mrk2` 파일은 비압축 flat 배열입니다. Granule 하나당 엔트리 하나. 각 엔트리에는 세 개의 필드가 기록됩니다.
 
 1. **`offset_in_compressed_file`** — `.bin` 파일에서 해당 압축 블록이 시작하는 바이트 위치
 2. **`offset_in_decompressed_block`** — 압축을 해제한 블록 안에서 해당 granule이 시작하는 바이트 위치
+3. **`rows_count`** — 이 granule에 포함된 행 수 (적응형 granularity를 위해 기록)
 
 ```
 price.mrk2 (granule → 물리적 위치 매핑):
@@ -155,7 +156,7 @@ Granule 0과 1은 같은 압축 블록(오프셋 0)에 들어 있습니다. Gran
 
 ### 왜 Mark 파일이 필요한가
 
-Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음부터 모든 압축 블록을 순서대로 해제하면서 N번째 granule 위치를 찾아야 합니다. Mark가 있으면 **랜덤 액세스**가 가능합니다 — mark N의 두 오프셋을 읽고, `.bin` 파일의 정확한 위치로 점프해서 해당 블록만 해제하면 됩니다.
+Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음부터 모든 압축 블록을 순서대로 해제하면서 N번째 granule 위치를 찾아야 합니다. Mark가 있으면 **랜덤 액세스**가 가능합니다 — mark N의 오프셋을 읽고, `.bin` 파일의 정확한 위치로 점프해서 해당 블록만 해제하면 됩니다.
 
 각 컬럼은 별도의 `.mrk2` 파일을 갖습니다. 같은 granule이라도 컬럼마다 데이터 타입과 크기가 다르기 때문에, 물리적 위치(바이트 오프셋)가 다릅니다. `price`(UInt32)와 `category`(LowCardinality(String))의 granule 0이 각각의 `.bin` 파일에서 다른 위치에 있는 것은 당연합니다.
 
@@ -205,8 +206,10 @@ primary.idx (1,221개 엔트리):
 │    ...   │ ...            │ ...                 │
 │   152    │ 도서           │ 2025-01-01 00:01:33 │
 │   ...    │ ...            │ ...                 │
-│  1067    │ 전자제품       │ 2025-01-01 00:00:55 │
-│  1068    │ 전자제품       │ 2025-01-03 08:47:22 │
+│   916    │ 전자제품       │ 2025-01-01 00:00:55 │
+│   917    │ 전자제품       │ 2025-01-03 08:47:22 │
+│   ...    │ ...            │ ...                 │
+│  1068    │ 화장품         │ 2025-01-01 00:02:18 │
 │   ...    │ ...            │ ...                 │
 │  1220    │ 화장품         │ 2025-12-29 15:33:41 │
 └──────────┴────────────────┴─────────────────────┘
@@ -239,13 +242,13 @@ primary.idx (1,221개 엔트리):
 데이터가 `ORDER BY (category, created_at)` 순으로 정렬되어 있으므로, 같은 category의 행들은 연속된 granule에 모여 있습니다.
 
 ```
-Granule:  [0: 가구] [1: 가구] ... [152: 도서] ... [1067: 전자] [1068: 전자] ... [1220: 화장품]
-                                                   ^^^^^^^^^^  ^^^^^^^^^^
-                                                    SELECTED    SELECTED
-          ◀─────── SKIP ──────────────────────────▶             ◀── SKIP ──▶
+Granule:  [0: 가구] ... [152: 도서] ... [763: 의류] ... [916: 전자] [917: 전자] ... [1068: 화장품] ... [1220: 화장품]
+                                                        ^^^^^^^^^^  ^^^^^^^^^^
+                                                         SELECTED    SELECTED
+          ◀──────────── SKIP ──────────────────────────▶             ◀────── SKIP ──────▶
 ```
 
-1,221개 granule 중 `전자제품`에 해당하는 약 150개만 읽고 나머지 1,070개는 건드리지 않습니다. 디스크 I/O가 약 1/8로 줄어드는 것입니다.
+1,221개 granule 중 `전자제품`에 해당하는 약 153개만 읽고 나머지 1,068개는 건드리지 않습니다. 디스크 I/O가 약 1/8로 줄어드는 것입니다.
 
 반면 `WHERE user_id = 42`를 쿼리하면 어떨까요? `user_id`는 `ORDER BY`에 포함되어 있지 않으므로 `primary.idx`에 기록되어 있지 않습니다. Pruning이 불가능하고 모든 granule을 읽어야 합니다. 어떤 컬럼을 `ORDER BY` 앞에 놓느냐에 따라 pruning 효과가 극적으로 달라집니다. 이 설계 전략은 [#5(PRIMARY KEY 설계)](/clickhouse/primary-key-design/)에서 집중적으로 다룹니다.
 
@@ -259,7 +262,7 @@ SELECT avg(price) FROM orders WHERE category = '전자제품'
      ▼
 ① primary.idx 이진 탐색
      │  category = '전자제품'인 granule 범위 결정
-     │  → granule 1067 ~ 1220 중 해당 범위 선택 (예: mark 1067~1218)
+     │  → granule 916 ~ 1068 중 해당 범위 선택 (예: mark 916~1068)
      ▼
 ② price.mrk2에서 선택된 mark 조회
      │  → 각 mark의 [compressed offset, decompressed offset] 획득
@@ -275,7 +278,7 @@ SELECT avg(price) FROM orders WHERE category = '전자제품'
 
 핵심은 **읽지 않는 것**에 있습니다. `order_id.bin`, `user_id.bin`, `created_at.bin`은 열지도 않습니다. `category.bin`도 WHERE 필터가 granule 내부에서 필요할 때만 읽습니다. 전체 1,221개 granule 중 약 150개만, 전체 5개 컬럼 중 1~2개만 읽으니, 원본 데이터의 극히 일부만 디스크에서 가져오는 셈입니다.
 
-④ 단계에서 WHERE 필터를 다시 적용하는 이유가 있습니다. 희소 인덱스는 granule 단위로 선택하기 때문에, granule 경계에 다른 category의 행이 포함될 수 있습니다. 예를 들어 granule 1067의 첫 행은 `전자제품`이지만 앞쪽 일부 행에 `스포츠`가 남아있을 수 있습니다. 그래서 granule을 읽은 뒤 행 단위 필터링이 한 번 더 필요합니다.
+④ 단계에서 WHERE 필터를 다시 적용하는 이유가 있습니다. 희소 인덱스는 granule 단위로 선택하기 때문에, granule 경계에 다른 category의 행이 포함될 수 있습니다. 예를 들어 pruning으로 선택된 첫 번째 granule의 앞쪽 행에는 이전 카테고리(`의류`)가 남아있을 수 있습니다. 이 granule의 첫 행이 `의류`이더라도 `전자제품`이 포함될 가능성이 있으면 전체 granule이 선택됩니다. 그래서 granule을 읽은 뒤 행 단위 필터링이 한 번 더 필요합니다.
 
 ## 실험 — Docker로 직접 확인하기
 
@@ -351,7 +354,7 @@ WHERE table = 'orders' AND active;
 └───────────┴──────────┴───────┴─────────────────────────┘
 ```
 
-1,221개의 mark가 1,221개의 granule에 대응합니다. 행당 약 8,190행 — 마지막 granule이 8,192행에 못 미치기 때문에 평균이 살짝 낮게 나옵니다. 정확히 예상대로입니다.
+1,221개의 mark가 1,221개의 granule에 대응합니다. granule당 약 8,190행 — 마지막 granule이 8,192행에 못 미치기 때문에 평균이 살짝 낮게 나옵니다. 정확히 예상대로입니다.
 
 ### Granule Pruning 실험
 
@@ -426,15 +429,15 @@ ORDER BY data_uncompressed_bytes DESC;
 
 ```
 ┌─column─────┬─type──────────────────┬─compressed─┬─uncompressed─┬─marks_size─┐
-│ order_id   │ UInt64                │ 12.51 MiB  │ 38.15 MiB    │ 19.07 KiB  │
-│ created_at │ DateTime              │ 5.73 MiB   │ 38.15 MiB    │ 19.07 KiB  │
-│ user_id    │ UInt32                │ 19.14 MiB  │ 38.15 MiB    │ 19.07 KiB  │
-│ price      │ UInt32                │ 19.07 MiB  │ 38.15 MiB    │ 19.07 KiB  │
-│ category   │ LowCardinality(String)│ 1.53 MiB   │ 9.54 MiB     │ 19.07 KiB  │
+│ order_id   │ UInt64                │ 12.51 MiB  │ 76.29 MiB    │ 28.61 KiB  │
+│ created_at │ DateTime              │ 5.73 MiB   │ 38.15 MiB    │ 28.61 KiB  │
+│ user_id    │ UInt32                │ 19.14 MiB  │ 38.15 MiB    │ 28.61 KiB  │
+│ price      │ UInt32                │ 19.07 MiB  │ 38.15 MiB    │ 28.61 KiB  │
+│ category   │ LowCardinality(String)│ 1.53 MiB   │ 9.54 MiB     │ 28.61 KiB  │
 └────────────┴───────────────────────┴────────────┴──────────────┴────────────┘
 ```
 
-`marks_size`가 모든 컬럼에서 동일하게 **19.07 KiB**입니다. 1,221개 mark × 16바이트(오프셋 2개 × 8바이트) = 19,536바이트 ≈ 19.07 KiB. 컬럼의 데이터 크기나 타입과 무관하게, granule 수가 같으면 Mark 파일 크기도 같습니다.
+`marks_size`가 모든 컬럼에서 동일하게 **28.61 KiB**입니다. 1,221개 mark × 24바이트(오프셋 2개 + rows_count, 각 8바이트) = 29,304바이트 ≈ 28.61 KiB. 컬럼의 데이터 크기나 타입과 무관하게, granule 수가 같으면 Mark 파일 크기도 같습니다.
 
 ### ORDER BY가 Pruning에 미치는 영향 (맛보기)
 
