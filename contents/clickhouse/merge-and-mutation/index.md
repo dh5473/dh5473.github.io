@@ -299,7 +299,7 @@ WHERE table = 'orders';
 
 ```
 ┌─table──┬─result_part_name─┬─progress─┬─elapsed─┬─num_parts─┬─total_size─┬─is_mutation─┐
-│ orders │ all_1_3_1        │     0.45 │    1.23 │         3 │ 111.05 MiB │           0 │
+│ orders │ all_1_3_1        │     0.45 │    1.23 │         3 │ 111.23 MiB │           0 │
 └────────┴──────────────────┴──────────┴─────────┴───────────┴────────────┴─────────────┘
 ```
 
@@ -377,7 +377,7 @@ WHERE category = '전자제품';
 DELETE FROM orders WHERE order_id < 100;
 ```
 
-이 명령은 거의 즉시 반환됩니다. Part를 재작성하지 않기 때문입니다. `system.mutations`를 확인하면 내부적으로 어떤 연산이 실행되었는지 볼 수 있습니다.
+이 명령은 거의 즉시 반환됩니다. 전체 컬럼 파일을 재작성하지 않기 때문입니다. `system.mutations`를 확인하면 내부적으로 어떤 연산이 실행되었는지 볼 수 있습니다.
 
 ```sql
 SELECT mutation_id, command, is_done
@@ -389,7 +389,7 @@ LIMIT 1;
 
 ```
 ┌─mutation_id────┬─command──────────────────────────────────────────────┬─is_done─┐
-│ mutation_6.txt │ UPDATE _row_exists = 0 WHERE order_id < 100         │       1 │
+│ mutation_5.txt │ UPDATE _row_exists = 0 WHERE order_id < 100         │       1 │
 └────────────────┴──────────────────────────────────────────────────────┴─────────┘
 ```
 
@@ -431,9 +431,15 @@ FROM system.parts
 WHERE table = 'orders' AND active;
 ```
 
-머지 후 `rows`가 100만큼 줄고, Part 크기도 소폭 감소한 것을 확인할 수 있습니다. 삭제된 행의 데이터가 물리적으로 정리된 것입니다.
+```
+┌─name──────┬─────rows─┬─size───────┐
+│ all_1_3_1 │  9999900 │ 110.94 MiB │
+└───────────┴──────────┴────────────┘
+```
 
-핵심 차이를 정리하면: 앞서 실행한 ALTER TABLE UPDATE는 Part 재작성까지 수 초가 걸렸지만, DELETE FROM은 즉시 반환되었습니다. 대신 ALTER TABLE DELETE는 실행 즉시 물리적으로 깨끗한 Part를 만들고, Lightweight DELETE는 다음 머지까지 마스킹 상태로 남깁니다. 용도에 맞게 선택해야 합니다.
+`rows`가 9,999,900으로 100만큼 줄었고, Part 크기도 소폭 감소했습니다. 삭제된 행의 데이터가 머지를 통해 물리적으로 정리된 것입니다.
+
+핵심 차이를 정리하면: 앞서 실행한 ALTER TABLE UPDATE는 Part 재작성까지 수 초가 걸렸지만, DELETE FROM은 즉시 반환되었습니다. ALTER TABLE DELETE는 뮤테이션이 완료되면 물리적으로 깨끗한 Part를 남기고, Lightweight DELETE는 다음 머지까지 마스킹 상태로 남깁니다. 용도에 맞게 선택해야 합니다.
 
 ## 실전에서는
 
