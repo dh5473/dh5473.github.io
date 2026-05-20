@@ -17,7 +17,7 @@ thumbnail: './thumbnail.png'
 
 이 글에서는 불변 Part를 관리하는 두 가지 메커니즘을 다룹니다. Part를 합치는 **백그라운드 머지**와, 불변 Part 위에서 변경을 구현하는 **뮤테이션(Mutation)**입니다.
 
-## 왜 불변 Part인가 — 설계 동기
+## 왜 불변 Part인가: 설계 동기
 
 PostgreSQL은 8KB 페이지 안에서 행을 직접 수정합니다(in-place update). UPDATE 하나에도 WAL 기록, 행 잠금, MVCC 버전 관리가 따라옵니다. 단건 트랜잭션 위주의 OLTP에서는 합리적인 설계지만, 초당 수십만 행을 쏟아붓는 OLAP 쓰기 패턴에서는 이 오버헤드가 심각한 병목이 됩니다.
 
@@ -36,7 +36,7 @@ In-place Update (RDB)              Append + Merge (MergeTree)
 
 대신 읽기 비용이 생깁니다. Part가 여러 개 있으면 쿼리가 모든 Part를 확인해야 합니다. Part 10개에서 같은 `WHERE` 조건을 검색하려면, 각 Part의 `primary.idx`를 10번 탐색하고 해당 granule을 10번 읽어야 합니다.
 
-이 읽기 비용을 줄이는 메커니즘이 **백그라운드 머지**입니다. 작은 Part 여러 개를 큰 Part 하나로 합쳐서, 쿼리가 확인해야 할 Part 수를 줄입니다. 쓰기 속도를 극대화하고, 읽기 비용은 머지로 점진적으로 상환하는 구조 — 이것이 MergeTree라는 이름의 핵심입니다.
+이 읽기 비용을 줄이는 메커니즘이 **백그라운드 머지**입니다. 작은 Part 여러 개를 큰 Part 하나로 합쳐서, 쿼리가 확인해야 할 Part 수를 줄입니다. 쓰기 속도를 극대화하고, 읽기 비용은 머지로 점진적으로 상환하는 구조입니다. 이것이 MergeTree라는 이름의 핵심입니다.
 
 ## 백그라운드 머지
 
@@ -69,7 +69,7 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
 
 머지에는 절대적인 규칙이 하나 있습니다. **같은 파티션 안의 Part만 머지됩니다.** 서로 다른 파티션의 Part는 절대 합쳐지지 않습니다.
 
-이 규칙 때문에 파티셔닝이 머지 효율에 직접적인 영향을 줍니다. 파티션을 너무 세밀하게 나누면 — 예를 들어 일별 파티션에 INSERT가 시간당 한 번뿐이라면 — 각 파티션에 Part가 하나씩만 존재해서 머지할 대상 자체가 없습니다. Part 수가 줄어들지 않고 계속 쌓이기만 합니다.
+이 규칙 때문에 파티셔닝이 머지 효율에 직접적인 영향을 줍니다. 파티션을 너무 세밀하게 나누면 (예를 들어 일별 파티션에 INSERT가 시간당 한 번뿐이라면) 각 파티션에 Part가 하나씩만 존재해서 머지할 대상 자체가 없습니다. Part 수가 줄어들지 않고 계속 쌓이기만 합니다.
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ 주의</strong><br>
@@ -107,7 +107,7 @@ Part는 생성부터 삭제까지 세 단계를 거칩니다.
 
 대규모 테이블에서 여러 머지가 동시에 진행되면 디스크 사용량이 급증할 수 있습니다. 디스크 여유 공간이 부족하면 머지가 실패하고, Part 수가 줄지 않아 읽기 성능이 저하되는 악순환에 빠집니다. `system.merges`에서 진행 중인 머지를 모니터링하는 것이 중요한 이유입니다.
 
-## 뮤테이션 — 불변 Part 위의 변경
+## 뮤테이션: 불변 Part 위의 변경
 
 ### ALTER TABLE UPDATE / DELETE
 
@@ -155,7 +155,7 @@ WHERE category = '전자제품'
 SETTINGS mutations_sync = 1;  -- 완료까지 대기
 ```
 
-### Lightweight DELETE — 더 가벼운 삭제
+### Lightweight DELETE: 더 가벼운 삭제
 
 ALTER TABLE DELETE가 Part를 통째로 재작성한다면, `DELETE FROM`은 훨씬 가볍습니다.
 
@@ -192,7 +192,7 @@ RDB에서 UPDATE는 일상적인 연산입니다. 주문 상태를 변경하고,
 
 기본 MergeTree는 머지할 때 Part의 데이터를 그대로 합칩니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 이 한계를 해결하기 위해 설계된 것이 **MergeTree 변종 엔진**들입니다. ReplacingMergeTree는 같은 키의 중복을 머지 시점에 제거하고, CollapsingMergeTree는 상태 변경을 +1/-1 쌍으로 처리합니다. 다음 글에서 이 엔진들이 머지 과정에서 어떤 추가 로직을 수행하는지 다룹니다.
 
-## 실험 — Docker로 직접 확인하기
+## 실험: Docker로 직접 확인하기
 
 [이전 글](/clickhouse/mergetree-internals/)의 Docker 환경(`ch-test` 컨테이너)을 그대로 사용합니다. 컨테이너가 없다면 [첫 번째 글](/clickhouse/why-clickhouse/)의 Docker 실험 섹션을 참고하세요.
 
@@ -335,7 +335,7 @@ WHERE table = 'orders';
 └────────────────┴──────────────────────────────────────────────┴─────────────────────┴─────────┴─────────────┘
 ```
 
-`is_done = 1`, `parts_to_do = 0` — 뮤테이션이 완료되었습니다. `system.parts`를 확인하면 새 Part가 생성된 것을 볼 수 있습니다.
+`is_done = 1`, `parts_to_do = 0`. 뮤테이션이 완료되었습니다. `system.parts`를 확인하면 새 Part가 생성된 것을 볼 수 있습니다.
 
 ```sql
 SELECT name, active, rows
@@ -509,7 +509,7 @@ KILL MUTATION WHERE mutation_id = 'mutation_4.txt';
 
 불변 Part는 MergeTree의 쓰기 성능을 보장하는 핵심 설계이고, 그로 인한 읽기 비용은 백그라운드 머지가 상환합니다. 뮤테이션은 불변성 위에서 변경을 구현하는 비상 도구이지, RDB의 UPDATE처럼 일상적으로 쓸 연산이 아닙니다.
 
-기본 MergeTree의 머지는 Part를 합칠 뿐, 중복을 제거하거나 값을 집계하지 않습니다. 다음 글에서는 머지 과정에 추가 로직을 끼워 넣는 MergeTree 변종들 — ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree — 이 각각 어떤 문제를 해결하는지 다룹니다.
+기본 MergeTree의 머지는 Part를 합칠 뿐, 중복을 제거하거나 값을 집계하지 않습니다. 다음 글에서는 머지 과정에 추가 로직을 끼워 넣는 MergeTree 변종들 (ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree) 이 각각 어떤 문제를 해결하는지 다룹니다.
 
 ---
 
