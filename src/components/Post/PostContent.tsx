@@ -62,7 +62,6 @@ const MarkdownRenderer = styled.div`
     border-left: 3px solid ${c.primary};
     background: ${c.bgSubtle};
     border-radius: 0 6px 6px 0;
-    font-weight: 600;
     color: ${c.text};
   }
 

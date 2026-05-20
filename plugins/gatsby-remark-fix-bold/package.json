@@ -1,0 +1,6 @@
+{
+  "name": "gatsby-remark-fix-bold",
+  "version": "1.0.0",
+  "description": "Fixes bold markers that fail to parse when closing ** follows ) and precedes a non-space character",
+  "main": "index.js"
+}

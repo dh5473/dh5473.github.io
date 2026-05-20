@@ -82,6 +82,9 @@ module.exports = {
       resolve: `gatsby-transformer-remark`,
       options: {
         plugins: [
+          // **텍스트(괄호)**+한글 패턴 bold 파싱 실패 수정 (mutateSource, 파싱 전에 실행)
+          'gatsby-remark-fix-bold',
+
           // 스마트 문장 부호
           {
             resolve: 'gatsby-remark-smartypants',
