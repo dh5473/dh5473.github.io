@@ -5,7 +5,7 @@ category: 'Database'
 series: 'clickhouse'
 seriesOrder: 4
 tags: ['ClickHouse', 'MergeTree', 'ReplacingMergeTree', 'SummingMergeTree', 'AggregatingMergeTree']
-summary: '기본 MergeTree의 머지는 데이터를 합칠 뿐이지만, 변종 엔진들은 머지 과정에 중복 제거, 합산, 집계, 상쇄 로직을 끼워 넣습니다. 네 가지 변종의 설계 동기와 동작 차이를 Docker 실험으로 확인합니다.'
+summary: 'Replacing, Summing, Aggregating, Collapsing 네 엔진이 머지 과정에서 각각 어떤 추가 로직을 수행하는지, 머지 전 중간 상태는 어떻게 처리해야 하는지를 Docker 실험으로 확인합니다.'
 thumbnail: './thumbnail.png'
 ---
 
