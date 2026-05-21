@@ -1,6 +1,6 @@
 ---
 date: '2026-05-21'
-title: 'MergeTree 변종 엔진: Replacing, Summing, Aggregating, Collapsing'
+title: '중복 제거부터 상태 상쇄까지: MergeTree 엔진 4종 비교'
 category: 'Database'
 series: 'clickhouse'
 seriesOrder: 4
