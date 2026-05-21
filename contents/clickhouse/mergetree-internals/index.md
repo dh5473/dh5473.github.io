@@ -250,7 +250,7 @@ Granule:  [0: Furniture] ... [152: Books] ... [763: Clothes]  [916: Electronics]
 
 1,221개 granule 중 `전자제품`에 해당하는 약 153개만 읽고 나머지 1,068개는 건드리지 않습니다. 디스크 I/O가 약 1/8로 줄어드는 것입니다.
 
-반면 `WHERE user_id = 42`를 쿼리하면 어떨까요? `user_id`는 `ORDER BY`에 포함되어 있지 않으므로 `primary.idx`에 기록되어 있지 않습니다. Pruning이 불가능하고 모든 granule을 읽어야 합니다. 어떤 컬럼을 `ORDER BY` 앞에 놓느냐에 따라 pruning 효과가 극적으로 달라집니다. 이 설계 전략은 [#5(PRIMARY KEY 설계)](/clickhouse/primary-key-design/)에서 집중적으로 다룹니다.
+반면 `WHERE user_id = 42`를 쿼리하면 어떨까요? `user_id`는 `ORDER BY`에 포함되어 있지 않으므로 `primary.idx`에 기록되어 있지 않습니다. Pruning이 불가능하고 모든 granule을 읽어야 합니다. 어떤 컬럼을 `ORDER BY` 앞에 놓느냐에 따라 pruning 효과가 극적으로 달라집니다.
 
 ## 쿼리 실행 흐름: 처음부터 끝까지
 
@@ -488,7 +488,7 @@ SELECT avg(price) FROM orders_by_user WHERE user_id = 42;
 
 **`Granules: 2/1221`**: `user_id`가 ORDER BY 첫 번째 컬럼이므로 극도로 정밀한 pruning이 작동합니다. 1,221개 중 2개만 읽습니다.
 
-같은 데이터, 같은 쿼리인데 ORDER BY만 바꿨을 뿐입니다. ORDER BY 선택이 곧 인덱스 설계이고, 이것이 쿼리 성능을 결정합니다. 이 주제는 [#5(PRIMARY KEY 설계)](/clickhouse/primary-key-design/)의 핵심입니다.
+같은 데이터, 같은 쿼리인데 ORDER BY만 바꿨을 뿐입니다. ORDER BY 선택이 곧 인덱스 설계이고, 이것이 쿼리 성능을 결정합니다.
 
 ## 실전에서는
 
@@ -512,7 +512,7 @@ ORDER BY active_parts DESC;
 - ORDER BY가 `(a, b)`인데 WHERE에 `b`만 있을 때 (첫 번째 키 컬럼 `a`를 건너뛰면 이진 탐색 불가)
 - 카디널리티가 극도로 높은 컬럼(예: UUID)이 ORDER BY 앞에 올 때 (granule마다 값이 고유해서 pruning 의미 없음)
 
-이 패턴들을 어떻게 회피하는지는 [#5(PRIMARY KEY 설계)](/clickhouse/primary-key-design/)에서 구체적인 설계 전략으로 다룹니다.
+이 패턴들을 피하려면 ORDER BY 키 설계가 중요합니다.
 
 ## 마치며
 
