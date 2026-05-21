@@ -5,7 +5,7 @@ category: 'Database'
 series: 'clickhouse'
 seriesOrder: 1
 tags: ['ClickHouse', 'OLAP', 'Column Store', 'MergeTree']
-summary: '1억 행 집계가 RDB에서 30초, ClickHouse에서 0.3초인 이유를 컬럼 저장, 벡터화 실행, 압축, MergeTree 구조의 설계 동기로부터 풀어내고 Docker 실험으로 직접 확인합니다.'
+summary: '1억 행 집계가 RDB에서 30초, ClickHouse에서 0.3초인 이유를 컬럼 저장, 벡터화 실행, 데이터 압축, MergeTree 구조의 설계 원리로 풀어냅니다.'
 thumbnail: './thumbnail.png'
 ---
 

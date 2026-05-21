@@ -5,7 +5,7 @@ category: 'Database'
 series: 'clickhouse'
 seriesOrder: 2
 tags: ['ClickHouse', 'MergeTree', 'Sparse Index', 'Granule', 'Mark']
-summary: 'MergeTree Part 디렉토리 안의 파일들을 하나하나 열어보고, Granule-Mark-희소 인덱스가 연결되는 구조를 따라가며, 쿼리가 수십억 행에서 필요한 Granule만 골라 읽는 과정을 Docker 실험으로 확인합니다.'
+summary: 'Part 디렉토리의 파일 구조부터 Granule, Mark, 희소 인덱스가 연결되는 읽기 경로까지. 쿼리가 수십억 행에서 필요한 Granule만 골라 읽는 원리를 설명합니다.'
 thumbnail: './thumbnail.png'
 ---
 

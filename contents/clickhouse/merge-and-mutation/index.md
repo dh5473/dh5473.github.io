@@ -5,7 +5,7 @@ category: 'Database'
 series: 'clickhouse'
 seriesOrder: 3
 tags: ['ClickHouse', 'MergeTree', 'Merge', 'Mutation', 'Part Lifecycle']
-summary: 'INSERT마다 쌓이는 불변 Part를 백그라운드 머지가 어떻게 합치는지, 불변 Part 위에서 UPDATE/DELETE가 어떻게 구현되는지를 Part 생명주기, system.merges, system.mutations 실험으로 확인합니다.'
+summary: 'INSERT마다 쌓이는 불변 Part를 백그라운드 머지가 어떻게 합치는지, 불변 Part 위에서 UPDATE/DELETE가 어떻게 구현되는지를 Part 생명주기와 뮤테이션 메커니즘으로 설명합니다.'
 thumbnail: './thumbnail.png'
 ---
 

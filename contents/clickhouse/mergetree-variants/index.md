@@ -5,7 +5,7 @@ category: 'Database'
 series: 'clickhouse'
 seriesOrder: 4
 tags: ['ClickHouse', 'MergeTree', 'ReplacingMergeTree', 'SummingMergeTree', 'AggregatingMergeTree']
-summary: 'Replacing, Summing, Aggregating, Collapsing 네 엔진이 머지 과정에서 각각 어떤 추가 로직을 수행하는지, 머지 전 중간 상태는 어떻게 처리해야 하는지를 Docker 실험으로 확인합니다.'
+summary: 'Replacing, Summing, Aggregating, Collapsing 네 엔진이 머지 과정에서 각각 어떤 추가 로직을 수행하는지, 머지 전 중간 상태는 어떻게 처리해야 하는지를 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
 
