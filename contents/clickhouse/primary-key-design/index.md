@@ -67,7 +67,7 @@ PRIMARY KEY (event_date, user_id);
 
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ 주의</strong><br>
-  ORDER BY는 테이블 생성 시 결정되며 이후 변경할 수 없습니다. 테이블에서 가장 레버리지 높은 설계 결정이므로, 쿼리 패턴을 분석한 뒤 신중하게 정해야 합니다. 잘못 잡으면 테이블을 새로 만들고 데이터를 다시 넣어야 합니다.
+  ORDER BY는 테이블 생성 시 결정됩니다. <code>ALTER TABLE MODIFY ORDER BY</code>로 컬럼을 추가할 수는 있지만, 새로 추가하는 컬럼만 가능하고 기존 컬럼 순서를 바꾸거나 제거하는 것은 불가능합니다. 사실상 가장 레버리지 높은 설계 결정이므로, 쿼리 패턴을 분석한 뒤 신중하게 정해야 합니다.
 </div>
 
 ## 카디널리티 순서의 원칙
@@ -109,7 +109,7 @@ ORDER BY (user_id, status)  — user_id 카디널리티: 100,000+
 → status 필터링으로 추가 스킵할 Granule이 없음
 ```
 
-같은 데이터, 같은 쿼리 `WHERE status = 1 AND user_id = 12345`에 대해 첫 번째 설계는 Granule을 대폭 줄이고, 두 번째 설계는 거의 줄이지 못합니다.
+단일 값 동등 조건(`WHERE status = 1 AND user_id = 12345`)에서는 두 설계 모두 첫 번째 컬럼의 바이너리 서치로 Granule을 크게 줄입니다. 하지만 범위 조건이 섞이거나 첫 번째 컬럼 없이 필터링할 때 차이가 벌어집니다. `WHERE status IN (1, 2) AND user_id BETWEEN 10000 AND 20000` 같은 쿼리에서 첫 번째 설계는 카디널리티가 낮은 `status`로 넓은 구간을 먼저 좁히고 그 안에서 `user_id` 범위를 추가로 걸러냅니다.
 
 ### 원칙 요약
 
@@ -147,10 +147,10 @@ ORDER BY (event_type, event_date, user_id)
 **패턴 B**: 사용자별 행동 분석이 주요 쿼리. "특정 사용자의 최근 7일 이벤트"를 가장 많이 실행한다면:
 
 ```sql
-ORDER BY (event_date, user_id, event_type)
+ORDER BY (user_id, event_date, event_type)
 ```
 
-`event_date`를 앞에 두면 날짜 범위 필터가 먼저 적용됩니다. 같은 날짜 안에서 `user_id`로 추가 스킵이 가능합니다.
+`user_id`(동등 조건)를 앞에 두면 바이너리 서치로 해당 사용자의 구간을 정확히 찾고, 그 안에서 `event_date` 범위 필터가 적용됩니다. `event_date`를 앞에 두면 BETWEEN 범위 조건이 걸리면서 `user_id` 인덱스 효과가 줄어듭니다.
 
 두 설계 중 어느 것이 "정답"인지는 쿼리 패턴에 달려 있습니다.
 
@@ -170,7 +170,7 @@ ENGINE = MergeTree()
 ORDER BY (event_date, event_type, user_id);
 ```
 
-`DateTime`(8바이트)대신 `Date`(2바이트)가 인덱스에 들어가므로, Granule당 인덱스 엔트리 크기가 줄어듭니다. 인덱스 전체가 메모리에 상주하므로 크기 절감이 곧 메모리 절감입니다.
+`DateTime`(4바이트) 대신 `Date`(2바이트)가 인덱스에 들어가므로, Granule당 인덱스 엔트리 크기가 줄어듭니다. 인덱스 전체가 메모리에 상주하므로 크기 절감이 곧 메모리 절감입니다.
 
 `ALIAS` 컬럼은 물리적으로 저장되지 않으므로 ORDER BY에 사용할 수 없습니다. `MATERIALIZED`는 물리적으로 저장되므로 가능합니다.
 
@@ -189,12 +189,12 @@ WHERE a = 1              → a로 바이너리 서치  ✅ 인덱스 활용
 WHERE a = 1 AND b = 2    → a, b 모두 활용     ✅✅ 최대 효과
 WHERE a = 1 AND b = 2 AND c = 3 → 전부 활용   ✅✅✅
 
-WHERE b = 2              → 접두사 아님         ❌ 전체 스캔
-WHERE c = 3              → 접두사 아님         ❌ 전체 스캔
+WHERE b = 2              → 접두사 아님         ❌ 거의 전체 스캔
+WHERE c = 3              → 접두사 아님         ❌ 거의 전체 스캔
 WHERE a = 1 AND c = 3    → a만 활용, c는 무시  ✅❌ (a까지만)
 ```
 
-`WHERE b = 2`는 `(a, b, c)` 정렬에서 b 값이 흩어져 있으므로 인덱스로 범위를 좁힐 수 없습니다. RDB에서 복합 인덱스 `(a, b, c)`가 `WHERE b = ?` 단독으로는 효과 없는 것과 같은 원리입니다.
+`WHERE b = 2`는 `(a, b, c)` 정렬에서 b 값이 흩어져 있으므로 바이너리 서치가 불가능합니다. ClickHouse의 제네릭 배제 탐색이 일부 Granule을 건너뛸 수는 있지만, 실질적으로는 전체 스캔에 가깝습니다.
 
 ### 범위 조건과 동등 조건
 
@@ -279,7 +279,7 @@ ALTER TABLE events ADD INDEX idx_url url TYPE bloom_filter GRANULARITY 4;
 ALTER TABLE events MATERIALIZE INDEX idx_url;
 ```
 
-주의할 점이 있습니다. 데이터 스키핑 인덱스는 ORDER BY에 의한 물리적 정렬과 **상관관계가 높은 컬럼**에서만 효과가 있습니다. 예를 들어 `url` 값이 모든 Granule에 골고루 분포해 있다면, 인덱스를 확인해도 스킵할 Granule이 거의 없습니다. 추가 비용만 들고 성능은 개선되지 않습니다.
+주의할 점이 있습니다. 데이터 스키핑 인덱스는 **필터링 대상 값이 소수의 Granule에 집중되어 있을 때** 효과가 있습니다. ORDER BY에 의한 정렬과 상관관계가 높으면 자연스럽게 이 조건이 충족됩니다. 반면 `url` 같은 값이 모든 Granule에 골고루 분포해 있다면, `bloom_filter`를 달아도 스킵할 Granule이 거의 없습니다. 인덱스 타입에 따라 효과가 다르므로(minmax는 정렬 의존도가 높고, bloom_filter는 값 분포에 더 의존), 맹목적으로 추가하면 비용만 늘어납니다.
 
 데이터 스키핑 인덱스와 Projection의 상세한 사용법은 다음 글에서 파티셔닝과 함께 다룹니다.
 
@@ -308,14 +308,11 @@ ORDER BY (category, order_id);
 `category = '전자제품'`인 `order_id = 100`과 `category = '의류'`인 `order_id = 100`은 ORDER BY 키가 다르므로 **다른 행으로 취급**됩니다. 같은 주문이라도 카테고리가 변경되면 중복이 제거되지 않습니다.
 
 ```sql
--- ✅ 올바른 설계
+-- ✅ 올바른 설계: 유니크 키만으로 ORDER BY
 ORDER BY order_id;
--- 또는 쿼리 성능이 필요하면
-ORDER BY (order_id, category);
--- → order_id가 앞에 와야 중복 제거가 올바르게 동작
 ```
 
-ReplacingMergeTree에서는 비즈니스 유니크 키가 ORDER BY의 앞부분에 와야 합니다.
+`ORDER BY (order_id, category)`처럼 category를 추가하면, category가 변경된 경우 같은 order_id라도 다른 행으로 취급됩니다. ReplacingMergeTree에서는 비즈니스 유니크 키만으로 ORDER BY를 구성하는 것이 안전합니다. 쿼리 성능을 위해 컬럼을 추가해야 한다면, 해당 컬럼의 값이 같은 유니크 키에 대해 절대 변하지 않는 경우에만 가능합니다.
 
 ## 실험: Docker로 직접 확인하기
 
@@ -409,7 +406,9 @@ WHERE status = 1 AND user_id = 12345;
 └──────────────────────────────────────────────┘
 ```
 
-`user_id = 12345`라는 정확한 값으로 필터링하면 두 경우 모두 1 Granule까지 좁혀집니다. 하지만 범위 쿼리에서 차이가 드러납니다.
+`user_id = 12345`라는 정확한 값으로 필터링하면 두 경우 모두 1 Granule까지 좁혀집니다. 두 번째 테이블의 EXPLAIN에서 `Keys: user_id`만 표시된 것을 주목하세요. `status`도 WHERE에 있지만, `user_id`(첫 번째 컬럼)의 카디널리티가 워낙 높아서 이미 1 Granule로 좁혀졌기 때문에 `status`로 추가 스킵할 여지가 없습니다. ClickHouse는 실제로 인덱스 효과가 있는 컬럼만 Keys에 표시합니다.
+
+하지만 범위 쿼리에서 차이가 드러납니다.
 
 ```sql
 -- status 범위 + user_id 범위
@@ -529,7 +528,7 @@ ClickHouse의 PRIMARY KEY는 정렬과 인덱싱을 위한 것이지, 유니크 
 
 ## 마치며
 
-ORDER BY는 ClickHouse에서 가장 레버리지가 높은 설계 결정입니다. 데이터의 물리적 정렬, 희소 인덱스의 키, 변종 엔진의 동작 키를 모두 결정합니다. 한번 정하면 변경할 수 없으므로, 쿼리 패턴을 먼저 분석하고 카디널리티 순서와 접두사 규칙을 고려해서 결정해야 합니다.
+ORDER BY는 ClickHouse에서 가장 레버리지가 높은 설계 결정입니다. 데이터의 물리적 정렬, 희소 인덱스의 키, 변종 엔진의 동작 키를 모두 결정합니다. 한번 정하면 사실상 바꾸기 어려우므로, 쿼리 패턴을 먼저 분석하고 카디널리티 순서와 접두사 규칙을 고려해서 결정해야 합니다.
 
 하나의 ORDER BY로 모든 쿼리를 최적화할 수는 없습니다. 다음 글에서는 파티셔닝, 데이터 스키핑 인덱스, Projection이 ORDER BY를 어떻게 보완하는지를 다룹니다.
 
