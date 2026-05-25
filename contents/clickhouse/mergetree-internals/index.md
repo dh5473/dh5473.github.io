@@ -242,10 +242,10 @@ primary.idx (1,221개 엔트리):
 데이터가 `ORDER BY (category, created_at)` 순으로 정렬되어 있으므로, 같은 category의 행들은 연속된 granule에 모여 있습니다.
 
 ```
-Granule:  [0: Furniture] ... [152: Books] ... [763: Clothes]  [916: Electronics] ... [1068: Electronics]  [1069: Cosmetics] ... [1220: Cosmetics]
-                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                                                                               SELECTED
-          ◀───────────────────── SKIP ──────────────────────▶                                             ◀─────────────── SKIP ────────────────▶
+Granule:  [0: 가구] ... [153: 도서] ... [763: 의류]  [916: 전자제품] ... [1067: 전자제품]  [1068: 화장품] ... [1220: 화장품]
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                                     SELECTED
+          ◀─────────────────── SKIP ──────────────────────▶                                     ◀──────────────── SKIP ────────────────▶
 ```
 
 1,221개 granule 중 `전자제품`에 해당하는 약 153개만 읽고 나머지 1,068개는 건드리지 않습니다. 디스크 I/O가 약 1/8로 줄어드는 것입니다.
@@ -262,13 +262,13 @@ SELECT avg(price) FROM orders WHERE category = '전자제품'
      ▼
 ① primary.idx 이진 탐색
      │  category = '전자제품'인 granule 범위 결정
-     │  → granule 916 ~ 1068 중 해당 범위 선택 (예: mark 916~1068)
+     │  → granule 916 ~ 1067 중 해당 범위 선택 (예: mark 916~1068)
      ▼
-② price.mrk2에서 선택된 mark 조회
+② price.mrk2 + category.mrk2에서 선택된 mark 조회
      │  → 각 mark의 [compressed offset, decompressed offset] 획득
      ▼
-③ price.bin에서 해당 압축 블록만 읽기 + 해제
-     │  → 선택된 granule들의 price 값 추출
+③ price.bin + category.bin에서 해당 압축 블록만 읽기 + 해제
+     │  → 선택된 granule들의 price, category 값 추출
      ▼
 ④ WHERE 필터 적용 + avg() 집계
      │  (granule 경계에서 다른 category가 섞일 수 있으므로 정확한 필터링 수행)
@@ -276,7 +276,7 @@ SELECT avg(price) FROM orders WHERE category = '전자제품'
 ⑤ 결과 반환
 ```
 
-핵심은 **읽지 않는 것**입니다. `order_id.bin`, `user_id.bin`, `created_at.bin`은 열지도 않습니다. 전체 1,221개 granule 중 약 153개만, 전체 5개 컬럼 중 1\~2개만 읽으니 원본 데이터의 극히 일부만 디스크에서 가져옵니다.
+핵심은 **읽지 않는 것**입니다. `order_id.bin`, `user_id.bin`, `created_at.bin`은 열지도 않습니다. 전체 1,221개 granule 중 약 153개만, 전체 5개 컬럼 중 2개만 읽으니 원본 데이터의 극히 일부만 디스크에서 가져옵니다.
 
 ④에서 WHERE 필터를 다시 적용하는 이유는 이렇습니다. 희소 인덱스는 granule 단위로 선택하기 때문에, granule 경계에 다른 category의 행이 섞일 수 있습니다. 선택된 첫 번째 granule의 앞쪽 행에 이전 카테고리(`의류`)가 남아있거나, 마지막 granule의 뒤쪽 행에 다음 카테고리(`화장품`)가 포함될 수 있습니다. 그래서 granule을 읽은 뒤 행 단위 필터링이 한 번 더 필요합니다.
 
@@ -435,7 +435,7 @@ ORDER BY data_uncompressed_bytes DESC;
 └────────────┴───────────────────────┴────────────┴──────────────┴────────────┘
 ```
 
-`marks_size`가 모든 컬럼에서 동일하게 **28.61 KiB**입니다. 1,221개 mark × 24바이트(오프셋 2개 + rows_count, 각 8바이트) = 29,304바이트 ≈ 28.61 KiB. 컬럼의 데이터 크기나 타입과 무관하게, granule 수가 같으면 Mark 파일 크기도 같습니다.
+`marks_size`가 모든 컬럼에서 동일하게 **28.61 KiB**입니다. 1,221개 mark × 24바이트(오프셋 2개 + `rows_count`, 각 8바이트) = 29,304바이트 ≈ 28.61 KiB. 컬럼의 데이터 크기나 타입과 무관하게, granule 수가 같으면 Mark 파일 크기도 같습니다.
 
 ### ORDER BY가 Pruning에 미치는 영향 (맛보기)
 

@@ -166,7 +166,7 @@ DELETE FROM orders WHERE order_id < 100;
 
 Lightweight DELETE는 모든 컬럼 파일을 재작성하지 않습니다. 내부적으로 `ALTER TABLE UPDATE _row_exists = 0 WHERE ...` 형태의 뮤테이션으로 변환됩니다. Wide Part의 경우 `_row_exists` 컬럼 파일만 새로 쓰고, 나머지 컬럼 파일은 **hardlink**로 연결하여 새 Part를 만듭니다. 전체 컬럼을 다시 쓰는 ALTER TABLE DELETE에 비해 I/O가 극적으로 줄어듭니다.
 
-이후 SELECT 쿼리는 자동으로 `PREWHERE _row_exists = 1` 조건이 추가되어, 삭제 표시된 행을 건너뜁니다. 실제 물리적 제거는 다음 백그라운드 머지 때 일어납니다.
+이후 SELECT 쿼리는 자동으로 `PREWHERE _row_exists` 조건이 추가되어, 삭제 표시된 행을 건너뜁니다. 실제 물리적 제거는 다음 백그라운드 머지 때 일어납니다.
 
 | 특성 | ALTER TABLE DELETE | DELETE FROM (Lightweight) |
 |------|-------------------|--------------------------|
@@ -418,6 +418,12 @@ WHERE table = 'orders' AND active
 ORDER BY name;
 ```
 
+```
+┌─name────────┬─active─┬─────rows─┬─size───────┐
+│ all_1_3_1_5 │      1 │ 10000000 │ 111.08 MiB │
+└─────────────┴────────┴──────────┴────────────┘
+```
+
 삭제된 행의 데이터는 물리적으로 남아 있고, `_row_exists = 0`으로 표시만 된 상태입니다. 실제 데이터 제거는 다음 백그라운드 머지 때 일어납니다. `OPTIMIZE TABLE`로 강제 머지를 실행하면 물리적으로도 제거됩니다.
 
 ```sql
@@ -432,9 +438,9 @@ WHERE table = 'orders' AND active;
 ```
 
 ```
-┌─name──────┬─────rows─┬─size───────┐
-│ all_1_3_1 │  9999900 │ 110.94 MiB │
-└───────────┴──────────┴────────────┘
+┌─name──────────┬─────rows─┬─size───────┐
+│ all_1_3_2_5   │  9999900 │ 110.94 MiB │
+└───────────────┴──────────┴────────────┘
 ```
 
 `rows`가 9,999,900으로 100만큼 줄었고, Part 크기도 소폭 감소했습니다. 삭제된 행의 데이터가 머지를 통해 물리적으로 정리된 것입니다.
@@ -489,7 +495,7 @@ KILL MUTATION WHERE mutation_id = 'mutation_4.txt';
 
 ### OPTIMIZE TABLE의 함정
 
-`OPTIMIZE TABLE orders FINAL`은 모든 Part를 하나로 강제 머지합니다. 실험에서는 유용하지만, **프로덕션에서 정기적으로 실행하면 안 됩니다**. 수백 GB 테이블에서 FINAL을 실행하면 전체 데이터를 재작성하는 것과 같습니다. 디스크 I/O와 CPU를 장시간 점유하고, 머지가 진행되는 동안 디스크 사용량이 2배로 뛰어오릅니다.
+`OPTIMIZE TABLE orders FINAL`은 각 파티션 내의 모든 Part를 하나로 강제 머지합니다. 실험에서는 유용하지만, **프로덕션에서 정기적으로 실행하면 안 됩니다**. 수백 GB 테이블에서 FINAL을 실행하면 전체 데이터를 재작성하는 것과 같습니다. 디스크 I/O와 CPU를 장시간 점유하고, 머지가 진행되는 동안 디스크 사용량이 2배로 뛰어오릅니다.
 
 백그라운드 머지 스케줄러를 신뢰하세요. ClickHouse는 자체적으로 최적의 시점에 최적의 Part를 선택해서 머지합니다. `OPTIMIZE TABLE`(FINAL 없이)을 실행하면 스케줄러에 "지금 머지를 시도해봐"라는 힌트를 줄 수 있지만, 이마저도 일상적으로 쓸 필요는 없습니다.
 

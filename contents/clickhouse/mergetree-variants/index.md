@@ -194,7 +194,7 @@ GROUP BY category, sale_date;
 
 ### 문제: 합산 이상의 집계가 필요할 때
 
-"일별 고유 사용자 수(DAU)"를 선집계하고 싶다면? 두 Part에서 각각 구한 uniq(user_id)를 단순히 더할 수 없습니다. 사용자가 겹칠 수 있기 때문입니다. Part A에서 uniq = 100, Part B에서 uniq = 80이라도, 합계가 180이 아닐 수 있습니다.
+"일별 고유 사용자 수(DAU)"를 선집계하고 싶다면? 두 Part에서 각각 구한 `uniq(user_id)`를 단순히 더할 수 없습니다. 사용자가 겹칠 수 있기 때문입니다. Part A에서 uniq = 100, Part B에서 uniq = 80이라도, 합계가 180이 아닐 수 있습니다.
 
 평균, 퍼센타일도 마찬가지입니다. 부분 합산으로는 올바른 결과를 구할 수 없는 집계 함수가 많습니다. AggregatingMergeTree는 이 문제를 **집계 함수의 중간 상태(intermediate state)**를 저장하는 방식으로 해결합니다.
 
@@ -531,7 +531,7 @@ SELECT * FROM daily_sales;
 └───────────┴────────────┴─────────┴─────────────┘
 ```
 
-세 행이 하나로 합산되었습니다. revenue 50000+30000+80000=160000, order_count 2+1+3=6.
+세 행이 하나로 합산되었습니다. `revenue` 50000+30000+80000=160000, `order_count` 2+1+3=6.
 
 ### 실험 3: CollapsingMergeTree로 상태 변경
 
@@ -580,7 +580,6 @@ sign을 활용한 쿼리로 현재 유효한 상태만 조회합니다.
 ```sql
 SELECT
     order_id,
-    argMax(status, sign) AS current_status,
     sum(price * sign) AS effective_price
 FROM orders_collapsing
 GROUP BY order_id
@@ -588,9 +587,9 @@ HAVING sum(sign) > 0;
 ```
 
 ```
-┌─order_id─┬─current_status─┬─effective_price─┐
-│        1 │ 배송중         │           10000 │
-└──────────┴────────────────┴─────────────────┘
+┌─order_id─┬─effective_price─┐
+│        1 │           10000 │
+└──────────┴─────────────────┘
 ```
 
 `sum(sign) = +1+(-1)+1 = 1 > 0`이므로 유효한 주문입니다. 강제 머지 후에는 상쇄된 쌍이 물리적으로 제거됩니다.
@@ -614,9 +613,9 @@ SELECT * FROM orders_collapsing;
 
 변종 엔진에서 ORDER BY는 단순한 정렬 키가 아닙니다. 엔진의 핵심 동작을 결정하는 키입니다.
 
-- **ReplacingMergeTree**: ORDER BY가 곧 중복 제거 키입니다. 비즈니스 유니크 키(order_id, user_id 등)를 ORDER BY에 넣어야 합니다. 만약 `ORDER BY (category, order_id)`로 설정하면, (category, order_id) 조합이 같아야 중복으로 인식합니다.
+- **ReplacingMergeTree**: ORDER BY가 곧 중복 제거 키입니다. 비즈니스 유니크 키(`order_id`, `user_id` 등)를 ORDER BY에 넣어야 합니다. 만약 `ORDER BY (category, order_id)`로 설정하면, `(category, order_id)` 조합이 같아야 중복으로 인식합니다.
 - **SummingMergeTree**: ORDER BY가 곧 GROUP BY 키입니다. 집계 차원(category, date 등)을 ORDER BY에 넣습니다.
-- **CollapsingMergeTree**: ORDER BY가 곧 상쇄 매칭 키입니다. 개별 엔티티를 식별하는 키(order_id 등)를 넣어야 합니다.
+- **CollapsingMergeTree**: ORDER BY가 곧 상쇄 매칭 키입니다. 개별 엔티티를 식별하는 키(`order_id` 등)를 넣어야 합니다.
 
 ORDER BY를 잘못 잡으면 엔진이 전혀 다른 행을 "같은 키"로 인식합니다.
 

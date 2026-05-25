@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 같은 데이터, 같은 테이블, 같은 쿼리. ORDER BY 컬럼 순서만 바꿨는데 스캔 행 수가 100배 차이 난 적이 있다면, ClickHouse에서 ORDER BY가 무엇인지 정확히 이해할 때가 된 것입니다.
 
-RDB에서는 테이블을 먼저 만들고, 성능이 필요한 쿼리에 맞춰 `CREATE INDEX`를 추가합니다. 인덱스는 테이블과 별개의 구조물입니다. ClickHouse는 다릅니다. `CREATE TABLE`의 `ORDER BY` 절이 곧 데이터의 물리적 정렬 순서이고, 동시에 [희소 인덱스](/clickhouse/mergetree-internals/)의 키입니다. 별도의 인덱스 생성 명령이 없습니다.
+RDB에서는 테이블을 먼저 만들고, 성능이 필요한 쿼리에 맞춰 `CREATE INDEX`를 추가합니다. 인덱스는 테이블과 별개의 구조물입니다. ClickHouse는 다릅니다. `CREATE TABLE`의 `ORDER BY` 절이 곧 데이터의 물리적 정렬 순서이고, 동시에 [희소 인덱스](/clickhouse/mergetree-internals/)의 키입니다. 희소 인덱스를 위한 별도의 생성 명령이 없습니다.
 
 <br>
 
@@ -279,7 +279,7 @@ ALTER TABLE events ADD INDEX idx_url url TYPE bloom_filter GRANULARITY 4;
 ALTER TABLE events MATERIALIZE INDEX idx_url;
 ```
 
-주의할 점이 있습니다. 데이터 스키핑 인덱스는 **필터링 대상 값이 소수의 Granule에 집중되어 있을 때** 효과가 있습니다. ORDER BY에 의한 정렬과 상관관계가 높으면 자연스럽게 이 조건이 충족됩니다. 반면 `url` 같은 값이 모든 Granule에 골고루 분포해 있다면, `bloom_filter`를 달아도 스킵할 Granule이 거의 없습니다. 인덱스 타입에 따라 효과가 다르므로(minmax는 정렬 의존도가 높고, bloom_filter는 값 분포에 더 의존), 맹목적으로 추가하면 비용만 늘어납니다.
+주의할 점이 있습니다. 데이터 스키핑 인덱스는 **필터링 대상 값이 소수의 Granule에 집중되어 있을 때** 효과가 있습니다. ORDER BY에 의한 정렬과 상관관계가 높으면 자연스럽게 이 조건이 충족됩니다. 반면 검색하는 특정 `url` 값이 대부분의 Granule에 존재한다면, `bloom_filter`를 달아도 스킵할 Granule이 거의 없습니다. 반대로 특정 값이 소수 Granule에만 존재하면 전체 분포와 무관하게 효과적입니다. 인덱스 타입에 따라 효과가 다르므로(minmax는 정렬 의존도가 높고, bloom_filter는 값 분포에 더 의존), 맹목적으로 추가하면 비용만 늘어납니다.
 
 데이터 스키핑 인덱스와 Projection의 상세한 사용법은 다음 글에서 파티셔닝과 함께 다룹니다.
 
@@ -291,6 +291,7 @@ ALTER TABLE events MATERIALIZE INDEX idx_url;
 |------|----------------|----------------|
 | ReplacingMergeTree | 중복 제거 키 | 비즈니스 유니크 키를 반드시 포함 |
 | SummingMergeTree | GROUP BY 차원 | 집계 차원(날짜, 카테고리 등) |
+| AggregatingMergeTree | 집계 차원 키 | 집계 차원 + 필요한 모든 GROUP BY 컬럼 |
 | CollapsingMergeTree | 상쇄 매칭 키 | 엔티티 식별자(order_id 등) |
 
 변종 엔진에서는 쿼리 성능과 머지 로직을 동시에 고려해야 합니다. 기본 MergeTree에서는 "쿼리에 가장 좋은 ORDER BY"를 고르면 되지만, 변종 엔진에서는 "머지 로직이 올바르게 동작하는 ORDER BY" 안에서 쿼리 성능을 최적화해야 합니다.
@@ -320,7 +321,7 @@ ORDER BY order_id;
 
 ### 실험 1: 카디널리티 순서에 따른 Granule 스킵 차이
 
-동일한 데이터로 ORDER BY 순서만 다른 두 테이블을 만들고, 같은 쿼리의 Granule 스킵 차이를 확인합니다.
+같은 분포의 데이터로 ORDER BY 순서만 다른 두 테이블을 만들고, 같은 쿼리의 Granule 스킵 차이를 확인합니다.
 
 ```sql
 -- 테이블 1: 낮은 카디널리티 → 높은 카디널리티
