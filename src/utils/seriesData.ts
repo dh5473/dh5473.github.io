@@ -48,4 +48,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: '컬럼 지향 OLAP 엔진의 설계 원리부터 실전 운영까지',
     color: '#FFCC00',
   },
+  'agent': {
+    title: 'AI Agent',
+    description: '프로덕션 에이전트의 아키텍처와 설계 패턴 — Claude Code, Codex, Devin 해부',
+    color: '#f97316',
+  },
 }
