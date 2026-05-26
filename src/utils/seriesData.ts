@@ -50,7 +50,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'agent': {
     title: 'AI Agent',
-    description: '프로덕션 에이전트의 아키텍처와 설계 패턴 — Claude Code, Codex, Devin 해부',
+    description: '에이전트 아키텍처와 설계 패턴',
     color: '#f97316',
   },
 }
