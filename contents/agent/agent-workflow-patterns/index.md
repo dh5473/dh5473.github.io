@@ -366,7 +366,7 @@ Orchestrator-Workers가 5개 하위 작업을 생성하고, 각 워커가 Evalua
 
 다섯 가지 패턴은 결국 하나의 질문에 대한 다섯 가지 답입니다. "LLM 호출을 어떻게 구성할 것인가?" 순차적으로(Chaining), 분기해서(Routing), 동시에(Parallelization), 동적으로 위임해서(Orchestrator-Workers), 반복적으로 개선해서(Evaluator-Optimizer). 진짜 실력은 어떤 패턴을 쓸지가 아니라, 어떤 패턴이 **필요 없는지**를 아는 것에 있습니다.
 
-다음 글에서는 이 모든 패턴의 공통 기반인 도구(Tool)를 깊이 다룹니다. 도구가 잘못 설계되면 어떤 패턴을 써도 성능이 나오지 않습니다. Anthropic이 말하는 ACI(Agent-Computer Interface) 설계 원칙과, Claude Code 26개 도구의 실제 스키마를 분석해 보겠습니다.
+다음 글에서는 이 모든 패턴의 공통 기반인 도구(Tool)를 깊이 다룹니다. 도구가 잘못 설계되면 어떤 패턴을 써도 성능이 나오지 않습니다. Anthropic이 말하는 ACI(Agent-Computer Interface) 설계 원칙과, Claude Code 도구의 설계 원칙 및 실제 스키마를 분석해 보겠습니다.
 
 ## 참고자료
 
