@@ -271,13 +271,13 @@ async def increment_counter(name: str) -> dict:
 | 반환값 제어 | 25,000 토큰 상한, 동적 truncation | 구조화된 결과 포맷 |
 | 에러 처리 | actionable 에러 + 대안 제시 | exit code + stderr 전달 |
 | 멱등성 | Write(덮어쓰기), Edit(diff 기반) | apply_patch(diff 기반) |
-| 안전 분류 | safe(읽기) vs exclusive(쓰기) 분리 | 샌드박스 내 전체 실행 |
+| 안전 분류 | safe(읽기) vs exclusive(쓰기) 분리 | OS 샌드박스 내 전체 실행 |
 
 두 가지 흥미로운 관찰이 있습니다.
 
 첫째, 파일 편집에서 두 시스템 모두 **diff 기반 접근**을 채택합니다. 줄 번호로 삽입하는 방식은 멱등성이 보장되지 않기 때문입니다. 줄 번호는 편집 후 바뀌므로, 같은 호출을 반복하면 엉뚱한 위치에 텍스트가 삽입됩니다. diff 기반이면 내용 자체를 매칭하므로 이 문제가 없습니다.
 
-둘째, 안전성 확보의 철학이 다릅니다. Claude Code는 **도구 수준에서 분류**([이전 글](/agent/agent-workflow-patterns/)에서 다룬 `partitionToolCalls()`)하여, 읽기 전용 도구는 병렬 실행하고 쓰기 도구는 순차 실행합니다. Codex는 **환경 수준에서 격리**하여, 모든 도구를 샌드박스 컨테이너 안에서 실행합니다. 개별 도구의 안전성을 분류할 필요가 줄어드는 셈입니다. 같은 목표를 서로 다른 레이어에서 해결하는 것입니다.
+둘째, 안전성 확보의 철학이 다릅니다. Claude Code는 **도구 수준에서 분류**([이전 글](/agent/agent-workflow-patterns/)에서 다룬 `partitionToolCalls()`)하여, 읽기 전용 도구는 병렬 실행하고 쓰기 도구는 순차 실행합니다. Codex는 **환경 수준에서 격리**하여, 모든 도구를 OS 네이티브 샌드박스(macOS Seatbelt / Linux bwrap+seccomp) 안에서 실행합니다. 기본적으로 네트워크가 차단되고 파일 쓰기가 작업 디렉터리로 제한되므로, 개별 도구의 안전성을 분류할 필요가 줄어드는 셈입니다. 같은 목표를 서로 다른 레이어에서 해결하는 것입니다.
 
 ---
 
