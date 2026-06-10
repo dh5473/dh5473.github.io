@@ -79,7 +79,7 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 피어 토폴로지는 고객 지원처럼 요청 유형에 따라 전문가가 달라지는 도메인에 적합합니다. 하지만 제어 흐름을 추적하기 어렵고, 에이전트 간 상태 일관성을 보장하기 힘듭니다.
 
 <div style="text-align: center; margin: 24px 0;">
-  <svg viewBox="0 0 790 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 790px; width: 100%;">
+  <svg viewBox="0 0 850 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 850px; width: 100%;">
     <style>
       .topo-box { stroke-width: 2; rx: 8; }
       .topo-text { font-family: 'Pretendard', sans-serif; font-size: 13px; text-anchor: middle; }
@@ -129,17 +129,17 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
     <text x="420" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Anthropic Harness (Planner/Generator/Evaluator)</text>
 
     <!-- Peer Topology -->
-    <text x="680" y="24" class="topo-label" fill="var(--text, #1c1917)">피어</text>
-    <rect x="635" y="50" width="90" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="680" y="77" class="topo-text" fill="var(--text, #1c1917)">Triage</text>
-    <line x1="660" y1="94" x2="633" y2="135" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <line x1="700" y1="94" x2="743" y2="135" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <rect x="590" y="138" width="85" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="633" y="161" class="topo-text" fill="var(--text, #1c1917)">전문가 A</text>
-    <rect x="700" y="138" width="85" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="743" y="161" class="topo-text" fill="var(--text, #1c1917)">전문가 B</text>
-    <line x1="675" y1="156" x2="700" y2="156" class="topo-arrow-bi" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
-    <text x="680" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
+    <text x="720" y="24" class="topo-label" fill="var(--text, #1c1917)">피어</text>
+    <rect x="675" y="50" width="90" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+    <text x="720" y="77" class="topo-text" fill="var(--text, #1c1917)">Triage</text>
+    <line x1="695" y1="94" x2="655" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+    <line x1="745" y1="94" x2="790" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+    <rect x="610" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+    <text x="655" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 A</text>
+    <rect x="745" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+    <text x="790" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 B</text>
+    <line x1="700" y1="158" x2="745" y2="158" class="topo-arrow-bi" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
+    <text x="720" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
   </svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
