@@ -79,68 +79,65 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 피어 토폴로지는 고객 지원처럼 요청 유형에 따라 전문가가 달라지는 도메인에 적합합니다. 하지만 제어 흐름을 추적하기 어렵고, 에이전트 간 상태 일관성을 보장하기 힘듭니다.
 
 <div style="text-align: center; margin: 24px 0;">
-  <svg viewBox="0 0 850 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 850px; width: 100%;">
-    <style>
-      .topo-box { stroke-width: 2; rx: 8; }
-      .topo-text { font-family: 'Pretendard', sans-serif; font-size: 13px; text-anchor: middle; }
-      .topo-label { font-family: 'Pretendard', sans-serif; font-size: 15px; font-weight: 700; text-anchor: middle; }
-      .topo-sub { font-family: 'Pretendard', sans-serif; font-size: 11px; text-anchor: middle; }
-      .topo-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowT); }
-      .topo-arrow-bi { stroke-width: 2; fill: none; marker-end: url(#arrowT); marker-start: url(#arrowTR); }
-    </style>
-    <defs>
-      <marker id="arrowT" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
-      </marker>
-      <marker id="arrowTR" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-        <path d="M8,0 L0,3 L8,6" fill="var(--text, #1c1917)" />
-      </marker>
-    </defs>
-
-    <!-- Star Topology -->
-    <text x="130" y="24" class="topo-label" fill="var(--text, #1c1917)">스타</text>
-    <rect x="80" y="50" width="100" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="130" y="77" class="topo-text" fill="var(--text, #1c1917)">오케스트레이터</text>
-    <line x1="100" y1="94" x2="40" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <line x1="130" y1="94" x2="130" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <line x1="160" y1="94" x2="220" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <rect x="5" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="40" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 1</text>
-    <rect x="95" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="130" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 2</text>
-    <rect x="185" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="220" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 3</text>
-    <text x="130" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Claude Code AgentTool, Codex spawn_agent</text>
-
-    <!-- Pipeline Topology -->
-    <text x="420" y="24" class="topo-label" fill="var(--text, #1c1917)">파이프라인</text>
-    <rect x="300" y="50" width="76" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="338" y="77" class="topo-text" fill="var(--text, #1c1917)">Planner</text>
-    <line x1="376" y1="72" x2="396" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <rect x="400" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="443" y="77" class="topo-text" fill="var(--text, #1c1917)">Generator</text>
-    <line x1="486" y1="72" x2="506" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <rect x="510" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="553" y="77" class="topo-text" fill="var(--text, #1c1917)">Evaluator</text>
-    <path d="M553,94 C553,120 443,120 443,94" class="topo-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
-    <text x="498" y="118" class="topo-sub" fill="var(--text-muted, #78716c)">피드백</text>
-    <rect x="340" y="140" width="160" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="420" y="163" class="topo-text" fill="var(--text, #1c1917)">파일 기반 상태 공유</text>
-    <text x="420" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Anthropic Harness (Planner/Generator/Evaluator)</text>
-
-    <!-- Peer Topology -->
-    <text x="720" y="24" class="topo-label" fill="var(--text, #1c1917)">피어</text>
-    <rect x="675" y="50" width="90" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="720" y="77" class="topo-text" fill="var(--text, #1c1917)">Triage</text>
-    <line x1="695" y1="94" x2="655" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <line x1="745" y1="94" x2="790" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-    <rect x="610" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="655" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 A</text>
-    <rect x="745" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="790" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 B</text>
-    <line x1="700" y1="158" x2="745" y2="158" class="topo-arrow-bi" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
-    <text x="720" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
-  </svg>
+<svg viewBox="0 0 850 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 850px; width: 100%;">
+<style>
+.topo-box { stroke-width: 2; rx: 8; }
+.topo-text { font-family: 'Pretendard', sans-serif; font-size: 13px; text-anchor: middle; }
+.topo-label { font-family: 'Pretendard', sans-serif; font-size: 15px; font-weight: 700; text-anchor: middle; }
+.topo-sub { font-family: 'Pretendard', sans-serif; font-size: 11px; text-anchor: middle; }
+.topo-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowT); }
+.topo-arrow-bi { stroke-width: 2; fill: none; marker-end: url(#arrowT); marker-start: url(#arrowTR); }
+</style>
+<defs>
+<marker id="arrowT" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
+</marker>
+<marker id="arrowTR" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+<path d="M8,0 L0,3 L8,6" fill="var(--text, #1c1917)" />
+</marker>
+</defs>
+<!-- Star Topology -->
+<text x="130" y="24" class="topo-label" fill="var(--text, #1c1917)">스타</text>
+<rect x="80" y="50" width="100" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="130" y="77" class="topo-text" fill="var(--text, #1c1917)">오케스트레이터</text>
+<line x1="100" y1="94" x2="40" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<line x1="130" y1="94" x2="130" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<line x1="160" y1="94" x2="220" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<rect x="5" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="40" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 1</text>
+<rect x="95" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="130" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 2</text>
+<rect x="185" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="220" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 3</text>
+<text x="130" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Claude Code AgentTool, Codex spawn_agent</text>
+<!-- Pipeline Topology -->
+<text x="420" y="24" class="topo-label" fill="var(--text, #1c1917)">파이프라인</text>
+<rect x="300" y="50" width="76" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="338" y="77" class="topo-text" fill="var(--text, #1c1917)">Planner</text>
+<line x1="376" y1="72" x2="396" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<rect x="400" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="443" y="77" class="topo-text" fill="var(--text, #1c1917)">Generator</text>
+<line x1="486" y1="72" x2="506" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<rect x="510" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="553" y="77" class="topo-text" fill="var(--text, #1c1917)">Evaluator</text>
+<path d="M553,94 C553,120 443,120 443,94" class="topo-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
+<text x="498" y="118" class="topo-sub" fill="var(--text-muted, #78716c)">피드백</text>
+<rect x="340" y="140" width="160" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="420" y="163" class="topo-text" fill="var(--text, #1c1917)">파일 기반 상태 공유</text>
+<text x="420" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Anthropic Harness (Planner/Generator/Evaluator)</text>
+<!-- Peer Topology -->
+<text x="720" y="24" class="topo-label" fill="var(--text, #1c1917)">피어</text>
+<rect x="675" y="50" width="90" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="720" y="77" class="topo-text" fill="var(--text, #1c1917)">Triage</text>
+<line x1="695" y1="94" x2="655" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<line x1="745" y1="94" x2="790" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
+<rect x="610" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="655" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 A</text>
+<rect x="745" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="790" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 B</text>
+<line x1="700" y1="158" x2="745" y2="158" class="topo-arrow-bi" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
+<text x="720" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
+</svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
   <em>세 가지 조정 토폴로지. 스타는 중앙 오케스트레이터가 모든 조정을 담당하고, 파이프라인은 역할별 에이전트가 순차적으로 연결되되 피드백 루프를 포함하며, 피어는 에이전트 간 수평 핸드오프로 제어권이 이동합니다.</em>
@@ -318,56 +315,47 @@ harness 벤치마크는 더 구체적입니다.
 서브에이전트가 `bubble` 모드로 실행 중일 때, 퍼미션이 필요한 도구 호출을 만나면 자체적으로 판단하지 않습니다. 대신 `EscalateToParent` 예외를 발생시켜 부모 에이전트로 올립니다. 부모 에이전트는 자신의 퍼미션 모드(default, auto, dontAsk 등)에 따라 [일곱 번째 글](/agent/agent-permission-safety/)의 deny-first 파이프라인으로 평가합니다. 평가 결과(허용 또는 거부)는 서브에이전트에게 돌아가고, 서브에이전트는 그 결과에 따라 실행을 계속하거나 대안을 찾습니다.
 
 <div style="text-align: center; margin: 24px 0;">
-  <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 640px; width: 100%;">
-    <style>
-      .esc-box { stroke-width: 2; rx: 8; }
-      .esc-text { font-family: 'Pretendard', sans-serif; font-size: 12px; text-anchor: middle; }
-      .esc-label { font-family: 'Pretendard', sans-serif; font-size: 11px; }
-      .esc-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowE); }
-    </style>
-    <defs>
-      <marker id="arrowE" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
-      </marker>
-    </defs>
-
-    <!-- Sub-agent -->
-    <rect x="20" y="30" width="130" height="50" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="85" y="52" class="esc-text" fill="var(--text, #1c1917)">서브에이전트</text>
-    <text x="85" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(bubble 모드)</text>
-
-    <!-- Arrow 1: escalate -->
-    <line x1="150" y1="55" x2="210" y2="55" class="esc-arrow" stroke="var(--primary, #0d9488)" />
-    <text x="180" y="47" class="esc-label" fill="var(--primary, #0d9488)" text-anchor="middle" font-size="10">EscalateToParent</text>
-
-    <!-- Parent -->
-    <rect x="215" y="30" width="130" height="50" class="esc-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-    <text x="280" y="52" class="esc-text" fill="var(--text, #1c1917)">부모 에이전트</text>
-    <text x="280" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(default/auto/dontAsk)</text>
-
-    <!-- Arrow 2: to pipeline -->
-    <line x1="345" y1="55" x2="405" y2="55" class="esc-arrow" stroke="var(--text, #1c1917)" />
-
-    <!-- Pipeline -->
-    <rect x="410" y="20" width="210" height="70" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-    <text x="515" y="45" class="esc-text" fill="var(--text, #1c1917)">Deny-First 파이프라인</text>
-    <text x="515" y="62" class="esc-text" fill="var(--text-muted, #78716c)">Deny → Allow → 분류기 → 사용자</text>
-    <text x="515" y="78" class="esc-text" fill="var(--text-muted, #78716c)">(7단계 평가)</text>
-
-    <!-- Arrow 3: result back -->
-    <path d="M515,90 L515,140 L85,140 L85,80" class="esc-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="6,3" />
-    <text x="300" y="155" class="esc-label" fill="var(--text, #1c1917)" text-anchor="middle">허용 또는 거부 결과 반환</text>
-
-    <!-- Two outcomes -->
-    <rect x="20" y="180" width="130" height="40" class="esc-box" fill="#10b981" fill-opacity="0.15" stroke="#10b981" />
-    <text x="85" y="205" class="esc-text" fill="var(--text, #1c1917)">허용 → 도구 실행</text>
-
-    <rect x="180" y="180" width="160" height="40" class="esc-box" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" />
-    <text x="260" y="205" class="esc-text" fill="var(--text, #1c1917)">거부 → 대안 탐색/중단</text>
-
-    <line x1="55" y1="160" x2="55" y2="175" class="esc-arrow" stroke="#10b981" />
-    <line x1="115" y1="160" x2="230" y2="175" class="esc-arrow" stroke="#ef4444" />
-  </svg>
+<svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 640px; width: 100%;">
+<style>
+.esc-box { stroke-width: 2; rx: 8; }
+.esc-text { font-family: 'Pretendard', sans-serif; font-size: 12px; text-anchor: middle; }
+.esc-label { font-family: 'Pretendard', sans-serif; font-size: 11px; }
+.esc-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowE); }
+</style>
+<defs>
+<marker id="arrowE" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
+</marker>
+</defs>
+<!-- Sub-agent -->
+<rect x="20" y="30" width="130" height="50" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="85" y="52" class="esc-text" fill="var(--text, #1c1917)">서브에이전트</text>
+<text x="85" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(bubble 모드)</text>
+<!-- Arrow 1: escalate -->
+<line x1="150" y1="55" x2="210" y2="55" class="esc-arrow" stroke="var(--primary, #0d9488)" />
+<text x="180" y="47" class="esc-label" fill="var(--primary, #0d9488)" text-anchor="middle" font-size="10">EscalateToParent</text>
+<!-- Parent -->
+<rect x="215" y="30" width="130" height="50" class="esc-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
+<text x="280" y="52" class="esc-text" fill="var(--text, #1c1917)">부모 에이전트</text>
+<text x="280" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(default/auto/dontAsk)</text>
+<!-- Arrow 2: to pipeline -->
+<line x1="345" y1="55" x2="405" y2="55" class="esc-arrow" stroke="var(--text, #1c1917)" />
+<!-- Pipeline -->
+<rect x="410" y="20" width="210" height="70" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
+<text x="515" y="45" class="esc-text" fill="var(--text, #1c1917)">Deny-First 파이프라인</text>
+<text x="515" y="62" class="esc-text" fill="var(--text-muted, #78716c)">Deny → Allow → 분류기 → 사용자</text>
+<text x="515" y="78" class="esc-text" fill="var(--text-muted, #78716c)">(7단계 평가)</text>
+<!-- Arrow 3: result back -->
+<path d="M515,90 L515,140 L85,140 L85,80" class="esc-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="6,3" />
+<text x="300" y="155" class="esc-label" fill="var(--text, #1c1917)" text-anchor="middle">허용 또는 거부 결과 반환</text>
+<!-- Two outcomes -->
+<rect x="20" y="180" width="130" height="40" class="esc-box" fill="#10b981" fill-opacity="0.15" stroke="#10b981" />
+<text x="85" y="205" class="esc-text" fill="var(--text, #1c1917)">허용 → 도구 실행</text>
+<rect x="180" y="180" width="160" height="40" class="esc-box" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" />
+<text x="260" y="205" class="esc-text" fill="var(--text, #1c1917)">거부 → 대안 탐색/중단</text>
+<line x1="55" y1="160" x2="55" y2="175" class="esc-arrow" stroke="#10b981" />
+<line x1="115" y1="160" x2="230" y2="175" class="esc-arrow" stroke="#ef4444" />
+</svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
   <em>bubble 모드 에스컬레이션 흐름. 서브에이전트가 퍼미션 판단을 부모에게 위임하고, 부모의 파이프라인이 평가한 결과에 따라 실행이 결정됩니다.</em>
