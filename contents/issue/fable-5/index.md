@@ -210,6 +210,11 @@ Opus 4.7 글을 쓸 때는 벤치마크와 체감의 괴리가 주제였는데, 
 
 6월 23일 이후 크레딧 전환이 실제로 어떻게 운영되는지, 분류기 오발이 얼마나 빨리 개선되는지가 이 출시의 최종 평가를 결정할 것 같습니다. Mythos와 Fable로 모델을 이원화하는 방식이 일회성 실험으로 끝날지, 프런티어 모델 출시의 새로운 표준이 될지도 지켜볼 부분입니다.
 
+<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 24px 0; border-radius: 4px;">
+  <strong>📌 후속 (2026년 6월 13일)</strong><br>
+  이 글을 쓴 직후, 미국 정부가 수출통제를 발동해 Fable 5와 Mythos 5를 전 세계에서 차단하는 사건이 벌어졌습니다. 출시 사흘 만의 일입니다. 자세한 내용은 <a href="/issue/fable-5-ban/">Claude Fable 5 차단 사건 분석 글</a>에서 다뤘습니다.
+</div>
+
 ## 참고자료
 
 - [Anthropic 공식 발표: Introducing Claude Fable 5 and Claude Mythos 5](https://www.anthropic.com/news/claude-fable-5-mythos-5)
