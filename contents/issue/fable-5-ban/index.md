@@ -17,7 +17,7 @@ thumbnail: './thumbnail.png'
 
 출시부터 차단까지 걸린 시간은 정확히 사흘입니다. 압축하면 이렇습니다.
 
-![Fable 5 출시부터 차단까지의 타임라인](./fable5-ban-timeline.png)
+![6월 9일 출시부터 6월 12일 수출통제 지침, 6월 13일 전 세계 차단까지 단 3일간의 Claude Fable 5 사건 타임라인](./fable5-ban-timeline.png)
 
 - **6월 9일**: Anthropic이 Claude Fable 5와 Mythos 5를 공개. "역대 최강" 호평이 쏟아짐
 - **6월 9일~10일**: 319페이지 시스템 카드에서 일부 작업의 성능을 "사용자에게 알리지 않고" 제한하는 장치가 발견되며 "secret sabotage(은밀한 방해)" 논란. Anthropic이 *"We made the wrong tradeoff"* 라며 사과하고, 이후로는 제한을 숨기지 않고 사용자에게 거부 사실을 명시적으로 알리는 방식으로 전환
