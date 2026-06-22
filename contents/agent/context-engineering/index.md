@@ -173,7 +173,7 @@ Read(파일 B) → 결과(4K) → ... (150K 도구 결과)
 
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>💡 컴팩션의 깊이</strong><br>
-  Claude Code의 5단계 컴팩션 파이프라인(Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact)과 Codex의 암호화 blob 방식의 내부 구조는 이 시리즈의 후속 글에서 다룹니다. 여기서는 컴팩션이 왜 필요하고 어떤 trade-off가 있는지에 집중합니다.
+  Claude Code의 5단계 컴팩션 파이프라인(Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact)과 Codex의 암호화 blob 방식의 내부 구조는 [컴팩션 글](/agent/compaction-pipeline/)에서 다룹니다. 여기서는 컴팩션이 왜 필요하고 어떤 trade-off가 있는지에 집중합니다.
 </div>
 
 ### 전략 3: 구조화된 노트 (에이전틱 메모리)
@@ -380,7 +380,7 @@ async def delegate_to_subagent(task: str, tools: dict, llm_call):
 
 컨텍스트 엔지니어링이 잘 작동하는지 어떻게 측정할까요? 토큰 사용률은 쉽게 측정할 수 있지만, "모델이 올바른 시점에 올바른 정보를 가지고 있었는가?"는 측정하기 어렵습니다. 프롬프트 엔지니어링은 출력을 A/B 테스트할 수 있지만, 컨텍스트 엔지니어링의 실패는 종종 침묵합니다. 모델은 그럴듯하지만 틀린 답을 내놓고, 그 원인이 압축 과정에서 사라진 사실이었다는 것을 사후에야 알게 됩니다.
 
-측정 가능한 지표(토큰 사용률, 컴팩션 횟수, 도구 호출 수)와 실제로 중요한 지표(정보 적시성, 결정 품질) 사이의 간극이 큽니다. 더 큰 컨텍스트 윈도우가 등장하더라도, context rot과 정보 관련성 문제는 윈도우 크기에 관계없이 존재합니다. 컨텍스트 엔지니어링의 평가 프레임워크는 아직 초기 단계이며, 이 시리즈의 후반부에서 에이전트 평가 체계를 다룰 때 이 문제를 다시 짚어봅니다.
+측정 가능한 지표(토큰 사용률, 컴팩션 횟수, 도구 호출 수)와 실제로 중요한 지표(정보 적시성, 결정 품질) 사이의 간극이 큽니다. 더 큰 컨텍스트 윈도우가 등장하더라도, context rot과 정보 관련성 문제는 윈도우 크기에 관계없이 존재합니다. 컨텍스트 엔지니어링의 평가 프레임워크는 아직 초기 단계이며, 이 영역은 열린 엔지니어링 문제로 남아 있습니다.
 
 ### 전략 선택의 어려움
 
