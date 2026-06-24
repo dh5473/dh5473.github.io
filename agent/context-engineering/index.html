@@ -9,7 +9,7 @@
 <h2>프롬프트 엔지니어링에서 컨텍스트 엔지니어링으로</h2>
 <h3>프롬프트의 한계</h3>
 <p>프롬프트 엔지니어링은 모델에게 전달하는 지시문을 다듬는 기술입니다. “이렇게 말하면 더 좋은 답이 나온다”는 접근으로, 단일 턴 질의응답에서는 충분히 효과적입니다.</p>
-<p>그런데 에이전트는 루프를 돕니다. <a href="/agent/what-is-ai-agent/">첫 번째 글</a>에서 살펴본 것처럼, 에이전트는 도구를 호출하고 결과를 확인하고 다시 판단하는 과정을 반복합니다. 한 턴의 도구 호출이 5,000 토큰의 결과를 반환한다면, 50턴 후에는 도구 결과만 250,000 토큰에 달합니다. 처음에 정성 들여 작성한 시스템 프롬프트가 전체 컨텍스트의 1~2%에 불과해지는 셈입니다.</p>
+<p>그런데 에이전트는 루프를 돌립니다. <a href="/agent/what-is-ai-agent/">첫 번째 글</a>에서 살펴본 것처럼, 에이전트는 도구를 호출하고 결과를 확인하고 다시 판단하는 과정을 반복합니다. 한 턴의 도구 호출이 5,000 토큰의 결과를 반환한다면, 50턴 후에는 도구 결과만 250,000 토큰에 달합니다. 처음에 정성 들여 작성한 시스템 프롬프트가 전체 컨텍스트의 1~2%에 불과해지는 셈입니다.</p>
 <p>이 상황에서 “프롬프트를 더 잘 쓰자”는 접근으로는 부족합니다. 문제는 프롬프트의 품질이 아니라, 모델이 매 턴마다 보게 되는 전체 정보의 구성이기 때문입니다. Andrej Karpathy는 이 관점의 전환을 이렇게 표현했습니다.</p>
 <blockquote>
 <p>“+1 for ‘context engineering’ over ‘prompt engineering’. People associate prompts with short task descriptions you’d give an LLM in your day-to-day use. When in every industrial-strength LLM app, context engineering is the delicate art and science of filling the context window with just the right information for the next step.”</p>
@@ -20,7 +20,7 @@
 <blockquote>
 <p>“Like humans, who have limited working memory capacity, LLMs have an ‘attention budget’ that they draw on when parsing large volumes of context. Every new token introduced depletes this budget by some amount.”</p>
 </blockquote>
-<p>트랜스포머 아키텍처에서 모든 토큰은 다른 모든 토큰과 상호 참조합니다. n개 토큰이 있으면 n²개의 쌍별 관계가 생기는 구조입니다. 컨텍스트가 길어질수록 이 관계망이 기하급수적으로 복잡해지고, 모델의 주의력이 분산됩니다.</p>
+<p>트랜스포머 아키텍처에서 모든 토큰은 다른 모든 토큰과 상호 참조합니다. n개 토큰이 있으면 n²개의 쌍별 관계가 생기는 구조입니다. 컨텍스트가 길어질수록 이 관계망이 급격하게 복잡해지고, 모델의 주의력이 분산됩니다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">토큰 수       쌍별 관계     상대적 복잡도
 10,000     →  100M        →  1x
 50,000     →  2.5B        →  25x
