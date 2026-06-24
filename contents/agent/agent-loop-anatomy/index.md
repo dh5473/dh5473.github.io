@@ -343,7 +343,7 @@ async def resilient_loop(messages, tools, llm_call,
   에러 복구는 선택이 아닙니다. 50턴 이상의 긴 세션에서는 output token 부족, 컨텍스트 초과, 네트워크 오류 중 하나 이상이 거의 반드시 발생합니다. 프로덕션 에이전트를 구축한다면, 최소한 output escalation과 reactive compaction은 구현해야 합니다.
 </div>
 
-Codex의 에러 복구는 아키텍처 자체에 내장되어 있습니다. 매 턴이 독립적인 HTTP 요청이므로, 실패한 요청을 단순히 재전송할 수 있습니다. 컨테이너 수준의 문제는 새 컨테이너를 띄워서 해결합니다. Claude Code처럼 루프 내부에 정교한 복구 전략을 구현할 필요가 적은 셈입니다. 이것이 "상태 없는" 아키텍처의 이점 중 하나입니다.
+Codex의 에러 복구는 아키텍처 자체에 내장되어 있습니다. 매 턴이 독립적인 HTTP 요청이므로, 실패한 요청을 단순히 재전송할 수 있습니다. Claude Code처럼 루프 내부에 정교한 복구 전략을 구현할 필요가 적은 셈입니다. 이것이 "상태 없는" 아키텍처의 이점 중 하나입니다.
 
 ---
 
@@ -371,8 +371,8 @@ Codex의 에러 복구는 아키텍처 자체에 내장되어 있습니다. 매 
 | 이벤트 유형 | Claude Code | Codex |
 |------------|-------------|-------|
 | 응답 시작 | `RequestStartEvent` | SSE `response.created` |
-| 텍스트 청크 | `StreamEvent` | SSE `response.text.delta` |
-| 도구 호출 | `tool_use` block | SSE `response.function_call` |
+| 텍스트 청크 | `StreamEvent` | SSE `response.output_text.delta` |
+| 도구 호출 | `tool_use` block | SSE `response.function_call_arguments.delta` |
 | 압축 마커 | `TombstoneMessage` | 없음 (blob으로 대체) |
 
 Claude Code의 `TombstoneMessage`는 컴팩션으로 제거된 메시지의 자리를 표시합니다. "여기에 뭔가 있었지만 압축되었다"는 표지판인 셈입니다. Codex는 blob이 히스토리 전체를 대체하므로 이런 표시가 필요 없습니다.

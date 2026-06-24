@@ -55,7 +55,7 @@ OpenAI도 같은 결론에 도달합니다. "A Practical Guide to Building Agent
 
 ## 도구 설계 5원칙
 
-Anthropic은 "Writing Effective Tools for AI Agents"에서 다섯 가지 설계 원칙을 제시합니다. 이것은 추상적인 가이드라인이 아닙니다. Claude Code와 SWE-bench 같은 평가 환경에서 도구를 반복 개선하면서 추출한 실전 원칙입니다.
+Anthropic의 "Writing Effective Tools for AI Agents"와 "Building Effective Agents"에서 제시한 원칙들을 재구성하여 다섯 가지로 정리합니다. 추상적인 가이드라인이 아니라, Claude Code와 SWE-bench 같은 평가 환경에서 도구를 반복 개선하면서 추출한 실전 원칙입니다.
 
 ### 원칙 1. 적을수록 좋다
 

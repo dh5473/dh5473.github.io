@@ -348,7 +348,7 @@ async def evaluator_optimizer(task: str, max_rounds: int = 3) -> str:
 | Routing | 1 (프로그래밍적 분류 시) ~ 2 (LLM 분류 시) | 2 |
 | Parallelization | N (동시 작업 수) | N |
 | Orchestrator-Workers | 2 + N (계획 + 워커 + 종합) | 2 + N |
-| Evaluator-Optimizer | 2K + 1 (K 라운드) | 2 * max_rounds + 1 |
+| Evaluator-Optimizer | 2 (첫 평가 통과 시) | 2 * max_rounds + 1 |
 
 Orchestrator-Workers가 5개 하위 작업을 생성하고, 각 워커가 Evaluator-Optimizer로 3라운드를 돈다면, 한 번의 사용자 요청에 수십 번의 LLM 호출이 발생합니다. 프로덕션 에이전트가 비용 관리에 많은 엔지니어링을 투자하는 이유입니다.
 
