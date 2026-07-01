@@ -1,12 +1,11 @@
 ---
 date: '2026-07-01'
-title: 'Claude Sonnet 5 출시: Opus급 성능을 Sonnet 가격에'
+title: 'Claude Sonnet 5 출시, Opus급 성능?'
 category: 'Issue'
 tags: ['Claude', 'Sonnet 5', 'Anthropic', 'LLM', 'AI Model']
 summary: '2026년 6월 30일 출시된 Claude Sonnet 5의 벤치마크, 가격, 경쟁 모델 비교, 안전성 개선까지 핵심 변경사항을 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
-다
 2026년 6월 30일, Anthropic이 Claude Sonnet 5를 출시했습니다. 7월 1일부터 무료 플랜과 Pro 구독의 기본 모델로 교체되며, API에서도 즉시 사용 가능합니다.
 
 공식 발표에서 강조한 메시지는 명확합니다. **Opus 4.8에 근접하는 성능을 Sonnet 가격대에 제공한다**는 것. 사실 이 패턴은 처음이 아닙니다. 2024년에 Sonnet 3.5가 당시 최상위 모델이었던 Opus 3을 뛰어넘었고, Sonnet 4.6도 출시 시점에 Opus 4.6 수준의 벤치마크를 보여줬습니다. Sonnet 라인이 이전 세대 Opus를 따라잡는 구도가 하나의 패턴이 된 셈입니다.
