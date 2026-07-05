@@ -21,30 +21,78 @@ A/B 테스트에서 전환율 차이를 보려면? 세 가지 교육 프로그�
 
 데이터를 보고 검정 방법을 고르는 판단 기준은 세 가지다: **(1) 데이터 유형**, **(2) 비교할 집단 수**, **(3) 표본 간 관계**. 이 세 축만 파악하면 어떤 검정을 쓸지 거의 자동으로 결정된다.
 
-```
-                        데이터 유형은?
-                     ┌──────┴──────┐
-                   연속형          범주형
-                     │               │
-               집단 수는?        ┌───┴───┐
-            ┌────┼────┐      적합도    독립성
-            1    2    3+     검정      검정
-            │    │    │       │         │
-         단일   독립/  ANOVA  카이제곱   카이제곱
-        표본   대응?   (F)   적합도    독립성
-        t-검정  │             검정      검정
-            ┌──┴──┐
-          독립   대응
-           │      │
-       독립 표본  대응 표본
-       t-검정    t-검정
-       (Welch)
-
-  ※ 정규성 가정 불만족 시 → 비모수 검정으로 대체
-     · 독립 2집단: Mann-Whitney U
-     · 대응 2집단: Wilcoxon signed-rank
-     · 3집단 이상: Kruskal-Wallis
-```
+<div style="text-align: center; margin: 24px 0;">
+  <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" style="max-width: 720px; width: 100%; height: auto;" role="img" aria-label="검정 방법 선택 플로차트">
+    <defs>
+      <marker id="arrow-st" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/>
+      </marker>
+    </defs>
+    <!-- root -->
+    <rect x="290" y="16" width="140" height="36" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="360" y="39" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2937" font-family="sans-serif">데이터 유형은?</text>
+    <!-- root -> A / B -->
+    <line x1="325" y1="52" x2="210" y2="92" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="240" y="66" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">연속형</text>
+    <line x1="395" y1="52" x2="530" y2="92" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="490" y="66" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">범주형</text>
+    <!-- A: group count -->
+    <rect x="140" y="96" width="120" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="200" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937" font-family="sans-serif">집단 수는?</text>
+    <!-- B: purpose -->
+    <rect x="470" y="96" width="140" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="540" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937" font-family="sans-serif">검정 목적은?</text>
+    <!-- A -> leaves -->
+    <line x1="170" y1="130" x2="90" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="112" y="152" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">1개</text>
+    <line x1="205" y1="130" x2="215" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="228" y="158" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">2개</text>
+    <line x1="235" y1="130" x2="340" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="310" y="152" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">3개 이상</text>
+    <!-- leaf: one-sample t -->
+    <rect x="25" y="186" width="110" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="80" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">단일 표본</text>
+    <text x="80" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">t-검정</text>
+    <!-- C: paired? -->
+    <rect x="160" y="186" width="110" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="215" y="208" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">표본 관계는?</text>
+    <!-- leaf: ANOVA -->
+    <rect x="295" y="186" width="110" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="350" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">일원 ANOVA</text>
+    <text x="350" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">(F-검정)</text>
+    <!-- B -> categorical leaves -->
+    <line x1="510" y1="130" x2="475" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="462" y="156" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">분포 적합도</text>
+    <line x1="575" y1="130" x2="620" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="640" y="156" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">변수 독립성</text>
+    <!-- leaf: chi2 gof -->
+    <rect x="415" y="186" width="115" height="48" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="472" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">카이제곱</text>
+    <text x="472" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">적합도 검정</text>
+    <!-- leaf: chi2 independence -->
+    <rect x="565" y="186" width="115" height="48" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="622" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">카이제곱</text>
+    <text x="622" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">독립성 검정</text>
+    <!-- C -> t-test leaves -->
+    <line x1="195" y1="220" x2="160" y2="262" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="160" y="242" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">독립</text>
+    <line x1="240" y1="220" x2="280" y2="262" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="278" y="242" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">대응</text>
+    <!-- leaf: independent t -->
+    <rect x="90" y="266" width="130" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="155" y="286" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">독립 표본 t-검정</text>
+    <text x="155" y="303" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">(Welch)</text>
+    <!-- leaf: paired t -->
+    <rect x="235" y="266" width="120" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="295" y="286" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">대응 표본</text>
+    <text x="295" y="303" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">t-검정</text>
+    <!-- nonparametric note -->
+    <rect x="40" y="348" width="640" height="72" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="360" y="374" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e" font-family="sans-serif">정규성 가정 불만족 시 → 비모수 검정으로 대체</text>
+    <text x="360" y="398" text-anchor="middle" font-size="12.5" fill="#92400e" font-family="sans-serif">독립 2집단: Mann-Whitney U · 대응 2집단: Wilcoxon signed-rank · 3집단 이상: Kruskal-Wallis</text>
+  </svg>
+</div>
+<p align="center" style="color: #888; font-size: 13px;"><em>데이터 유형, 집단 수, 표본 관계에 따른 검정 방법 선택 플로차트</em></p>
 
 이 플로차트를 머릿속에 넣어두면, 나머지는 각 검정의 구체적인 메커니즘을 이해하는 일이다. 아래 표로 전체 검정 방법을 한눈에 정리해두자 — 글을 읽는 동안 레퍼런스로 돌아와도 좋다.
 
