@@ -317,20 +317,7 @@ $$E[X + Y] = E[X] + E[Y]$$
 
 두 번째 식이 강력한 이유는 $X$와 $Y$의 관계(독립 여부)와 **무관하게** 성립하기 때문이다.
 
-```python
-# 선형성 검증
-a, b = 3, 5
-print(f"E[{a}X + {b}] = {a * E_X + b:.1f}")  # 15.5
-
-# 시뮬레이션
-transformed = a * rolls + b
-print(f"시뮬레이션 = {transformed.mean():.4f}")  # ≈ 15.5
-
-# 두 주사위의 합
-rolls_2 = rng.integers(1, 7, size=1_000_000)
-print(f"E[X] + E[Y] = {3.5 + 3.5}")  # 7.0
-print(f"E[X + Y] 시뮬레이션 = {(rolls + rolls_2).mean():.4f}")  # ≈ 7.0
-```
+주사위 시뮬레이션(100만 회)으로 확인해 보면 $E[3X + 5] = 3 \times 3.5 + 5 = 15.5$에 시뮬레이션 평균이 일치하고, 서로 독립인 두 주사위 합의 시뮬레이션 평균도 $E[X] + E[Y] = 7.0$에 수렴한다.
 
 :::info
 
@@ -411,16 +398,7 @@ $$\text{Var}(aX + b) = a^2 \text{Var}(X)$$
 
 상수 $b$를 더해도 분산은 변하지 않는다(평행 이동은 흩어진 정도에 영향을 주지 않는다). $a$를 곱하면 분산은 $a^2$배가 된다.
 
-```python
-a, b = 3, 5
-var_X = rolls.var()
-var_transformed = (a * rolls + b).var()
-
-print(f"Var(X)         = {var_X:.4f}")
-print(f"a²·Var(X)      = {a**2 * var_X:.4f}")
-print(f"Var(aX + b)    = {var_transformed:.4f}")
-# 세 값이 모두 같다
-```
+주사위 시뮬레이션으로 확인해 보면 $\text{Var}(3X + 5)$는 $3^2 \cdot \text{Var}(X) = 9 \times 2.9167 \approx 26.25$와 일치한다.
 
 ### 표준편차
 
@@ -614,7 +592,7 @@ print(f"표본 분산  = {samples.var():.4f}")
 print(f"표본 σ    = {samples.std():.4f}")
 ```
 
-이론값과 시뮬레이션 결과가 거의 일치한다. 표본 수가 커질수록 이 차이는 더 줄어든다 — 이것이 **대수의 법칙**(Law of Large Numbers)의 본질이며, 이후 글에서 다시 다루게 된다.
+이론값과 시뮬레이션 결과가 거의 일치한다. 표본 수가 커질수록 이 차이는 더 줄어든다. 이것이 **큰 수의 법칙**(Law of Large Numbers)의 본질이며, 이후 글에서 다시 다루게 된다.
 
 ---
 

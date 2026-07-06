@@ -104,22 +104,8 @@ n_misses = n_intervals - n_covers
 
 print(f"1,000개 95% CI 중 참값 포함: {n_covers}개 ({n_covers/n_intervals*100:.1f}%)")
 print(f"참값 놓침: {n_misses}개 ({n_misses/n_intervals*100:.1f}%)")
-
-# 처음 20개 구간 출력 (포함 여부 표시)
-print("\n처음 20개 구간:")
-for i, (lo, hi, covers) in enumerate(results[:20]):
-    marker = "✓" if covers else "✗ MISS"
-    print(f"  [{lo:>6.3f}, {hi:>6.3f}]  {marker}")
 # 1,000개 95% CI 중 참값 포함: 942개 (94.2%)
 # 참값 놓침: 58개 (5.8%)
-#
-# 처음 20개 구간:
-#   [-0.252,  0.532]  ✓
-#   [-0.506,  0.278]  ✓
-#   [-0.290,  0.494]  ✓
-#   [-0.412,  0.372]  ✓
-#   [-0.357,  0.427]  ✓
-#   ...
 ```
 
 약 5%의 구간이 참값을 놓쳤다. 이 구간들은 표본이 우연히 한쪽으로 치우쳐 추출된 경우다. "95% 신뢰"란 이 구성 절차(procedure)가 장기적으로 95%의 성공률을 가진다는 뜻이지, 개별 구간이 95% 확률로 맞다는 뜻이 아니다.
@@ -406,29 +392,15 @@ $$E = z_{\alpha/2} \cdot \frac{\sigma}{\sqrt{n}}$$
 
 $$n \geq \left(\frac{z_{\alpha/2} \cdot \sigma}{E}\right)^2$$
 
-```python
-from scipy import stats
-import numpy as np
+공식에 $\sigma = 10$, $z_{0.025} = 1.96$을 대입해 목표 반폭별 필요 표본 크기를 계산하면 다음과 같다.
 
-sigma = 10.0  # 예상 표준편차
-alpha = 0.05
-z = stats.norm.ppf(1 - alpha/2)
-
-print(f"σ = {sigma}, 95% CI 기준")
-print(f"{'목표 반폭 E':>12} {'필요 표본 크기 n':>16}")
-print("-" * 32)
-for E in [5.0, 3.0, 2.0, 1.0, 0.5]:
-    n_required = np.ceil((z * sigma / E) ** 2)
-    print(f"{E:>12.1f} {n_required:>16.0f}")
-# σ = 10, 95% CI 기준
-#  목표 반폭 E    필요 표본 크기 n
-# --------------------------------
-#          5.0               16
-#          3.0               43
-#          2.0               97
-#          1.0              385
-#          0.5             1537
-```
+| 목표 반폭 $E$ | 필요 표본 크기 $n$ |
+|---|---|
+| 5.0 | 16 |
+| 3.0 | 43 |
+| 2.0 | 97 |
+| 1.0 | 385 |
+| 0.5 | 1,537 |
 
 반폭을 절반으로 줄이려면 표본이 **4배** 필요하다. $\sqrt{n}$에 반비례하기 때문이다. 정밀도를 높이는 일은 전형적인 수확 체감(diminishing returns)의 법칙을 따른다.
 

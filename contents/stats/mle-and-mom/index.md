@@ -59,7 +59,7 @@ print(f"MoM σ̂² = {mom_sigma2:.4f}  (참값: {true_sigma2})")
 
 ### 예시 2: 감마분포 $\text{Gamma}(\alpha, \beta)$
 
-적률법의 진가는 모수와 적률의 관계가 비선형일 때 드러나게 된다. 감마분포의 평균과 분산은 다음과 같다.
+적률법의 진가는 모수와 적률의 관계가 비선형일 때 드러나게 된다. 감마분포의 평균과 분산은 다음과 같다. 여기서 $\beta$는 rate 파라미터다. [연속확률분포 글](/stats/continuous-distributions/)에서는 scale 파라미터($E[X] = \alpha\beta$) 표기를 썼으니 혼동하지 않도록 주의하자.
 
 $$E[X] = \frac{\alpha}{\beta}, \qquad \text{Var}(X) = \frac{\alpha}{\beta^2}$$
 
@@ -302,38 +302,7 @@ $$\sqrt{n}(\hat{\theta}_{\text{MLE}} - \theta_0) \xrightarrow{d} N\left(0, \frac
 
 $n$이 커지면 MLE의 분포는 정규분포에 가까워진다. 여기서 $I(\theta_0)$는 **피셔 정보량**(Fisher Information)이다. 이 결과가 신뢰구간 구성의 기반이 되는데, 다음 글에서 본격적으로 다룰 주제이기도 하다.
 
-실제로 확인해보자. 포아송 분포의 MLE인 $\hat{\lambda} = \bar{X}$가 $n$이 커질수록 정규분포에 얼마나 가까워지는지 시뮬레이션으로 살펴볼 수 있다.
-
-```python
-import numpy as np
-
-np.random.seed(42)
-true_lambda = 5.0
-sample_sizes = [10, 50, 200, 1000]
-n_sims = 10_000
-
-print(f"포아송(λ={true_lambda}) MLE의 점근 정규성 확인")
-print(f"이론적 분산: Var(λ̂) = λ/n = {true_lambda}/n")
-print()
-
-for n in sample_sizes:
-    mles = [np.mean(np.random.poisson(true_lambda, size=n)) for _ in range(n_sims)]
-    mles = np.array(mles)
-    theoretical_var = true_lambda / n
-    empirical_var = np.var(mles)
-    print(f"n = {n:>4d}:  E[λ̂] = {np.mean(mles):.4f},  "
-          f"Var = {empirical_var:.6f},  이론 = {theoretical_var:.6f},  "
-          f"비율 = {empirical_var/theoretical_var:.4f}")
-# 포아송(λ=5.0) MLE의 점근 정규성 확인
-# 이론적 분산: Var(λ̂) = 5.0/n
-#
-# n =   10:  E[λ̂] = 5.0048,  Var = 0.500193,  이론 = 0.500000,  비율 = 1.0004
-# n =   50:  E[λ̂] = 4.9997,  Var = 0.100263,  이론 = 0.100000,  비율 = 1.0026
-# n =  200:  E[λ̂] = 5.0010,  Var = 0.024475,  이론 = 0.025000,  비율 = 0.9790
-# n = 1000:  E[λ̂] = 4.9995,  Var = 0.004785,  이론 = 0.005000,  비율 = 0.9571
-```
-
-실증 분산이 이론값 $\lambda/n = 1/(nI(\lambda))$에 거의 정확히 일치하는 것을 확인할 수 있다. 분산의 비율이 1에 가깝다는 것은 MLE가 [크래머-라오 하한](/stats/point-estimation/)에 도달하고 있다는 뜻이다.
+실제로 포아송 분포($\lambda = 5$)의 MLE $\hat{\lambda} = \bar{X}$를 표본 크기별로 10,000회 반복 계산해 보면, 실증 분산과 이론값 $\lambda/n$의 비율이 $n = 10$에서 1.00, $n = 1000$에서 0.96으로 몬테카를로 노이즈 범위 안에서 1 근처에 머문다. 실증 분산이 이론값 $1/(nI(\lambda))$을 잘 따라간다는 것은 MLE가 [크래머-라오 하한](/stats/point-estimation/)에 도달하고 있다는 뜻이다.
 
 ### 3. 점근 효율성 (Asymptotic Efficiency)
 
@@ -382,31 +351,7 @@ $$I(\theta) = -E\left[\frac{\partial^2}{\partial\theta^2}\log f(X;\theta)\right]
 | $\text{Poisson}(\lambda)$ | $\lambda$ | $\frac{1}{\lambda}$ | $\frac{\lambda}{n}$ |
 | $\text{Exp}(\lambda)$ | $\lambda$ | $\frac{1}{\lambda^2}$ | $\frac{\lambda^2}{n}$ |
 
-```python
-# 피셔 정보량과 CRLB 계산 예시
-n = 50
-
-# Bernoulli
-p = 0.3
-fi_bern = 1 / (p * (1-p))
-crlb_bern = 1 / (n * fi_bern)
-print(f"Bernoulli(p={p}): I(p) = {fi_bern:.4f}, CRLB = {crlb_bern:.6f}")
-
-# Normal
-sigma2 = 4.0
-fi_norm = 1 / sigma2
-crlb_norm = 1 / (n * fi_norm)
-print(f"Normal(σ²={sigma2}): I(μ) = {fi_norm:.4f}, CRLB = {crlb_norm:.6f}")
-
-# Poisson
-lam = 3.0
-fi_pois = 1 / lam
-crlb_pois = 1 / (n * fi_pois)
-print(f"Poisson(λ={lam}): I(λ) = {fi_pois:.4f}, CRLB = {crlb_pois:.6f}")
-# Bernoulli(p=0.3): I(p) = 4.7619, CRLB = 0.004200
-# Normal(σ²=4.0): I(μ) = 0.2500, CRLB = 0.080000
-# Poisson(λ=3.0): I(λ) = 0.3333, CRLB = 0.060000
-```
+공식에 숫자를 대입하기만 하면 된다. 예를 들어 $n = 50$일 때 CRLB는 $\text{Bernoulli}(p=0.3)$이 0.0042, $N(\mu, \sigma^2=4)$가 0.08, $\text{Poisson}(\lambda=3)$이 0.06이다.
 
 ### 왜 피셔 정보가 중요한가?
 

@@ -447,35 +447,7 @@ for n in [10, 20, 23, 30, 50, 70]:
 
 ### Monte Carlo 검증
 
-```python
-import random
-
-def birthday_montecarlo(n, num_trials=100_000):
-    """Monte Carlo 시뮬레이션으로 생일 문제 확률 추정"""
-    matches = 0
-    for _ in range(num_trials):
-        birthdays = [random.randint(1, 365) for _ in range(n)]
-        if len(birthdays) != len(set(birthdays)):
-            matches += 1
-    return matches / num_trials
-
-# 이론값과 시뮬레이션 비교
-print(f"{'n':>4} {'이론값':>10} {'시뮬레이션':>10} {'오차':>10}")
-print("-" * 38)
-for n in [10, 23, 30, 50]:
-    theo = birthday_theoretical(n)
-    mc = birthday_montecarlo(n)
-    print(f"{n:4d} {theo:10.4f} {mc:10.4f} {abs(theo-mc):10.4f}")
-# 결과 예시:
-#    n      이론값    시뮬레이션        오차
-# --------------------------------------
-#   10     0.1169     0.1171     0.0002
-#   23     0.5073     0.5081     0.0008
-#   30     0.7063     0.7058     0.0005
-#   50     0.9704     0.9700     0.0004
-```
-
-아래 그래프가 이 결과를 시각적으로 보여준다.
+생일을 무작위로 부여하는 Monte Carlo 시뮬레이션(10만 회)으로 검증해 보면, $n = 23$에서 이론값 0.5073 vs 시뮬레이션 0.5081처럼 모든 $n$에서 오차가 0.001 이내로 일치한다. 아래 그래프가 이 결과를 시각적으로 보여준다.
 
 ![생일 문제: 이론 곡선과 Monte Carlo 시뮬레이션](./birthday-simulation.png)
 <p align="center" style="color: #888; font-size: 13px;"><em>생일 문제: 인디고 곡선(이론값)과 청록색 점(시뮬레이션)이 거의 완벽하게 일치한다. n=23에서 50%를 넘는다.</em></p>

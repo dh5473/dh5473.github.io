@@ -221,7 +221,7 @@ print(f"이메일 길이 기준 분할: IG = {ig_b:.4f} bits")   # 0.0072
 print(f"\n→ '무료' 단어 기준이 {ig_a/ig_b:.0f}배 더 유용한 분할!")
 ```
 
-결과를 보면 "무료"라는 단어의 포함 여부가 이메일 길이보다 약 52배 더 유용한 분할 기준이라는 것을 IG가 정량적으로 알려준다. ID3, C4.5 같은 결정 트리 알고리즘이 바로 이 원리로 동작한다.
+결과를 보면 "무료"라는 단어의 포함 여부가 이메일 길이보다 약 53배 더 유용한 분할 기준이라는 것을 IG가 정량적으로 알려준다. ID3, C4.5 같은 결정 트리 알고리즘이 바로 이 원리로 동작한다.
 
 :::tip
 
@@ -697,58 +697,7 @@ scikit-learn의 `mutual_info_classif`는 연속 변수에 대해 k-최근접 이
 
 지금까지 다룬 개념들이 어떻게 연결되는지 한눈에 정리해 보자.
 
-```python
-# 정보이론 개념들의 관계를 코드로 검증
-import numpy as np
-
-# 두 분포 정의
-P = np.array([0.5, 0.3, 0.2])
-Q = np.array([0.3, 0.4, 0.3])
-
-# 기본 함수들
-def H(p):
-    """엔트로피"""
-    p = p[p > 0]
-    return -np.sum(p * np.log2(p))
-
-def H_cross(p, q):
-    """교차 엔트로피"""
-    mask = p > 0
-    return -np.sum(p[mask] * np.log2(q[mask]))
-
-def KL(p, q):
-    """KL 발산"""
-    mask = p > 0
-    return np.sum(p[mask] * np.log2(p[mask] / q[mask]))
-
-# 핵심 관계 검증
-print("=" * 55)
-print("정보이론 핵심 관계 검증")
-print("=" * 55)
-
-H_P = H(P)
-H_PQ = H_cross(P, Q)
-KL_PQ = KL(P, Q)
-
-print(f"\n1. H(P)       = {H_P:.6f} bits")
-print(f"   H(P, Q)    = {H_PQ:.6f} bits")
-print(f"   D_KL(P||Q) = {KL_PQ:.6f} bits")
-
-print(f"\n2. H(P,Q) = H(P) + D_KL(P||Q)?")
-print(f"   좌변: {H_PQ:.6f}")
-print(f"   우변: {H_P + KL_PQ:.6f}")
-print(f"   → {'일치!' if abs(H_PQ - (H_P + KL_PQ)) < 1e-10 else '불일치'}")
-
-print(f"\n3. D_KL(P||Q) ≥ 0?")
-print(f"   D_KL(P||Q) = {KL_PQ:.6f} ≥ 0  → {'성립!' if KL_PQ >= 0 else '위반!'}")
-
-print(f"\n4. H(P,Q) ≥ H(P)?  (CE ≥ Entropy)")
-print(f"   {H_PQ:.6f} ≥ {H_P:.6f}  → {'성립!' if H_PQ >= H_P else '위반!'}")
-
-print(f"\n5. CE 최소화 = KL 최소화?")
-print(f"   H(P)는 상수이므로, min H(P,Q) ⟺ min D_KL(P||Q)")
-print(f"   → 모델 Q를 진짜 분포 P에 맞추는 것!")
-```
+$P = (0.5, 0.3, 0.2)$, $Q = (0.3, 0.4, 0.3)$라는 두 분포로 직접 계산해 보면 $H(P) = 1.485$, $D_{KL}(P \| Q) = 0.127$, $H(P, Q) = 1.612$ 비트로, $H(P, Q) = H(P) + D_{KL}(P \| Q)$가 수치적으로 정확히 성립한다. $D_{KL} \geq 0$이므로 항상 $H(P, Q) \geq H(P)$이고, $H(P)$는 모델과 무관한 상수이므로 **교차 엔트로피를 최소화하는 것은 곧 KL 발산을 최소화하는 것**, 즉 모델 분포 $Q$를 진짜 분포 $P$에 맞추는 일이다.
 
 :::summary
 

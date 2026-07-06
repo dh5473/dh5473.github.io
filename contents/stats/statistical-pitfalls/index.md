@@ -33,36 +33,7 @@ $$P(\text{적어도 1개 거짓 양성}) = 1 - (1-\alpha)^m$$
 | 20 | **64.2%** |
 | 100 | **99.4%** |
 
-20개의 변수를 테스트하면 아무 효과가 없어도 64%의 확률로 "유의한" 결과가 하나 이상 나온다. Python으로 직접 확인해 보자.
-
-```python
-import numpy as np
-from scipy import stats
-
-np.random.seed(42)
-
-n_tests = 20
-n_samples = 100
-significant_count = 0
-n_simulations = 10000
-
-for _ in range(n_simulations):
-    p_values = []
-    for _ in range(n_tests):
-        # 두 그룹 모두 같은 분포에서 추출 (효과 없음)
-        group_a = np.random.normal(0, 1, n_samples)
-        group_b = np.random.normal(0, 1, n_samples)
-        _, p = stats.ttest_ind(group_a, group_b)
-        p_values.append(p)
-    # 20개 중 하나라도 p < 0.05이면 "발견"
-    if min(p_values) < 0.05:
-        significant_count += 1
-
-print(f"20개 검정 시 거짓 발견 비율: {significant_count/n_simulations:.1%}")
-# 20개 검정 시 거짓 발견 비율: 64.0%
-```
-
-효과가 전혀 없는 랜덤 데이터인데도, 20개를 검정하면 약 64%의 시뮬레이션에서 "유의한 결과"가 나타났다.
+20개의 변수를 테스트하면 아무 효과가 없어도 64%의 확률로 "유의한" 결과가 하나 이상 나온다. 실제로 효과가 전혀 없는 두 그룹에 t-검정 20개를 묶어 10,000회 시뮬레이션해 보면, 64.0%의 시뮬레이션에서 적어도 하나의 p-value가 0.05 아래로 떨어진다. 이론값 64.2%와 정확히 맞아떨어진다.
 
 ### 보정 방법
 
@@ -277,10 +248,10 @@ female_rate = female_total['합격자'].sum() / female_total['지원자'].sum()
 print(f"\n=== 전체 합산 ===")
 print(f"남성 합격률: {male_rate:.1%} ({male_total['지원자'].sum()}명)")
 print(f"여성 합격률: {female_rate:.1%} ({female_total['지원자'].sum()}명)")
-print(f"\n→ 전체: 남성이 높다. 학과별: 여성이 같거나 높다 → 심슨의 역설!")
+print(f"\n→ 전체: 남성이 높다. 학과별: 대부분 여성이 비슷하거나 높다 → 심슨의 역설!")
 ```
 
-학과별로 보면 여성 합격률이 남성과 비슷하거나 높은데, 전체를 합치면 남성이 더 높게 나타난다. 이 역설의 핵심은 **교란 변수(Confounding Variable)** — 여기서는 "지원 학과"가 성별과 합격률 모두에 영향을 미치기 때문이다.
+학과별로 보면 대부분의 학과에서 여성 합격률이 남성과 비슷하거나 오히려 높은데(A: 82.4% vs 62.1%, D: 34.9% vs 33.1%), 전체를 합치면 남성이 더 높게 나타난다. 이 역설의 핵심은 **교란 변수(Confounding Variable)**다. 여기서는 "지원 학과"가 성별과 합격률 모두에 영향을 미친다.
 
 :::info
 
