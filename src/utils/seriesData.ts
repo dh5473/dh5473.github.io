@@ -53,4 +53,9 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     description: '에이전트 아키텍처와 설계 패턴',
     color: '#f97316',
   },
+  'llm-serving': {
+    title: 'LLM Serving',
+    description: 'vLLM의 동작 원리로부터 이해하는 LLM 서빙과 추론 최적화',
+    color: '#0ea5e9',
+  },
 }
