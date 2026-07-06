@@ -353,31 +353,7 @@ $$P\left(\bar{X}_n - 1.96 \cdot \frac{\sigma}{\sqrt{n}} \leq \mu \leq \bar{X}_n 
 
 이것이 95% 신뢰구간이다. CLT가 없으면 $\bar{X}_n$이 정규분포를 따른다는 보장이 없으니, 이 공식 자체가 성립하지 않는다.
 
-```python
-import numpy as np
-from scipy import stats
-
-# CLT 기반 신뢰구간 직접 구현
-np.random.seed(42)
-population = np.random.exponential(scale=5, size=100000)  # 모집단: Exp(5)
-true_mean = population.mean()
-print(f"True population mean: {true_mean:.4f}")
-
-# 표본 추출 후 95% 신뢰구간
-n = 50
-sample = np.random.choice(population, size=n, replace=False)
-x_bar = sample.mean()
-s = sample.std(ddof=1)  # 표본 표준편차
-
-z = 1.96  # 95% 신뢰수준
-margin = z * s / np.sqrt(n)
-
-print(f"Sample mean: {x_bar:.4f}")
-print(f"95% CI: [{x_bar - margin:.4f}, {x_bar + margin:.4f}]")
-print(f"Contains true mean? {x_bar - margin <= true_mean <= x_bar + margin}")
-```
-
-지수분포 — 정규분포가 아닌 비대칭 분포 — 에서 뽑았는데도, CLT 덕분에 신뢰구간이 유효하게 작동한다.
+실제로 정규분포가 아닌 지수분포 모집단에서 표본 50개를 뽑아 이 공식으로 95% 신뢰구간을 계산해 봐도 구간은 참 평균을 유효하게 포착한다. CLT가 표본 평균의 근사 정규성을 보장해 주기 때문이다.
 
 ### p-값과 가설 검정
 

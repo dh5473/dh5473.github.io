@@ -300,9 +300,11 @@ for idx, n_obs in enumerate(checkpoints):
 
 fig.suptitle('Beta-Binomial: 사후분포의 순차 업데이트', fontsize=14, y=1.02)
 plt.tight_layout()
-plt.savefig('beta_binomial_update.png', dpi=150, bbox_inches='tight')
 plt.show()
 ```
+
+![Beta-Binomial 사후분포의 순차 업데이트](./beta-binomial-update.png)
+<p align="center" style="color: #888; font-size: 13px;"><em>데이터가 쌓일수록 사후분포가 좁아지며 참값(빨간 점선) 쪽으로 이동한다.</em></p>
 
 이 시각화에서 핵심적으로 확인할 것은 세 가지다.
 
@@ -347,86 +349,15 @@ $$
 
 여기서 핵심적인 통찰이 있다. 수용 확률의 비율에서 <strong>정규화 상수 $P(X)$가 상쇄된다</strong>. 분자와 분모 모두 $P(\theta|X) \propto P(X|\theta)P(\theta)$이므로, 정규화 상수를 모르고도 사후분포에서 샘플링할 수 있다.
 
-### Python으로 직접 구현: 1D Metropolis-Hastings
+### 해석해와의 검증
 
-동전 편향 추정 문제를 MCMC로 풀어보자. Beta-Binomial은 해석해가 있으므로 MCMC가 불필요하지만, 결과를 해석해와 비교 검증할 수 있어서 학습용으로 적합하다.
-
-```python
-import numpy as np
-from scipy import stats
-
-np.random.seed(42)
-
-# --- 데이터 ---
-true_p = 0.65
-n_flips = 50
-data = np.random.binomial(1, true_p, size=n_flips)
-k = data.sum()  # 성공 횟수
-
-# --- 사전분포: Beta(2, 2) ---
-alpha_prior, beta_prior = 2, 2
-
-def log_posterior(p, k, n, alpha, beta):
-    """비정규화 로그 사후분포 (정규화 상수 불필요)"""
-    if p <= 0 or p >= 1:
-        return -np.inf  # 모수 공간 밖
-    log_likelihood = k * np.log(p) + (n - k) * np.log(1 - p)
-    log_prior = (alpha - 1) * np.log(p) + (beta - 1) * np.log(1 - p)
-    return log_likelihood + log_prior
-
-# --- Metropolis-Hastings ---
-n_samples = 50000
-proposal_sd = 0.05      # 제안 분포의 표준편차
-samples = np.zeros(n_samples)
-samples[0] = 0.5         # 시작점
-accepted = 0
-
-for t in range(1, n_samples):
-    # 1. 제안
-    current = samples[t - 1]
-    proposed = np.random.normal(current, proposal_sd)
-
-    # 2. 수용 확률 (로그 스케일)
-    log_alpha = log_posterior(proposed, k, n_flips, alpha_prior, beta_prior) \
-              - log_posterior(current,  k, n_flips, alpha_prior, beta_prior)
-
-    # 3. 수용/기각
-    if np.log(np.random.uniform()) < log_alpha:
-        samples[t] = proposed
-        accepted += 1
-    else:
-        samples[t] = current
-
-burn_in = 5000
-posterior_samples = samples[burn_in:]  # 번인(burn-in) 제거
-
-print(f"수용률: {accepted / n_samples:.1%}")
-# 수용률: ~45-55% (적정 범위)
-
-print(f"MCMC 사후 평균: {posterior_samples.mean():.4f}")
-print(f"MCMC 사후 표준편차: {posterior_samples.std():.4f}")
-
-# 해석해와 비교
-alpha_post = alpha_prior + k
-beta_post = beta_prior + (n_flips - k)
-exact_posterior = stats.beta(alpha_post, beta_post)
-print(f"해석해 사후 평균: {exact_posterior.mean():.4f}")
-print(f"해석해 사후 표준편차: {exact_posterior.std():.4f}")
-
-# 95% 신용구간 비교
-mcmc_ci = np.percentile(posterior_samples, [2.5, 97.5])
-exact_ci = exact_posterior.ppf([0.025, 0.975])
-print(f"MCMC 95% CI:  [{mcmc_ci[0]:.4f}, {mcmc_ci[1]:.4f}]")
-print(f"해석해 95% CI: [{exact_ci[0]:.4f}, {exact_ci[1]:.4f}]")
-```
-
-MCMC 결과와 해석해가 매우 가까울 것이다. 5만 개의 샘플(번인 5,000 제거)이면 1차원 문제에서는 충분하다. 다만 고차원 문제에서는 수렴 진단이 필수적인데, 이에 대해서는 마지막 섹션에서 정리한다.
+동전 편향 추정 문제(Beta-Binomial)는 해석해가 있으므로 MCMC 결과를 검증하기에 좋다. 위 알고리즘을 그대로 구현해 샘플 5만 개를 뽑고(번인 5,000개 제거) 사후 평균과 95% 신용구간을 계산해 보면, 켤레 사전분포로 구한 해석해와 소수점 셋째 자리까지 일치한다. 정규화 상수를 전혀 계산하지 않았는데도 올바른 사후분포에 도달하는 것을 눈으로 확인할 수 있는 셈이다. 다만 1차원 문제라 이 정도로 충분했을 뿐, 고차원 문제에서는 수렴 진단이 필수적이다. 이에 대해서는 마지막 섹션에서 정리한다.
 
 :::info
 
 **💡 실무에서의 MCMC 도구**
 
-직접 구현은 학습용이다. 실무에서는 검증된 라이브러리를 사용한다:
+MCMC를 직접 구현하는 것은 어디까지나 학습용이다. 실무에서는 검증된 라이브러리를 사용한다:
 - **PyMC** — Python 베이지안 모델링의 표준. NUTS(No-U-Turn Sampler) 기반으로 고차원에서도 효율적이다.
 - **Stan (PyStan/CmdStanPy)** — HMC(Hamiltonian Monte Carlo) 기반. 산업계와 학계 모두에서 널리 사용된다.
 - **emcee** — 앙상블 샘플러. 천문학 커뮤니티에서 시작해 범용으로 확산되었다.

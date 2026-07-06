@@ -176,10 +176,7 @@ print(f"첨도: {stats.kurtosis(skewed_data):.3f}")  # 첨도: ≈ 6.0
 
 ```python
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 np.random.seed(42)
 
@@ -210,10 +207,11 @@ axes[2].set_xlabel('X')
 axes[2].set_ylabel('Y')
 
 plt.tight_layout()
-plt.savefig('/tmp/eda_viz_demo.png', dpi=100)
-plt.close('all')
-print("시각화 저장 완료")
+plt.show()
 ```
+
+![히스토그램, 박스플롯, 산점도 예시](./eda-viz-tools.png)
+<p align="center" style="color: #888; font-size: 13px;"><em>왼쪽부터 히스토그램(이봉 분포), 박스플롯(그룹 비교), 산점도(선형 관계)</em></p>
 
 히스토그램은 분포의 형태를 직관적으로 보여준다. 위 예시처럼 봉우리가 두 개(bimodal)인 분포는 기술통계량만으로는 절대 포착할 수 없다. 박스플롯은 그룹 간 비교에 탁월하며, 상자 밖의 점이 이상치 후보라는 정보를 즉시 제공한다. 산점도는 두 변수 간 관계의 방향과 강도를 한눈에 드러낸다.
 
@@ -319,9 +317,6 @@ print(df.groupby('pclass')['survived'].mean().round(3))
 
 ```python
 import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -364,10 +359,11 @@ fig.colorbar(im, ax=axes[1, 1], shrink=0.8)
 
 fig.suptitle('Titanic Dataset EDA', fontsize=14, y=1.02)
 plt.tight_layout()
-plt.savefig('/tmp/titanic_eda.png', dpi=100, bbox_inches='tight')
-plt.close('all')
-print("타이타닉 EDA 시각화 저장 완료")
+plt.show()
 ```
+
+![타이타닉 데이터셋 EDA 시각화](./titanic-eda.png)
+<p align="center" style="color: #888; font-size: 13px;"><em>타이타닉 데이터셋 EDA. 나이 분포, 등급별 요금, 성별×등급 생존율, 상관 히트맵</em></p>
 
 상관 히트맵에서 `pclass`와 `fare`의 음의 상관(-0.55)이 눈에 띈다. 등급 숫자가 작을수록(1등석) 요금이 높으므로 자연스러운 결과다. `survived`와 `fare`의 양의 상관(0.26)도 "비싼 표를 산 승객일수록 생존 확률이 높았다"는 패턴을 반영한다.
 

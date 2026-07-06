@@ -238,9 +238,7 @@ for moe_pct in [5, 3, 2, 1, 0.5]:
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 
-matplotlib.use('Agg')
 plt.rcParams['font.size'] = 11
 
 np.random.seed(42)
@@ -301,9 +299,7 @@ axes[1].set_ylabel('Estimation Error')
 axes[1].set_title('Estimation Error: Random vs Biased')
 
 plt.tight_layout()
-plt.savefig('/Users/dony/projects/donmain/contents/stats/sampling-and-bias/thumbnail.png',
-            dpi=150, bbox_inches='tight')
-plt.close('all')
+plt.show()
 
 # --- 수치 비교 ---
 print(f"모집단 평균: {pop_mean:.0f}")
@@ -327,6 +323,9 @@ print(f"  표준오차(SE): {np.std(means_biased, ddof=1):.1f}")
 #   편향(Bias): 1616.4
 #   표준오차(SE): 160.5
 ```
+
+![편향된 표본 vs 무작위 표본 시뮬레이션](./biased-vs-random.png)
+<p align="center" style="color: #888; font-size: 13px;"><em>왼쪽: 표본 평균의 분포. 편향된 표본(빨강)은 모평균(검은 점선)에서 멀리 벗어나 있다. 오른쪽: 추정 오차 비교.</em></p>
 
 결과를 보면 무작위 추출의 편향은 거의 0인 반면, 상위 50%에서만 추출한 경우 편향이 약 1,600이나 된다. 표본 크기를 200에서 2,000으로 늘려도 이 편향은 줄어들지 않는다. 편향은 표본 크기의 문제가 아니라 추출 방법의 문제이기 때문이다.
 
