@@ -21,21 +21,82 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
 
 에이전트 생태계에서 M개의 에이전트 플랫폼(Claude Code, Cursor, Windsurf, Codex 등)이 N개의 외부 서비스(GitHub, Slack, Jira, DB, 모니터링 도구 등)와 연결되어야 한다고 가정합니다. 표준이 없으면 M×N개의 커스텀 통합이 필요합니다.
 
-```
-M 에이전트 × N 서비스 = M×N 커스텀 통합
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 480" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="표준이 없으면 에이전트 3개와 서비스 4개가 12개의 커스텀 통합을 필요로 하지만, MCP 표준 프로토콜을 경유하면 7개 구현으로 줄어드는 비교 다이어그램">
+  <style>
+    .mn-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .mn-label { font-size: 13px; fill: var(--text, #1c1917); }
+    .mn-formula { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .mn-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .mn-mesh { stroke: var(--text-danger, #dc2626); stroke-width: 1; opacity: 0.5; }
+    .mn-spoke { stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+    .mn-hub { fill: var(--primary, #0d9488); }
+    .mn-hub-text { font-size: 15px; font-weight: 700; fill: #ffffff; }
+    .mn-divider { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+  </style>
+  <!-- 위: 표준 없음 -->
+  <text x="240" y="20" text-anchor="middle" class="mn-title">위: 표준 없음, 조합마다 커스텀 통합</text>
+  <rect x="30" y="34" width="110" height="34" rx="6" class="mn-box" />
+  <rect x="185" y="34" width="110" height="34" rx="6" class="mn-box" />
+  <rect x="340" y="34" width="110" height="34" rx="6" class="mn-box" />
+  <text x="85" y="56" text-anchor="middle" class="mn-label">Claude Code</text>
+  <text x="240" y="56" text-anchor="middle" class="mn-label">Cursor</text>
+  <text x="395" y="56" text-anchor="middle" class="mn-label">Codex</text>
+  <!-- 12개 교차 연결 -->
+  <line x1="85" y1="68" x2="78" y2="150" class="mn-mesh" />
+  <line x1="85" y1="68" x2="186" y2="150" class="mn-mesh" />
+  <line x1="85" y1="68" x2="294" y2="150" class="mn-mesh" />
+  <line x1="85" y1="68" x2="402" y2="150" class="mn-mesh" />
+  <line x1="240" y1="68" x2="78" y2="150" class="mn-mesh" />
+  <line x1="240" y1="68" x2="186" y2="150" class="mn-mesh" />
+  <line x1="240" y1="68" x2="294" y2="150" class="mn-mesh" />
+  <line x1="240" y1="68" x2="402" y2="150" class="mn-mesh" />
+  <line x1="395" y1="68" x2="78" y2="150" class="mn-mesh" />
+  <line x1="395" y1="68" x2="186" y2="150" class="mn-mesh" />
+  <line x1="395" y1="68" x2="294" y2="150" class="mn-mesh" />
+  <line x1="395" y1="68" x2="402" y2="150" class="mn-mesh" />
+  <rect x="28" y="150" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="136" y="150" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="244" y="150" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="352" y="150" width="100" height="34" rx="6" class="mn-box" />
+  <text x="78" y="172" text-anchor="middle" class="mn-label">GitHub</text>
+  <text x="186" y="172" text-anchor="middle" class="mn-label">Slack</text>
+  <text x="294" y="172" text-anchor="middle" class="mn-label">Jira</text>
+  <text x="402" y="172" text-anchor="middle" class="mn-label">DB</text>
+  <text x="240" y="212" text-anchor="middle" class="mn-formula">3 × 4 = 12개 커스텀 통합</text>
+  <line x1="20" y1="234" x2="460" y2="234" class="mn-divider" />
+  <!-- 아래: MCP 경유 -->
+  <text x="240" y="258" text-anchor="middle" class="mn-title">아래: MCP 표준 하나를 경유</text>
+  <rect x="30" y="272" width="110" height="34" rx="6" class="mn-box" />
+  <rect x="185" y="272" width="110" height="34" rx="6" class="mn-box" />
+  <rect x="340" y="272" width="110" height="34" rx="6" class="mn-box" />
+  <text x="85" y="294" text-anchor="middle" class="mn-label">Claude Code</text>
+  <text x="240" y="294" text-anchor="middle" class="mn-label">Cursor</text>
+  <text x="395" y="294" text-anchor="middle" class="mn-label">Codex</text>
+  <line x1="85" y1="306" x2="85" y2="342" class="mn-spoke" />
+  <line x1="240" y1="306" x2="240" y2="342" class="mn-spoke" />
+  <line x1="395" y1="306" x2="395" y2="342" class="mn-spoke" />
+  <rect x="28" y="342" width="424" height="34" rx="6" class="mn-hub" />
+  <text x="240" y="364" text-anchor="middle" class="mn-hub-text">MCP 표준 프로토콜</text>
+  <line x1="78" y1="376" x2="78" y2="412" class="mn-spoke" />
+  <line x1="186" y1="376" x2="186" y2="412" class="mn-spoke" />
+  <line x1="294" y1="376" x2="294" y2="412" class="mn-spoke" />
+  <line x1="402" y1="376" x2="402" y2="412" class="mn-spoke" />
+  <rect x="28" y="412" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="136" y="412" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="244" y="412" width="100" height="34" rx="6" class="mn-box" />
+  <rect x="352" y="412" width="100" height="34" rx="6" class="mn-box" />
+  <text x="78" y="434" text-anchor="middle" class="mn-label">GitHub</text>
+  <text x="186" y="434" text-anchor="middle" class="mn-label">Slack</text>
+  <text x="294" y="434" text-anchor="middle" class="mn-label">Jira</text>
+  <text x="402" y="434" text-anchor="middle" class="mn-label">DB</text>
+  <text x="240" y="468" text-anchor="middle" class="mn-formula">3 + 4 = 7개 구현</text>
+</svg>
+</div>
 
-에이전트 3개 × 서비스 10개 = 30개 커스텀 통합
-```
+에이전트 3개와 서비스 10개라면 커스텀 통합이 30개 필요합니다. USB가 등장하기 전의 주변기기 시장과 같은 상황입니다. 프린터, 스캐너, 키보드가 각각 고유한 포트와 드라이버를 요구했고, 새 기기를 추가할 때마다 호환성 문제가 발생했습니다. USB가 이 문제를 M+N으로 줄인 것처럼, MCP는 에이전트와 외부 서비스 사이의 표준 인터페이스 역할을 합니다. 같은 조건에서 MCP를 경유하면 구현해야 할 것은 13개로 줄어듭니다.
 
-USB가 등장하기 전의 주변기기 시장과 같은 상황입니다. 프린터, 스캐너, 키보드가 각각 고유한 포트와 드라이버를 요구했고, 새 기기를 추가할 때마다 호환성 문제가 발생했습니다. USB가 이 문제를 M+N으로 줄인 것처럼, MCP는 에이전트와 외부 서비스 사이의 표준 인터페이스 역할을 합니다.
-
-```
-M 에이전트 + N 서비스 = M + N 구현
-
-에이전트 3개 + 서비스 10개 = 13개 구현
-```
-
-MCP 이전에 Claude Code의 도구는 하드코딩된 내장 도구였습니다. `Read`, `Write`, `Bash`, `Grep` 같은 도구는 코드베이스에 직접 정의되어 있고, 새로운 도구를 추가하려면 소스 코드를 수정해야 했습니다. [세 번째 글](/agent/agent-tool-use/)에서 분석한 내장 도구가 바로 이런 방식입니다.
+MCP 이전에 Claude Code의 도구는 하드코딩된 내장 도구였습니다. `Read`, `Write`, `Bash`, `Grep` 같은 도구는 코드베이스에 직접 정의되어 있고, 새로운 도구를 추가하려면 소스 코드를 수정해야 했습니다.
 
 MCP가 도입된 이후, 외부 서비스를 MCP 서버로 한 번 구현하면 MCP를 지원하는 모든 에이전트에서 동작합니다. Claude Code뿐 아니라 Cursor, Windsurf, 그리고 커스텀 에이전트까지 동일한 MCP 서버를 공유합니다.
 
@@ -56,25 +117,61 @@ MCP는 Microsoft의 LSP(Language Server Protocol)에서 영감을 받았습니�
 
 MCP는 세 가지 역할로 구성됩니다.
 
-```
-┌─────────────────────────────────────────┐
-│            Host (에이전트 앱)              │
-│                                         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ Client 1 │ │ Client 2 │ │ Client 3 │ │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ │
-└───────┼────────────┼────────────┼───────┘
-        │            │            │
-   ┌────▼─────┐ ┌────▼─────┐ ┌───▼──────┐
-   │ Server 1 │ │ Server 2 │ │ Server 3 │
-   │ (GitHub) │ │ (Slack)  │ │ (DB)     │
-   └────┬─────┘ └────┬─────┘ └────┬─────┘
-        │            │             │
-   ┌────▼─────┐ ┌────▼─────┐ ┌────▼─────┐
-   │ GitHub   │ │ Slack    │ │ PostgreSQL│
-   │ API      │ │ API      │ │          │
-   └──────────┘ └──────────┘ └──────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 344" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Host 안의 Client 세 개가 각각 하나의 MCP Server와 1대1로 연결되고, 각 Server는 GitHub API, Slack API, PostgreSQL 같은 실제 서비스에 연결되는 3계층 구조">
+  <style>
+    .hcs-h { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .hcs-l { font-size: 13px; fill: var(--text, #1c1917); }
+    .hcs-s { font-size: 12px; fill: var(--text-muted, #78716c); }
+    .hcs-host { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .hcs-client { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .hcs-server { fill: var(--bg, #fafaf8); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+    .hcs-ext { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .hcs-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.6; }
+  </style>
+  <defs>
+    <marker id="hcsHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+  </defs>
+  <!-- Host 계층 -->
+  <rect x="20" y="20" width="440" height="112" rx="8" class="hcs-host" />
+  <text x="38" y="46" class="hcs-h">Host (에이전트 앱)</text>
+  <rect x="32" y="72" width="124" height="44" rx="6" class="hcs-client" />
+  <rect x="178" y="72" width="124" height="44" rx="6" class="hcs-client" />
+  <rect x="324" y="72" width="124" height="44" rx="6" class="hcs-client" />
+  <text x="94" y="99" text-anchor="middle" class="hcs-l">Client 1</text>
+  <text x="240" y="99" text-anchor="middle" class="hcs-l">Client 2</text>
+  <text x="386" y="99" text-anchor="middle" class="hcs-l">Client 3</text>
+  <!-- Client에서 Server로 -->
+  <line x1="94" y1="132" x2="94" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="240" y1="132" x2="240" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="386" y1="132" x2="386" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <text x="167" y="156" text-anchor="middle" class="hcs-s">MCP (JSON-RPC 2.0)</text>
+  <!-- Server 계층 -->
+  <rect x="32" y="172" width="124" height="56" rx="6" class="hcs-server" />
+  <rect x="178" y="172" width="124" height="56" rx="6" class="hcs-server" />
+  <rect x="324" y="172" width="124" height="56" rx="6" class="hcs-server" />
+  <text x="94" y="196" text-anchor="middle" class="hcs-l">Server 1</text>
+  <text x="240" y="196" text-anchor="middle" class="hcs-l">Server 2</text>
+  <text x="386" y="196" text-anchor="middle" class="hcs-l">Server 3</text>
+  <text x="94" y="216" text-anchor="middle" class="hcs-s">GitHub</text>
+  <text x="240" y="216" text-anchor="middle" class="hcs-s">Slack</text>
+  <text x="386" y="216" text-anchor="middle" class="hcs-s">DB</text>
+  <!-- Server에서 외부 서비스로 -->
+  <line x1="94" y1="228" x2="94" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="240" y1="228" x2="240" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="386" y1="228" x2="386" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <text x="167" y="252" text-anchor="middle" class="hcs-s">각 서비스의 네이티브 API</text>
+  <!-- 외부 서비스 계층 -->
+  <rect x="32" y="268" width="124" height="52" rx="6" class="hcs-ext" />
+  <rect x="178" y="268" width="124" height="52" rx="6" class="hcs-ext" />
+  <rect x="324" y="268" width="124" height="52" rx="6" class="hcs-ext" />
+  <text x="94" y="299" text-anchor="middle" class="hcs-l">GitHub API</text>
+  <text x="240" y="299" text-anchor="middle" class="hcs-l">Slack API</text>
+  <text x="386" y="299" text-anchor="middle" class="hcs-l">PostgreSQL</text>
+</svg>
+</div>
 
 **Host**는 에이전트 애플리케이션 자체입니다. Claude Code, Cursor, 또는 직접 만든 에이전트가 Host입니다. Host는 여러 개의 Client를 생성하고 관리하며, 보안 정책과 사용자 승인을 제어합니다. LLM과의 통합도 Host의 책임입니다.
 
@@ -94,7 +191,7 @@ Server가 Client에게 제공하는 기능은 세 가지 프리미티브로 표�
 
 제어 주체의 차이가 핵심입니다. **Resources**는 애플리케이션이 언제 어떤 데이터를 컨텍스트에 포함할지 결정합니다. **Tools**는 LLM이 언제 어떤 함수를 호출할지 결정합니다. **Prompts**는 사용자가 명시적으로 선택합니다.
 
-[세 번째 글](/agent/agent-tool-use/)에서 분석한 Claude Code의 내장 도구(`Read`, `Write`, `Bash`)는 모두 Tools에 해당합니다. MCP는 여기에 Resources와 Prompts를 추가하여, 도구 호출 외에 "데이터를 컨텍스트에 첨부"하거나 "사전 정의된 워크플로우를 실행"하는 패턴까지 표준화합니다.
+Claude Code의 내장 도구(`Read`, `Write`, `Bash`)는 모두 Tools에 해당합니다. MCP는 여기에 Resources와 Prompts를 추가하여, 도구 호출 외에 "데이터를 컨텍스트에 첨부"하거나 "사전 정의된 워크플로우를 실행"하는 패턴까지 표준화합니다.
 
 ### 전송 계층
 
@@ -108,22 +205,57 @@ MCP는 JSON-RPC 2.0 메시지 포맷을 사용하며, 두 가지 전송 방식�
 
 Client와 Server 사이의 세션은 세 단계를 거칩니다. 초기화(Initialization), 작업(Operation), 종료(Shutdown)입니다.
 
-```
-Client                          Server
-  │                               │
-  │──── initialize ──────────────▶│  1. 초기화: 프로토콜 버전과
-  │◀─── capabilities ────────────│     지원 기능을 교환
-  │──── initialized ────────────▶│     초기화 완료 통지
-  │                               │
-  │──── tools/list ──────────────▶│  2. 작업: 도구/리소스 탐색
-  │◀─── tool definitions ────────│
-  │──── tools/call ──────────────▶│     도구 실행
-  │◀─── result ──────────────────│
-  │          ...                  │
-  │                               │
-  │──── (close transport) ───────▶│  3. 종료: stdin 닫기 또는
-  │                               │     HTTP 연결 종료
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="MCP 세션의 세 단계 시퀀스 다이어그램. 초기화 단계에서 initialize와 capabilities와 initialized를 교환하고, 작업 단계에서 tools/list와 tools/call을 주고받은 뒤, 종료 단계에서 전송 계층을 닫는다">
+  <style>
+    .lc-head { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .lc-phase { font-size: 13px; font-weight: 700; fill: var(--text, #1c1917); }
+    .lc-msg { font-size: 13px; fill: var(--text, #1c1917); }
+    .lc-life { stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .lc-band { fill: var(--bg-muted, #eeecea); }
+    .lc-req { stroke: var(--primary, #0d9488); stroke-width: 1.6; }
+    .lc-res { stroke: var(--text-muted, #78716c); stroke-width: 1.4; stroke-dasharray: 5 3; }
+  </style>
+  <defs>
+    <marker id="lcReqHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--primary, #0d9488)" />
+    </marker>
+    <marker id="lcResHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+  </defs>
+  <!-- 라이프라인 -->
+  <text x="110" y="22" text-anchor="middle" class="lc-head">Client</text>
+  <text x="390" y="22" text-anchor="middle" class="lc-head">Server</text>
+  <line x1="110" y1="34" x2="110" y2="382" class="lc-life" />
+  <line x1="390" y1="34" x2="390" y2="382" class="lc-life" />
+  <!-- 1. 초기화 -->
+  <rect x="150" y="44" width="200" height="26" rx="13" class="lc-band" />
+  <text x="250" y="62" text-anchor="middle" class="lc-phase">1. 초기화 (Initialization)</text>
+  <text x="250" y="90" text-anchor="middle" class="lc-msg">initialize</text>
+  <line x1="114" y1="96" x2="386" y2="96" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="250" y="118" text-anchor="middle" class="lc-msg">capabilities</text>
+  <line x1="386" y1="124" x2="114" y2="124" class="lc-res" marker-end="url(#lcResHead)" />
+  <text x="250" y="146" text-anchor="middle" class="lc-msg">notifications/initialized</text>
+  <line x1="114" y1="152" x2="386" y2="152" class="lc-req" marker-end="url(#lcReqHead)" />
+  <!-- 2. 작업 -->
+  <rect x="150" y="168" width="200" height="26" rx="13" class="lc-band" />
+  <text x="250" y="186" text-anchor="middle" class="lc-phase">2. 작업 (Operation)</text>
+  <text x="250" y="214" text-anchor="middle" class="lc-msg">tools/list</text>
+  <line x1="114" y1="220" x2="386" y2="220" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="250" y="242" text-anchor="middle" class="lc-msg">tool definitions</text>
+  <line x1="386" y1="248" x2="114" y2="248" class="lc-res" marker-end="url(#lcResHead)" />
+  <text x="250" y="270" text-anchor="middle" class="lc-msg">tools/call</text>
+  <line x1="114" y1="276" x2="386" y2="276" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="250" y="298" text-anchor="middle" class="lc-msg">result</text>
+  <line x1="386" y1="304" x2="114" y2="304" class="lc-res" marker-end="url(#lcResHead)" />
+  <!-- 3. 종료 -->
+  <rect x="150" y="320" width="200" height="26" rx="13" class="lc-band" />
+  <text x="250" y="338" text-anchor="middle" class="lc-phase">3. 종료 (Shutdown)</text>
+  <text x="250" y="366" text-anchor="middle" class="lc-msg">stdin 닫기 또는 HTTP 연결 종료</text>
+  <line x1="114" y1="372" x2="386" y2="372" class="lc-req" marker-end="url(#lcReqHead)" />
+</svg>
+</div>
 
 capability 교환이 중요한 이유는, Server마다 지원하는 기능이 다르기 때문입니다. 어떤 Server는 Tools만 제공하고, 어떤 Server는 Resources와 Prompts까지 지원합니다. Client는 초기화 단계에서 Server의 능력을 파악하고, 세션 동안 선언된 기능만 사용합니다.
 
@@ -153,10 +285,42 @@ tools = [
 
 결과는 명확합니다. 72,000 토큰이 약 8,700 토큰으로 줄어들어 **85% 절감**. 단순히 토큰을 아끼는 것이 아니라, 모델이 58개 도구 중에서 올바른 도구를 고르는 정확도도 향상됩니다. Anthropic의 내부 평가에서 Opus 4의 MCP 도구 선택 정확도가 49%에서 74%로 올랐습니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 프롬프트 캐싱과의 호환</strong><br>
-  Tool Search는 프롬프트 캐싱을 깨뜨리지 않습니다. 지연된 도구는 초기 프롬프트에서 완전히 제외되므로, 시스템 프롬프트와 핵심 도구 정의가 캐시 프리픽스로 안정적으로 유지됩니다. 동적으로 로딩된 도구는 캐시 프리픽스 뒤에 추가됩니다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 230" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 도구 스키마가 차지하는 비중 비교. 기본 방식은 72,000 토큰으로 36퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
+  <style>
+    .ctx-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .ctx-row { font-size: 13px; fill: var(--text, #1c1917); }
+    .ctx-sub { font-size: 12px; fill: var(--text-muted, #78716c); }
+    .ctx-track { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+    .ctx-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .ctx-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .ctx-bad-t { font-size: 13px; font-weight: 700; fill: var(--text-danger, #dc2626); }
+    .ctx-good-t { font-size: 13px; font-weight: 700; fill: var(--text-success, #16a34a); }
+  </style>
+  <text x="240" y="20" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 도구 스키마가 차지하는 몫</text>
+  <!-- 기본 방식 -->
+  <text x="30" y="52" class="ctx-row">기본: 58개 도구 스키마를 전부 로딩</text>
+  <rect x="30" y="62" width="420" height="36" rx="4" class="ctx-track" />
+  <rect x="30" y="62" width="151" height="36" rx="4" class="ctx-bad" />
+  <text x="105" y="85" text-anchor="middle" class="ctx-bad-t">72,000</text>
+  <text x="315" y="85" text-anchor="middle" class="ctx-sub">남은 여유 128,000</text>
+  <!-- Tool Search 적용 -->
+  <text x="30" y="136" class="ctx-row">Tool Search: 메타 도구와 실제 사용분만</text>
+  <rect x="30" y="146" width="420" height="36" rx="4" class="ctx-track" />
+  <rect x="30" y="146" width="18" height="36" rx="4" class="ctx-good" />
+  <text x="58" y="169" class="ctx-good-t">8,700 (85% 절감)</text>
+  <text x="440" y="169" text-anchor="end" class="ctx-sub">남은 여유 191,300</text>
+  <text x="240" y="212" text-anchor="middle" class="ctx-sub">GitHub, Slack, Sentry, Grafana, Splunk 5개 서버 기준 (단위: 토큰)</text>
+</svg>
 </div>
+
+:::info
+
+**프롬프트 캐싱과의 호환**
+
+Tool Search는 프롬프트 캐싱을 깨뜨리지 않습니다. 지연된 도구는 초기 프롬프트에서 완전히 제외되므로, 시스템 프롬프트와 핵심 도구 정의가 캐시 프리픽스로 안정적으로 유지됩니다. 동적으로 로딩된 도구는 캐시 프리픽스 뒤에 추가됩니다.
+
+:::
 
 ### 전략 2: Programmatic Tool Calling (37% 토큰 절감)
 
@@ -202,13 +366,71 @@ Programmatic Tool Calling이 "모델이 코드를 작성하고 도구 호출 결
 | **Programmatic Tool Calling** | 중간 결과 축적 | 37% | 25.6% → 28.5% (지식 검색) |
 | **Code Execution with MCP** | 스키마 + 결과 모두 | 98.7% | MCP 작업 전반 개선 |
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 364" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 최적화 전략이 컨텍스트에서 제외하는 구간 비교. Tool Search는 도구 스키마를, Programmatic Tool Calling은 중간 결과를, Code Execution with MCP는 둘 다 제외하고 최종 출력만 남긴다">
+  <style>
+    .st-name { font-size: 14px; font-weight: 700; }
+    .st-base { fill: var(--text, #1c1917); }
+    .st-opt { fill: var(--primary, #0d9488); }
+    .st-in { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .st-out { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .st-in-t { font-size: 13px; fill: var(--text, #1c1917); }
+    .st-out-t { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .st-strike { stroke: var(--text-muted, #78716c); stroke-width: 1.2; opacity: 0.6; }
+    .st-legend { font-size: 12px; fill: var(--text-muted, #78716c); }
+  </style>
+  <!-- 범례 -->
+  <rect x="22" y="8" width="14" height="12" rx="2" class="st-in" />
+  <text x="42" y="18" class="st-legend">컨텍스트에 포함</text>
+  <rect x="170" y="8" width="14" height="12" rx="2" class="st-out" />
+  <line x1="172" y1="10" x2="182" y2="18" class="st-strike" />
+  <text x="190" y="18" class="st-legend">컨텍스트에서 제외</text>
+  <!-- 기본 -->
+  <text x="22" y="52" class="st-name st-base">기본 (최적화 없음)</text>
+  <rect x="22" y="60" width="136" height="40" rx="6" class="st-in" />
+  <text x="90" y="85" text-anchor="middle" class="st-in-t">도구 스키마</text>
+  <rect x="172" y="60" width="136" height="40" rx="6" class="st-in" />
+  <text x="240" y="85" text-anchor="middle" class="st-in-t">중간 결과</text>
+  <rect x="322" y="60" width="136" height="40" rx="6" class="st-in" />
+  <text x="390" y="85" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <!-- 전략 1 -->
+  <text x="22" y="134" class="st-name st-opt">전략 1. Tool Search</text>
+  <rect x="22" y="142" width="136" height="40" rx="6" class="st-out" />
+  <line x1="30" y1="150" x2="150" y2="174" class="st-strike" />
+  <text x="90" y="167" text-anchor="middle" class="st-out-t">도구 스키마</text>
+  <rect x="172" y="142" width="136" height="40" rx="6" class="st-in" />
+  <text x="240" y="167" text-anchor="middle" class="st-in-t">중간 결과</text>
+  <rect x="322" y="142" width="136" height="40" rx="6" class="st-in" />
+  <text x="390" y="167" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <!-- 전략 2 -->
+  <text x="22" y="216" class="st-name st-opt">전략 2. Programmatic Tool Calling</text>
+  <rect x="22" y="224" width="136" height="40" rx="6" class="st-in" />
+  <text x="90" y="249" text-anchor="middle" class="st-in-t">도구 스키마</text>
+  <rect x="172" y="224" width="136" height="40" rx="6" class="st-out" />
+  <line x1="180" y1="232" x2="300" y2="256" class="st-strike" />
+  <text x="240" y="249" text-anchor="middle" class="st-out-t">중간 결과</text>
+  <rect x="322" y="224" width="136" height="40" rx="6" class="st-in" />
+  <text x="390" y="249" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <!-- 전략 3 -->
+  <text x="22" y="298" class="st-name st-opt">전략 3. Code Execution with MCP</text>
+  <rect x="22" y="306" width="136" height="40" rx="6" class="st-out" />
+  <line x1="30" y1="314" x2="150" y2="338" class="st-strike" />
+  <text x="90" y="331" text-anchor="middle" class="st-out-t">도구 스키마</text>
+  <rect x="172" y="306" width="136" height="40" rx="6" class="st-out" />
+  <line x1="180" y1="314" x2="300" y2="338" class="st-strike" />
+  <text x="240" y="331" text-anchor="middle" class="st-out-t">중간 결과</text>
+  <rect x="322" y="306" width="136" height="40" rx="6" class="st-in" />
+  <text x="390" y="331" text-anchor="middle" class="st-in-t">최종 출력</text>
+</svg>
+</div>
+
 세 전략은 상호 배타적이 아닙니다. Tool Search로 필요한 도구만 탐색하고, 탐색된 도구를 Programmatic Tool Calling으로 효율적으로 실행하는 조합이 가능합니다.
 
 ---
 
 ## 퍼미션과 신뢰 경계
 
-MCP 서버는 에이전트에게 새로운 능력을 부여하는 만큼, 새로운 보안 위험도 함께 가져옵니다. [일곱 번째 글](/agent/agent-permission-safety/)에서 내장 도구의 퍼미션 파이프라인을 분석했는데, MCP 도구에는 추가적인 신뢰 경계가 존재합니다.
+MCP 서버는 에이전트에게 새로운 능력을 부여하는 만큼, 새로운 보안 위험도 함께 가져옵니다. 내장 도구는 에이전트가 직접 정의한 퍼미션 파이프라인 안에서 통제되지만, MCP 도구에는 그 바깥에 또 하나의 신뢰 경계가 존재합니다.
 
 ### 내장 도구 vs MCP 도구
 
@@ -239,7 +461,7 @@ MCP의 가장 중요한 보안 설계 원칙 중 하나는 **서버 간 격리**
 
 > "Servers should not be able to read the whole conversation, nor see into other servers."
 
-각 Server는 독립 프로세스로 실행되며, Host의 전체 대화 기록에 접근할 수 없습니다. Server가 받는 것은 Client가 명시적으로 전달한 요청 파라미터뿐입니다. GitHub Server가 Slack Server의 메시지를 읽거나, 다른 Server의 도구 호출 결과를 볼 수 없습니다. 이 격리는 [이전 글](/agent/multi-agent-systems/)에서 분석한 Claude Code의 서브에이전트 사이드체인 패턴과 같은 원리입니다. 컨텍스트를 공유하지 않아 보안 경계가 유지됩니다.
+각 Server는 독립 프로세스로 실행되며, Host의 전체 대화 기록에 접근할 수 없습니다. Server가 받는 것은 Client가 명시적으로 전달한 요청 파라미터뿐입니다. GitHub Server가 Slack Server의 메시지를 읽거나, 다른 Server의 도구 호출 결과를 볼 수 없습니다. 이 격리는 서브에이전트를 부모와 분리된 컨텍스트에서 실행하는 사이드체인 패턴과 같은 원리입니다. 컨텍스트를 공유하지 않아 보안 경계가 유지됩니다.
 
 | 관점 | Claude Code 내장 도구 | MCP 도구 |
 |------|---------------------|---------|
@@ -490,7 +712,7 @@ async def agent_loop_with_mcp(
 
 ## 에이전트 간 표준: A2A
 
-MCP가 에이전트와 외부 **도구** 사이의 표준이라면, 에이전트와 **다른 에이전트** 사이의 표준은 아직 없습니다. [이전 글](/agent/multi-agent-systems/)에서 다뤘듯이 Claude Code는 함수 호출과 사이드체인, Anthropic Harness는 파일 기반, Codex는 SQLite 세션을 사용합니다. 시스템마다 다른 내부 프로토콜은 호환되지 않습니다.
+MCP가 에이전트와 외부 **도구** 사이의 표준이라면, 에이전트와 **다른 에이전트** 사이의 표준은 아직 없습니다. 에이전트끼리 협력할 때 Claude Code는 함수 호출과 사이드체인, Anthropic Harness는 파일 기반, Codex는 SQLite 세션을 사용합니다. 시스템마다 다른 내부 프로토콜은 호환되지 않습니다.
 
 Google이 제안하고 이후 Linux Foundation에 기부한 A2A(Agent-to-Agent) 프로토콜은 이 문제를 풀려는 시도입니다.
 
@@ -511,7 +733,7 @@ A2A는 v1.0 안정 스펙이 공개되었고 150개 이상의 조직이 참여�
 
 ### 서버 품질 편차
 
-MCP가 "누구나 서버를 만들 수 있다"는 것은 장점이자 단점입니다. npm 생태계에서 패키지 품질이 천차만별인 것처럼, MCP 서버의 도구 설계 품질도 크게 다릅니다. [세 번째 글](/agent/agent-tool-use/)에서 다룬 ACI 원칙(명확한 네이밍, 최소한의 파라미터, 의미 있는 에러 메시지)을 지키는 서버가 있는 반면, 모호한 설명과 과도한 파라미터로 모델을 혼란스럽게 만드는 서버도 있습니다. 도구 설계가 곧 모델의 성능을 결정하므로, 서버 품질 문제는 에이전트 전체의 성능에 직접 영향을 미칩니다.
+MCP가 "누구나 서버를 만들 수 있다"는 것은 장점이자 단점입니다. npm 생태계에서 패키지 품질이 천차만별인 것처럼, MCP 서버의 도구 설계 품질도 크게 다릅니다. ACI(Agent-Computer Interface) 원칙(명확한 네이밍, 최소한의 파라미터, 의미 있는 에러 메시지)을 지키는 서버가 있는 반면, 모호한 설명과 과도한 파라미터로 모델을 혼란스럽게 만드는 서버도 있습니다. 도구 설계가 곧 모델의 성능을 결정하므로, 서버 품질 문제는 에이전트 전체의 성능에 직접 영향을 미칩니다.
 
 ### 상태 관리
 
@@ -529,9 +751,18 @@ MCP가 "누구나 서버를 만들 수 있다"는 것은 장점이자 단점입�
 
 ## 마치며
 
-[첫 번째 글](/agent/what-is-ai-agent/)에서 에이전트를 "모델, 도구, 루프"라는 세 가지 요소로 정의했습니다. 시리즈 전체를 관통하는 숫자가 있었습니다. Claude Code에서 AI가 판단하는 로직은 1.6%이고, 나머지 98.4%는 결정론적 인프라입니다. 이 시리즈는 그 98.4%가 무엇으로 구성되어 있는지를 하나씩 해부한 기록입니다. 워크플로우 패턴, 도구 설계, 컨텍스트 관리, 루프 아키텍처, 컴팩션, 퍼미션, 멀티에이전트 조정, 그리고 이 글에서 다룬 외부 연결 프로토콜까지.
+에이전트는 결국 "모델, 도구, 루프"라는 세 가지 요소로 이루어집니다. 그리고 시리즈 전체를 관통하는 숫자가 하나 있었습니다. Claude Code에서 AI가 판단하는 로직은 1.6%이고, 나머지 98.4%는 결정론적 인프라입니다. 이 시리즈는 그 98.4%가 무엇으로 구성되어 있는지를 하나씩 해부한 기록입니다. 워크플로우 패턴, 도구 설계, 컨텍스트 관리, 루프 아키텍처, 컴팩션, 퍼미션, 멀티에이전트 조정, 그리고 이 글에서 다룬 외부 연결 프로토콜까지.
 
 MCP가 그 인프라의 마지막 조각입니다. 에이전트가 자신의 내장 도구만으로는 할 수 없는 일, 외부 세계와의 연결을 표준화된 방식으로 가능하게 만듭니다. 에이전트 시스템의 가치는 결국 "무엇과 연결될 수 있는가"가 결정합니다. MCP는 그 연결의 비용을 M×N에서 M+N으로, 그리고 컨텍스트 비용을 85%에서 98.7%까지 줄이는 표준입니다.
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent의 도구 설계: ACI 원칙부터 프로덕션 스키마까지](/agent/agent-tool-use/)
+- [AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단](/agent/agent-permission-safety/)
+- [AI Agent의 멀티에이전트 시스템: 여러 에이전트가 협력할 때 생기는 다섯 가지 문제](/agent/multi-agent-systems/)
+
+<br>
 
 ## 참고자료
 
