@@ -21,15 +21,61 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
 
 먼저 생성 과정 자체를 봅시다. LLM은 문장을 통째로 만들지 않습니다. **자기회귀(Autoregressive)** 방식, 즉 지금까지의 토큰 전체를 입력으로 받아 "다음 토큰 하나"를 예측하는 일을 반복합니다.
 
-```
-입력: "한국의 수도는"
-
-Step 1: [한국의, 수도는]                → 다음 토큰: "서울"
-Step 2: [한국의, 수도는, 서울]          → 다음 토큰: "입니다"
-Step 3: [한국의, 수도는, 서울, 입니다]  → 다음 토큰: <EOS>
-
-출력: "서울입니다"
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 256" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="자기회귀 생성 과정. 입력 한국의 수도는에서 시작해 스텝마다 토큰을 하나씩 예측하고, 그 토큰을 시퀀스 끝에 붙여 다시 입력으로 넣는 과정을 3스텝에 걸쳐 보여준다. 최종 출력은 서울입니다.">
+  <style>
+    .sv1-chip { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .sv1-new  { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+    .sv1-out  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .sv1-t    { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .sv1-sub  { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .sv1-cap  { fill: var(--text-muted, #78716c); font-size: 14px; text-anchor: middle; }
+    .sv1-ar   { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#sv1Arrow); }
+  </style>
+  <defs>
+    <marker id="sv1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <text x="240" y="26" class="sv1-cap">입력: “한국의 수도는”</text>
+  <text x="14" y="70" class="sv1-sub">Step 1</text>
+  <rect x="62" y="48" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="91" y="70" class="sv1-t">한국의</text>
+  <rect x="125" y="48" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="154" y="70" class="sv1-t">수도는</text>
+  <path d="M190,65 L214,65" class="sv1-ar"/>
+  <rect x="220" y="48" width="80" height="34" rx="6" class="sv1-new"/>
+  <text x="260" y="70" class="sv1-t">서울</text>
+  <text x="14" y="118" class="sv1-sub">Step 2</text>
+  <rect x="62" y="96" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="91" y="118" class="sv1-t">한국의</text>
+  <rect x="125" y="96" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="154" y="118" class="sv1-t">수도는</text>
+  <rect x="188" y="96" width="58" height="34" rx="6" class="sv1-new"/>
+  <text x="217" y="118" class="sv1-t">서울</text>
+  <path d="M253,113 L277,113" class="sv1-ar"/>
+  <rect x="283" y="96" width="80" height="34" rx="6" class="sv1-new"/>
+  <text x="323" y="118" class="sv1-t">입니다</text>
+  <text x="14" y="166" class="sv1-sub">Step 3</text>
+  <rect x="62" y="144" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="91" y="166" class="sv1-t">한국의</text>
+  <rect x="125" y="144" width="58" height="34" rx="6" class="sv1-chip"/>
+  <text x="154" y="166" class="sv1-t">수도는</text>
+  <rect x="188" y="144" width="58" height="34" rx="6" class="sv1-new"/>
+  <text x="217" y="166" class="sv1-t">서울</text>
+  <rect x="251" y="144" width="58" height="34" rx="6" class="sv1-new"/>
+  <text x="280" y="166" class="sv1-t">입니다</text>
+  <path d="M316,161 L340,161" class="sv1-ar"/>
+  <rect x="346" y="144" width="80" height="34" rx="6" class="sv1-new"/>
+  <text x="386" y="166" class="sv1-t">&lt;EOS&gt;</text>
+  <path d="M240,184 L240,200" class="sv1-ar"/>
+  <rect x="150" y="204" width="180" height="36" rx="8" class="sv1-out"/>
+  <text x="240" y="227" class="sv1-t">출력: “서울입니다”</text>
+</svg>
+</div>
 
 한 번의 forward pass가 하는 일은 정확히 하나입니다. 현재까지의 토큰 시퀀스를 받아서, 어휘 사전(vocabulary) 전체에 대한 확률 분포를 출력하는 것. 그 분포에서 토큰 하나를 뽑고(greedy든 sampling이든), 뽑힌 토큰을 시퀀스 끝에 붙여서 다시 모델에 넣습니다. `<EOS>`(생성 종료 토큰)가 나오거나 `max_tokens`에 도달할 때까지 이 루프가 돕니다.
 
@@ -47,14 +93,61 @@ Step 3: [한국의, 수도는, 서울, 입니다]  → 다음 토큰: <EOS>
 
 그래서 모든 추론 엔진은 각 토큰의 attention 중간 결과물인 **Key와 Value 벡터를 저장해두고 재사용**합니다. 이것이 **KV Cache**입니다.
 
-```
-KV Cache 없이:
-Step N에서 토큰 N개 전체를 다시 계산  → 스텝당 비용이 계속 증가
-
-KV Cache 사용:
-Step N에서 새 토큰 1개만 계산하고,
-이전 토큰들의 K, V는 캐시에서 읽음    → 스텝당 계산량 거의 일정
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="KV Cache 유무 비교. 캐시가 없으면 스텝마다 재계산량을 나타내는 막대가 계속 길어지고, 캐시를 쓰면 새로 계산하는 막대 길이가 스텝마다 동일하게 유지되며 이전 토큰의 K와 V는 KV Cache에서 읽어온다.">
+  <style>
+    .kv1-barA  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .kv1-barB  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .kv1-box   { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .kv1-hA    { fill: var(--text-danger, #dc2626); font-size: 15px; }
+    .kv1-hB    { fill: var(--primary, #0d9488); font-size: 15px; }
+    .kv1-noteA { fill: var(--text-danger, #dc2626); font-size: 13px; }
+    .kv1-noteB { fill: var(--primary, #0d9488); font-size: 13px; }
+    .kv1-lab   { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .kv1-t     { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .kv1-sub   { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
+    .kv1-ar    { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none;
+                 stroke-dasharray: 4 3; marker-end: url(#kv1Arrow); }
+  </style>
+  <defs>
+    <marker id="kv1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <text x="16" y="24" class="kv1-hA">KV Cache 없이</text>
+  <text x="16" y="49" class="kv1-lab">Step 1</text>
+  <rect x="70" y="36" width="44" height="18" rx="4" class="kv1-barA"/>
+  <text x="16" y="73" class="kv1-lab">Step 2</text>
+  <rect x="70" y="60" width="88" height="18" rx="4" class="kv1-barA"/>
+  <text x="16" y="97" class="kv1-lab">Step 3</text>
+  <rect x="70" y="84" width="132" height="18" rx="4" class="kv1-barA"/>
+  <text x="16" y="121" class="kv1-lab">Step 4</text>
+  <rect x="70" y="108" width="176" height="18" rx="4" class="kv1-barA"/>
+  <text x="256" y="121" class="kv1-lab">토큰 4개 전체 재계산</text>
+  <text x="70" y="149" class="kv1-noteA">스텝당 비용이 계속 증가</text>
+  <line x1="16" y1="166" x2="464" y2="166" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+  <text x="16" y="190" class="kv1-hB">KV Cache 사용</text>
+  <text x="16" y="215" class="kv1-lab">Step 1</text>
+  <rect x="70" y="202" width="44" height="18" rx="4" class="kv1-barB"/>
+  <text x="124" y="215" class="kv1-lab">새 토큰만 계산</text>
+  <text x="16" y="239" class="kv1-lab">Step 2</text>
+  <rect x="70" y="226" width="44" height="18" rx="4" class="kv1-barB"/>
+  <text x="16" y="263" class="kv1-lab">Step 3</text>
+  <rect x="70" y="250" width="44" height="18" rx="4" class="kv1-barB"/>
+  <text x="16" y="287" class="kv1-lab">Step 4</text>
+  <rect x="70" y="274" width="44" height="18" rx="4" class="kv1-barB"/>
+  <rect x="200" y="200" width="130" height="92" rx="8" class="kv1-box"/>
+  <text x="265" y="240" class="kv1-t">KV Cache</text>
+  <text x="265" y="262" class="kv1-sub">이전 K, V 재사용</text>
+  <path d="M196,235 L120,235" class="kv1-ar"/>
+  <path d="M196,259 L120,259" class="kv1-ar"/>
+  <path d="M196,283 L120,283" class="kv1-ar"/>
+  <text x="70" y="312" class="kv1-noteB">스텝당 계산량 거의 일정</text>
+</svg>
+</div>
 
 KV Cache 덕분에 decode 스텝의 계산량은 시퀀스 길이와 무관하게 "새 토큰 1개 분량"으로 고정됩니다. 대신 그 대가로 **요청마다 GPU 메모리에 상태(state)를 유지**해야 합니다. 대화가 길어질수록, 동시 요청이 많아질수록 이 캐시가 GPU 메모리를 잠식합니다.
 
@@ -87,7 +180,7 @@ Prefill이 끝나면 생성 루프, 즉 **Decode** 단계에 들어갑니다. �
 
 얼마나 극단적인지 간단히 계산해볼 수 있습니다. [Gemma 4 31B](/llm/gemma4-architecture/) 같은 30B급 dense 모델을 bf16, 배치 1로 H100에서 돌린다면:
 
-```
+```text
 모델 가중치:        약 31B 파라미터 × 2 bytes ≈ 62 GB
 H100 메모리 대역폭:  약 3.35 TB/s
 
@@ -97,10 +190,13 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
 
 연산이 아무리 빨라도, 배치 1에서는 초당 54토큰 언저리가 물리적 상한입니다. GPU의 연산 성능(H100 bf16 기준 약 1,000 TFLOPS)은 이 계산에 등장조차 하지 않습니다. 병목이 연산이 아니라는 뜻입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  실제로는 KV Cache 읽기가 추가되고 커널 효율이 100%가 아니므로 이 상한보다 느립니다. 하지만 "가중치 크기 ÷ 메모리 대역폭"은 배치 1 생성 속도의 감을 잡는 데 충분히 좋은 근사입니다. 자기 모델과 GPU로 직접 계산해보길 권합니다.
-</div>
+:::info
+
+**참고**
+
+실제로는 KV Cache 읽기가 추가되고 커널 효율이 100%가 아니므로 이 상한보다 느립니다. 하지만 "가중치 크기 ÷ 메모리 대역폭"은 배치 1 생성 속도의 감을 잡는 데 충분히 좋은 근사입니다. 자기 모델과 GPU로 직접 계산해보길 권합니다.
+
+:::
 
 <br>
 
@@ -108,24 +204,53 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
 
 정리하면 요청 하나는 이렇게 흘러갑니다.
 
-```
-요청 도착
-   │
-   ▼
-┌─────────────────────────────┐
-│ Prefill (1회)                │   프롬프트 N개 토큰을 병렬 처리
-│  - compute-bound             │   KV Cache 생성
-│  - TTFT를 결정               │   첫 토큰 출력
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│ Decode (토큰 수만큼 반복)     │   스텝당 토큰 1개 생성
-│  - memory-bound              │   KV Cache 참조 + 추가
-│  - 생성 속도(TPOT)를 결정     │   <EOS>까지 반복
-└──────────────┬──────────────┘
-               ▼
-           응답 완료
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 322" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="요청 하나의 처리 흐름. 요청이 도착하면 요청당 한 번 실행되는 Prefill 단계가 프롬프트 전체를 병렬 처리해 KV Cache와 첫 토큰을 만들며 compute-bound라 TTFT를 결정한다. 이어서 출력 토큰 수만큼 반복되는 Decode 단계가 스텝당 토큰 하나씩 생성하며 memory-bound라 TPOT를 결정한다. 마지막에 응답이 완료된다.">
+  <style>
+    .pd1-pill  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .pd1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .pd1-title { fill: var(--text, #1c1917); font-size: 17px; }
+    .pd1-pillt { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .pd1-meta  { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .pd1-hotA  { fill: var(--accent, #d97706); font-size: 14px; }
+    .pd1-hotB  { fill: var(--primary, #0d9488); font-size: 14px; }
+    .pd1-ar    { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pd1Arrow); }
+  </style>
+  <defs>
+    <marker id="pd1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <rect x="170" y="12" width="140" height="30" rx="15" class="pd1-pill"/>
+  <text x="240" y="32" class="pd1-pillt">요청 도착</text>
+  <path d="M240,44 L240,56" class="pd1-ar"/>
+  <rect x="30" y="58" width="420" height="90" rx="10" class="pd1-box"/>
+  <rect x="30" y="58" width="6" height="90" fill="var(--accent, #d97706)"/>
+  <text x="52" y="84" class="pd1-title">Prefill</text>
+  <text x="124" y="84" class="pd1-meta">요청당 1회</text>
+  <text x="52" y="110" class="pd1-hotA">compute-bound</text>
+  <text x="52" y="134" class="pd1-meta">TTFT(첫 토큰 지연) 결정</text>
+  <text x="262" y="88" class="pd1-meta">프롬프트 전체를 병렬 처리</text>
+  <text x="262" y="112" class="pd1-meta">KV Cache 생성</text>
+  <text x="262" y="136" class="pd1-meta">첫 토큰 출력</text>
+  <path d="M240,150 L240,166" class="pd1-ar"/>
+  <rect x="30" y="170" width="420" height="90" rx="10" class="pd1-box"/>
+  <rect x="30" y="170" width="6" height="90" fill="var(--primary, #0d9488)"/>
+  <text x="52" y="196" class="pd1-title">Decode</text>
+  <text x="136" y="196" class="pd1-meta">토큰 수만큼 반복</text>
+  <text x="52" y="222" class="pd1-hotB">memory-bound</text>
+  <text x="52" y="246" class="pd1-meta">TPOT(토큰당 시간) 결정</text>
+  <text x="262" y="200" class="pd1-meta">스텝당 토큰 1개 생성</text>
+  <text x="262" y="224" class="pd1-meta">KV Cache 참조 + 추가</text>
+  <text x="262" y="248" class="pd1-meta">&lt;EOS&gt;까지 반복</text>
+  <path d="M240,262 L240,278" class="pd1-ar"/>
+  <rect x="170" y="280" width="140" height="30" rx="15" class="pd1-pill"/>
+  <text x="240" y="300" class="pd1-pillt">응답 완료</text>
+</svg>
+</div>
 
 | 구분 | Prefill | Decode |
 |------|---------|--------|
@@ -147,7 +272,7 @@ decode가 memory-bound라는 사실에서 곧바로 따라 나오는 결론이 �
 
 > Decode가 memory-bound이기 때문에, **배칭은 LLM 서빙에서 거의 공짜 점심입니다.** 처리량을 높이는 첫 번째 수단이 "더 좋은 GPU"가 아니라 "더 큰 배치"인 이유입니다.
 
-물론 공짜에는 조건이 붙습니다. 배치에 들어온 요청 수만큼 KV Cache가 GPU 메모리에 동시에 살아 있어야 합니다. 배치를 키우는 능력은 결국 KV Cache를 담을 메모리에서 나옵니다. 그리고 요청마다 출력 길이가 달라서, 배치를 "언제 묶고 언제 풀지"도 일반 배칭처럼 단순하지 않습니다. 이것이 vLLM의 continuous batching이 풀어내는 문제인데, 시리즈 4편에서 다룹니다.
+물론 공짜에는 조건이 붙습니다. 배치에 들어온 요청 수만큼 KV Cache가 GPU 메모리에 동시에 살아 있어야 합니다. 배치를 키우는 능력은 결국 KV Cache를 담을 메모리에서 나옵니다. 그리고 요청마다 출력 길이가 달라서, 배치를 "언제 묶고 언제 풀지"도 일반 배칭처럼 단순하지 않습니다. 먼저 끝난 요청의 자리를 비워두지 않고 대기 중인 요청으로 곧바로 채우는 continuous batching이 vLLM에서 이 문제를 풀어냅니다.
 
 <br>
 
