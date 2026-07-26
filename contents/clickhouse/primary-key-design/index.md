@@ -15,7 +15,7 @@ RDB에서는 테이블을 먼저 만들고, 성능이 필요한 쿼리에 맞춰
 
 <br>
 
-[지난 글](/clickhouse/mergetree-variants/)에서 네 가지 변종 엔진 모두 ORDER BY 키가 핵심 동작을 결정한다는 것을 확인했습니다. 이 글에서는 한 단계 더 나아가, ORDER BY 키를 어떻게 설계해야 하는지를 체계적으로 다룹니다.
+ReplacingMergeTree의 중복 제거 키, SummingMergeTree의 집계 차원처럼 [변종 엔진](/clickhouse/mergetree-variants/)의 핵심 동작도 결국 ORDER BY 키가 결정합니다. 이 글에서는 그 ORDER BY 키를 어떻게 설계해야 하는지를 체계적으로 다룹니다.
 
 ## PRIMARY KEY와 ORDER BY의 관계
 
@@ -59,16 +59,53 @@ PRIMARY KEY (event_date, user_id);
 
 이 경우 데이터는 `(event_date, user_id, event_type)` 순서로 물리 정렬되지만, `primary.idx`에는 `(event_date, user_id)`만 기록됩니다. `event_type`은 인덱스에 들어가지 않지만 정렬에는 참여하므로, 같은 `(event_date, user_id)` 안에서 `event_type`으로 데이터가 정렬됩니다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 270" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ORDER BY에 지정한 세 컬럼 중 앞의 두 컬럼만 PRIMARY KEY로 지정했을 때, 희소 인덱스에는 앞 두 컬럼만 기록되고 물리 정렬은 세 컬럼 전체를 따른다는 것을 보여주는 그림">
+<style>
+.pk5-t { fill: var(--text, #1c1917); }
+.pk5-m { fill: var(--text-muted, #78716c); }
+.pk5-p { fill: var(--primary, #0d9488); }
+.pk5-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.pk5-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.pk5-br { fill: none; stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.pk5-brp { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2; }
+</style>
+<text class="pk5-t" x="240" y="22" text-anchor="middle" font-size="18">ORDER BY (event_date, user_id, event_type)</text>
+<!-- 위쪽 괄호: primary.idx에 들어가는 접두사 -->
+<text class="pk5-p" x="162" y="52" text-anchor="middle" font-size="18">primary.idx에 기록되는 키</text>
+<path class="pk5-brp" d="M16 74 V62 H308 V74" />
+<!-- 정렬 키 컬럼 상자 -->
+<rect class="pk5-key" x="16" y="82" width="136" height="46" rx="6" />
+<rect class="pk5-key" x="172" y="82" width="136" height="46" rx="6" />
+<rect class="pk5-box" x="328" y="82" width="136" height="46" rx="6" />
+<text class="pk5-t" x="84" y="111" text-anchor="middle" font-size="18">event_date</text>
+<text class="pk5-t" x="240" y="111" text-anchor="middle" font-size="18">user_id</text>
+<text class="pk5-m" x="396" y="111" text-anchor="middle" font-size="18">event_type</text>
+<!-- 아래쪽 괄호: 물리 정렬은 세 컬럼 전체 -->
+<path class="pk5-br" d="M16 136 V148 H464 V136" />
+<text class="pk5-t" x="240" y="174" text-anchor="middle" font-size="18">데이터가 물리적으로 정렬되는 순서</text>
+<!-- 보충 설명 -->
+<text class="pk5-t" x="240" y="214" text-anchor="middle" font-size="18">PRIMARY KEY는 ORDER BY의 접두사만 가능</text>
+<text class="pk5-m" x="240" y="240" text-anchor="middle" font-size="17">event_type은 인덱스 없이 정렬에만 참여</text>
+</svg>
+</div>
+
 이 패턴은 AggregatingMergeTree에서 유용합니다. 인덱스 크기를 줄이면서도 머지 로직에 필요한 넓은 정렬 키를 유지할 수 있기 때문입니다.
 
 ### RDB와의 결정적 차이
 
-[두 번째 글](/clickhouse/mergetree-internals/)에서 다뤘지만 다시 강조합니다. ClickHouse의 PRIMARY KEY는 **유니크 제약(Unique Constraint)이 아닙니다.** 같은 PRIMARY KEY 값을 가진 행이 여러 개 있어도 아무 에러 없이 저장됩니다. ClickHouse에서 PRIMARY KEY는 "이 순서로 정렬하고, 이 값으로 인덱스를 만들겠다"는 선언일 뿐입니다.
+한 번 더 강조할 필요가 있습니다. ClickHouse의 PRIMARY KEY는 **유니크 제약(Unique Constraint)이 아닙니다.** 같은 PRIMARY KEY 값을 가진 행이 여러 개 있어도 아무 에러 없이 저장됩니다. ClickHouse에서 PRIMARY KEY는 "이 순서로 정렬하고, 이 값으로 [희소 인덱스](/clickhouse/mergetree-internals/)를 만들겠다"는 선언일 뿐입니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  ORDER BY는 테이블 생성 시 결정됩니다. <code>ALTER TABLE MODIFY ORDER BY</code>로 컬럼을 추가할 수는 있지만, 새로 추가하는 컬럼만 가능하고 기존 컬럼 순서를 바꾸거나 제거하는 것은 불가능합니다. 사실상 가장 레버리지 높은 설계 결정이므로, 쿼리 패턴을 분석한 뒤 신중하게 정해야 합니다.
-</div>
+:::warning
+
+**주의**
+
+ORDER BY는 테이블 생성 시 결정됩니다. `ALTER TABLE MODIFY ORDER BY`로 컬럼을 추가할 수는 있지만, 새로 추가하는 컬럼만 가능하고 기존 컬럼 순서를 바꾸거나 제거하는 것은 불가능합니다. 사실상 가장 레버리지 높은 설계 결정이므로, 쿼리 패턴을 분석한 뒤 신중하게 정해야 합니다.
+
+:::
 
 ## 카디널리티 순서의 원칙
 
@@ -76,7 +113,7 @@ ORDER BY 설계에서 가장 중요한 규칙은 컬럼의 카디널리티(cardi
 
 ### 첫 번째 컬럼은 바이너리 서치
 
-[두 번째 글](/clickhouse/mergetree-internals/)에서 다뤘듯이, 희소 인덱스 탐색에서 첫 번째 컬럼은 바이너리 서치(binary search)로 찾습니다. O(log₂ n)이므로 카디널리티가 100이든 1억이든 효율적입니다. 첫 번째 컬럼의 카디널리티는 인덱스 탐색 성능 자체에는 큰 영향을 미치지 않습니다.
+[희소 인덱스](/clickhouse/mergetree-internals/) 탐색에서 첫 번째 컬럼은 바이너리 서치(binary search)로 찾습니다. O(log₂ n)이므로 카디널리티가 100이든 1억이든 효율적입니다. 첫 번째 컬럼의 카디널리티는 인덱스 탐색 성능 자체에는 큰 영향을 미치지 않습니다.
 
 문제는 **두 번째 이후 컬럼**에서 발생합니다.
 
@@ -88,35 +125,85 @@ ORDER BY 설계에서 가장 중요한 규칙은 컬럼의 카디널리티(cardi
 
 앞 컬럼의 카디널리티가 **높으면**, 같은 값의 구간이 매우 좁습니다. 극단적으로 1 Granule 이하면, 두 번째 컬럼은 아무리 좋은 조건을 걸어도 추가로 건너뛸 Granule이 없습니다.
 
-```
-ORDER BY (status, user_id)  — status 카디널리티: 5
-┌──────────────────────────────────────────────────────┐
-│ status=1 │ status=1 │ status=1 │ status=2 │ status=2 │ ...
-│ uid=100  │ uid=250  │ uid=400  │ uid=50   │ uid=180  │
-│ (G0)     │ (G1)     │ (G2)     │ (G3)     │ (G4)     │
-└──────────────────────────────────────────────────────┘
-→ status=1인 구간이 3개 Granule에 걸침
-→ 그 안에서 user_id 필터링으로 추가 스킵 가능
-
-
-ORDER BY (user_id, status)  — user_id 카디널리티: 100,000+
-┌──────────────────────────────────────────────────────┐
-│ uid=1    │ uid=2    │ uid=3    │ uid=4    │ uid=5    │ ...
-│ status=2 │ status=1 │ status=3 │ status=1 │ status=2 │
-│ (G0)     │ (G0)     │ (G0)     │ (G0)     │ (G0)     │
-└──────────────────────────────────────────────────────┘
-→ user_id 하나당 행이 적어서 같은 Granule 안에 여러 user_id가 섞임
-→ status 필터링으로 추가 스킵할 Granule이 없음
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="정렬 키 순서에 따른 데이터 물리 배치 차이. 위는 카디널리티가 낮은 status를 앞에 둬서 같은 값의 구간이 세 Granule에 걸치는 경우, 아래는 카디널리티가 높은 user_id를 앞에 둬서 구간이 한 Granule보다 좁아지는 경우">
+<style>
+.cd5-t { fill: var(--text, #1c1917); }
+.cd5-m { fill: var(--text-muted, #78716c); }
+.cd5-ok { fill: var(--text-success, #16a34a); }
+.cd5-no { fill: var(--text-danger, #dc2626); }
+.cd5-p { fill: var(--primary, #0d9488); }
+.cd5-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.cd5-seg { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.cd5-br { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2; }
+.cd5-div { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+</style>
+<!-- 위 패널: 낮은 카디널리티 컬럼이 앞 -->
+<text class="cd5-t" x="240" y="24" text-anchor="middle" font-size="19">위: ORDER BY (status, user_id)</text>
+<text class="cd5-m" x="240" y="48" text-anchor="middle" font-size="17">status는 5종, user_id는 50,000종</text>
+<rect class="cd5-seg" x="16" y="66" width="87" height="56" rx="5" />
+<rect class="cd5-seg" x="105" y="66" width="87" height="56" rx="5" />
+<rect class="cd5-seg" x="194" y="66" width="87" height="56" rx="5" />
+<rect class="cd5-cell" x="283" y="66" width="87" height="56" rx="5" />
+<rect class="cd5-cell" x="372" y="66" width="87" height="56" rx="5" />
+<text class="cd5-t" x="59" y="90" text-anchor="middle" font-size="17">status=1</text>
+<text class="cd5-t" x="148" y="90" text-anchor="middle" font-size="17">status=1</text>
+<text class="cd5-t" x="237" y="90" text-anchor="middle" font-size="17">status=1</text>
+<text class="cd5-t" x="326" y="90" text-anchor="middle" font-size="17">status=2</text>
+<text class="cd5-t" x="415" y="90" text-anchor="middle" font-size="17">status=2</text>
+<text class="cd5-m" x="59" y="112" text-anchor="middle" font-size="17">uid=100</text>
+<text class="cd5-m" x="148" y="112" text-anchor="middle" font-size="17">uid=250</text>
+<text class="cd5-m" x="237" y="112" text-anchor="middle" font-size="17">uid=400</text>
+<text class="cd5-m" x="326" y="112" text-anchor="middle" font-size="17">uid=50</text>
+<text class="cd5-m" x="415" y="112" text-anchor="middle" font-size="17">uid=180</text>
+<text class="cd5-m" x="59" y="140" text-anchor="middle" font-size="17">G0</text>
+<text class="cd5-m" x="148" y="140" text-anchor="middle" font-size="17">G1</text>
+<text class="cd5-m" x="237" y="140" text-anchor="middle" font-size="17">G2</text>
+<text class="cd5-m" x="326" y="140" text-anchor="middle" font-size="17">G3</text>
+<text class="cd5-m" x="415" y="140" text-anchor="middle" font-size="17">G4</text>
+<path class="cd5-br" d="M16 152 V164 H281 V152" />
+<text class="cd5-p" x="148" y="190" text-anchor="middle" font-size="18">status=1 구간 = 3 Granule</text>
+<text class="cd5-ok" x="240" y="218" text-anchor="middle" font-size="18">✓ 그 안에서 user_id로 추가 스킵</text>
+<line class="cd5-div" x1="16" y1="244" x2="464" y2="244" />
+<!-- 아래 패널: 높은 카디널리티 컬럼이 앞 -->
+<text class="cd5-t" x="240" y="278" text-anchor="middle" font-size="19">아래: ORDER BY (user_id, status)</text>
+<text class="cd5-m" x="240" y="302" text-anchor="middle" font-size="17">user_id 값이 거의 매 행 바뀜</text>
+<rect class="cd5-seg" x="16" y="320" width="443" height="60" rx="5" />
+<rect class="cd5-cell" x="24" y="328" width="82" height="44" rx="4" />
+<rect class="cd5-cell" x="109" y="328" width="82" height="44" rx="4" />
+<rect class="cd5-cell" x="194" y="328" width="82" height="44" rx="4" />
+<rect class="cd5-cell" x="279" y="328" width="82" height="44" rx="4" />
+<rect class="cd5-cell" x="364" y="328" width="82" height="44" rx="4" />
+<text class="cd5-t" x="65" y="348" text-anchor="middle" font-size="17">uid=1</text>
+<text class="cd5-t" x="150" y="348" text-anchor="middle" font-size="17">uid=2</text>
+<text class="cd5-t" x="235" y="348" text-anchor="middle" font-size="17">uid=3</text>
+<text class="cd5-t" x="320" y="348" text-anchor="middle" font-size="17">uid=4</text>
+<text class="cd5-t" x="405" y="348" text-anchor="middle" font-size="17">uid=5</text>
+<text class="cd5-m" x="65" y="368" text-anchor="middle" font-size="17">status=2</text>
+<text class="cd5-m" x="150" y="368" text-anchor="middle" font-size="17">status=1</text>
+<text class="cd5-m" x="235" y="368" text-anchor="middle" font-size="17">status=3</text>
+<text class="cd5-m" x="320" y="368" text-anchor="middle" font-size="17">status=1</text>
+<text class="cd5-m" x="405" y="368" text-anchor="middle" font-size="17">status=2</text>
+<text class="cd5-p" x="240" y="404" text-anchor="middle" font-size="18">다섯 행 전부가 G0 하나에 들어감</text>
+<text class="cd5-no" x="240" y="434" text-anchor="middle" font-size="18">✗ user_id 구간이 Granule보다 좁음</text>
+<text class="cd5-m" x="240" y="458" text-anchor="middle" font-size="17">status로 건너뛸 Granule이 없음</text>
+</svg>
+</div>
 
 단일 값 동등 조건(`WHERE status = 1 AND user_id = 12345`)에서는 두 설계 모두 첫 번째 컬럼의 바이너리 서치로 Granule을 크게 줄입니다. 하지만 범위 조건이 섞이거나 첫 번째 컬럼 없이 필터링할 때 차이가 벌어집니다. `WHERE status IN (1, 2) AND user_id BETWEEN 10000 AND 20000` 같은 쿼리에서 첫 번째 설계는 카디널리티가 낮은 `status`로 넓은 구간을 먼저 좁히고 그 안에서 `user_id` 범위를 추가로 걸러냅니다.
 
 ### 원칙 요약
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 카디널리티 순서 원칙</strong><br>
-  <strong>낮은 카디널리티 → 높은 카디널리티</strong> 순서로 배치합니다. 단, WHERE 절에 자주 등장하는 컬럼이 앞에 와야 합니다. 카디널리티가 낮아도 WHERE에 쓰이지 않는 컬럼을 앞에 두면 의미가 없습니다. ORDER BY 컬럼 수는 2~5개가 적당합니다. 그 이상이면 INSERT 성능이 저하됩니다.
-</div>
+:::info
+
+**카디널리티 순서 원칙**
+
+**낮은 카디널리티에서 높은 카디널리티** 순서로 배치합니다. 단, WHERE 절에 자주 등장하는 컬럼이 앞에 와야 합니다. 카디널리티가 낮아도 WHERE에 쓰이지 않는 컬럼을 앞에 두면 의미가 없습니다. ORDER BY 컬럼 수는 2~5개가 적당합니다. 그 이상이면 INSERT 성능이 저하됩니다.
+
+:::
 
 ## 복합 키 설계 실전
 
@@ -182,17 +269,79 @@ ORDER BY 설계에서 컬럼 순서가 중요한 근본적인 이유입니다.
 
 `ORDER BY (a, b, c)`로 정의된 테이블에서 희소 인덱스는 `(a, b, c)` 순서의 정렬에 기반합니다. 따라서 인덱스가 효과를 발휘하려면 **접두사(prefix)** 순서로 필터링해야 합니다.
 
-```
-ORDER BY (a, b, c) 테이블에서:
-
-WHERE a = 1              → a로 바이너리 서치  ✅ 인덱스 활용
-WHERE a = 1 AND b = 2    → a, b 모두 활용     ✅✅ 최대 효과
-WHERE a = 1 AND b = 2 AND c = 3 → 전부 활용   ✅✅✅
-
-WHERE b = 2              → 접두사 아님         ❌ 거의 전체 스캔
-WHERE c = 3              → 접두사 아님         ❌ 거의 전체 스캔
-WHERE a = 1 AND c = 3    → a만 활용, c는 무시  ✅❌ (a까지만)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ORDER BY (a, b, c) 테이블에서 WHERE 조건별로 a, b, c 중 어떤 컬럼이 희소 인덱스에 쓰이는지 정리한 표. 접두사 조건만 인덱스를 타고, b나 c 단독 조건은 전체 스캔이 된다">
+<style>
+.pf5-t { fill: var(--text, #1c1917); }
+.pf5-m { fill: var(--text-muted, #78716c); }
+.pf5-p { fill: var(--primary, #0d9488); }
+.pf5-d { fill: var(--text-danger, #dc2626); }
+.pf5-use { fill: var(--primary, #0d9488); }
+.pf5-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.2; }
+.pf5-w { fill: #ffffff; }
+</style>
+<text class="pf5-t" x="240" y="24" text-anchor="middle" font-size="19">ORDER BY (a, b, c) 테이블</text>
+<!-- 열 머리글 -->
+<text class="pf5-m" x="16" y="56" font-size="17">WHERE 조건</text>
+<text class="pf5-m" x="321" y="56" text-anchor="middle" font-size="17">a</text>
+<text class="pf5-m" x="367" y="56" text-anchor="middle" font-size="17">b</text>
+<text class="pf5-m" x="413" y="56" text-anchor="middle" font-size="17">c</text>
+<!-- 그룹 1: 접두사 조건 -->
+<text class="pf5-p" x="16" y="86" font-size="18">접두사 조건: 인덱스 활용</text>
+<text class="pf5-t" x="16" y="118" font-size="17">a = 1</text>
+<rect class="pf5-use" x="300" y="98" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="346" y="98" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="392" y="98" width="42" height="30" rx="4" />
+<text class="pf5-w" x="321" y="119" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-d" x="367" y="119" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="413" y="119" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-t" x="16" y="154" font-size="17">a = 1 AND b = 2</text>
+<rect class="pf5-use" x="300" y="134" width="42" height="30" rx="4" />
+<rect class="pf5-use" x="346" y="134" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="392" y="134" width="42" height="30" rx="4" />
+<text class="pf5-w" x="321" y="155" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-w" x="367" y="155" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-d" x="413" y="155" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-t" x="16" y="190" font-size="17">a = 1 AND b = 2 AND c = 3</text>
+<rect class="pf5-use" x="300" y="170" width="42" height="30" rx="4" />
+<rect class="pf5-use" x="346" y="170" width="42" height="30" rx="4" />
+<rect class="pf5-use" x="392" y="170" width="42" height="30" rx="4" />
+<text class="pf5-w" x="321" y="191" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-w" x="367" y="191" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-w" x="413" y="191" text-anchor="middle" font-size="18">✓</text>
+<!-- 그룹 2: 접두사가 아닌 조건 -->
+<text class="pf5-d" x="16" y="226" font-size="18">접두사 아님: 거의 전체 스캔</text>
+<text class="pf5-t" x="16" y="258" font-size="17">b = 2</text>
+<rect class="pf5-no" x="300" y="238" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="346" y="238" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="392" y="238" width="42" height="30" rx="4" />
+<text class="pf5-d" x="321" y="259" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="367" y="259" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="413" y="259" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-t" x="16" y="294" font-size="17">c = 3</text>
+<rect class="pf5-no" x="300" y="274" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="346" y="274" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="392" y="274" width="42" height="30" rx="4" />
+<text class="pf5-d" x="321" y="295" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="367" y="295" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="413" y="295" text-anchor="middle" font-size="18">✗</text>
+<!-- 그룹 3: 중간이 빠진 조건 -->
+<text class="pf5-t" x="16" y="330" font-size="18">중간이 빠짐: a까지만 활용</text>
+<text class="pf5-t" x="16" y="362" font-size="17">a = 1 AND c = 3</text>
+<rect class="pf5-use" x="300" y="342" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="346" y="342" width="42" height="30" rx="4" />
+<rect class="pf5-no" x="392" y="342" width="42" height="30" rx="4" />
+<text class="pf5-w" x="321" y="363" text-anchor="middle" font-size="18">✓</text>
+<text class="pf5-d" x="367" y="363" text-anchor="middle" font-size="18">✗</text>
+<text class="pf5-d" x="413" y="363" text-anchor="middle" font-size="18">✗</text>
+<!-- 보충 설명 -->
+<text class="pf5-m" x="240" y="402" text-anchor="middle" font-size="17">b나 c 단독 조건은 값이 흩어져 있어</text>
+<text class="pf5-m" x="240" y="424" text-anchor="middle" font-size="17">바이너리 서치를 쓸 수 없습니다</text>
+</svg>
+</div>
 
 `WHERE b = 2`는 `(a, b, c)` 정렬에서 b 값이 흩어져 있으므로 바이너리 서치가 불가능합니다. ClickHouse의 제네릭 배제 탐색이 일부 Granule을 건너뛸 수는 있지만, 실질적으로는 전체 스캔에 가깝습니다.
 
@@ -281,11 +430,11 @@ ALTER TABLE events MATERIALIZE INDEX idx_url;
 
 주의할 점이 있습니다. 데이터 스키핑 인덱스는 **필터링 대상 값이 소수의 Granule에 집중되어 있을 때** 효과가 있습니다. ORDER BY에 의한 정렬과 상관관계가 높으면 자연스럽게 이 조건이 충족됩니다. 반면 검색하는 특정 `url` 값이 대부분의 Granule에 존재한다면, `bloom_filter`를 달아도 스킵할 Granule이 거의 없습니다. 반대로 특정 값이 소수 Granule에만 존재하면 전체 분포와 무관하게 효과적입니다. 인덱스 타입에 따라 효과가 다르므로(minmax는 정렬 의존도가 높고, bloom_filter는 값 분포에 더 의존), 맹목적으로 추가하면 비용만 늘어납니다.
 
-데이터 스키핑 인덱스와 Projection의 상세한 사용법은 다음 글에서 파티셔닝과 함께 다룹니다.
+데이터 스키핑 인덱스는 ORDER BY를 대체하지 않습니다. 정렬 키를 먼저 확정하고, 그것으로 좁혀지지 않는 쿼리 패턴에 한해 보조 수단으로 붙이는 것이 순서입니다.
 
 ## 변종 엔진에서의 ORDER BY 설계
 
-[이전 글](/clickhouse/mergetree-variants/)에서 다뤘듯이, 변종 엔진에서 ORDER BY는 단순한 정렬 키가 아닙니다. 엔진의 머지 로직이 ORDER BY에 의존합니다.
+[변종 엔진](/clickhouse/mergetree-variants/)에서 ORDER BY는 단순한 정렬 키가 아닙니다. 엔진의 머지 로직이 ORDER BY에 의존합니다.
 
 | 엔진 | ORDER BY의 의미 | 설계 시 고려사항 |
 |------|----------------|----------------|
@@ -317,7 +466,7 @@ ORDER BY order_id;
 
 ## 실험: Docker로 직접 확인하기
 
-[첫 번째 글](/clickhouse/why-clickhouse/)의 Docker 환경(`ch-test` 컨테이너)을 사용합니다.
+[Docker로 띄운 ClickHouse](/clickhouse/why-clickhouse/)(`ch-test` 컨테이너)에서 확인합니다.
 
 ### 실험 1: 카디널리티 순서에 따른 Granule 스킵 차이
 
@@ -371,7 +520,7 @@ SELECT count() FROM events_status_first
 WHERE status = 1 AND user_id = 12345;
 ```
 
-```
+```text
 ┌─explain──────────────────────────────────────┐
 │ Expression ((Project names + Projection))    │
 │   Aggregating                                │
@@ -392,7 +541,7 @@ SELECT count() FROM events_user_first
 WHERE status = 1 AND user_id = 12345;
 ```
 
-```
+```text
 ┌─explain──────────────────────────────────────┐
 │ Expression ((Project names + Projection))    │
 │   Aggregating                                │
@@ -418,7 +567,7 @@ SELECT count() FROM events_status_first
 WHERE status IN (1, 2) AND user_id BETWEEN 10000 AND 20000;
 ```
 
-```
+```text
 │           Granules: 3/13                     │ ← 3개만 읽음
 ```
 
@@ -428,7 +577,7 @@ SELECT count() FROM events_user_first
 WHERE status IN (1, 2) AND user_id BETWEEN 10000 AND 20000;
 ```
 
-```
+```text
 │           Granules: 4/13                     │ ← 4개 읽음
 ```
 
@@ -464,7 +613,7 @@ EXPLAIN indexes = 1
 SELECT count() FROM prefix_test WHERE a = 5;
 ```
 
-```
+```text
 │           Keys: a                            │
 │           Granules: 7/62                     │ ← 62개 중 7개
 ```
@@ -475,7 +624,7 @@ EXPLAIN indexes = 1
 SELECT count() FROM prefix_test WHERE b = 500;
 ```
 
-```
+```text
 │           Granules: 62/62                    │ ← 전체 스캔
 ```
 
@@ -485,12 +634,59 @@ EXPLAIN indexes = 1
 SELECT count() FROM prefix_test WHERE a = 5 AND b = 500;
 ```
 
-```
+```text
 │           Keys: a, b                         │
 │           Granules: 1/62                     │ ← 1개
 ```
 
-`WHERE b = 500` 단독으로는 62개 Granule을 전부 읽어야 합니다. 하지만 `WHERE a = 5 AND b = 500`으로 접두사를 포함하면 1개까지 줄어듭니다. 접두사 규칙의 효과가 명확하게 드러납니다.
+세 쿼리가 읽는 Granule 수를 실제 비율대로 그리면 이렇습니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 325" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="전체 62개 Granule 중 세 쿼리가 각각 읽는 Granule 수를 비율대로 그린 막대. a는 7개, b 단독은 62개 전부, a와 b를 함께 걸면 1개만 읽는다">
+<defs>
+<pattern id="gr5Tick" width="7.2258" height="34" patternUnits="userSpaceOnUse">
+<line x1="7.2258" y1="0" x2="7.2258" y2="34" stroke="var(--bg, #fafaf8)" stroke-width="1" />
+</pattern>
+</defs>
+<style>
+.gr5-t { fill: var(--text, #1c1917); }
+.gr5-m { fill: var(--text-muted, #78716c); }
+.gr5-read { fill: var(--text-danger, #dc2626); }
+.gr5-skip { fill: var(--bg-success, #f0fdf4); }
+.gr5-out { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.gr5-sw { stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+</style>
+<!-- 범례 -->
+<rect class="gr5-read" x="16" y="10" width="18" height="18" rx="3" />
+<text class="gr5-m" x="42" y="25" font-size="17">읽은 Granule</text>
+<rect class="gr5-skip gr5-sw" x="180" y="10" width="18" height="18" rx="3" />
+<text class="gr5-m" x="206" y="25" font-size="17">건너뛴 Granule</text>
+<!-- 1. 접두사 컬럼 단독 -->
+<text class="gr5-t" x="16" y="62" font-size="18">WHERE a = 5 → 7 / 62 Granule</text>
+<rect class="gr5-skip" x="16" y="72" width="448" height="34" rx="3" />
+<rect class="gr5-read" x="16" y="72" width="50.6" height="34" />
+<rect x="16" y="72" width="448" height="34" fill="url(#gr5Tick)" />
+<rect class="gr5-out" x="16" y="72" width="448" height="34" rx="3" />
+<!-- 2. 비접두사 컬럼 단독 -->
+<text class="gr5-t" x="16" y="146" font-size="18">WHERE b = 500 → 62 / 62 Granule</text>
+<rect class="gr5-skip" x="16" y="156" width="448" height="34" rx="3" />
+<rect class="gr5-read" x="16" y="156" width="448" height="34" rx="3" />
+<rect x="16" y="156" width="448" height="34" fill="url(#gr5Tick)" />
+<rect class="gr5-out" x="16" y="156" width="448" height="34" rx="3" />
+<!-- 3. 접두사 + 후행 컬럼 -->
+<text class="gr5-t" x="16" y="230" font-size="18">WHERE a = 5 AND b = 500 → 1 / 62</text>
+<rect class="gr5-skip" x="16" y="240" width="448" height="34" rx="3" />
+<rect class="gr5-read" x="16" y="240" width="7.2" height="34" />
+<rect x="16" y="240" width="448" height="34" fill="url(#gr5Tick)" />
+<rect class="gr5-out" x="16" y="240" width="448" height="34" rx="3" />
+<text class="gr5-m" x="240" y="306" text-anchor="middle" font-size="17">전체 62 Granule (500,000행 ÷ 8,192)</text>
+</svg>
+</div>
+
+`WHERE b = 500` 단독으로는 62개 Granule을 전부 읽어야 합니다. 하지만 `WHERE a = 5 AND b = 500`으로 접두사를 포함하면 1개까지 줄어듭니다.
 
 ## 흔한 실수 바로잡기
 
@@ -531,7 +727,7 @@ ClickHouse의 PRIMARY KEY는 정렬과 인덱싱을 위한 것이지, 유니크 
 
 ORDER BY는 ClickHouse에서 가장 레버리지가 높은 설계 결정입니다. 데이터의 물리적 정렬, 희소 인덱스의 키, 변종 엔진의 동작 키를 모두 결정합니다. 한번 정하면 사실상 바꾸기 어려우므로, 쿼리 패턴을 먼저 분석하고 카디널리티 순서와 접두사 규칙을 고려해서 결정해야 합니다.
 
-하나의 ORDER BY로 모든 쿼리를 최적화할 수는 없습니다. 다음 글에서는 파티셔닝, 데이터 스키핑 인덱스, Projection이 ORDER BY를 어떻게 보완하는지를 다룹니다.
+하나의 ORDER BY로 모든 쿼리를 최적화할 수는 없습니다. 남는 패턴은 Projection, Materialized View, 데이터 스키핑 인덱스로 보완하되, 각각이 저장 공간과 INSERT 비용을 얼마나 더 요구하는지를 함께 계산한 뒤에 붙여야 합니다.
 
 ---
 

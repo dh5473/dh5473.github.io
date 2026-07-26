@@ -9,9 +9,9 @@ summary: 'INSERT마다 쌓이는 불변 Part를 백그라운드 머지가 어떻
 thumbnail: './thumbnail.png'
 ---
 
-[지난 글](/clickhouse/mergetree-internals/)에서 Part 이름의 구조를 분석했습니다. `all_1_1_0`에서 마지막 `0`은 머지 횟수라고 했습니다. INSERT를 세 번 실행하면 `all_1_1_0`, `all_2_2_0`, `all_3_3_0` 세 개의 Part가 생긴다고도 했습니다. 그런데 `system.parts`를 몇 초 뒤에 다시 조회하면, 세 Part가 사라지고 `all_1_3_1` 하나만 남아 있습니다. 무슨 일이 일어난 걸까요?
+MergeTree는 INSERT 한 번에 [Part](/clickhouse/mergetree-internals/) 하나를 만듭니다. Part 이름 `all_1_1_0`의 마지막 자리는 머지 레벨이고, INSERT 직후의 Part는 아직 한 번도 머지되지 않았으므로 `0`입니다. 그래서 INSERT를 세 번 실행하면 `all_1_1_0`, `all_2_2_0`, `all_3_3_0` 세 개가 생깁니다. 그런데 `system.parts`를 몇 초 뒤에 다시 조회하면, 세 Part가 사라지고 `all_1_3_1` 하나만 남아 있습니다. 무슨 일이 일어난 걸까요?
 
-한 가지 더. Part는 불변(immutable)이라고 했습니다. 한번 디스크에 쓰이면 절대 수정되지 않습니다. 그렇다면 `ALTER TABLE orders UPDATE price = 0 WHERE order_id = 42`는 어떻게 동작할까요? 불변인 데이터를 어떻게 "수정"하는 걸까요?
+한 가지 더. Part는 불변(immutable)입니다. 한번 디스크에 쓰이면 절대 수정되지 않습니다. 그렇다면 `ALTER TABLE orders UPDATE price = 0 WHERE order_id = 42`는 어떻게 동작할까요? 불변인 데이터를 어떻게 "수정"하는 걸까요?
 
 <br>
 
@@ -23,16 +23,42 @@ PostgreSQL은 8KB 페이지 안에서 행을 직접 수정합니다(in-place upd
 
 MergeTree는 정반대의 선택을 합니다. INSERT가 들어오면 데이터를 `ORDER BY` 순서로 정렬해서 새로운 Part를 디스크에 **순차 쓰기(sequential write)**합니다. 기존 Part는 건드리지 않습니다. 락도 없고, 랜덤 I/O도 없습니다. 쓰기 처리량이 디스크 순차 대역폭에 비례해서 선형으로 스케일합니다.
 
-```
-In-place Update (RDB)              Append + Merge (MergeTree)
-
-┌──────────────────┐               INSERT 1 → Part A (불변)
-│  Page 내부에서     │               INSERT 2 → Part B (불변)
-│  직접 수정         │ ← 락, WAL    INSERT 3 → Part C (불변)
-│  (random I/O)     │                          │
-└──────────────────┘                           ▼ 백그라운드 머지
-                                   Part ABC (불변, 통합)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="위쪽은 RDB의 in-place update로 페이지 안에서 행을 직접 수정하며 락과 WAL, 랜덤 I/O가 따르는 구조. 아래쪽은 MergeTree의 append 방식으로 INSERT마다 불변 Part가 새로 생기고 백그라운드 머지가 이들을 하나로 합치는 구조.">
+<style>.ch3a-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.ch3a-t{font-size:20px;fill:var(--text, #1c1917)}.ch3a-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3a-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3a-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3a-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:2}.ch3a-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<defs>
+<marker id="ch3aArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 위 패널: RDB -->
+<text x="10" y="26" class="ch3a-h">위: RDB의 in-place update</text>
+<text x="240" y="60" text-anchor="middle" class="ch3a-p">UPDATE</text>
+<line x1="240" y1="70" x2="240" y2="86" class="ch3a-line" marker-end="url(#ch3aArrow)"/>
+<rect x="120" y="92" width="240" height="60" rx="6" class="ch3a-box"/>
+<text x="240" y="129" text-anchor="middle" class="ch3a-t">Page 안에서 직접 수정</text>
+<text x="240" y="178" text-anchor="middle" class="ch3a-s">락 · WAL · 랜덤 I/O</text>
+<line x1="10" y1="200" x2="470" y2="200" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 아래 패널: MergeTree -->
+<text x="10" y="232" class="ch3a-h">아래: MergeTree의 append + merge</text>
+<rect x="150" y="250" width="200" height="44" rx="6" class="ch3a-box"/>
+<text x="250" y="279" text-anchor="middle" class="ch3a-t">Part A (불변)</text>
+<text x="16" y="279" class="ch3a-s">INSERT 1</text>
+<rect x="150" y="302" width="200" height="44" rx="6" class="ch3a-box"/>
+<text x="250" y="331" text-anchor="middle" class="ch3a-t">Part B (불변)</text>
+<text x="16" y="331" class="ch3a-s">INSERT 2</text>
+<rect x="150" y="354" width="200" height="44" rx="6" class="ch3a-box"/>
+<text x="250" y="383" text-anchor="middle" class="ch3a-t">Part C (불변)</text>
+<text x="16" y="383" class="ch3a-s">INSERT 3</text>
+<line x1="250" y1="404" x2="250" y2="432" class="ch3a-line" marker-end="url(#ch3aArrow)"/>
+<text x="266" y="424" class="ch3a-p">백그라운드 머지</text>
+<rect x="110" y="438" width="280" height="50" rx="6" class="ch3a-hi"/>
+<text x="250" y="470" text-anchor="middle" class="ch3a-t">Part ABC (불변, 통합)</text>
+</svg>
+</div>
 
 대신 읽기 비용이 생깁니다. Part가 여러 개 있으면 쿼리가 모든 Part를 확인해야 합니다. Part 10개에서 같은 `WHERE` 조건을 검색하려면, 각 Part의 `primary.idx`를 10번 탐색하고 해당 granule을 10번 읽어야 합니다.
 
@@ -44,22 +70,46 @@ In-place Update (RDB)              Append + Merge (MergeTree)
 
 ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확인하고, 합칠 Part를 선택합니다. 선택된 Part들의 데이터를 `ORDER BY` 순서로 merge-sort하여 하나의 새 Part를 생성합니다.
 
-[지난 글](/clickhouse/mergetree-internals/)에서 Part 이름 `all_1_1_0`을 분해했습니다. 머지가 일어나면 이름이 어떻게 바뀌는지 봅시다.
+[Part 이름](/clickhouse/mergetree-internals/) `all_1_1_0`은 `{파티션}_{min_block}_{max_block}_{level}` 형식입니다. 머지가 일어나면 이 이름이 어떻게 바뀌는지 봅시다.
 
-```
-머지 전:
-  all_1_1_0  (block 1~1, level 0)
-  all_2_2_0  (block 2~2, level 0)
-  all_3_3_0  (block 3~3, level 0)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="머지 전 all_1_1_0, all_2_2_0, all_3_3_0 세 개의 level 0 Part가 백그라운드 머지를 거쳐 block 범위 1부터 3까지를 담은 level 1 Part인 all_1_3_1 하나로 합쳐지는 과정.">
+<style>.ch3b-h{font-size:20px;fill:var(--text-muted, #78716c)}.ch3b-n{font-size:20px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3b-m{font-size:18px;fill:var(--text-muted, #78716c)}.ch3b-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3b-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3b-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:2}.ch3b-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<defs>
+<marker id="ch3bArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 머지 전 -->
+<text x="10" y="26" class="ch3b-h">머지 전</text>
+<rect x="56" y="38" width="368" height="46" rx="6" class="ch3b-box"/>
+<text x="76" y="68" class="ch3b-n">all_1_1_0</text>
+<text x="404" y="68" text-anchor="end" class="ch3b-m">block 1~1, level 0</text>
+<rect x="56" y="94" width="368" height="46" rx="6" class="ch3b-box"/>
+<text x="76" y="124" class="ch3b-n">all_2_2_0</text>
+<text x="404" y="124" text-anchor="end" class="ch3b-m">block 2~2, level 0</text>
+<rect x="56" y="150" width="368" height="46" rx="6" class="ch3b-box"/>
+<text x="76" y="180" class="ch3b-n">all_3_3_0</text>
+<text x="404" y="180" text-anchor="end" class="ch3b-m">block 3~3, level 0</text>
+<!-- 머지 -->
+<text x="240" y="232" text-anchor="middle" class="ch3b-p">백그라운드 머지</text>
+<line x1="240" y1="242" x2="240" y2="274" class="ch3b-line" marker-end="url(#ch3bArrow)"/>
+<!-- 머지 후 -->
+<text x="10" y="304" class="ch3b-h">머지 후</text>
+<rect x="56" y="316" width="368" height="52" rx="6" class="ch3b-hi"/>
+<text x="76" y="349" class="ch3b-n">all_1_3_1</text>
+<text x="404" y="349" text-anchor="end" class="ch3b-m">block 1~3, level 1</text>
+<!-- 이름 규칙 -->
+<text x="240" y="398" text-anchor="middle" class="ch3b-m">min_block: 원본들의 최솟값 (1)</text>
+<text x="240" y="422" text-anchor="middle" class="ch3b-m">max_block: 원본들의 최댓값 (3)</text>
+<text x="240" y="446" text-anchor="middle" class="ch3b-m">level: 기존 최댓값 + 1 (1)</text>
+</svg>
+</div>
 
-         │  백그라운드 머지
-         ▼
-
-머지 후:
-  all_1_3_1  (block 1~3, level 1)
-```
-
-`min_block`은 원본 Part들 중 최솟값(1), `max_block`은 최댓값(3), `level`은 기존 최댓값 + 1(0 + 1 = 1)이 됩니다. Part 이름만 봐도 "이 Part는 block 1부터 3까지를 한 번 머지한 결과"라는 이력을 읽을 수 있습니다.
+`level`은 원본들의 최댓값에 1을 더한 값이므로, level 0짜리 Part 세 개를 합치면 level 1이 됩니다. Part 이름만 봐도 "이 Part는 block 1부터 3까지를 한 번 머지한 결과"라는 이력을 읽을 수 있습니다.
 
 머지가 완료되면 원본 Part 세 개는 **inactive** 상태로 전환됩니다. 새 Part가 이후의 모든 쿼리를 서빙하고, 원본은 일정 시간이 지나면 디스크에서 물리적으로 삭제됩니다.
 
@@ -71,10 +121,13 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
 
 이 규칙 때문에 파티셔닝이 머지 효율에 직접적인 영향을 줍니다. 파티션을 너무 세밀하게 나누면 (예를 들어 일별 파티션에 INSERT가 시간당 한 번뿐이라면) 각 파티션에 Part가 하나씩만 존재해서 머지할 대상 자체가 없습니다. Part 수가 줄어들지 않고 계속 쌓이기만 합니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  파티션 수가 많을수록 머지 효율이 떨어집니다. 파티셔닝은 "오래된 데이터를 통째로 DROP하기 위한 도구"이지, 쿼리 성능을 위한 도구가 아닙니다.
-</div>
+:::warning
+
+**주의**
+
+파티션 수가 많을수록 머지 효율이 떨어집니다. 파티셔닝은 "오래된 데이터를 통째로 DROP하기 위한 도구"이지, 쿼리 성능을 위한 도구가 아닙니다.
+
+:::
 
 머지 스케줄러가 어떤 Part를 선택하는가도 중요합니다. ClickHouse의 머지 알고리즘은 Part 크기, 개수, 총 재작성 비용 등을 종합적으로 고려하여 최적의 Part 조합을 선택합니다. 일반적으로 작은 Part가 먼저 머지되는 경향이 있는데, 비용 대비 Part 수 감소 효과가 크기 때문입니다. 이미 큰 Part는 머지 비용이 높아 나중에 처리됩니다.
 
@@ -82,16 +135,42 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
 
 Part는 생성부터 삭제까지 세 단계를 거칩니다.
 
-```
-                 머지 완료                 old_parts_lifetime 경과
-  ┌──────────┐ ──────────▶ ┌──────────┐ ──────────────────────▶ ┌──────────┐
-  │  Active   │            │ Inactive  │                        │ 물리 삭제  │
-  │ (active=1)│            │ (active=0)│                        │ (디스크    │
-  │           │            │           │                        │  에서 제거) │
-  └──────────┘             └──────────┘                         └──────────┘
-       ▲
-       │ INSERT
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제된다.">
+<style>.ch3c-n{font-size:21px;font-weight:700}.ch3c-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3c-l{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<defs>
+<marker id="ch3cArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- INSERT -->
+<text x="240" y="28" text-anchor="middle" class="ch3c-p">INSERT</text>
+<line x1="240" y1="38" x2="240" y2="62" class="ch3c-line" marker-end="url(#ch3cArrow)"/>
+<!-- Active -->
+<rect x="90" y="68" width="300" height="72" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2"/>
+<text x="240" y="100" text-anchor="middle" class="ch3c-n" fill="var(--text-success, #16a34a)">Active</text>
+<text x="240" y="126" text-anchor="middle" class="ch3c-s">active = 1, 쿼리에 응답</text>
+<!-- 머지 완료 -->
+<line x1="240" y1="144" x2="240" y2="190" class="ch3c-line" marker-end="url(#ch3cArrow)"/>
+<text x="254" y="173" class="ch3c-l">머지 완료</text>
+<!-- Inactive -->
+<rect x="90" y="196" width="300" height="94" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
+<text x="240" y="228" text-anchor="middle" class="ch3c-n" fill="var(--text-warn, #d97706)">Inactive</text>
+<text x="240" y="254" text-anchor="middle" class="ch3c-s">active = 0, 디스크에 잔존</text>
+<text x="240" y="278" text-anchor="middle" class="ch3c-s">장애 복구 · 실행 중 쿼리 대비</text>
+<!-- 수명 경과 -->
+<line x1="240" y1="294" x2="240" y2="344" class="ch3c-line" marker-end="url(#ch3cArrow)"/>
+<text x="254" y="314" class="ch3c-l">old_parts_lifetime</text>
+<text x="254" y="336" class="ch3c-l">기본 480초 경과</text>
+<!-- 물리 삭제 -->
+<rect x="90" y="350" width="300" height="72" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="240" y="382" text-anchor="middle" class="ch3c-n" fill="var(--text-muted, #78716c)">물리 삭제</text>
+<text x="240" y="408" text-anchor="middle" class="ch3c-s">디스크에서 완전히 제거</text>
+</svg>
+</div>
 
 **Active**: INSERT로 생성된 직후부터 쿼리에 응답하는 상태입니다. `system.parts`에서 `active = 1`로 표시됩니다.
 
@@ -121,16 +200,42 @@ ALTER TABLE orders DELETE WHERE order_id < 100;
 
 이 명령이 실행되면 ClickHouse는 조건에 매칭될 수 있는 **모든 Part를 통째로 재작성**합니다. Part 안의 데이터를 처음부터 끝까지 읽으면서 조건에 맞는 행을 수정(또는 제거)한 새 Part를 생성하고, 원본 Part를 inactive로 전환합니다.
 
-```
-ALTER TABLE orders UPDATE price = 0 WHERE category = '전자제품'
-
-all_1_3_1 (원본 Part, 1,000만 행)
-    │
-    ▼  전체 Part 읽기 → 조건 적용 → 새 Part 쓰기
-    │
-all_1_3_1 → inactive → 삭제
-all_1_3_1_4 (새 Part, price 수정 반영)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환된다.">
+<style>.ch3d-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-n{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-t{font-size:19px;fill:var(--text, #1c1917)}.ch3d-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3d-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<defs>
+<marker id="ch3dArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 명령 -->
+<text x="240" y="24" text-anchor="middle" class="ch3d-c">ALTER TABLE orders UPDATE price = 0</text>
+<text x="240" y="48" text-anchor="middle" class="ch3d-c">WHERE category = '전자제품'</text>
+<!-- 원본 Part -->
+<rect x="80" y="66" width="320" height="66" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<text x="240" y="96" text-anchor="middle" class="ch3d-n">all_1_3_1</text>
+<text x="240" y="120" text-anchor="middle" class="ch3d-s">원본 Part · 1,000만 행</text>
+<line x1="240" y1="136" x2="240" y2="158" class="ch3d-line" marker-end="url(#ch3dArrow)"/>
+<!-- 재작성 -->
+<rect x="50" y="164" width="380" height="76" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="240" y="194" text-anchor="middle" class="ch3d-t">Part 전체를 처음부터 끝까지 읽기</text>
+<text x="240" y="220" text-anchor="middle" class="ch3d-t">조건에 맞는 행을 바꿔 새 Part 기록</text>
+<line x1="240" y1="244" x2="240" y2="266" class="ch3d-line" marker-end="url(#ch3dArrow)"/>
+<!-- 결과 -->
+<rect x="50" y="272" width="380" height="140" rx="8" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<rect x="68" y="288" width="344" height="52" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2"/>
+<text x="88" y="321" class="ch3d-n">all_1_3_1_4</text>
+<text x="392" y="321" text-anchor="end" class="ch3d-s">active = 1</text>
+<rect x="68" y="348" width="344" height="52" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<text x="88" y="381" class="ch3d-n">all_1_3_1</text>
+<text x="392" y="381" text-anchor="end" class="ch3d-s">inactive 전환</text>
+<!-- 캡션 -->
+<text x="240" y="446" text-anchor="middle" class="ch3d-s">1행만 바꿔도 Part 전체가 재작성됩니다</text>
+</svg>
+</div>
 
 1행만 수정해도 Part 전체(수백만 행)를 재작성합니다. 이것이 ClickHouse에서 뮤테이션이 "무거운 연산"인 이유입니다. 불변 Part를 "수정"하는 유일한 방법이 새 복사본을 만드는 것이기 때문입니다.
 
@@ -177,10 +282,13 @@ Lightweight DELETE는 모든 컬럼 파일을 재작성하지 않습니다. 내�
 | 쿼리 오버헤드 | 없음 | `_row_exists` 마스크 체크 |
 | 주 용도 | 대량 일괄 삭제 | 선택적 행 삭제 |
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  Lightweight DELETE도 내부적으로는 뮤테이션의 일종이고, 새 Part를 생성합니다. 다만 Wide Part에서는 <code>_row_exists</code> 컬럼만 실제로 쓰고 나머지는 hardlink이므로 I/O가 최소화됩니다. Compact Part(기본 10MB 미만)에서는 모든 컬럼이 하나의 파일에 있어서 전체 재작성이 발생합니다.
-</div>
+:::info
+
+**참고**
+
+Lightweight DELETE도 내부적으로는 뮤테이션의 일종이고, 새 Part를 생성합니다. 다만 Wide Part에서는 `_row_exists` 컬럼만 실제로 쓰고 나머지는 hardlink이므로 I/O가 최소화됩니다. Compact Part(기본 10MiB 미만)에서는 모든 컬럼이 하나의 파일에 있어서 전체 재작성이 발생합니다.
+
+:::
 
 대량 삭제가 필요한 경우에는 두 방법 모두 비효율적입니다. 오래된 데이터를 주기적으로 정리하는 패턴이라면, 파티션 단위로 `ALTER TABLE DROP PARTITION`을 사용하는 것이 가장 빠릅니다.
 
@@ -190,7 +298,7 @@ RDB에서 UPDATE는 일상적인 연산입니다. 주문 상태를 변경하고,
 
 만약 "사용자가 주문을 취소하면 상태를 변경해야 한다"거나 "같은 키의 데이터가 중복으로 들어올 수 있다"는 요구사항이 있다면, 뮤테이션으로 해결하려 하면 안 됩니다. 이것은 스키마 설계의 문제입니다.
 
-기본 MergeTree는 머지할 때 Part의 데이터를 그대로 합칩니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 이 한계를 해결하기 위해 설계된 것이 **MergeTree 변종 엔진**들입니다. ReplacingMergeTree는 같은 키의 중복을 머지 시점에 제거하고, CollapsingMergeTree는 상태 변경을 +1/-1 쌍으로 처리합니다. 다음 글에서 이 엔진들이 머지 과정에서 어떤 추가 로직을 수행하는지 다룹니다.
+기본 MergeTree는 머지할 때 Part의 데이터를 그대로 합칩니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 이 한계를 해결하기 위해 설계된 것이 **MergeTree 계열 엔진**들입니다. ReplacingMergeTree는 같은 키의 중복을 머지 시점에 제거하고, CollapsingMergeTree는 상태 변경을 +1/-1 쌍으로 상쇄합니다. 다음 글에서 이 엔진들이 머지 과정에서 어떤 추가 로직을 수행하는지 다룹니다.
 
 ## 실험: Docker로 직접 확인하기
 
@@ -250,7 +358,7 @@ WHERE table = 'orders'
 ORDER BY name;
 ```
 
-```
+```text
 ┌─name──────┬─active─┬────rows─┬─size───────┬─modification_time───┐
 │ all_1_1_0 │      1 │ 3000000 │ 33.38 MiB  │ 2026-05-19 12:00:01 │
 │ all_2_2_0 │      1 │ 3000000 │ 33.37 MiB  │ 2026-05-19 12:00:03 │
@@ -271,7 +379,7 @@ WHERE table = 'orders'
 ORDER BY active DESC, name;
 ```
 
-```
+```text
 ┌─name──────┬─active─┬─────rows─┬─size───────┐
 │ all_1_3_1 │      1 │ 10000000 │ 111.05 MiB │
 │ all_1_1_0 │      0 │  3000000 │ 33.38 MiB  │
@@ -297,7 +405,7 @@ FROM system.merges
 WHERE table = 'orders';
 ```
 
-```
+```text
 ┌─table──┬─result_part_name─┬─progress─┬─elapsed─┬─num_parts─┬─total_size─┬─is_mutation─┐
 │ orders │ all_1_3_1        │     0.45 │    1.23 │         3 │ 111.23 MiB │           0 │
 └────────┴──────────────────┴──────────┴─────────┴───────────┴────────────┴─────────────┘
@@ -329,7 +437,7 @@ FROM system.mutations
 WHERE table = 'orders';
 ```
 
-```
+```text
 ┌─mutation_id────┬─command──────────────────────────────────────┬─create_time─────────┬─is_done─┬─parts_to_do─┐
 │ mutation_4.txt │ UPDATE price = 0 WHERE category = '전자제품' │ 2026-05-19 12:01:15 │       1 │           0 │
 └────────────────┴──────────────────────────────────────────────┴─────────────────────┴─────────┴─────────────┘
@@ -344,7 +452,7 @@ WHERE table = 'orders'
 ORDER BY active DESC, name;
 ```
 
-```
+```text
 ┌─name────────┬─active─┬─────rows─┐
 │ all_1_3_1_4 │      1 │ 10000000 │
 │ all_1_3_1   │      0 │ 10000000 │
@@ -361,7 +469,7 @@ FROM orders
 WHERE category = '전자제품';
 ```
 
-```
+```text
 ┌─────cnt─┬─avg_price─┐
 │ 1250000 │         0 │
 └─────────┴───────────┘
@@ -387,7 +495,7 @@ ORDER BY create_time DESC
 LIMIT 1;
 ```
 
-```
+```text
 ┌─mutation_id────┬─command──────────────────────────────────────────────┬─is_done─┐
 │ mutation_5.txt │ UPDATE _row_exists = 0 WHERE order_id < 100         │       1 │
 └────────────────┴──────────────────────────────────────────────────────┴─────────┘
@@ -399,7 +507,7 @@ LIMIT 1;
 SELECT count() FROM orders WHERE order_id < 100;
 ```
 
-```
+```text
 ┌─count()─┐
 │       0 │
 └─────────┘
@@ -418,7 +526,7 @@ WHERE table = 'orders' AND active
 ORDER BY name;
 ```
 
-```
+```text
 ┌─name────────┬─active─┬─────rows─┬─size───────┐
 │ all_1_3_1_5 │      1 │ 10000000 │ 111.08 MiB │
 └─────────────┴────────┴──────────┴────────────┘
@@ -437,7 +545,7 @@ FROM system.parts
 WHERE table = 'orders' AND active;
 ```
 
-```
+```text
 ┌─name──────────┬─────rows─┬─size───────┐
 │ all_1_3_2_5   │  9999900 │ 110.94 MiB │
 └───────────────┴──────────┴────────────┘
@@ -515,7 +623,7 @@ KILL MUTATION WHERE mutation_id = 'mutation_4.txt';
 
 불변 Part는 MergeTree의 쓰기 성능을 보장하는 핵심 설계이고, 그로 인한 읽기 비용은 백그라운드 머지가 상환합니다. 뮤테이션은 불변성 위에서 변경을 구현하는 비상 도구이지, RDB의 UPDATE처럼 일상적으로 쓸 연산이 아닙니다.
 
-기본 MergeTree의 머지는 Part를 합칠 뿐, 중복을 제거하거나 값을 집계하지 않습니다. 다음 글에서는 머지 과정에 추가 로직을 끼워 넣는 MergeTree 변종들 (ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree) 이 각각 어떤 문제를 해결하는지 다룹니다.
+기본 MergeTree의 머지는 Part를 합칠 뿐, 중복을 제거하거나 값을 집계하지 않습니다. 다음 글에서는 머지 과정에 추가 로직을 끼워 넣는 네 가지 엔진(ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree)이 각각 어떤 문제를 해결하는지 다룹니다.
 
 ---
 

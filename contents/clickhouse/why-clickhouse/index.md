@@ -43,39 +43,118 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 
 ## Row store vs Column store: 디스크 I/O의 관점
 
-같은 테이블을 두 가지 방식으로 저장한다고 생각해봅시다.
+5개 컬럼, 1억 행짜리 `orders` 테이블을 두 가지 방식으로 저장한다고 생각해봅시다.
 
-```
-orders 테이블 (5개 컬럼, 1억 행)
-┌─────────┬──────────┬───────┬──────────┬─────────┐
-│ order_id│ user_id  │ price │ category │ created │
-├─────────┼──────────┼───────┼──────────┼─────────┤
-│ 1       │ 42       │ 29900 │ 전자제품  │ 2026-01 │
-│ 2       │ 17       │ 5900  │ 도서     │ 2026-01 │
-│ ...     │ ...      │ ...   │ ...      │ ...     │
-└─────────┴──────────┴───────┴──────────┴─────────┘
-```
+| order_id | user_id | price | category | created |
+|---|---|---|---|---|
+| 1 | 42 | 29900 | 전자제품 | 2026-01 |
+| 2 | 17 | 5900 | 도서 | 2026-01 |
+| ... | ... | ... | ... | ... |
 
 ### Row store (PostgreSQL 방식)
 
-```
-디스크 블록 1: [order_id=1, user_id=42, price=29900, category=전자제품, created=2026-01]
-               [order_id=2, user_id=17, price=5900,  category=도서,     created=2026-01]
-               ...
-디스크 블록 2: [order_id=101, ...]
-               ...
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="행 지향 저장에서는 한 행의 다섯 개 컬럼이 디스크 블록에 나란히 붙어 저장되므로, price 컬럼 하나만 필요한 집계에도 모든 컬럼을 함께 읽어야 한다는 것을 보여주는 그림">
+<style>
+.ch1-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
+.ch1-lbl { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch1-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch1-t { fill: var(--text-muted, #78716c); font-size: 17px; }
+.ch1-hit { fill: var(--primary, #0d9488); font-size: 17px; font-weight: 700; }
+.ch1-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ch1-cell-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+</style>
+<text class="ch1-title" x="240" y="28" text-anchor="middle">행 지향: 한 행이 통째로 붙어 있다</text>
+<!-- block 1 -->
+<text class="ch1-lbl" x="10" y="58">디스크 블록 1</text>
+<rect class="ch1-cell" x="10" y="66" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="102" y="66" width="92" height="34" rx="4"/>
+<rect class="ch1-cell-hit" x="194" y="66" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="286" y="66" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="378" y="66" width="92" height="34" rx="4"/>
+<text class="ch1-t" x="56" y="88" text-anchor="middle">order_id</text>
+<text class="ch1-t" x="148" y="88" text-anchor="middle">user_id</text>
+<text class="ch1-hit" x="240" y="88" text-anchor="middle">price</text>
+<text class="ch1-t" x="332" y="88" text-anchor="middle">category</text>
+<text class="ch1-t" x="424" y="88" text-anchor="middle">created</text>
+<rect class="ch1-cell" x="10" y="104" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="102" y="104" width="92" height="34" rx="4"/>
+<rect class="ch1-cell-hit" x="194" y="104" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="286" y="104" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="378" y="104" width="92" height="34" rx="4"/>
+<text class="ch1-t" x="56" y="126" text-anchor="middle">order_id</text>
+<text class="ch1-t" x="148" y="126" text-anchor="middle">user_id</text>
+<text class="ch1-hit" x="240" y="126" text-anchor="middle">price</text>
+<text class="ch1-t" x="332" y="126" text-anchor="middle">category</text>
+<text class="ch1-t" x="424" y="126" text-anchor="middle">created</text>
+<!-- block 2 -->
+<text class="ch1-lbl" x="10" y="164">디스크 블록 2</text>
+<rect class="ch1-cell" x="10" y="172" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="102" y="172" width="92" height="34" rx="4"/>
+<rect class="ch1-cell-hit" x="194" y="172" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="286" y="172" width="92" height="34" rx="4"/>
+<rect class="ch1-cell" x="378" y="172" width="92" height="34" rx="4"/>
+<text class="ch1-t" x="56" y="194" text-anchor="middle">order_id</text>
+<text class="ch1-t" x="148" y="194" text-anchor="middle">user_id</text>
+<text class="ch1-hit" x="240" y="194" text-anchor="middle">price</text>
+<text class="ch1-t" x="332" y="194" text-anchor="middle">category</text>
+<text class="ch1-t" x="424" y="194" text-anchor="middle">created</text>
+<text class="ch1-lbl" x="240" y="228" text-anchor="middle">... 1억 행까지 같은 배치</text>
+<!-- caption -->
+<text class="ch1-cap" x="240" y="262" text-anchor="middle">avg(price)에 필요한 건 price 칸뿐인데</text>
+<text class="ch1-cap" x="240" y="286" text-anchor="middle">5개 컬럼을 전부 디스크에서 읽는다</text>
+</svg>
+</div>
 
 한 행의 모든 컬럼이 연속으로 저장됩니다. `SELECT * FROM orders WHERE order_id = 42` 같은 OLTP 쿼리에 최적입니다. 인덱스로 해당 행의 위치를 찾으면, 한 번의 디스크 읽기로 그 행의 모든 컬럼을 가져올 수 있습니다.
 
 ### Column store (ClickHouse 방식)
 
-```
-price.bin:    [29900, 5900, 12000, 8500, ...]     ← 1억 개의 price 값만 연속
-user_id.bin:  [42, 17, 88, 42, ...]                ← 1억 개의 user_id 값만 연속
-category.bin: [전자제품, 도서, 의류, 전자제품, ...]   ← 1억 개의 category 값만 연속
-...
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 356" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컬럼 지향 저장에서는 컬럼마다 별도의 파일이 만들어져, avg(price) 쿼리가 price.bin 파일 하나만 읽고 나머지 네 개 파일은 열지 않는다는 것을 보여주는 그림">
+<style>
+.ch2-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
+.ch2-name { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch2-name-hit { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
+.ch2-val { fill: var(--text-muted, #78716c); font-size: 17px; }
+.ch2-val-hit { fill: var(--primary, #0d9488); font-size: 17px; }
+.ch2-tag { fill: var(--text-muted, #78716c); font-size: 17px; }
+.ch2-tag-hit { fill: var(--primary, #0d9488); font-size: 17px; font-weight: 700; }
+.ch2-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch2-bar { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ch2-bar-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+</style>
+<text class="ch2-title" x="240" y="28" text-anchor="middle">컬럼 지향: 컬럼마다 파일이 따로</text>
+<!-- order_id -->
+<text class="ch2-name" x="10" y="84">order_id.bin</text>
+<rect class="ch2-bar" x="132" y="60" width="256" height="34" rx="4"/>
+<text class="ch2-val" x="144" y="83">1, 2, 3, 4, ...</text>
+<text class="ch2-tag" x="398" y="83">✕ 스킵</text>
+<!-- user_id -->
+<text class="ch2-name" x="10" y="128">user_id.bin</text>
+<rect class="ch2-bar" x="132" y="104" width="256" height="34" rx="4"/>
+<text class="ch2-val" x="144" y="127">42, 17, 88, ...</text>
+<text class="ch2-tag" x="398" y="127">✕ 스킵</text>
+<!-- price -->
+<text class="ch2-name-hit" x="10" y="172">price.bin</text>
+<rect class="ch2-bar-hit" x="132" y="148" width="256" height="34" rx="4"/>
+<text class="ch2-val-hit" x="144" y="171">29900, 5900, ...</text>
+<text class="ch2-tag-hit" x="398" y="171">✓ 읽음</text>
+<!-- category -->
+<text class="ch2-name" x="10" y="216">category.bin</text>
+<rect class="ch2-bar" x="132" y="192" width="256" height="34" rx="4"/>
+<text class="ch2-val" x="144" y="215">전자제품, 도서, ...</text>
+<text class="ch2-tag" x="398" y="215">✕ 스킵</text>
+<!-- created -->
+<text class="ch2-name" x="10" y="260">created.bin</text>
+<rect class="ch2-bar" x="132" y="236" width="256" height="34" rx="4"/>
+<text class="ch2-val" x="144" y="259">2026-01, ...</text>
+<text class="ch2-tag" x="398" y="259">✕ 스킵</text>
+<!-- caption -->
+<text class="ch2-cap" x="240" y="308" text-anchor="middle">avg(price)가 여는 파일은 price.bin 하나</text>
+<text class="ch2-cap" x="240" y="332" text-anchor="middle">5개 컬럼 중 1개, 디스크 I/O는 1/5</text>
+</svg>
+</div>
 
 같은 컬럼의 값들이 연속으로 저장됩니다. 이제 `SELECT avg(price) FROM orders`가 어떻게 달라지는지 봅시다.
 
@@ -93,7 +172,7 @@ category.bin: [전자제품, 도서, 의류, 전자제품, ...]   ← 1억 개�
 
 Row store에서는 `[42, 29900, '전자제품', '2026-01-05']`처럼 서로 다른 타입의 값이 뒤섞이기 때문에 이런 압축이 불가능합니다.
 
-ClickHouse 공식 블로그에 따르면, nginx 로그 데이터를 ClickHouse에 저장했을 때 원본 대비 **170배 압축**을 달성한 사례가 있습니다. ClickBench 100M 행 벤치마크에서도 PostgreSQL이 약 100GiB를 차지하는 데이터셋을 ClickHouse는 9.26GiB로 저장합니다. 10배 이상의 차이입니다.
+ClickHouse 공식 블로그에 따르면, nginx 로그 데이터를 ClickHouse에 저장했을 때 원본 대비 **170배 압축**을 달성한 사례가 있습니다. ClickBench의 1억 행 hits 데이터셋에서도 같은 데이터를 PostgreSQL은 약 99GiB로, ClickHouse는 약 14GiB로 저장합니다. 7배 차이입니다.
 
 ## ClickHouse의 설계 선택들
 
@@ -105,18 +184,74 @@ ClickHouse 공식 블로그에 따르면, nginx 로그 데이터를 ClickHouse�
 
 ClickHouse는 다릅니다. 한 번에 최대 **65,536개의 값**(기본 `max_block_size`)을 하나의 컬럼 벡터로 묶어서 처리합니다. 같은 연산을 수만 개의 값에 루프로 돌리면 **SIMD(Single Instruction Multiple Data)** 명령어를 활용할 수 있습니다. ClickHouse는 컴파일러의 자동 벡터화뿐 아니라 핵심 연산에 직접 작성된 SIMD 인트린식도 포함하고 있습니다. AVX2 레지스터 하나가 256비트이니, 32비트 정수 8개를 한 번의 CPU 명령으로 처리할 수 있는 것입니다.
 
-```
-Volcano 모델 (행 단위):
-  row 1 → filter → aggregate
-  row 2 → filter → aggregate
-  row 3 → filter → aggregate
-  ... × 1억
-
-벡터화 모델 (블록 단위):
-  [row 1..65536] → filter (SIMD) → aggregate (SIMD)
-  [row 65537..131072] → filter (SIMD) → aggregate (SIMD)
-  ... × ~1,500 블록
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Volcano 모델이 행 하나마다 필터와 집계를 호출해 1억 번 반복하는 모습, 아래쪽은 벡터화 모델이 65,536행 블록 단위로 SIMD 필터와 집계를 수행해 약 1,500번만 반복하는 모습을 비교한 그림">
+<style>
+.ch3-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
+.ch3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ch3-box-v { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch3-t { fill: var(--text, #1c1917); font-size: 18px; }
+.ch3-tv { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
+.ch3-note { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch3-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.ch3-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<defs>
+<marker id="ch3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- panel A -->
+<text class="ch3-title" x="240" y="28" text-anchor="middle">위: Volcano 모델 (행 하나씩)</text>
+<rect class="ch3-box" x="16" y="46" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="180" y="46" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="340" y="46" width="124" height="34" rx="4"/>
+<text class="ch3-t" x="78" y="69" text-anchor="middle">행 1</text>
+<text class="ch3-t" x="242" y="69" text-anchor="middle">필터</text>
+<text class="ch3-t" x="402" y="69" text-anchor="middle">집계</text>
+<path class="ch3-line" d="M 144 63 L 174 63" marker-end="url(#ch3Arrow)"/>
+<path class="ch3-line" d="M 308 63 L 334 63" marker-end="url(#ch3Arrow)"/>
+<rect class="ch3-box" x="16" y="90" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="180" y="90" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="340" y="90" width="124" height="34" rx="4"/>
+<text class="ch3-t" x="78" y="113" text-anchor="middle">행 2</text>
+<text class="ch3-t" x="242" y="113" text-anchor="middle">필터</text>
+<text class="ch3-t" x="402" y="113" text-anchor="middle">집계</text>
+<path class="ch3-line" d="M 144 107 L 174 107" marker-end="url(#ch3Arrow)"/>
+<path class="ch3-line" d="M 308 107 L 334 107" marker-end="url(#ch3Arrow)"/>
+<rect class="ch3-box" x="16" y="134" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="180" y="134" width="124" height="34" rx="4"/>
+<rect class="ch3-box" x="340" y="134" width="124" height="34" rx="4"/>
+<text class="ch3-t" x="78" y="157" text-anchor="middle">행 3</text>
+<text class="ch3-t" x="242" y="157" text-anchor="middle">필터</text>
+<text class="ch3-t" x="402" y="157" text-anchor="middle">집계</text>
+<path class="ch3-line" d="M 144 151 L 174 151" marker-end="url(#ch3Arrow)"/>
+<path class="ch3-line" d="M 308 151 L 334 151" marker-end="url(#ch3Arrow)"/>
+<text class="ch3-note" x="240" y="196" text-anchor="middle">... 1억 행이면 1억 번 반복</text>
+<text class="ch3-note" x="240" y="226" text-anchor="middle">행마다 가상 함수 호출: 1억 번</text>
+<line class="ch3-div" x1="20" y1="252" x2="460" y2="252"/>
+<!-- panel B -->
+<text class="ch3-title" x="240" y="290" text-anchor="middle">아래: 벡터화 (블록 단위)</text>
+<rect class="ch3-box-v" x="16" y="308" width="124" height="42" rx="4"/>
+<rect class="ch3-box-v" x="180" y="308" width="124" height="42" rx="4"/>
+<rect class="ch3-box-v" x="340" y="308" width="124" height="42" rx="4"/>
+<text class="ch3-tv" x="78" y="335" text-anchor="middle">65,536행</text>
+<text class="ch3-tv" x="242" y="335" text-anchor="middle">필터 SIMD</text>
+<text class="ch3-tv" x="402" y="335" text-anchor="middle">집계 SIMD</text>
+<path class="ch3-line" d="M 144 329 L 174 329" marker-end="url(#ch3Arrow)"/>
+<path class="ch3-line" d="M 308 329 L 334 329" marker-end="url(#ch3Arrow)"/>
+<rect class="ch3-box-v" x="16" y="360" width="124" height="42" rx="4"/>
+<rect class="ch3-box-v" x="180" y="360" width="124" height="42" rx="4"/>
+<rect class="ch3-box-v" x="340" y="360" width="124" height="42" rx="4"/>
+<text class="ch3-tv" x="78" y="387" text-anchor="middle">다음 블록</text>
+<text class="ch3-tv" x="242" y="387" text-anchor="middle">필터 SIMD</text>
+<text class="ch3-tv" x="402" y="387" text-anchor="middle">집계 SIMD</text>
+<path class="ch3-line" d="M 144 381 L 174 381" marker-end="url(#ch3Arrow)"/>
+<path class="ch3-line" d="M 308 381 L 334 381" marker-end="url(#ch3Arrow)"/>
+<text class="ch3-note" x="240" y="430" text-anchor="middle">... 1억 행이면 약 1,500 블록</text>
+<text class="ch3-note" x="240" y="460" text-anchor="middle">블록마다 호출: 약 1,500번</text>
+</svg>
+</div>
 
 함수 호출 오버헤드가 1억 번에서 약 1,500번으로 줄어들고, 각 루프 내부에서는 SIMD가 데이터 수준 병렬성까지 뽑아냅니다. ClickHouse는 런타임에 `cpuid` 명령어로 CPU를 감지해서 SSE 4.2, AVX2, AVX-512 중 최적의 커널을 선택합니다.
 
@@ -156,13 +291,52 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 
 > INSERT가 들어오면 데이터를 PRIMARY KEY 순서로 정렬한 뒤 **불변(immutable) Part**로 디스크에 씁니다. 각 Part 안에서 컬럼별로 별도 파일이 만들어지고, 8,192행마다 하나의 **Granule** 경계가 기록됩니다. 이 경계를 가리키는 것이 **희소 인덱스(sparse index)**입니다. 시간이 지나면 백그라운드 프로세스가 작은 Part들을 하나의 큰 Part로 **머지(merge)**합니다.
 
-```
-INSERT 1 → Part_1 (불변)
-INSERT 2 → Part_2 (불변)
-INSERT 3 → Part_3 (불변)
-             ↓ 백그라운드 머지
-         Part_1_2_3 (불변)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 360" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="INSERT 세 번이 각각 불변 Part를 하나씩 만들고, 백그라운드 머지가 세 Part를 하나의 큰 Part로 합치는 과정을 보여주는 그림">
+<style>
+.ch4-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
+.ch4-in { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ch4-part { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch4-t { fill: var(--text, #1c1917); font-size: 18px; }
+.ch4-tp { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
+.ch4-big { fill: var(--primary, #0d9488); font-size: 20px; font-weight: 700; }
+.ch4-note { fill: var(--text-muted, #78716c); font-size: 17px; }
+.ch4-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch4-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+</style>
+<defs>
+<marker id="ch4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<text class="ch4-title" x="240" y="28" text-anchor="middle">INSERT마다 새 Part가 생긴다</text>
+<!-- row 1 -->
+<rect class="ch4-in" x="14" y="50" width="160" height="40" rx="4"/>
+<text class="ch4-t" x="94" y="76" text-anchor="middle">INSERT 1</text>
+<path class="ch4-line" d="M 180 70 L 244 70" marker-end="url(#ch4Arrow)"/>
+<rect class="ch4-part" x="250" y="50" width="180" height="40" rx="4"/>
+<text class="ch4-tp" x="340" y="76" text-anchor="middle">Part_1 (불변)</text>
+<!-- row 2 -->
+<rect class="ch4-in" x="14" y="102" width="160" height="40" rx="4"/>
+<text class="ch4-t" x="94" y="128" text-anchor="middle">INSERT 2</text>
+<path class="ch4-line" d="M 180 122 L 244 122" marker-end="url(#ch4Arrow)"/>
+<rect class="ch4-part" x="250" y="102" width="180" height="40" rx="4"/>
+<text class="ch4-tp" x="340" y="128" text-anchor="middle">Part_2 (불변)</text>
+<!-- row 3 -->
+<rect class="ch4-in" x="14" y="154" width="160" height="40" rx="4"/>
+<text class="ch4-t" x="94" y="180" text-anchor="middle">INSERT 3</text>
+<path class="ch4-line" d="M 180 174 L 244 174" marker-end="url(#ch4Arrow)"/>
+<rect class="ch4-part" x="250" y="154" width="180" height="40" rx="4"/>
+<text class="ch4-tp" x="340" y="180" text-anchor="middle">Part_3 (불변)</text>
+<!-- merge -->
+<path class="ch4-line" d="M 340 200 L 340 244" marker-end="url(#ch4Arrow)"/>
+<text class="ch4-note" x="326" y="228" text-anchor="end">백그라운드 머지</text>
+<rect class="ch4-part" x="230" y="250" width="220" height="46" rx="4"/>
+<text class="ch4-big" x="340" y="279" text-anchor="middle">Part_1_2_3</text>
+<!-- caption -->
+<text class="ch4-cap" x="240" y="330" text-anchor="middle">제자리 수정 없이 새로 쓰고, 나중에 합친다</text>
+</svg>
+</div>
 
 LSM-tree에서 영감받은 구조입니다. 일반적인 RDB의 B-tree 인덱스와 비교하면 차이가 선명합니다. B-tree는 기존 페이지 안에서 데이터를 제자리 수정(in-place update)합니다. 랜덤 I/O가 발생하지만, 인덱스 구조가 항상 최신 상태를 반영하므로 읽기가 단순합니다. MergeTree는 반대입니다. 쓰기 시점에 제자리 수정을 하지 않고 항상 새로운 Part를 추가하기 때문에, 쓰기가 순차 I/O로 이루어져 빠릅니다. 대신 읽기 시에는 여러 Part를 동시에 확인해야 하는데, 이 비용을 백그라운드 머지가 점진적으로 줄여줍니다.
 
@@ -170,7 +344,7 @@ LSM-tree에서 영감받은 구조입니다. 일반적인 RDB의 B-tree 인덱�
 
 희소 인덱스도 짚어둘 필요가 있습니다. PostgreSQL의 B-tree 인덱스는 **모든 행**을 가리킵니다. 1억 행이면 인덱스 엔트리도 1억 개입니다. MergeTree의 희소 인덱스는 **8,192행마다 하나의 엔트리**만 기록합니다. 1억 행이면 인덱스 엔트리가 약 12,000개입니다. 이 인덱스는 메모리에 전부 올라갈 정도로 작기 때문에, 수십억 행 테이블에서도 쿼리가 "어느 granule을 읽어야 하는가"를 마이크로초 단위로 결정할 수 있습니다. 물론 이 방식은 포인트 쿼리(`WHERE id = 42`)에는 불리합니다. 정확히 한 행을 찾는 것이 아니라, 그 행이 포함된 8,192행 granule 전체를 읽어야 하기 때문입니다. OLAP 워크로드에서는 이 트레이드오프가 문제 되지 않습니다.
 
-MergeTree의 내부 구조(Part 파일 레이아웃, Granule과 Mark의 관계, 희소 인덱스가 쿼리를 어떻게 가속하는지)는 [다음 글](/clickhouse/mergetree-internals/)에서 본격적으로 해부합니다.
+여기까지가 MergeTree의 설계 의도입니다. 실제 내부 구조는 [다음 글](/clickhouse/mergetree-internals/)에서 이어갑니다.
 
 ## 실험: Docker로 직접 확인하기
 
@@ -216,7 +390,7 @@ SELECT
 FROM numbers(10000000);
 ```
 
-```
+```text
 Ok.
 0 rows in set. Elapsed: 2.817 sec. Processed 10.00 million rows, 80.00 MB (3.55 million rows/s., 28.40 MB/s.)
 ```
@@ -236,7 +410,7 @@ GROUP BY category
 ORDER BY cnt DESC;
 ```
 
-```
+```text
 ┌─category─┬─────cnt─┬────────avg_price─┬─max_price─┐
 │ 가구     │ 1251039 │ 102399.273282902 │    199999 │
 │ 식품     │ 1250976 │ 102473.727498498 │    199999 │
@@ -268,7 +442,7 @@ WHERE table = 'orders' AND database = 'default'
 ORDER BY data_uncompressed_bytes DESC;
 ```
 
-```
+```text
 ┌─name───────┬─compressed─┬─uncompressed─┬──ratio─┐
 │ created_at │ 5.73 MiB   │ 38.15 MiB    │   6.66 │
 │ user_id    │ 19.14 MiB  │ 38.15 MiB    │   1.99 │
@@ -296,7 +470,7 @@ FROM system.parts
 WHERE table = 'orders' AND active;
 ```
 
-```
+```text
 ┌─name──────┬─────rows─┬─size───────┬─active─┐
 │ all_1_1_0 │ 10000000 │ 57.64 MiB  │      1 │
 └───────────┴──────────┴────────────┴────────┘
@@ -315,7 +489,7 @@ FROM orders
 GROUP BY category;
 ```
 
-```
+```text
 ┌─explain───────────────────────────────────────────┐
 │ (Expression)                                       │
 │ ExpressionTransform                                │
@@ -346,11 +520,11 @@ GROUP BY category;
 
 ClickHouse는 "대량의 이벤트를 빠르게 집계해야 하는" 곳이면 어디든 쓰입니다. 대표적인 사례 세 가지를 짧게 소개합니다.
 
-**Cloudflare(HTTP 분석)**: Cloudflare는 초당 600만 HTTP 요청의 분석 데이터를 ClickHouse로 처리합니다. 전체적으로는 초당 약 9,000만 행이 INSERT되며, 평균 삽입 대역폭은 47Gbps에 달합니다. PostgreSQL + Citus 조합에서 ClickHouse로 마이그레이션한 사례입니다.
+**Cloudflare(HTTP 분석)**: Cloudflare는 평균 초당 600만(피크 800만) HTTP 요청의 분석 데이터를 ClickHouse로 처리합니다. 모든 파이프라인을 합치면 초당 1,100만 행이 INSERT되고, 평균 삽입 대역폭은 47Gbps입니다. PostgreSQL + Citus 조합에서 ClickHouse로 마이그레이션한 사례입니다.
 
-**PostHog(프로덕트 분석)**: 오픈소스 프로덕트 분석 플랫폼 PostHog는 ClickHouse를 메인 분석 백엔드로 사용합니다. 500억 건 이상의 이벤트를 추적하고, 이벤트 테이블 단일 컬럼이 62TB(비압축 기준)에 달합니다. 퍼널 분석, 트렌드 시각화, 유저 행동 필터링 같은 복잡한 분석 쿼리를 서브초 단위로 처리합니다.
+**PostHog(프로덕트 분석)**: 오픈소스 프로덕트 분석 플랫폼 PostHog는 ClickHouse를 메인 분석 백엔드로 사용합니다. 이벤트를 샤딩된 `sharded_events` 테이블에 쌓고, 자주 쓰이는 JSON 프로퍼티는 별도 컬럼으로 머터리얼라이즈해서 퍼널 분석, 트렌드 시각화, 유저 행동 필터링 같은 쿼리를 처리합니다. 컬럼 스토어의 강점을 스키마 설계에 직접 반영한 사례입니다.
 
-**GitLab(Observability)**: GitLab은 FY23에 ClickHouse를 Observability와 Analytics의 표준 데이터 스토어로 채택했습니다. 메트릭, 로그, 이벤트 등 다양한 관측 데이터를 ClickHouse로 통합해 처리하고 있습니다.
+**GitLab(Observability)**: GitLab은 FY23에 대용량, 삽입 위주 워크로드(Observability, Analytics 등)의 표준 데이터 스토어로 ClickHouse를 선택했습니다. FY23-Q2에는 Observability 팀이 에러 트래킹을 비롯한 관측 기능용 ClickHouse 데이터 플랫폼을 배포했고, 다른 팀들도 아키텍처에 편입하고 있습니다. Postgres와 Redis를 대체하려는 것이 아니라는 점을 GitLab 스스로 명시하고 있습니다.
 
 세 사례 모두 공통점이 있습니다. **쓰기는 대량 배치, 읽기는 소수 컬럼 집계**라는 OLAP 패턴에 정확히 부합한다는 것입니다.
 
@@ -378,5 +552,7 @@ ClickHouse의 속도는 마법이 아니라 설계 선택의 결과입니다. �
 - [ClickHouse 공식 리소스: Vectorised Query Execution](https://clickhouse.com/resources/engineering/vectorised-query-execution)
 - [ClickHouse 공식 블로그: Compressing nginx logs 170x with column storage](https://clickhouse.com/blog/log-compression-170x)
 - [Cloudflare: HTTP Analytics for 6M requests per second using ClickHouse](https://blog.cloudflare.com/http-analytics-for-6m-requests-per-second-using-clickhouse/)
-- [PostHog Docs: How PostHog Works — ClickHouse](https://posthog.com/docs/how-posthog-works/clickhouse)
-- [GitLab Handbook: ClickHouse Usage at GitLab](https://handbook.gitlab.com/handbook/engineering/architecture/design-documents/clickhouse_usage/)
+- [PostHog Docs: How PostHog Works, ClickHouse](https://posthog.com/docs/how-posthog-works/clickhouse)
+- [PostHog Blog: The secrets of PostHog query performance](https://posthog.com/blog/secrets-of-posthog-query-performance)
+- [GitLab Handbook: ClickHouse Datastore Working Group](https://handbook.gitlab.com/handbook/company/working-groups/clickhouse-datastore/)
+- [ClickBench: a Benchmark For Analytical Databases](https://benchmark.clickhouse.com/)

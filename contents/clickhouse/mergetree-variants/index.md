@@ -9,7 +9,7 @@ summary: 'Replacing, Summing, Aggregating, Collapsing 네 엔진이 머지 과�
 thumbnail: './thumbnail.png'
 ---
 
-[지난 글](/clickhouse/merge-and-mutation/)에서 기본 MergeTree의 머지는 Part를 합칠 뿐이라고 했습니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 그렇다면 CDC 파이프라인에서 같은 주문이 두 번 들어오면 어떻게 될까요? 기본 MergeTree에서는 두 행이 영원히 남습니다. [뮤테이션](/clickhouse/merge-and-mutation/)으로 지울 수는 있지만, Part 전체를 재작성해야 합니다.
+기본 MergeTree의 머지는 Part를 합칠 뿐입니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 그렇다면 CDC 파이프라인에서 같은 주문이 두 번 들어오면 어떻게 될까요? 기본 MergeTree에서는 두 행이 영원히 남습니다. [뮤테이션](/clickhouse/merge-and-mutation/)으로 지울 수는 있지만, Part 전체를 재작성해야 합니다.
 
 주문 상태가 "접수"에서 "배송중"으로 바뀔 때도 마찬가지입니다. 불변 Part에 UPDATE를 하려면 뮤테이션이 필요하고, 이것은 비상 도구이지 일상적 연산이 아닙니다.
 
@@ -19,31 +19,76 @@ thumbnail: './thumbnail.png'
 
 ## 머지에 로직을 끼워 넣는다는 것
 
-[지난 글](/clickhouse/merge-and-mutation/)에서 본 기본 MergeTree의 머지를 복습합시다. 백그라운드 스레드가 같은 파티션 내의 Part들을 선택하고, `ORDER BY` 순서로 merge-sort하여 하나의 새 Part를 만듭니다. 이것이 전부입니다. 데이터는 합쳐질 뿐, 내용이 변하지 않습니다.
+기본 MergeTree의 [머지](/clickhouse/merge-and-mutation/)는 단순합니다. 백그라운드 스레드가 같은 파티션 내의 Part들을 선택하고, `ORDER BY` 순서로 merge-sort하여 하나의 새 Part를 만듭니다. 이것이 전부입니다. 데이터는 합쳐질 뿐, 내용이 변하지 않습니다.
 
 변종 엔진은 이 merge-sort 과정에 한 단계를 추가합니다. 정렬하면서 **같은 ORDER BY 키를 가진 행들이 만나면**, 엔진별로 정해진 로직을 실행합니다.
 
-```
-기본 MergeTree 머지:
-
-Part A ─┐
-        ├─ merge-sort ──────────────────▶ Part C
-Part B ─┘
-         (데이터 그대로 합침)
-
-
-변종 엔진 머지:
-
-Part A ─┐
-        ├─ merge-sort ─▶ [추가 로직] ──▶ Part C
-Part B ─┘                    │
-                             ▼
-                  같은 ORDER BY 키의 행이 만나면:
-                    Replacing  → 최신 버전만 유지
-                    Summing    → 숫자 컬럼 합산
-                    Aggregating → 집계 상태 병합
-                    Collapsing → +1/-1 쌍 상쇄
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 516" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="기본 MergeTree 머지는 두 Part를 merge-sort로 합칠 뿐이지만, 변종 엔진 머지는 merge-sort 과정에 추가 로직을 끼워 넣어 같은 ORDER BY 키의 행을 엔진별로 처리한다는 비교 그림">
+<style>
+.mv1-t{fill:var(--text,#1c1917);font-size:19px}
+.mv1-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.mv1-m{fill:var(--text-muted,#78716c);font-size:18px}
+.mv1-p{fill:var(--primary,#0d9488);font-size:19px;font-weight:700}
+.mv1-b{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv1-e{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
+.mv1-l{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv1-d{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
+</style>
+<defs>
+<marker id="mv1Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+</marker>
+</defs>
+<!-- panel 1: 기본 MergeTree -->
+<text class="mv1-h" x="20" y="28">기본 MergeTree 머지</text>
+<rect class="mv1-b" x="20" y="44" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="70" y="68" text-anchor="middle">Part A</text>
+<rect class="mv1-b" x="20" y="90" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="70" y="114" text-anchor="middle">Part B</text>
+<path class="mv1-l" d="M120,63 H150"/>
+<path class="mv1-l" d="M120,109 H150"/>
+<path class="mv1-l" d="M150,63 V109"/>
+<path class="mv1-l" d="M150,86 H172" marker-end="url(#mv1Arrow)"/>
+<rect class="mv1-b" x="178" y="63" width="132" height="46" rx="4"/>
+<text class="mv1-t" x="244" y="92" text-anchor="middle">merge-sort</text>
+<path class="mv1-l" d="M310,86 H350" marker-end="url(#mv1Arrow)"/>
+<rect class="mv1-b" x="356" y="67" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="406" y="91" text-anchor="middle">Part C</text>
+<text class="mv1-m" x="244" y="134" text-anchor="middle">데이터 그대로 합침</text>
+<path class="mv1-d" d="M20,154 H460"/>
+<!-- panel 2: 변종 엔진 -->
+<text class="mv1-h" x="20" y="186">변종 엔진 머지</text>
+<rect class="mv1-b" x="20" y="202" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="70" y="226" text-anchor="middle">Part A</text>
+<rect class="mv1-b" x="20" y="248" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="70" y="272" text-anchor="middle">Part B</text>
+<path class="mv1-l" d="M120,221 H150"/>
+<path class="mv1-l" d="M120,267 H150"/>
+<path class="mv1-l" d="M150,221 V267"/>
+<path class="mv1-l" d="M150,244 H172" marker-end="url(#mv1Arrow)"/>
+<rect class="mv1-e" x="178" y="200" width="132" height="88" rx="4"/>
+<text class="mv1-t" x="244" y="234" text-anchor="middle">merge-sort</text>
+<text class="mv1-p" x="244" y="264" text-anchor="middle">+ 추가 로직</text>
+<path class="mv1-l" d="M310,244 H350" marker-end="url(#mv1Arrow)"/>
+<rect class="mv1-b" x="356" y="225" width="100" height="38" rx="4"/>
+<text class="mv1-t" x="406" y="249" text-anchor="middle">Part C</text>
+<path class="mv1-l" d="M244,288 V312" marker-end="url(#mv1Arrow)"/>
+<text class="mv1-m" x="240" y="338" text-anchor="middle">같은 ORDER BY 키의 행이 만나면</text>
+<rect class="mv1-b" x="20" y="350" width="440" height="146" rx="4"/>
+<text class="mv1-p" x="200" y="382" text-anchor="end">Replacing</text>
+<text class="mv1-t" x="212" y="382">→ 최신 버전만 유지</text>
+<text class="mv1-p" x="200" y="414" text-anchor="end">Summing</text>
+<text class="mv1-t" x="212" y="414">→ 숫자 컬럼 합산</text>
+<text class="mv1-p" x="200" y="446" text-anchor="end">Aggregating</text>
+<text class="mv1-t" x="212" y="446">→ 집계 상태 병합</text>
+<text class="mv1-p" x="200" y="478" text-anchor="end">Collapsing</text>
+<text class="mv1-t" x="212" y="478">→ +1/-1 쌍 상쇄</text>
+</svg>
+</div>
 
 여기서 반드시 기억해야 할 전제가 하나 있습니다. **이 추가 로직은 머지 시점에만 동작합니다.** INSERT할 때는 아무 일도 일어나지 않습니다. 머지가 일어나기 전까지 "중간 상태"(중복 행, 미합산 행, 상쇄되지 않은 +1/-1 쌍)가 그대로 존재합니다.
 
@@ -55,7 +100,7 @@ Part B ─┘                    │
 
 CDC(Change Data Capture)로 외부 DB의 변경을 ClickHouse로 동기화하거나, 장애 복구 후 데이터를 재처리하면 같은 `order_id`를 가진 행이 여러 번 INSERT될 수 있습니다. 기본 MergeTree에서는 ORDER BY 키가 같은 행이 여러 개 존재해도 아무 문제 없이 전부 저장합니다. Primary Key가 유니크 제약이 아니기 때문입니다.
 
-중복을 제거하려면? [지난 글](/clickhouse/merge-and-mutation/)에서 봤듯이 `ALTER TABLE DELETE`로 뮤테이션을 실행할 수 있지만, 이것은 Part 전체를 재작성하는 무거운 연산입니다. 정기적으로 중복이 들어오는 환경에서는 현실적이지 않습니다.
+중복을 제거하려면? [뮤테이션](/clickhouse/merge-and-mutation/)으로 `ALTER TABLE DELETE`를 실행할 수 있지만, 이것은 Part 전체를 재작성하는 무거운 연산입니다. 정기적으로 중복이 들어오는 환경에서는 현실적이지 않습니다.
 
 ### ORDER BY 키 기준 중복 제거
 
@@ -75,16 +120,82 @@ ORDER BY order_id;
 
 `ReplacingMergeTree(ver)`에서 `ver`은 버전 컬럼입니다. 같은 `order_id`를 가진 행이 여러 개 있으면, `ver` 값이 가장 큰 행 하나만 살아남습니다. `ver`을 지정하지 않으면 가장 최근에 생성된 Part(가장 나중에 INSERT된 데이터)의 행이 남습니다.
 
-```
-Part A                    Part B                    머지 결과
-┌────────┬───┬─────┐     ┌────────┬───┬─────┐     ┌────────┬───┬─────┐
-│order_id│ver│price│     │order_id│ver│price│     │order_id│ver│price│
-├────────┼───┼─────┤     ├────────┼───┼─────┤     ├────────┼───┼─────┤
-│   1    │ 1 │ 100 │     │   1    │ 2 │ 200 │     │   1    │ 2 │ 200 │ ← ver=2
-│   2    │ 1 │ 300 │     │   3    │ 1 │ 400 │     │   2    │ 1 │ 300 │
-└────────┴───┴─────┘     └────────┴───┴─────┘     │   3    │ 1 │ 400 │
-                                                   └────────┴───┴─────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 550" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ReplacingMergeTree 머지 전에는 Part A와 Part B에 order_id 1이 각각 존재하지만, 머지 후에는 ver 값이 큰 행 하나만 남는다는 비교 그림">
+<style>
+.mv2-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.mv2-m{fill:var(--text-muted,#78716c);font-size:18px}
+.mv2-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv2-td{fill:var(--text,#1c1917);font-size:19px}
+.mv2-ok{fill:var(--text-success,#16a34a);font-size:18px}
+.mv2-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv2-hd{fill:var(--bg-muted,#eeecea)}
+.mv2-hi{fill:var(--bg-warn,#fffbeb)}
+.mv2-sc{fill:var(--bg-success,#f0fdf4)}
+.mv2-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
+.mv2-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+</style>
+<defs>
+<marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+</marker>
+</defs>
+<!-- 머지 전 -->
+<text class="mv2-h" x="20" y="26">머지 전</text>
+<text class="mv2-m" x="25" y="56">Part A</text>
+<rect class="mv2-hd" x="25" y="66" width="300" height="34"/>
+<rect class="mv2-hi" x="25" y="100" width="300" height="34"/>
+<path class="mv2-gl" d="M25,100 H325 M25,134 H325 M135,66 V168 M215,66 V168"/>
+<rect class="mv2-bx" x="25" y="66" width="300" height="102" rx="4"/>
+<text class="mv2-th" x="80" y="89" text-anchor="middle">order_id</text>
+<text class="mv2-th" x="175" y="89" text-anchor="middle">ver</text>
+<text class="mv2-th" x="270" y="89" text-anchor="middle">price</text>
+<text class="mv2-td" x="80" y="124" text-anchor="middle">1</text>
+<text class="mv2-td" x="175" y="124" text-anchor="middle">1</text>
+<text class="mv2-td" x="270" y="124" text-anchor="middle">100</text>
+<text class="mv2-td" x="80" y="158" text-anchor="middle">2</text>
+<text class="mv2-td" x="175" y="158" text-anchor="middle">1</text>
+<text class="mv2-td" x="270" y="158" text-anchor="middle">300</text>
+<text class="mv2-m" x="25" y="198">Part B</text>
+<rect class="mv2-hd" x="25" y="208" width="300" height="34"/>
+<rect class="mv2-hi" x="25" y="242" width="300" height="34"/>
+<path class="mv2-gl" d="M25,242 H325 M25,276 H325 M135,208 V310 M215,208 V310"/>
+<rect class="mv2-bx" x="25" y="208" width="300" height="102" rx="4"/>
+<text class="mv2-th" x="80" y="231" text-anchor="middle">order_id</text>
+<text class="mv2-th" x="175" y="231" text-anchor="middle">ver</text>
+<text class="mv2-th" x="270" y="231" text-anchor="middle">price</text>
+<text class="mv2-td" x="80" y="266" text-anchor="middle">1</text>
+<text class="mv2-td" x="175" y="266" text-anchor="middle">2</text>
+<text class="mv2-td" x="270" y="266" text-anchor="middle">200</text>
+<text class="mv2-td" x="80" y="300" text-anchor="middle">3</text>
+<text class="mv2-td" x="175" y="300" text-anchor="middle">1</text>
+<text class="mv2-td" x="270" y="300" text-anchor="middle">400</text>
+<text class="mv2-m" x="338" y="266">중복 키</text>
+<path class="mv2-ar" d="M175,310 V346" marker-end="url(#mv2Arrow)"/>
+<!-- 머지 후 -->
+<text class="mv2-h" x="20" y="380">머지 후</text>
+<rect class="mv2-hd" x="25" y="392" width="300" height="34"/>
+<rect class="mv2-sc" x="25" y="426" width="300" height="34"/>
+<path class="mv2-gl" d="M25,426 H325 M25,460 H325 M25,494 H325 M135,392 V528 M215,392 V528"/>
+<rect class="mv2-bx" x="25" y="392" width="300" height="136" rx="4"/>
+<text class="mv2-th" x="80" y="415" text-anchor="middle">order_id</text>
+<text class="mv2-th" x="175" y="415" text-anchor="middle">ver</text>
+<text class="mv2-th" x="270" y="415" text-anchor="middle">price</text>
+<text class="mv2-td" x="80" y="450" text-anchor="middle">1</text>
+<text class="mv2-td" x="175" y="450" text-anchor="middle">2</text>
+<text class="mv2-td" x="270" y="450" text-anchor="middle">200</text>
+<text class="mv2-td" x="80" y="484" text-anchor="middle">2</text>
+<text class="mv2-td" x="175" y="484" text-anchor="middle">1</text>
+<text class="mv2-td" x="270" y="484" text-anchor="middle">300</text>
+<text class="mv2-td" x="80" y="518" text-anchor="middle">3</text>
+<text class="mv2-td" x="175" y="518" text-anchor="middle">1</text>
+<text class="mv2-td" x="270" y="518" text-anchor="middle">400</text>
+<text class="mv2-ok" x="338" y="450">ver=2만 유지</text>
+</svg>
+</div>
 
 `order_id = 1`이 두 Part에 각각 존재했지만, 머지 후에는 `ver = 2`인 행만 남습니다.
 
@@ -115,12 +226,15 @@ GROUP BY order_id;
 
 `argMax(status, ver)`는 "ver이 가장 큰 행의 status"를 반환합니다. GROUP BY와 함께 사용하면 FINAL 없이도 최신 버전만 조회할 수 있습니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  ReplacingMergeTree는 머지 시점에만 중복을 제거합니다. 머지는 백그라운드에서 비동기로 일어나므로, <code>FINAL</code> 없이 SELECT하면 같은 ORDER BY 키의 행이 여러 개 보일 수 있습니다. "중복 없는 결과"가 필요하면 반드시 <code>FINAL</code>을 사용하거나 <code>argMax</code> 패턴을 적용하세요.
-</div>
+:::warning
 
-한 가지 더. 물리적 머지는 **같은 파티션 안에서만** 일어납니다. 같은 `order_id`가 서로 다른 파티션에 들어갔다면, 백그라운드 머지로는 영원히 중복이 제거되지 않습니다. `FINAL`은 기본적으로 파티션을 넘어 중복을 제거할 수 있지만(`do_not_merge_across_partitions_select_final` 설정으로 제어), 파티셔닝 전략이 ReplacingMergeTree의 물리적 머지 동작에 직접 영향을 미치는 것은 분명합니다.
+**주의**
+
+ReplacingMergeTree는 머지 시점에만 중복을 제거합니다. 머지는 백그라운드에서 비동기로 일어나므로, `FINAL` 없이 SELECT하면 같은 ORDER BY 키의 행이 여러 개 보일 수 있습니다. "중복 없는 결과"가 필요하면 반드시 `FINAL`을 사용하거나 `argMax` 패턴을 적용하세요.
+
+:::
+
+한 가지 더. 물리적 머지는 **같은 파티션 안에서만** 일어납니다. 같은 `order_id`가 서로 다른 파티션에 들어갔다면, 백그라운드 머지로는 영원히 중복이 제거되지 않습니다. `FINAL`은 기본적으로 파티션을 넘어 중복을 제거하지만(`do_not_merge_across_partitions_select_final` 설정으로 파티션 단위 처리를 강제할 수 있습니다), 물리적 중복은 그대로 남습니다. 중복 제거 키가 여러 파티션에 흩어지지 않도록 파티션 키를 잡아야 합니다.
 
 ## SummingMergeTree
 
@@ -148,24 +262,92 @@ ORDER BY (category, sale_date);
 
 `SummingMergeTree((revenue, order_count))`에서 괄호 안의 컬럼이 합산 대상입니다. 생략하면 ORDER BY에 포함되지 않은 모든 숫자 컬럼이 자동으로 합산됩니다.
 
-```
-Part A                              Part B
-┌────────┬──────┬───────┬───────┐   ┌────────┬──────┬───────┬───────┐
-│category│ date │revenue│ count │   │category│ date │revenue│ count │
-├────────┼──────┼───────┼───────┤   ├────────┼──────┼───────┼───────┤
-│ 도서   │05-01 │ 5000  │   2   │   │ 도서   │05-01 │ 3000  │   1   │
-│ 의류   │05-01 │ 8000  │   3   │   │ 도서   │05-02 │ 7000  │   3   │
-└────────┴──────┴───────┴───────┘   └────────┴──────┴───────┴───────┘
-
-                    머지 결과
-            ┌────────┬──────┬───────┬───────┐
-            │category│ date │revenue│ count │
-            ├────────┼──────┼───────┼───────┤
-            │ 도서   │05-01 │ 8000  │   3   │ ← 합산
-            │ 도서   │05-02 │ 7000  │   3   │
-            │ 의류   │05-01 │ 8000  │   3   │
-            └────────┴──────┴───────┴───────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 578" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="SummingMergeTree 머지 전에는 도서 05-01 키가 Part A와 Part B에 나뉘어 있지만, 머지 후에는 revenue와 count가 합산된 한 행으로 합쳐진다는 비교 그림">
+<style>
+.mv3-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.mv3-m{fill:var(--text-muted,#78716c);font-size:18px}
+.mv3-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv3-td{fill:var(--text,#1c1917);font-size:19px}
+.mv3-ok{fill:var(--text-success,#16a34a);font-size:17px}
+.mv3-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv3-hd{fill:var(--bg-muted,#eeecea)}
+.mv3-hi{fill:var(--bg-warn,#fffbeb)}
+.mv3-sc{fill:var(--bg-success,#f0fdf4)}
+.mv3-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
+.mv3-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+</style>
+<defs>
+<marker id="mv3Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+</marker>
+</defs>
+<!-- 머지 전 -->
+<text class="mv3-h" x="20" y="26">머지 전</text>
+<text class="mv3-m" x="25" y="56">Part A</text>
+<rect class="mv3-hd" x="25" y="66" width="370" height="34"/>
+<rect class="mv3-hi" x="25" y="100" width="370" height="34"/>
+<path class="mv3-gl" d="M25,100 H395 M25,134 H395 M125,66 V168 M215,66 V168 M315,66 V168"/>
+<rect class="mv3-bx" x="25" y="66" width="370" height="102" rx="4"/>
+<text class="mv3-th" x="75" y="89" text-anchor="middle">category</text>
+<text class="mv3-th" x="170" y="89" text-anchor="middle">date</text>
+<text class="mv3-th" x="265" y="89" text-anchor="middle">revenue</text>
+<text class="mv3-th" x="355" y="89" text-anchor="middle">count</text>
+<text class="mv3-td" x="75" y="124" text-anchor="middle">도서</text>
+<text class="mv3-td" x="170" y="124" text-anchor="middle">05-01</text>
+<text class="mv3-td" x="265" y="124" text-anchor="middle">5000</text>
+<text class="mv3-td" x="355" y="124" text-anchor="middle">2</text>
+<text class="mv3-td" x="75" y="158" text-anchor="middle">의류</text>
+<text class="mv3-td" x="170" y="158" text-anchor="middle">05-01</text>
+<text class="mv3-td" x="265" y="158" text-anchor="middle">8000</text>
+<text class="mv3-td" x="355" y="158" text-anchor="middle">3</text>
+<text class="mv3-m" x="25" y="198">Part B</text>
+<rect class="mv3-hd" x="25" y="208" width="370" height="34"/>
+<rect class="mv3-hi" x="25" y="242" width="370" height="34"/>
+<path class="mv3-gl" d="M25,242 H395 M25,276 H395 M125,208 V310 M215,208 V310 M315,208 V310"/>
+<rect class="mv3-bx" x="25" y="208" width="370" height="102" rx="4"/>
+<text class="mv3-th" x="75" y="231" text-anchor="middle">category</text>
+<text class="mv3-th" x="170" y="231" text-anchor="middle">date</text>
+<text class="mv3-th" x="265" y="231" text-anchor="middle">revenue</text>
+<text class="mv3-th" x="355" y="231" text-anchor="middle">count</text>
+<text class="mv3-td" x="75" y="266" text-anchor="middle">도서</text>
+<text class="mv3-td" x="170" y="266" text-anchor="middle">05-01</text>
+<text class="mv3-td" x="265" y="266" text-anchor="middle">3000</text>
+<text class="mv3-td" x="355" y="266" text-anchor="middle">1</text>
+<text class="mv3-td" x="75" y="300" text-anchor="middle">도서</text>
+<text class="mv3-td" x="170" y="300" text-anchor="middle">05-02</text>
+<text class="mv3-td" x="265" y="300" text-anchor="middle">7000</text>
+<text class="mv3-td" x="355" y="300" text-anchor="middle">3</text>
+<path class="mv3-ar" d="M210,310 V346" marker-end="url(#mv3Arrow)"/>
+<!-- 머지 후 -->
+<text class="mv3-h" x="20" y="380">머지 후</text>
+<rect class="mv3-hd" x="25" y="392" width="370" height="34"/>
+<rect class="mv3-sc" x="25" y="426" width="370" height="34"/>
+<path class="mv3-gl" d="M25,426 H395 M25,460 H395 M25,494 H395 M125,392 V528 M215,392 V528 M315,392 V528"/>
+<rect class="mv3-bx" x="25" y="392" width="370" height="136" rx="4"/>
+<text class="mv3-th" x="75" y="415" text-anchor="middle">category</text>
+<text class="mv3-th" x="170" y="415" text-anchor="middle">date</text>
+<text class="mv3-th" x="265" y="415" text-anchor="middle">revenue</text>
+<text class="mv3-th" x="355" y="415" text-anchor="middle">count</text>
+<text class="mv3-td" x="75" y="450" text-anchor="middle">도서</text>
+<text class="mv3-td" x="170" y="450" text-anchor="middle">05-01</text>
+<text class="mv3-td" x="265" y="450" text-anchor="middle">8000</text>
+<text class="mv3-td" x="355" y="450" text-anchor="middle">3</text>
+<text class="mv3-td" x="75" y="484" text-anchor="middle">도서</text>
+<text class="mv3-td" x="170" y="484" text-anchor="middle">05-02</text>
+<text class="mv3-td" x="265" y="484" text-anchor="middle">7000</text>
+<text class="mv3-td" x="355" y="484" text-anchor="middle">3</text>
+<text class="mv3-td" x="75" y="518" text-anchor="middle">의류</text>
+<text class="mv3-td" x="170" y="518" text-anchor="middle">05-01</text>
+<text class="mv3-td" x="265" y="518" text-anchor="middle">8000</text>
+<text class="mv3-td" x="355" y="518" text-anchor="middle">3</text>
+<text class="mv3-ok" x="403" y="450">합산</text>
+<text class="mv3-m" x="240" y="558" text-anchor="middle">revenue 5000+3000=8000, count 2+1=3</text>
+</svg>
+</div>
 
 (도서, 05-01) 키가 두 Part에 존재했지만, 머지 후에는 revenue 5000+3000=8000, count 2+1=3으로 합산된 하나의 행만 남습니다.
 
@@ -183,12 +365,15 @@ FROM daily_sales
 GROUP BY category, sale_date;
 ```
 
-"SummingMergeTree인데 왜 `sum()`을 또 써야 하지?"라고 생각할 수 있습니다. SummingMergeTree의 가치는 `sum()` 자체를 없애는 것이 아니라, **집계 대상 행 수를 극적으로 줄이는 것**에 있습니다. 원본 수억 건에서 GROUP BY하던 것을 수백~수천 행에서 GROUP BY하게 되니, 쿼리 성능이 수천 배 향상됩니다.
+"SummingMergeTree인데 왜 `sum()`을 또 써야 하지?"라고 생각할 수 있습니다. SummingMergeTree의 가치는 `sum()` 자체를 없애는 것이 아니라, **집계 대상 행 수를 극적으로 줄이는 것**에 있습니다. 원본 수억 건에서 GROUP BY하던 것을 수백~수천 행에서 GROUP BY하게 되니, 읽어야 할 데이터량이 그만큼 줄어듭니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  SummingMergeTree는 단순 합산(sum)만 지원합니다. 평균(avg), 유니크 카운트(uniq), 퍼센타일 같은 집계는 합산으로 구할 수 없습니다. 임의의 집계 함수가 필요하면 AggregatingMergeTree를 사용합니다.
-</div>
+:::info
+
+**참고**
+
+SummingMergeTree는 단순 합산(sum)만 지원합니다. 평균(avg), 유니크 카운트(uniq), 퍼센타일 같은 집계는 합산으로 구할 수 없습니다. 임의의 집계 함수가 필요하면 AggregatingMergeTree를 사용합니다.
+
+:::
 
 ## AggregatingMergeTree
 
@@ -248,6 +433,50 @@ GROUP BY event_date, category;
 
 `uniqMerge`는 저장된 중간 상태들을 병합해서 최종 결과를 도출합니다. 머지가 일어나면 같은 ORDER BY 키의 중간 상태끼리 자동으로 병합되므로, 시간이 지날수록 행 수가 줄어들면서도 정확도는 유지됩니다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 405" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="AggregatingMergeTree는 INSERT 시 uniqState로 중간 상태를 저장하고, 머지 시점에 같은 키의 상태끼리 병합하며, SELECT 시 uniqMerge로 최종 값을 도출한다는 흐름 그림">
+<style>
+.mv4-t{fill:var(--text,#1c1917);font-size:20px}
+.mv4-s{fill:var(--text,#1c1917);font-size:19px}
+.mv4-m{fill:var(--text-muted,#78716c);font-size:18px}
+.mv4-p{fill:var(--primary,#0d9488);font-size:18px;font-weight:700}
+.mv4-b{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv4-e{fill:var(--bg,#fafaf8);stroke:var(--primary,#0d9488);stroke-width:1.5}
+.mv4-i{fill:var(--bg-muted,#eeecea);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv4-l{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+</style>
+<defs>
+<marker id="mv4Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+</marker>
+</defs>
+<rect class="mv4-b" x="60" y="20" width="360" height="52" rx="4"/>
+<text class="mv4-t" x="240" y="53" text-anchor="middle">원본 이벤트 행 (orders)</text>
+<path class="mv4-l" d="M240,72 V106" marker-end="url(#mv4Arrow)"/>
+<text class="mv4-m" x="252" y="96">INSERT: uniqState()</text>
+<!-- AggregatingMergeTree 테이블 -->
+<rect class="mv4-e" x="30" y="110" width="420" height="185" rx="4"/>
+<text class="mv4-p" x="240" y="136" text-anchor="middle">AggregatingMergeTree 테이블</text>
+<text class="mv4-m" x="44" y="178">머지 전</text>
+<rect class="mv4-i" x="125" y="150" width="145" height="44" rx="4"/>
+<text class="mv4-s" x="197" y="178" text-anchor="middle">uniq 상태 A</text>
+<rect class="mv4-i" x="290" y="150" width="145" height="44" rx="4"/>
+<text class="mv4-s" x="362" y="178" text-anchor="middle">uniq 상태 B</text>
+<path class="mv4-l" d="M240,200 V228" marker-end="url(#mv4Arrow)"/>
+<text class="mv4-m" x="256" y="220">상태 병합</text>
+<text class="mv4-m" x="44" y="264">머지 후</text>
+<rect class="mv4-i" x="125" y="236" width="145" height="44" rx="4"/>
+<text class="mv4-s" x="197" y="264" text-anchor="middle">병합된 상태</text>
+<path class="mv4-l" d="M240,295 V331" marker-end="url(#mv4Arrow)"/>
+<text class="mv4-m" x="252" y="320">SELECT: uniqMerge()</text>
+<rect class="mv4-b" x="60" y="335" width="360" height="52" rx="4"/>
+<text class="mv4-t" x="240" y="368" text-anchor="middle">최종 값 (unique_users)</text>
+</svg>
+</div>
+
 ### 직접 INSERT vs Materialized View
 
 위 예시처럼 직접 `INSERT INTO ... SELECT ... -State()` 패턴을 쓸 수도 있지만, 실무에서는 거의 항상 **Materialized View**를 통해 자동화합니다. 원본 테이블에 INSERT가 들어올 때마다 Materialized View가 자동으로 `-State` 변환을 실행하고 AggregatingMergeTree 테이블에 넣어줍니다.
@@ -266,10 +495,13 @@ AggregatingMergeTree + Materialized View 조합은 ClickHouse 실시간 집계�
 
 MergeTree는 항상 정확하지만 매번 전체 데이터를 읽어야 합니다. SummingMergeTree는 단순 합산을 자동화하고, AggregatingMergeTree는 임의의 집계 함수를 지원합니다. 복잡도 대비 유연성의 트레이드오프입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  <code>AggregateFunction</code> 타입 컬럼은 바이너리 상태를 저장하므로 <code>SELECT *</code>로 직접 읽으면 깨진 문자가 출력됩니다. 반드시 <code>-Merge</code> 콤비네이터(<code>uniqMerge</code>, <code>sumMerge</code>, <code>avgMerge</code> 등)를 통해 읽어야 합니다.
-</div>
+:::info
+
+**참고**
+
+`AggregateFunction` 타입 컬럼은 바이너리 상태를 저장하므로 `SELECT *`로 직접 읽으면 깨진 문자가 출력됩니다. 반드시 `-Merge` 콤비네이터(`uniqMerge`, `sumMerge`, `avgMerge` 등)를 통해 읽어야 합니다.
+
+:::
 
 ## CollapsingMergeTree
 
@@ -300,21 +532,82 @@ ORDER BY order_id;
 - `sign = 1`: 이 행은 유효한 상태입니다 (state row)
 - `sign = -1`: 이 행은 이전 상태를 취소합니다 (cancel row)
 
-상태를 변경할 때는 두 행을 INSERT합니다.
+INSERT 흐름은 이렇습니다.
 
-```
-1) 초기 INSERT (주문 접수):
-   (order_id=1, status='접수', price=10000, sign=+1)
-
-2) 상태 변경 (접수 → 배송중):
-   (order_id=1, status='접수', price=10000, sign=-1)   ← 이전 상태 취소
-   (order_id=1, status='배송중', price=10000, sign=+1)  ← 새 상태 삽입
-
-3) 머지 후:
-   (order_id=1, status='배송중', price=10000, sign=+1)  ← +1/-1 쌍 상쇄
-```
+- 주문이 접수되면 `(order_id=1, status='접수', price=10000, sign=+1)` 한 행을 넣습니다.
+- 접수에서 배송중으로 바뀌면 두 행을 함께 넣습니다. 이전 상태의 정확한 복사본에 `sign=-1`을 붙인 `(order_id=1, status='접수', price=10000, sign=-1)`로 이전 상태를 취소하고, `(order_id=1, status='배송중', price=10000, sign=+1)`로 새 상태를 삽입합니다.
 
 머지할 때 같은 ORDER BY 키의 `+1`과 `-1` 쌍이 만나면 둘 다 삭제됩니다. 결과적으로 최종 상태만 남습니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="CollapsingMergeTree 머지 전에는 접수 상태의 sign 플러스1 행과 마이너스1 행, 배송중 행 세 개가 남아 있지만, 머지 후에는 접수 쌍이 상쇄되어 배송중 행 하나만 남는다는 비교 그림">
+<style>
+.mv5-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.mv5-m{fill:var(--text-muted,#78716c);font-size:18px}
+.mv5-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv5-td{fill:var(--text,#1c1917);font-size:19px}
+.mv5-wn{fill:var(--text-warn,#d97706);font-size:17px}
+.mv5-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.mv5-hd{fill:var(--bg-muted,#eeecea)}
+.mv5-hi{fill:var(--bg-warn,#fffbeb)}
+.mv5-sc{fill:var(--bg-success,#f0fdf4)}
+.mv5-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
+.mv5-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv5-br{stroke:var(--text-warn,#d97706);stroke-width:1.5;fill:none}
+</style>
+<defs>
+<marker id="mv5Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+</marker>
+</defs>
+<!-- 머지 전 -->
+<text class="mv5-h" x="20" y="26">머지 전</text>
+<text class="mv5-m" x="102" y="26">(상태 변경 직후)</text>
+<rect class="mv5-hd" x="25" y="44" width="365" height="34"/>
+<rect class="mv5-hi" x="25" y="78" width="365" height="68"/>
+<rect class="mv5-sc" x="25" y="146" width="365" height="34"/>
+<path class="mv5-gl" d="M25,78 H390 M25,112 H390 M25,146 H390 M120,44 V180 M220,44 V180 M320,44 V180"/>
+<rect class="mv5-bx" x="25" y="44" width="365" height="136" rx="4"/>
+<text class="mv5-th" x="72" y="67" text-anchor="middle">order_id</text>
+<text class="mv5-th" x="170" y="67" text-anchor="middle">status</text>
+<text class="mv5-th" x="270" y="67" text-anchor="middle">price</text>
+<text class="mv5-th" x="355" y="67" text-anchor="middle">sign</text>
+<text class="mv5-td" x="72" y="102" text-anchor="middle">1</text>
+<text class="mv5-td" x="170" y="102" text-anchor="middle">접수</text>
+<text class="mv5-td" x="270" y="102" text-anchor="middle">10000</text>
+<text class="mv5-td" x="355" y="102" text-anchor="middle">+1</text>
+<text class="mv5-td" x="72" y="136" text-anchor="middle">1</text>
+<text class="mv5-td" x="170" y="136" text-anchor="middle">접수</text>
+<text class="mv5-td" x="270" y="136" text-anchor="middle">10000</text>
+<text class="mv5-td" x="355" y="136" text-anchor="middle">-1</text>
+<text class="mv5-td" x="72" y="170" text-anchor="middle">1</text>
+<text class="mv5-td" x="170" y="170" text-anchor="middle">배송중</text>
+<text class="mv5-td" x="270" y="170" text-anchor="middle">10000</text>
+<text class="mv5-td" x="355" y="170" text-anchor="middle">+1</text>
+<path class="mv5-br" d="M396,80 H404 V144 H396"/>
+<path class="mv5-br" d="M404,112 H410"/>
+<text class="mv5-wn" x="414" y="118">상쇄</text>
+<path class="mv5-ar" d="M207,180 V216" marker-end="url(#mv5Arrow)"/>
+<!-- 머지 후 -->
+<text class="mv5-h" x="20" y="250">머지 후</text>
+<rect class="mv5-hd" x="25" y="264" width="365" height="34"/>
+<rect class="mv5-sc" x="25" y="298" width="365" height="34"/>
+<path class="mv5-gl" d="M25,298 H390 M120,264 V332 M220,264 V332 M320,264 V332"/>
+<rect class="mv5-bx" x="25" y="264" width="365" height="68" rx="4"/>
+<text class="mv5-th" x="72" y="287" text-anchor="middle">order_id</text>
+<text class="mv5-th" x="170" y="287" text-anchor="middle">status</text>
+<text class="mv5-th" x="270" y="287" text-anchor="middle">price</text>
+<text class="mv5-th" x="355" y="287" text-anchor="middle">sign</text>
+<text class="mv5-td" x="72" y="322" text-anchor="middle">1</text>
+<text class="mv5-td" x="170" y="322" text-anchor="middle">배송중</text>
+<text class="mv5-td" x="270" y="322" text-anchor="middle">10000</text>
+<text class="mv5-td" x="355" y="322" text-anchor="middle">+1</text>
+<text class="mv5-m" x="240" y="368" text-anchor="middle">+1/-1 쌍이 사라지고 최종 상태만 남습니다</text>
+</svg>
+</div>
 
 ### VersionedCollapsingMergeTree
 
@@ -354,10 +647,13 @@ HAVING sum(sign) > 0;
 
 `sum(sign) > 0`은 "취소되지 않은 행만"이라는 뜻입니다. `sum(price * sign)`은 유효한 행의 price 합계입니다. FINAL 키워드도 사용할 수 있지만, 대규모 데이터에서는 GROUP BY 패턴이 더 유연합니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  CollapsingMergeTree를 사용하려면 상태를 취소할 때 "이전 상태의 정확한 복사본"을 <code>sign=-1</code>과 함께 INSERT해야 합니다. 애플리케이션이 이전 상태를 알지 못하면 cancel row를 만들 수 없습니다. 이전 상태를 추적하기 어려운 시스템에서는 ReplacingMergeTree가 더 적합합니다.
-</div>
+:::warning
+
+**주의**
+
+CollapsingMergeTree를 사용하려면 상태를 취소할 때 "이전 상태의 정확한 복사본"을 `sign=-1`과 함께 INSERT해야 합니다. 애플리케이션이 이전 상태를 알지 못하면 cancel row를 만들 수 없습니다. 이전 상태를 추적하기 어려운 시스템에서는 ReplacingMergeTree가 더 적합합니다.
+
+:::
 
 ## 변종 엔진 선택 가이드
 
@@ -419,7 +715,7 @@ INSERT INTO orders_replacing VALUES
 SELECT * FROM orders_replacing ORDER BY order_id, ver;
 ```
 
-```
+```text
 ┌─order_id─┬─ver─┬─status──┬─price─┐
 │        1 │   1 │ 접수    │ 10000 │
 │        1 │   2 │ 배송중  │ 10000 │
@@ -435,7 +731,7 @@ SELECT * FROM orders_replacing ORDER BY order_id, ver;
 SELECT * FROM orders_replacing FINAL ORDER BY order_id;
 ```
 
-```
+```text
 ┌─order_id─┬─ver─┬─status──┬─price─┐
 │        1 │   2 │ 배송중  │ 10000 │
 │        2 │   1 │ 접수    │ 20000 │
@@ -451,7 +747,7 @@ OPTIMIZE TABLE orders_replacing FINAL;
 SELECT * FROM orders_replacing ORDER BY order_id;
 ```
 
-```
+```text
 ┌─order_id─┬─ver─┬─status──┬─price─┐
 │        1 │   2 │ 배송중  │ 10000 │
 │        2 │   1 │ 접수    │ 20000 │
@@ -492,7 +788,7 @@ INSERT INTO daily_sales VALUES ('전자제품', '2026-05-01', 80000, 3);
 SELECT * FROM daily_sales;
 ```
 
-```
+```text
 ┌─category──┬──sale_date─┬─revenue─┬─order_count─┐
 │ 전자제품  │ 2026-05-01 │   50000 │           2 │
 │ 전자제품  │ 2026-05-01 │   30000 │           1 │
@@ -512,7 +808,7 @@ FROM daily_sales
 GROUP BY category, sale_date;
 ```
 
-```
+```text
 ┌─category──┬──sale_date─┬─total_revenue─┬─total_orders─┐
 │ 전자제품  │ 2026-05-01 │        160000 │            6 │
 └───────────┴────────────┴───────────────┴──────────────┘
@@ -525,7 +821,7 @@ OPTIMIZE TABLE daily_sales FINAL;
 SELECT * FROM daily_sales;
 ```
 
-```
+```text
 ┌─category──┬──sale_date─┬─revenue─┬─order_count─┐
 │ 전자제품  │ 2026-05-01 │  160000 │           6 │
 └───────────┴────────────┴─────────┴─────────────┘
@@ -567,7 +863,7 @@ INSERT INTO orders_collapsing VALUES
 SELECT * FROM orders_collapsing ORDER BY order_id, sign;
 ```
 
-```
+```text
 ┌─order_id─┬─status──┬─price─┬─sign─┐
 │        1 │ 접수    │ 10000 │   -1 │
 │        1 │ 접수    │ 10000 │    1 │
@@ -586,7 +882,7 @@ GROUP BY order_id
 HAVING sum(sign) > 0;
 ```
 
-```
+```text
 ┌─order_id─┬─effective_price─┐
 │        1 │           10000 │
 └──────────┴─────────────────┘
@@ -599,7 +895,7 @@ OPTIMIZE TABLE orders_collapsing FINAL;
 SELECT * FROM orders_collapsing;
 ```
 
-```
+```text
 ┌─order_id─┬─status──┬─price─┬─sign─┐
 │        1 │ 배송중  │ 10000 │    1 │
 └──────────┴─────────┴───────┴──────┘
@@ -635,7 +931,7 @@ ORDER BY를 잘못 잡으면 엔진이 전혀 다른 행을 "같은 키"로 인�
 
 ReplacingMergeTree에서는 `SELECT count() FROM table`과 `SELECT count() FROM table FINAL`의 차이를 비교하면 현재 중복 비율을 추정할 수 있습니다. 차이가 크다면 머지가 충분히 진행되지 않은 것입니다.
 
-[지난 글](/clickhouse/merge-and-mutation/)에서 다뤘듯이 `OPTIMIZE TABLE FINAL`은 프로덕션에서 정기적으로 실행하면 안 됩니다. 변종 엔진이라고 해서 예외가 아닙니다. 백그라운드 머지 스케줄러가 최적의 시점에 머지를 수행하도록 맡기는 것이 올바른 운영 방식입니다.
+[`OPTIMIZE TABLE FINAL`](/clickhouse/merge-and-mutation/)은 강제 머지를 유발하므로 프로덕션에서 정기적으로 실행하면 안 됩니다. 변종 엔진이라고 해서 예외가 아닙니다. 백그라운드 머지 스케줄러가 최적의 시점에 머지를 수행하도록 맡기는 것이 올바른 운영 방식입니다.
 
 ## 마치며
 
