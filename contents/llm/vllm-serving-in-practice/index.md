@@ -19,35 +19,61 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
 
 `vllm serve google/gemma-4-31B-it --tensor-parallel-size 2`를 실행하면 프로세스 4개가 뜹니다. API 서버 1개, EngineCore 1개, GPU 워커 2개(GPU당 1개)입니다.
 
-```
- HTTP 요청/응답
-      │
-┌─────▼───────────────────────────┐
-│ API 서버 프로세스                  │  요청 수신, 토큰화,
-│ (APIServer)                     │  디토큰화, 스트리밍
-└─────┬───────────────────────────┘
-      │ ZMQ
-┌─────▼───────────────────────────┐
-│ EngineCore 프로세스               │  스케줄러 busy loop,
-│ (EngineCore)                    │  KV 캐시 블록 관리
-└─────┬───────────────────────────┘
-      │ shared memory 브로드캐스트
-┌─────▼─────────┐  ┌──────────────┐
-│ 워커 프로세스     │  │ 워커 프로세스    │  GPU당 1개,
-│ (Worker_TP0)   │  │ (Worker_TP1)  │  forward 실행
-└───────────────┘  └──────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 460 268" style="width: 100%; height: auto; max-width: 460px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="vLLM V1 엔진의 프로세스 구조. HTTP 요청이 API 서버 프로세스로 들어가고, ZMQ로 EngineCore 프로세스에 전달된 뒤, shared memory 브로드캐스트로 GPU마다 하나씩 붙은 워커 프로세스로 내려갑니다.">
+  <style>
+    .vp1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .vp1-label { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .vp1-sub   { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
+    .vp1-note  { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: start; }
+    .vp1-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#vp1Arrow); }
+    .vp1-line  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="vp1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <text x="230" y="16" class="vp1-sub">HTTP 요청 / 응답</text>
+  <path d="M230,24 L230,34" class="vp1-arrow"/>
+  <rect x="60" y="36" width="340" height="56" rx="8" class="vp1-box"/>
+  <text x="230" y="60" class="vp1-label">API 서버 (APIServer)</text>
+  <text x="230" y="80" class="vp1-sub">요청 수신, 토큰화, 디토큰화, 스트리밍</text>
+  <path d="M230,92 L230,116" class="vp1-arrow"/>
+  <text x="240" y="109" class="vp1-note">ZMQ</text>
+  <rect x="60" y="118" width="340" height="56" rx="8" class="vp1-box"/>
+  <text x="230" y="142" class="vp1-label">EngineCore</text>
+  <text x="230" y="162" class="vp1-sub">스케줄러 busy loop, KV Cache 블록 관리</text>
+  <path d="M230,174 L230,192" class="vp1-line"/>
+  <path d="M140,192 L320,192" class="vp1-line"/>
+  <path d="M140,192 L140,206" class="vp1-arrow"/>
+  <path d="M320,192 L320,206" class="vp1-arrow"/>
+  <text x="240" y="188" class="vp1-note">shared memory</text>
+  <rect x="60" y="208" width="160" height="52" rx="8" class="vp1-box"/>
+  <text x="140" y="230" class="vp1-label">Worker_TP0</text>
+  <text x="140" y="249" class="vp1-sub">GPU 0, forward 실행</text>
+  <rect x="240" y="208" width="160" height="52" rx="8" class="vp1-box"/>
+  <text x="320" y="230" class="vp1-label">Worker_TP1</text>
+  <text x="320" y="249" class="vp1-sub">GPU 1, forward 실행</text>
+</svg>
+</div>
 
-각자의 역할이 뚜렷합니다. API 서버는 HTTP 요청을 받아 프롬프트를 토큰으로 바꾸고, 생성된 토큰을 다시 텍스트로 바꿔 스트리밍합니다. EngineCore는 스케줄러가 도는 곳입니다. 매 스텝 어떤 요청의 어떤 토큰을 배치에 넣을지 결정하고 KV 캐시 블록을 관리하는 busy loop를 돌립니다. 워커는 GPU마다 하나씩 붙어서 가중치를 올리고 forward를 실행합니다.
+각자의 역할이 뚜렷합니다. API 서버는 HTTP 요청을 받아 프롬프트를 토큰으로 바꾸고, 생성된 토큰을 다시 텍스트로 바꿔 스트리밍합니다. EngineCore는 스케줄러가 도는 곳입니다. 매 스텝 어떤 요청의 어떤 토큰을 배치에 넣을지 결정하고 KV Cache 블록을 관리하는 busy loop를 돌립니다. 워커는 GPU마다 하나씩 붙어서 가중치를 올리고 forward를 실행합니다.
 
 이렇게 나눈 이유가 이 구조의 핵심입니다. 토큰화, 디토큰화, HTTP 스트리밍은 전부 CPU 작업입니다. 이것들이 스케줄링 루프와 같은 프로세스에 있으면, 긴 프롬프트를 토큰화하는 동안 GPU에 일감을 주는 루프가 멈추고 GPU는 그 시간만큼 놉니다. V1은 CPU 작업을 API 서버 프로세스로 밀어내서 GPU 실행 루프와 겹쳐 돌아가게 만들었습니다. EngineCore는 오직 스케줄링과 실행만 합니다.
 
 요청 하나의 생애주기를 따라가면 이렇습니다. HTTP로 들어온 요청을 API 서버가 토큰화해서 ZMQ로 EngineCore에 넘기고, 스케줄러가 배치에 실어 워커에 브로드캐스트하고, 워커가 forward로 다음 토큰을 만들면 결과가 역순으로 API 서버까지 돌아와 디토큰화된 뒤 클라이언트로 스트리밍됩니다. 같은 노드 안에서 API 서버와 EngineCore는 ZMQ(Unix 소켓)로, EngineCore와 워커들은 shared memory로 통신합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 로그에서 확인하기</strong><br>
-  vLLM 로그는 줄마다 <code>(APIServer pid=...)</code>, <code>(EngineCore pid=...)</code>, <code>(Worker_TP0 pid=...)</code> 프리픽스가 붙습니다. 어느 프로세스가 낸 로그인지 구분되므로, 위 구조를 로그에서 그대로 확인할 수 있습니다.
-</div>
+:::info
+
+**로그에서 확인하기**
+
+vLLM 로그는 줄마다 `(APIServer pid=...)`, `(EngineCore pid=...)`, `(Worker_TP0 pid=...)` 프리픽스가 붙습니다. 어느 프로세스가 낸 로그인지 구분되므로, 위 구조를 로그에서 그대로 확인할 수 있습니다.
+
+:::
 
 <br>
 
@@ -55,25 +81,46 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
 
 vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니다. 그 비율이 `--gpu-memory-utilization`이고, 기본값은 0.92입니다. 여기서 중요한 것은 이 비율이 **전체 메모리 기준**이라는 점입니다. 다른 프로세스가 GPU를 쓰고 있으면 그만큼 양보하는 것이 아니라, 빈 메모리가 예약량보다 적으면 시작 자체가 실패합니다. 한 GPU에 vLLM 인스턴스 두 개를 올리려면 각각 0.45처럼 합이 1 아래가 되게 나눠 지정해야 합니다.
 
-예약한 메모리를 어디에 쓰는지는 시작 순서를 보면 드러납니다. 가중치를 올린 다음, vLLM은 최대 크기 배치로 더미 forward를 한 번 돌려서 활성값이 정점에서 얼마나 먹는지, NCCL 버퍼 같은 PyTorch 밖 메모리가 얼마인지, CUDA graph가 얼마를 쓸지 측정하고 추정합니다. 그리고 예산에서 이것들을 뺀 **나머지 전부를 KV 캐시 풀로** 만듭니다.
+예약한 메모리를 어디에 쓰는지는 시작 순서를 보면 드러납니다. 가중치를 올린 다음, vLLM은 최대 크기 배치로 더미 forward를 한 번 돌려서 활성값이 정점에서 얼마나 먹는지, NCCL 버퍼 같은 PyTorch 밖 메모리가 얼마인지, CUDA graph가 얼마를 쓸지 측정하고 추정합니다. 그리고 예산에서 이것들을 뺀 **나머지 전부를 KV Cache 풀로** 만듭니다.
 
-```
-80GB GPU × 0.92 = 73.6GB 예산
-┌──────────────┬─────────────────┬──────────────────────┐
-│ 모델 가중치     │ 활성값 피크        │ KV 캐시 풀              │
-│ (고정)         │ + CUDA graph    │ (남는 것 전부)          │
-└──────────────┴─────────────────┴──────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 200" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="80GB GPU에 gpu_memory_utilization 0.92를 적용한 73.6GB 예산을 모델 가중치, 활성값 피크와 CUDA graph, KV Cache 풀 세 몫으로 나눈 가로 막대. KV Cache 풀은 앞의 두 몫을 뺀 나머지 전부를 차지합니다.">
+  <style>
+    .vm1-title  { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .vm1-fixed  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .vm1-act    { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+    .vm1-kv     { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .vm1-in     { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
+    .vm1-legend { fill: var(--text, #1c1917); font-size: 13px; text-anchor: start; }
+  </style>
+  <text x="240" y="22" class="vm1-title">80GB GPU × 0.92 = 73.6GB 예산</text>
+  <rect x="20" y="38" width="150" height="42" rx="4" class="vm1-fixed"/>
+  <text x="95" y="64" class="vm1-in">가중치</text>
+  <rect x="170" y="38" width="90" height="42" class="vm1-act"/>
+  <text x="215" y="64" class="vm1-in">활성값</text>
+  <rect x="260" y="38" width="200" height="42" rx="4" class="vm1-kv"/>
+  <text x="360" y="64" class="vm1-in" fill="#ffffff">KV Cache 풀</text>
+  <rect x="60" y="106" width="14" height="14" rx="3" class="vm1-fixed"/>
+  <text x="84" y="118" class="vm1-legend">모델 가중치 (고정)</text>
+  <rect x="60" y="134" width="14" height="14" rx="3" class="vm1-act"/>
+  <text x="84" y="146" class="vm1-legend">활성값 피크 + CUDA graph (시작 시 추정)</text>
+  <rect x="60" y="162" width="14" height="14" rx="3" class="vm1-kv"/>
+  <text x="84" y="174" class="vm1-legend">KV Cache 풀 (남는 것 전부)</text>
+</svg>
+</div>
 
-nvidia-smi가 시작부터 90% 넘게 차 있는 이유가 이것입니다. 요청이 많아지면 메모리를 늘려가는 것이 아니라, 쓸 수 있는 메모리를 미리 전부 KV 캐시 풀로 확보해두고 그 안에서 블록을 할당합니다. 시작 로그에 이 계산의 결과가 그대로 찍힙니다.
+nvidia-smi가 시작부터 90% 넘게 차 있는 이유가 이것입니다. 요청이 많아지면 메모리를 늘려가는 것이 아니라, 쓸 수 있는 메모리를 미리 전부 KV Cache 풀로 확보해두고 그 안에서 블록을 할당합니다. 시작 로그에 이 계산의 결과가 그대로 찍힙니다.
 
-```
+```text
 Available KV cache memory: 38.21 GiB
 GPU KV cache size: 613,024 tokens
 Maximum concurrency for 32,768 tokens per request: 18.71x
 ```
 
-숫자는 환경마다 다르지만 세 줄의 의미는 같습니다. 첫 줄이 예산에서 가중치와 활성값을 빼고 남은 KV 몫, 둘째 줄이 그 메모리를 모델의 토큰당 KV 크기로 나눠 토큰 단위로 환산한 KV 캐시 풀의 총용량입니다(이 예시는 토큰당 약 65KB인 모델입니다). 셋째 줄의 최대 동시성은 풀 총용량을 `max_model_len` 길이 요청 하나가 차지할 토큰 수로 나눈 값으로, 모든 요청이 최대 길이까지 갔을 때도 18개 요청을 동시에 감당한다는 뜻입니다.
+숫자는 환경마다 다르지만 세 줄의 의미는 같습니다. 첫 줄이 예산에서 가중치와 활성값을 빼고 남은 KV 몫, 둘째 줄이 그 메모리를 모델의 토큰당 KV 크기로 나눠 토큰 단위로 환산한 KV Cache 풀의 총용량입니다(이 예시는 토큰당 약 65KB인 모델입니다). 셋째 줄의 최대 동시성은 풀 총용량을 `max_model_len` 길이 요청 하나가 차지할 토큰 수로 나눈 값으로, 모든 요청이 최대 길이까지 갔을 때도 18개 요청을 동시에 감당한다는 뜻입니다.
 
 기본값을 1.0으로 올리지 않는 이유도 이 구조에서 나옵니다. 더미 forward로 재는 활성값과 CUDA graph 메모리는 추정치라서 실제 운영에서 조금씩 어긋날 수 있고, GPU에는 드라이버 등 기본 점유도 있습니다. 여유 없이 꽉 채우면 운영 중 OOM으로 돌아옵니다. KV가 모자라면 vLLM은 진행 중인 요청을 잠시 내리고 나중에 다시 계산하는 preemption으로 버티는데, 이 preemption 로그가 잦다는 신호가 보일 때 0.95까지 올려보는 식으로, 기본값에서 출발해 조정하는 인자입니다.
 
@@ -83,7 +130,7 @@ Maximum concurrency for 32,768 tokens per request: 18.71x
 
 `--max-model-len`은 요청 하나가 가질 수 있는 최대 길이(프롬프트 + 출력)입니다. 지정하지 않으면 모델 설정의 컨텍스트 길이를 그대로 씁니다. Gemma 4 31B라면 256K입니다.
 
-이 인자가 실제로 하는 일은 두 가지입니다. 우선 이 길이를 넘는 요청은 API에서 거부됩니다. 그리고 시작할 때 vLLM은 `max_model_len` 길이의 요청 **하나**가 KV 캐시 풀에 들어가는지 검사합니다. 안 들어가면 "KV 캐시 메모리가 부족하니 gpu_memory_utilization을 올리거나 max_model_len을 줄이라"는 에러와 함께 시작이 실패합니다. 256K 컨텍스트 모델을 작은 GPU에 올릴 때 흔히 만나는 에러인데, 해법은 에러 메시지 그대로 `max_model_len`을 실제 워크로드 길이로 내리는 것입니다.
+이 인자가 실제로 하는 일은 두 가지입니다. 우선 이 길이를 넘는 요청은 API에서 거부됩니다. 그리고 시작할 때 vLLM은 `max_model_len` 길이의 요청 **하나**가 KV Cache 풀에 들어가는지 검사합니다. 안 들어가면 "KV Cache 메모리가 부족하니 gpu_memory_utilization을 올리거나 max_model_len을 줄이라"는 에러와 함께 시작이 실패합니다. 256K 컨텍스트 모델을 작은 GPU에 올릴 때 흔히 만나는 에러인데, 해법은 에러 메시지 그대로 `max_model_len`을 실제 워크로드 길이로 내리는 것입니다.
 
 내려야 하는 이유는 시작 검사 통과만이 아닙니다. 위에서 본 최대 동시성이 `max_model_len` 기준으로 계산되므로, 256K를 그대로 두면 실제로는 4K짜리 요청만 오는 서비스에서도 보장되는 동시성이 256K 요청 기준으로 계산됩니다. 요청당 KV는 PagedAttention이 실제 길이만큼만 블록을 할당하니 메모리 낭비는 없지만, 최악의 요청을 상정하는 기준선이 현실과 동떨어지게 됩니다. 워크로드의 p99 길이에 여유를 얹은 값으로 내려 잡는 것이 실전의 기본입니다.
 
@@ -95,34 +142,20 @@ V1 스케줄러는 매 스텝 토큰 예산(`max_num_batched_tokens`)을 채우�
 
 실전에서 알아둘 것은 이 둘의 기본값이 단일 숫자가 아니라 **하드웨어에 따라 다르다**는 점입니다.
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-  <thead>
-    <tr style="background: #f8f9fa;">
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">인자 (OpenAI 호환 서버 기준)</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">H100급 (메모리 70GiB 이상, A100 제외)</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">그 외 (A100 포함)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><code>max_num_seqs</code></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">1024</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">256</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><code>max_num_batched_tokens</code></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">8192</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">2048</td>
-    </tr>
-  </tbody>
-</table>
+| 인자 (OpenAI 호환 서버 기준) | H100급 (메모리 70GiB 이상, A100 제외) | 그 외 (A100 포함) |
+|---|---|---|
+| `max_num_seqs` | 1024 | 256 |
+| `max_num_batched_tokens` | 8192 | 2048 |
 
 A100이 예외로 빠져 있는 것은 큰 기본값이 A100에서 오히려 처리량을 떨어뜨렸기 때문입니다. 조정 방향은 명확합니다. KV가 부족해 preemption 로그가 잦으면 둘 중 하나를 낮추고, 큰 GPU에서 작은 모델의 처리량을 끌어올리려면 공식 문서 권장대로 `max_num_batched_tokens`를 8192보다 크게 잡습니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 낡은 자료 주의</strong><br>
-  인터넷의 vLLM 튜닝 자료 상당수가 V0 시절 이야기입니다. "<code>gpu_memory_utilization</code> 기본값 0.9"는 지금 0.92이고, <code>--enable-chunked-prefill</code>은 V1에서 기본 활성화라 넘길 필요가 없으며, <code>--swap-space</code>는 인자 자체가 사라졌습니다(V1은 KV가 부족하면 CPU로 옮기는 대신 preemption 후 재계산합니다).
-</div>
+:::warning
+
+**낡은 자료 주의**
+
+인터넷의 vLLM 튜닝 자료 상당수가 V0 시절 이야기입니다. "`gpu_memory_utilization` 기본값 0.9"는 지금 0.92이고, `--enable-chunked-prefill`은 V1에서 기본 활성화라 넘길 필요가 없으며, `--swap-space`는 인자 자체가 사라졌습니다(V1은 KV가 부족하면 CPU로 옮기는 대신 preemption 후 재계산합니다).
+
+:::
 
 <br>
 
@@ -136,10 +169,13 @@ V1의 기본 모드는 FULL_AND_PIECEWISE입니다. 매 스텝 모양이 일정�
 
 `--enforce-eager`는 이 캡처를 전부 생략하고 매 스텝 PyTorch eager 모드로 실행하는 스위치입니다. 기동이 훨씬 빨라지므로 모델을 자주 다시 띄우는 개발 루프에서 유용하고, 메모리가 정말 빠듯할 때 그래프 몫을 회수하는 최후 수단도 됩니다. 대신 decode 성능을 계속 손해 봅니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  개발 중에 붙인 <code>--enforce-eager</code>를 프로덕션 스크립트에 그대로 남기는 실수가 흔합니다. 서비스 배포에서는 떼는 것이 기본입니다. 매 decode 스텝에 launch 오버헤드를 계속 지불하게 됩니다.
-</div>
+:::warning
+
+**주의**
+
+개발 중에 붙인 `--enforce-eager`를 프로덕션 스크립트에 그대로 남기는 실수가 흔합니다. 서비스 배포에서는 떼는 것이 기본입니다. 매 decode 스텝에 launch 오버헤드를 계속 지불하게 됩니다.
+
+:::
 
 <br>
 
@@ -175,10 +211,13 @@ JSON만 받아야 하는 시스템에 LLM을 붙일 때, 프롬프트로 "JSON�
 
 정규식, 선택지, 임의 문법이 필요하면 vLLM 확장 파라미터 `structured_outputs`(json, regex, choice, grammar)를 씁니다. thinking을 켠 모델에서는 사고 과정에는 마스크를 걸지 않고 최종 답변부터 형식을 강제합니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 낡은 자료 주의</strong><br>
-  <code>guided_json</code>, <code>guided_regex</code>, <code>guided_choice</code>, <code>guided_grammar</code> 파라미터와 <code>--guided-decoding-backend</code> 플래그는 v0.12.0에서 제거되었습니다. 검색으로 찾은 예제가 이 이름을 쓰고 있다면 현재 버전에서는 동작하지 않습니다.
-</div>
+:::warning
+
+**낡은 자료 주의**
+
+`guided_json`, `guided_regex`, `guided_choice`, `guided_grammar` 파라미터와 `--guided-decoding-backend` 플래그는 v0.12.0에서 제거되었습니다. 검색으로 찾은 예제가 이 이름을 쓰고 있다면 현재 버전에서는 동작하지 않습니다.
+
+:::
 
 <br>
 
@@ -190,7 +229,7 @@ JSON만 받아야 하는 시스템에 LLM을 붙일 때, 프롬프트로 "JSON�
 
 그래서 통신량이 정확히 계산됩니다. 레이어당 forward에서 all-reduce 2회, attention 출력에서 한 번과 MLP 출력에서 한 번입니다. 레이어 60개 모델이면 토큰 하나를 decode할 때마다 all-reduce 120회가 GPU들 사이를 오갑니다. NVLink처럼 빠른 인터커넥트로 묶인 GPU에서는 이 비용이 감춰지지만, PCIe로만 연결된 GPU에서는 all-reduce가 병목이 되어 TP의 이득이 크게 깎입니다.
 
-KV 캐시에도 같은 분할이 적용됩니다. KV head도 TP 수만큼 나뉘므로 KV 캐시가 GPU마다 1/N씩 분산되고, 가중치 몫도 1/N로 줄어 있으니 GPU당 KV 여유가 이중으로 늘어납니다. 모델이 한 장에 들어가더라도 KV 풀을 키우려고 TP를 쓰는 경우가 있는 이유입니다. 다만 여러 query head가 KV head 하나를 공유하는 GQA 구조라 KV head가 몇 개 없는 모델에서, TP를 KV head 수보다 크게 잡으면, 같은 KV head를 여러 GPU가 복제해서 들고 가며 캐시 효율이 떨어집니다.
+KV Cache에도 같은 분할이 적용됩니다. KV head도 TP 수만큼 나뉘므로 KV Cache가 GPU마다 1/N씩 분산되고, 가중치 몫도 1/N로 줄어 있으니 GPU당 KV 여유가 이중으로 늘어납니다. 모델이 한 장에 들어가더라도 KV 풀을 키우려고 TP를 쓰는 경우가 있는 이유입니다. 다만 여러 query head가 KV head 하나를 공유하는 GQA 구조라 KV head가 몇 개 없는 모델에서, TP를 KV head 수보다 크게 잡으면, 같은 KV head를 여러 GPU가 복제해서 들고 가며 캐시 효율이 떨어집니다.
 
 TP 값을 고를 때는 제약도 있습니다. attention head 수가 TP로 나누어떨어지지 않으면 시작 시 에러가 나고, 양자화 모델은 가중치를 일정 크기의 group으로 묶어 압축하므로, 나눈 조각이 그 group 크기로 떨어져야 해서 가능한 TP 조합이 더 좁습니다.
 
