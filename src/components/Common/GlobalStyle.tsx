@@ -16,6 +16,14 @@ const defaultStyle = css`
     --border:       #e7e5e4;
     --border-muted: #f0edeb;
     --code-bg:      #1e1b18;
+
+    /* 다이어그램 시맨틱 토큰 */
+    --text-success: #16a34a;
+    --bg-success:   #f0fdf4;
+    --text-danger:  #dc2626;
+    --bg-danger:    #fef2f2;
+    --text-warn:    #d97706;
+    --bg-warn:      #fffbeb;
   }
 
   [data-theme='dark'] {
@@ -30,6 +38,14 @@ const defaultStyle = css`
     --border:       #292524;
     --border-muted: #221f1c;
     --code-bg:      #1e1b18;
+
+    /* 다이어그램 시맨틱 토큰 */
+    --text-success: #4ade80;
+    --bg-success:   rgba(34, 197, 94, 0.12);
+    --text-danger:  #f87171;
+    --bg-danger:    rgba(239, 68, 68, 0.12);
+    --text-warn:    #fbbf24;
+    --bg-warn:      rgba(245, 158, 11, 0.12);
   }
 
   /* ─── Reset ─────────────────────────────────────────────────────── */
