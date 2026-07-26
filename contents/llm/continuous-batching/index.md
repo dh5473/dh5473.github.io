@@ -22,18 +22,18 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
 문제는 **어떻게 묶느냐**입니다. 가장 단순한 방식은 요청 여러 개를 모아 배치로 만들고, 그 배치를 통째로 시작해서 통째로 끝내는 것입니다. 이걸 static batching이라고 합니다. 그런데 LLM 요청은 생성하는 토큰 수가 제각각입니다. 어떤 요청은 세 단어로 끝나고, 어떤 요청은 소설 한 편을 씁니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 226" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 278" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="static batching 간트 차트. 요청 A는 3스텝, B는 8스텝, D는 4스텝 만에 끝나지만 가장 긴 C가 14스텝을 채울 때까지 그 자리가 빈 슬롯으로 남아 낭비된다">
   <style>
-    .cb1-title { fill: var(--text, #1c1917); font-size: 15px; }
-    .cb1-name  { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .cb1-sub   { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb1-title { fill: var(--text, #1c1917); font-size: 22px; }
+    .cb1-name  { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
+    .cb1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb1-run   { fill: var(--primary, #0d9488); }
     .cb1-waste { fill: url(#cb1Hatch); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .cb1-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
-    .cb1-warn  { fill: var(--text-danger, #dc2626); font-size: 12px; text-anchor: middle; }
+    .cb1-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb1-warn  { fill: var(--text-danger, #dc2626); font-size: 17px; text-anchor: middle; }
   </style>
   <defs>
     <pattern id="cb1Hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -41,29 +41,34 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
       <line x1="0" y1="0" x2="0" y2="8" stroke="var(--text-danger, #dc2626)" stroke-width="1.4" opacity="0.4"/>
     </pattern>
   </defs>
-  <text x="10" y="18" class="cb1-title">Static batching</text>
-  <text x="448" y="18" class="cb1-sub" text-anchor="end">시간 →</text>
-  <text x="36" y="61" class="cb1-name">A</text>
-  <rect x="56" y="44" width="84" height="24" rx="3" class="cb1-run"/>
-  <text x="98" y="60" class="cb1-in">3스텝</text>
-  <rect x="140" y="44" width="308" height="24" rx="3" class="cb1-waste"/>
-  <text x="294" y="60" class="cb1-warn">빈 슬롯 = 낭비</text>
-  <text x="36" y="95" class="cb1-name">B</text>
-  <rect x="56" y="78" width="224" height="24" rx="3" class="cb1-run"/>
-  <text x="168" y="94" class="cb1-in">8스텝</text>
-  <rect x="280" y="78" width="168" height="24" rx="3" class="cb1-waste"/>
-  <text x="36" y="129" class="cb1-name">C</text>
-  <rect x="56" y="112" width="392" height="24" rx="3" class="cb1-run"/>
-  <text x="252" y="128" class="cb1-in">14스텝 (가장 김)</text>
-  <text x="36" y="163" class="cb1-name">D</text>
-  <rect x="56" y="146" width="112" height="24" rx="3" class="cb1-run"/>
-  <text x="112" y="162" class="cb1-in">4스텝</text>
-  <rect x="168" y="146" width="280" height="24" rx="3" class="cb1-waste"/>
-  <rect x="56" y="184" width="14" height="12" rx="2" class="cb1-run"/>
-  <text x="76" y="194" class="cb1-sub">실행 중</text>
-  <rect x="140" y="184" width="14" height="12" rx="2" class="cb1-waste"/>
-  <text x="160" y="194" class="cb1-sub">빈 슬롯 (낭비)</text>
-  <text x="56" y="216" class="cb1-sub">가장 긴 C가 끝나야 배치 전체가 반납된다</text>
+  <text x="10" y="24" class="cb1-title">Static batching</text>
+  <text x="470" y="24" class="cb1-sub" text-anchor="end">시간 →</text>
+  <!-- 요청 A -->
+  <text x="32" y="65" class="cb1-name">A</text>
+  <rect x="52" y="44" width="90" height="30" rx="4" class="cb1-run"/>
+  <text x="97" y="65" class="cb1-in">3스텝</text>
+  <rect x="142" y="44" width="328" height="30" rx="4" class="cb1-waste"/>
+  <text x="306" y="65" class="cb1-warn">빈 슬롯 = 낭비</text>
+  <!-- 요청 B -->
+  <text x="32" y="105" class="cb1-name">B</text>
+  <rect x="52" y="84" width="239" height="30" rx="4" class="cb1-run"/>
+  <text x="171" y="105" class="cb1-in">8스텝</text>
+  <rect x="291" y="84" width="179" height="30" rx="4" class="cb1-waste"/>
+  <!-- 요청 C -->
+  <text x="32" y="145" class="cb1-name">C</text>
+  <rect x="52" y="124" width="418" height="30" rx="4" class="cb1-run"/>
+  <text x="261" y="145" class="cb1-in">14스텝 (가장 김)</text>
+  <!-- 요청 D -->
+  <text x="32" y="185" class="cb1-name">D</text>
+  <rect x="52" y="164" width="119" height="30" rx="4" class="cb1-run"/>
+  <text x="111" y="185" class="cb1-in">4스텝</text>
+  <rect x="171" y="164" width="299" height="30" rx="4" class="cb1-waste"/>
+  <!-- 범례와 캡션 -->
+  <rect x="52" y="210" width="18" height="14" rx="2" class="cb1-run"/>
+  <text x="78" y="222" class="cb1-sub">실행 중</text>
+  <rect x="152" y="210" width="18" height="14" rx="2" class="cb1-waste"/>
+  <text x="178" y="222" class="cb1-sub">빈 슬롯 (낭비)</text>
+  <text x="10" y="258" class="cb1-sub">가장 긴 C가 끝나야 배치 전체가 반납된다</text>
 </svg>
 </div>
 
@@ -78,53 +83,59 @@ A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스�
 핵심은 배치 구성의 단위를 **요청 전체가 아니라 한 스텝(=한 번의 forward pass)**으로 낮춘 것입니다. 매 스텝이 끝나면 스케줄러가 배치를 다시 들여다봅니다. 답을 다 만든 요청은 그 즉시 배치에서 빠지고, 그 빈자리에 대기 중이던 요청이 바로 들어옵니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 410" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="continuous batching의 스텝별 배치 구성. 네 개의 슬롯이 매 스텝 다시 채워진다. A가 완료되면 E가, D가 완료되면 F가, B가 완료되면 G가 즉시 그 자리에 합류해 빈 슬롯이 생기지 않는다">
   <style>
-    .cb2-title { fill: var(--text, #1c1917); font-size: 15px; }
-    .cb2-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb2-title { fill: var(--text, #1c1917); font-size: 22px; }
+    .cb2-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb2-cell  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .cb2-new   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .cb2-req   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .cb2-nreq  { fill: var(--text-success, #16a34a); font-size: 15px; text-anchor: middle; }
-    .cb2-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb2-req   { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
+    .cb2-nreq  { fill: var(--text-success, #16a34a); font-size: 22px; text-anchor: middle; }
+    .cb2-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>
-  <text x="8" y="18" class="cb2-title">Continuous batching</text>
-  <text x="8" y="59" class="cb2-step">스텝 t</text>
-  <rect x="72" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="60" class="cb2-req">A</text>
-  <rect x="140" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="60" class="cb2-req">B</text>
-  <rect x="208" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="60" class="cb2-req">C</text>
-  <rect x="276" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="60" class="cb2-req">D</text>
-  <text x="8" y="95" class="cb2-step">스텝 t+1</text>
-  <rect x="72" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="96" class="cb2-req">A</text>
-  <rect x="140" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="96" class="cb2-req">B</text>
-  <rect x="208" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="96" class="cb2-req">C</text>
-  <rect x="276" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="96" class="cb2-req">D</text>
-  <text x="8" y="131" class="cb2-step">스텝 t+2</text>
-  <rect x="72" y="112" width="62" height="30" rx="5" class="cb2-new"/><text x="103" y="132" class="cb2-nreq">E</text>
-  <rect x="140" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="132" class="cb2-req">B</text>
-  <rect x="208" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="132" class="cb2-req">C</text>
-  <rect x="276" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="132" class="cb2-req">D</text>
-  <text x="348" y="132" class="cb2-note">A 완료, E 합류</text>
-  <text x="8" y="167" class="cb2-step">스텝 t+3</text>
-  <rect x="72" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="168" class="cb2-req">E</text>
-  <rect x="140" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="168" class="cb2-req">B</text>
-  <rect x="208" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="168" class="cb2-req">C</text>
-  <rect x="276" y="148" width="62" height="30" rx="5" class="cb2-new"/><text x="307" y="168" class="cb2-nreq">F</text>
-  <text x="348" y="168" class="cb2-note">D 완료, F 합류</text>
-  <text x="8" y="203" class="cb2-step">스텝 t+4</text>
-  <rect x="72" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="204" class="cb2-req">E</text>
-  <rect x="140" y="184" width="62" height="30" rx="5" class="cb2-new"/><text x="171" y="204" class="cb2-nreq">G</text>
-  <rect x="208" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="204" class="cb2-req">C</text>
-  <rect x="276" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="204" class="cb2-req">F</text>
-  <text x="348" y="204" class="cb2-note">B 완료, G 합류</text>
-  <rect x="72" y="228" width="14" height="12" rx="2" class="cb2-cell"/>
-  <text x="92" y="238" class="cb2-note">진행 중</text>
-  <rect x="160" y="228" width="14" height="12" rx="2" class="cb2-new"/>
-  <text x="180" y="238" class="cb2-note">새로 합류</text>
-  <text x="72" y="256" class="cb2-note">빈 슬롯이 생기지 않아 매 스텝 배치가 꽉 찬다</text>
+  <text x="8" y="24" class="cb2-title">Continuous batching</text>
+  <!-- 스텝 t -->
+  <text x="8" y="68" class="cb2-step">스텝 t</text>
+  <rect x="88" y="44" width="90" height="36" rx="5" class="cb2-cell"/><text x="133" y="69" class="cb2-req">A</text>
+  <rect x="184" y="44" width="90" height="36" rx="5" class="cb2-cell"/><text x="229" y="69" class="cb2-req">B</text>
+  <rect x="280" y="44" width="90" height="36" rx="5" class="cb2-cell"/><text x="325" y="69" class="cb2-req">C</text>
+  <rect x="376" y="44" width="90" height="36" rx="5" class="cb2-cell"/><text x="421" y="69" class="cb2-req">D</text>
+  <!-- 스텝 t+1 -->
+  <text x="8" y="114" class="cb2-step">스텝 t+1</text>
+  <rect x="88" y="90" width="90" height="36" rx="5" class="cb2-cell"/><text x="133" y="115" class="cb2-req">A</text>
+  <rect x="184" y="90" width="90" height="36" rx="5" class="cb2-cell"/><text x="229" y="115" class="cb2-req">B</text>
+  <rect x="280" y="90" width="90" height="36" rx="5" class="cb2-cell"/><text x="325" y="115" class="cb2-req">C</text>
+  <rect x="376" y="90" width="90" height="36" rx="5" class="cb2-cell"/><text x="421" y="115" class="cb2-req">D</text>
+  <!-- 스텝 t+2 -->
+  <text x="8" y="160" class="cb2-step">스텝 t+2</text>
+  <rect x="88" y="136" width="90" height="36" rx="5" class="cb2-new"/><text x="133" y="161" class="cb2-nreq">E</text>
+  <rect x="184" y="136" width="90" height="36" rx="5" class="cb2-cell"/><text x="229" y="161" class="cb2-req">B</text>
+  <rect x="280" y="136" width="90" height="36" rx="5" class="cb2-cell"/><text x="325" y="161" class="cb2-req">C</text>
+  <rect x="376" y="136" width="90" height="36" rx="5" class="cb2-cell"/><text x="421" y="161" class="cb2-req">D</text>
+  <text x="88" y="190" class="cb2-note">A 완료, E 합류</text>
+  <!-- 스텝 t+3 -->
+  <text x="8" y="228" class="cb2-step">스텝 t+3</text>
+  <rect x="88" y="204" width="90" height="36" rx="5" class="cb2-cell"/><text x="133" y="229" class="cb2-req">E</text>
+  <rect x="184" y="204" width="90" height="36" rx="5" class="cb2-cell"/><text x="229" y="229" class="cb2-req">B</text>
+  <rect x="280" y="204" width="90" height="36" rx="5" class="cb2-cell"/><text x="325" y="229" class="cb2-req">C</text>
+  <rect x="376" y="204" width="90" height="36" rx="5" class="cb2-new"/><text x="421" y="229" class="cb2-nreq">F</text>
+  <text x="88" y="258" class="cb2-note">D 완료, F 합류</text>
+  <!-- 스텝 t+4 -->
+  <text x="8" y="296" class="cb2-step">스텝 t+4</text>
+  <rect x="88" y="272" width="90" height="36" rx="5" class="cb2-cell"/><text x="133" y="297" class="cb2-req">E</text>
+  <rect x="184" y="272" width="90" height="36" rx="5" class="cb2-new"/><text x="229" y="297" class="cb2-nreq">G</text>
+  <rect x="280" y="272" width="90" height="36" rx="5" class="cb2-cell"/><text x="325" y="297" class="cb2-req">C</text>
+  <rect x="376" y="272" width="90" height="36" rx="5" class="cb2-cell"/><text x="421" y="297" class="cb2-req">F</text>
+  <text x="88" y="326" class="cb2-note">B 완료, G 합류</text>
+  <!-- 범례와 캡션 -->
+  <rect x="88" y="348" width="18" height="14" rx="2" class="cb2-cell"/>
+  <text x="114" y="360" class="cb2-note">진행 중</text>
+  <rect x="196" y="348" width="18" height="14" rx="2" class="cb2-new"/>
+  <text x="222" y="360" class="cb2-note">새로 합류</text>
+  <text x="8" y="392" class="cb2-note">빈 슬롯이 생기지 않아 매 스텝 배치가 꽉 찬다</text>
 </svg>
 </div>
 
@@ -149,36 +160,40 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
 요청 처리는 두 단계로 나뉩니다. 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill, 그다음 토큰을 하나씩 만드는 decode. prefill은 프롬프트의 모든 토큰을 병렬로 계산하는 compute-bound 단계이고, decode는 토큰 하나를 만드는 memory-bound 단계입니다. 문제는 프롬프트가 길 때입니다. 8,000토큰짜리 프롬프트의 prefill은 연산량이 많아 한 스텝을 통째로 잡아먹습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 228" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 280" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="chunked prefill이 없을 때의 스텝 구성. 스텝 t와 t+2는 A B C의 decode로 채워지지만, 그 사이 스텝 t+1을 8000토큰짜리 긴 prefill이 통째로 차지해 기존 요청의 토큰 생성이 멈춘다">
   <style>
-    .cb3-title { fill: var(--text, #1c1917); font-size: 15px; }
-    .cb3-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb3-title { fill: var(--text, #1c1917); font-size: 22px; }
+    .cb3-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb3-dec   { fill: var(--primary, #0d9488); }
     .cb3-pre   { fill: var(--accent, #d97706); }
-    .cb3-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
-    .cb3-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
-    .cb3-warn  { fill: var(--text-danger, #dc2626); font-size: 12px; }
+    .cb3-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb3-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb3-warn  { fill: var(--text-danger, #dc2626); font-size: 17px; }
   </style>
-  <text x="8" y="18" class="cb3-title">Chunked prefill이 없다면</text>
-  <text x="8" y="64" class="cb3-step">스텝 t</text>
-  <rect x="76" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="137" y="64" class="cb3-in">decode A</text>
-  <rect x="203" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="264" y="64" class="cb3-in">decode B</text>
-  <rect x="330" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="391" y="64" class="cb3-in">decode C</text>
-  <text x="8" y="108" class="cb3-step">스텝 t+1</text>
-  <rect x="76" y="88" width="376" height="32" rx="4" class="cb3-pre"/>
-  <text x="264" y="108" class="cb3-in">prefill X (8,000토큰 통째)</text>
-  <text x="8" y="152" class="cb3-step">스텝 t+2</text>
-  <rect x="76" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="137" y="152" class="cb3-in">decode A</text>
-  <rect x="203" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="264" y="152" class="cb3-in">decode B</text>
-  <rect x="330" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="391" y="152" class="cb3-in">decode C</text>
-  <rect x="76" y="180" width="14" height="12" rx="2" class="cb3-dec"/>
-  <text x="96" y="190" class="cb3-note">decode (memory-bound)</text>
-  <rect x="266" y="180" width="14" height="12" rx="2" class="cb3-pre"/>
-  <text x="286" y="190" class="cb3-note">prefill (compute-bound)</text>
-  <text x="76" y="216" class="cb3-warn">스텝 t+1 동안 A·B·C의 토큰 생성이 멈춘다</text>
+  <text x="8" y="24" class="cb3-title">Chunked prefill이 없다면</text>
+  <!-- 스텝 t -->
+  <text x="8" y="71" class="cb3-step">스텝 t</text>
+  <rect x="88" y="46" width="122" height="38" rx="4" class="cb3-dec"/><text x="149" y="71" class="cb3-in">decode A</text>
+  <rect x="218" y="46" width="122" height="38" rx="4" class="cb3-dec"/><text x="279" y="71" class="cb3-in">decode B</text>
+  <rect x="348" y="46" width="122" height="38" rx="4" class="cb3-dec"/><text x="409" y="71" class="cb3-in">decode C</text>
+  <!-- 스텝 t+1: 긴 prefill이 스텝을 독점 -->
+  <text x="8" y="119" class="cb3-step">스텝 t+1</text>
+  <rect x="88" y="94" width="382" height="38" rx="4" class="cb3-pre"/>
+  <text x="279" y="119" class="cb3-in">prefill X (8,000토큰 통째)</text>
+  <!-- 스텝 t+2 -->
+  <text x="8" y="167" class="cb3-step">스텝 t+2</text>
+  <rect x="88" y="142" width="122" height="38" rx="4" class="cb3-dec"/><text x="149" y="167" class="cb3-in">decode A</text>
+  <rect x="218" y="142" width="122" height="38" rx="4" class="cb3-dec"/><text x="279" y="167" class="cb3-in">decode B</text>
+  <rect x="348" y="142" width="122" height="38" rx="4" class="cb3-dec"/><text x="409" y="167" class="cb3-in">decode C</text>
+  <!-- 범례와 캡션 -->
+  <rect x="88" y="192" width="18" height="14" rx="2" class="cb3-dec"/>
+  <text x="114" y="204" class="cb3-note">decode (memory-bound)</text>
+  <rect x="88" y="216" width="18" height="14" rx="2" class="cb3-pre"/>
+  <text x="114" y="228" class="cb3-note">prefill (compute-bound)</text>
+  <text x="8" y="260" class="cb3-warn">스텝 t+1 동안 A·B·C의 토큰 생성이 멈춘다</text>
 </svg>
 </div>
 
@@ -193,41 +208,47 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
 해법은 단순합니다. 긴 prefill을 한 스텝에 통째로 밀어 넣지 말고, **여러 조각으로 잘라** 여러 스텝에 나눠 처리하는 것입니다. 이것이 chunked prefill입니다(Sarathi-Serve, 2024). 그리고 잘라낸 prefill 청크를, 진행 중인 요청들의 decode와 **같은 스텝에 함께** 태웁니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 250" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 336" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="chunked prefill을 적용한 스텝 구성. 스텝 t부터 t+3까지 매 스텝에 A와 B의 decode와 X의 prefill 청크가 함께 실려, 기존 요청의 토큰 생성이 끊기지 않는다">
   <style>
-    .cb4-title { fill: var(--text, #1c1917); font-size: 15px; }
-    .cb4-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb4-title { fill: var(--text, #1c1917); font-size: 22px; }
+    .cb4-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb4-dec   { fill: var(--primary, #0d9488); }
     .cb4-pre   { fill: var(--accent, #d97706); }
-    .cb4-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
-    .cb4-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
-    .cb4-ok    { fill: var(--text-success, #16a34a); font-size: 12px; }
+    .cb4-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb4-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb4-ok    { fill: var(--text-success, #16a34a); font-size: 17px; }
   </style>
-  <text x="8" y="18" class="cb4-title">Chunked prefill</text>
-  <text x="8" y="64" class="cb4-step">스텝 t</text>
-  <rect x="76" y="44" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="64" class="cb4-in">decode A</text>
-  <rect x="173" y="44" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="64" class="cb4-in">decode B</text>
-  <rect x="270" y="44" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="64" class="cb4-in">X 청크 1/4</text>
-  <text x="8" y="104" class="cb4-step">스텝 t+1</text>
-  <rect x="76" y="84" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="104" class="cb4-in">decode A</text>
-  <rect x="173" y="84" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="104" class="cb4-in">decode B</text>
-  <rect x="270" y="84" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="104" class="cb4-in">X 청크 2/4</text>
-  <text x="8" y="144" class="cb4-step">스텝 t+2</text>
-  <rect x="76" y="124" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="144" class="cb4-in">decode A</text>
-  <rect x="173" y="124" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="144" class="cb4-in">decode B</text>
-  <rect x="270" y="124" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="144" class="cb4-in">X 청크 3/4</text>
-  <text x="8" y="184" class="cb4-step">스텝 t+3</text>
-  <rect x="76" y="164" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="184" class="cb4-in">decode A</text>
-  <rect x="173" y="164" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="184" class="cb4-in">decode B</text>
-  <rect x="270" y="164" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="184" class="cb4-in">X 청크 4/4</text>
-  <rect x="76" y="204" width="14" height="12" rx="2" class="cb4-dec"/>
-  <text x="96" y="214" class="cb4-note">decode (memory-bound)</text>
-  <rect x="266" y="204" width="14" height="12" rx="2" class="cb4-pre"/>
-  <text x="286" y="214" class="cb4-note">prefill (compute-bound)</text>
-  <text x="76" y="240" class="cb4-ok">A·B의 토큰 생성이 끊기지 않고, X의 prefill은 네 스텝에 나뉜다</text>
+  <text x="8" y="24" class="cb4-title">Chunked prefill</text>
+  <!-- 스텝 t -->
+  <text x="8" y="71" class="cb4-step">스텝 t</text>
+  <rect x="88" y="46" width="96" height="38" rx="4" class="cb4-dec"/><text x="136" y="71" class="cb4-in">decode A</text>
+  <rect x="190" y="46" width="96" height="38" rx="4" class="cb4-dec"/><text x="238" y="71" class="cb4-in">decode B</text>
+  <rect x="292" y="46" width="178" height="38" rx="4" class="cb4-pre"/><text x="381" y="71" class="cb4-in">X 청크 1/4</text>
+  <!-- 스텝 t+1 -->
+  <text x="8" y="117" class="cb4-step">스텝 t+1</text>
+  <rect x="88" y="92" width="96" height="38" rx="4" class="cb4-dec"/><text x="136" y="117" class="cb4-in">decode A</text>
+  <rect x="190" y="92" width="96" height="38" rx="4" class="cb4-dec"/><text x="238" y="117" class="cb4-in">decode B</text>
+  <rect x="292" y="92" width="178" height="38" rx="4" class="cb4-pre"/><text x="381" y="117" class="cb4-in">X 청크 2/4</text>
+  <!-- 스텝 t+2 -->
+  <text x="8" y="163" class="cb4-step">스텝 t+2</text>
+  <rect x="88" y="138" width="96" height="38" rx="4" class="cb4-dec"/><text x="136" y="163" class="cb4-in">decode A</text>
+  <rect x="190" y="138" width="96" height="38" rx="4" class="cb4-dec"/><text x="238" y="163" class="cb4-in">decode B</text>
+  <rect x="292" y="138" width="178" height="38" rx="4" class="cb4-pre"/><text x="381" y="163" class="cb4-in">X 청크 3/4</text>
+  <!-- 스텝 t+3 -->
+  <text x="8" y="209" class="cb4-step">스텝 t+3</text>
+  <rect x="88" y="184" width="96" height="38" rx="4" class="cb4-dec"/><text x="136" y="209" class="cb4-in">decode A</text>
+  <rect x="190" y="184" width="96" height="38" rx="4" class="cb4-dec"/><text x="238" y="209" class="cb4-in">decode B</text>
+  <rect x="292" y="184" width="178" height="38" rx="4" class="cb4-pre"/><text x="381" y="209" class="cb4-in">X 청크 4/4</text>
+  <!-- 범례와 캡션 -->
+  <rect x="88" y="234" width="18" height="14" rx="2" class="cb4-dec"/>
+  <text x="114" y="246" class="cb4-note">decode (memory-bound)</text>
+  <rect x="88" y="258" width="18" height="14" rx="2" class="cb4-pre"/>
+  <text x="114" y="270" class="cb4-note">prefill (compute-bound)</text>
+  <text x="8" y="302" class="cb4-ok">A·B의 토큰 생성이 끊기지 않고,</text>
+  <text x="8" y="324" class="cb4-ok">X의 prefill은 네 스텝에 나뉜다</text>
 </svg>
 </div>
 
@@ -256,19 +277,19 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 배분 순서에는 우선순위가 있습니다. 스케줄러는 먼저 진행 중인 요청(running 큐)의 decode부터 예산에 채웁니다. 그리고 남은 예산으로 대기 중인 요청(waiting 큐)의 prefill을 채우는데, 남은 예산에 다 안 들어가면 그만큼만 잘라서 넣습니다. 이 "잘라서 넣기"가 바로 chunked prefill입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 238" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 decode 요청 A B C가 1토큰씩 3토큰을 차지하고, 남은 예산으로 waiting 큐의 X가 2048토큰 prefill 청크를 채운다. 최종 스케줄 결과는 A 1, B 1, C 1, X 2048">
   <style>
-    .cb5-title { fill: var(--text, #1c1917); font-size: 14px; text-anchor: middle; }
+    .cb5-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
     .cb5-dec   { fill: var(--primary, #0d9488); }
     .cb5-pre   { fill: var(--accent, #d97706); }
     .cb5-rest  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .cb5-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
-    .cb5-muted { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
-    .cb5-s1    { fill: var(--primary, #0d9488); font-size: 13px; }
-    .cb5-s2    { fill: var(--accent, #d97706); font-size: 13px; }
+    .cb5-leg   { fill: var(--text, #1c1917); font-size: 17px; }
+    .cb5-muted { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .cb5-s1    { fill: var(--primary, #0d9488); font-size: 18px; }
+    .cb5-s2    { fill: var(--accent, #d97706); font-size: 18px; }
     .cb5-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
   </style>
   <defs>
@@ -276,19 +297,27 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
       <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
-  <text x="240" y="20" class="cb5-title">한 스텝의 토큰 예산 = 8,192</text>
-  <rect x="20" y="36" width="44" height="38" rx="4" class="cb5-dec"/>
-  <text x="42" y="60" class="cb5-in">A B C</text>
-  <rect x="64" y="36" width="110" height="38" rx="4" class="cb5-pre"/>
-  <text x="119" y="60" class="cb5-in">X 청크 2,048</text>
-  <rect x="174" y="36" width="286" height="38" rx="4" class="cb5-rest"/>
-  <text x="317" y="60" class="cb5-muted">남은 예산 6,141 토큰</text>
-  <text x="20" y="102" class="cb5-s1">1. running 큐의 decode부터 채운다 (3토큰)</text>
-  <text x="20" y="126" class="cb5-s2">2. 남은 예산으로 waiting 큐의 prefill을 잘라 넣는다</text>
-  <path d="M240,140 L240,158" class="cb5-arrow"/>
-  <rect x="110" y="164" width="260" height="34" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
-  <text x="240" y="186" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
-  <text x="240" y="222" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
+  <text x="240" y="26" class="cb5-title">한 스텝의 토큰 예산 = 8,192</text>
+  <!-- 예산 막대: decode / prefill 청크 / 남은 예산 -->
+  <rect x="20" y="44" width="30" height="44" rx="4" class="cb5-dec"/>
+  <rect x="50" y="44" width="100" height="44" class="cb5-pre"/>
+  <rect x="150" y="44" width="310" height="44" rx="4" class="cb5-rest"/>
+  <!-- 막대 구간 설명 -->
+  <rect x="20" y="104" width="18" height="14" rx="2" class="cb5-dec"/>
+  <text x="46" y="116" class="cb5-leg">decode A·B·C = 3토큰</text>
+  <rect x="20" y="128" width="18" height="14" rx="2" class="cb5-pre"/>
+  <text x="46" y="140" class="cb5-leg">X 청크 = 2,048토큰</text>
+  <rect x="20" y="152" width="18" height="14" rx="2" class="cb5-rest"/>
+  <text x="46" y="164" class="cb5-leg">남은 예산 = 6,141토큰</text>
+  <!-- 배분 순서 -->
+  <text x="20" y="198" class="cb5-s1">1. running 큐의 decode부터 채운다 (3토큰)</text>
+  <text x="20" y="224" class="cb5-s2">2. 남은 예산으로 waiting 큐의</text>
+  <text x="40" y="246" class="cb5-s2">prefill을 잘라 넣는다</text>
+  <path d="M240,260 L240,280" class="cb5-arrow"/>
+  <!-- 스케줄 결과 -->
+  <rect x="70" y="288" width="340" height="42" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+  <text x="240" y="315" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
+  <text x="240" y="356" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
 </svg>
 </div>
 

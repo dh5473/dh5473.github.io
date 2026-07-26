@@ -22,25 +22,25 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
 한 iteration은 이렇게 돌아갑니다. 먼저 **draft** 역할의 작은 모델이 토큰을 γ개 생성합니다. γ는 미리 그려놓을 draft 토큰 수로 보통 한 자릿수이고, 작은 모델이라 γ번을 돌아도 큰 모델 한 번보다 쌉니다. 그다음 **target**인 큰 모델이 forward 한 번으로 γ개 위치의 확률분포를 전부 계산합니다. 프롬프트를 병렬로 처리하던 prefill과 같은 병렬성입니다. 이제 각 위치에서 draft가 내놓은 토큰을 target의 분포와 비교해 수락하거나 거절합니다. 처음 거절이 난 위치에서는 target의 분포로 토큰을 다시 뽑고, 그 뒤에 남은 draft는 버립니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 350" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="draft 모델이 그린 다섯 개의 토큰을 target 모델이 forward 한 번으로 병렬 검증해 앞의 세 개를 수락하고 네 번째를 거절한 뒤 나머지 하나를 버리고, target이 다시 뽑은 토큰 한 개를 더해 이번 iteration에 네 토큰을 확정하는 과정">
   <style>
-    .sd1-cap    { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .sd1-cap    { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
     .sd1-box    { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .sd1-tok    { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .sd1-tok    { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
     .sd1-okbox  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .sd1-oktxt  { fill: var(--text-success, #16a34a); font-size: 15px; text-anchor: middle; }
-    .sd1-oksub  { fill: var(--text-success, #16a34a); font-size: 12px; text-anchor: middle; }
-    .sd1-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .sd1-oktxt  { fill: var(--text-success, #16a34a); font-size: 22px; text-anchor: middle; }
+    .sd1-oksub  { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: middle; }
+    .sd1-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     .sd1-nobox  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .sd1-nosub  { fill: var(--text-danger, #dc2626); font-size: 12px; text-anchor: middle; }
-    .sd1-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3; fill: none; stroke-linecap: round; }
+    .sd1-nosub  { fill: var(--text-danger, #dc2626); font-size: 17px; text-anchor: middle; }
+    .sd1-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3.5; fill: none; stroke-linecap: round; }
     .sd1-drop   { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .sd1-dsub   { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; opacity: 0.7; }
+    .sd1-dsub   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; opacity: 0.7; }
     .sd1-newbox { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .sd1-newtxt { fill: var(--primary, #0d9488); font-size: 14px; text-anchor: middle; }
+    .sd1-newtxt { fill: var(--primary, #0d9488); font-size: 20px; text-anchor: middle; }
     .sd1-arrow  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#sd1Arrow); }
   </style>
   <defs>
@@ -48,44 +48,49 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
       <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
-  <text x="240" y="16" class="sd1-cap">draft 모델이 토큰 5개를 미리 그린다</text>
-  <rect x="20"  y="26" width="80" height="40" rx="8" class="sd1-box"/>
-  <rect x="110" y="26" width="80" height="40" rx="8" class="sd1-box"/>
-  <rect x="200" y="26" width="80" height="40" rx="8" class="sd1-box"/>
-  <rect x="290" y="26" width="80" height="40" rx="8" class="sd1-box"/>
-  <rect x="380" y="26" width="80" height="40" rx="8" class="sd1-box"/>
-  <text x="60"  y="51" class="sd1-tok">이</text>
-  <text x="150" y="51" class="sd1-tok">결과</text>
-  <text x="240" y="51" class="sd1-tok">는</text>
-  <text x="330" y="51" class="sd1-tok">매우</text>
-  <text x="420" y="51" class="sd1-tok">흥미</text>
-  <path d="M240,72 L240,88" class="sd1-arrow"/>
-  <text x="240" y="106" class="sd1-cap">target이 forward 한 번으로 5개 위치를 병렬 검증</text>
-  <rect x="20"  y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
-  <rect x="110" y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
-  <rect x="200" y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
-  <rect x="290" y="116" width="80" height="48" rx="8" class="sd1-nobox"/>
-  <rect x="380" y="116" width="80" height="48" rx="8" class="sd1-drop"/>
-  <path d="M52,134 l5,6 l10,-13"  class="sd1-okmark"/>
-  <path d="M142,134 l5,6 l10,-13" class="sd1-okmark"/>
-  <path d="M232,134 l5,6 l10,-13" class="sd1-okmark"/>
-  <path d="M323,128 L337,142 M337,128 L323,142" class="sd1-nomark"/>
-  <text x="60"  y="157" class="sd1-oksub">수락</text>
-  <text x="150" y="157" class="sd1-oksub">수락</text>
-  <text x="240" y="157" class="sd1-oksub">수락</text>
-  <text x="330" y="157" class="sd1-nosub">거절</text>
-  <text x="420" y="136" class="sd1-dsub">검증해도</text>
-  <text x="420" y="152" class="sd1-dsub">버려짐</text>
-  <path d="M240,170 L240,186" class="sd1-arrow"/>
-  <text x="240" y="204" class="sd1-cap">이번 iteration 확정: 4토큰</text>
-  <rect x="20"  y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
-  <rect x="110" y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
-  <rect x="200" y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
-  <rect x="290" y="214" width="170" height="40" rx="8" class="sd1-newbox"/>
-  <text x="60"  y="239" class="sd1-oktxt">이</text>
-  <text x="150" y="239" class="sd1-oktxt">결과</text>
-  <text x="240" y="239" class="sd1-oktxt">는</text>
-  <text x="375" y="239" class="sd1-newtxt">target이 다시 뽑은 1개</text>
+  <!-- 1단: draft 제안 -->
+  <text x="240" y="20" class="sd1-cap">draft 모델이 토큰 5개를 미리 그린다</text>
+  <rect x="20"  y="32" width="80" height="48" rx="8" class="sd1-box"/>
+  <rect x="110" y="32" width="80" height="48" rx="8" class="sd1-box"/>
+  <rect x="200" y="32" width="80" height="48" rx="8" class="sd1-box"/>
+  <rect x="290" y="32" width="80" height="48" rx="8" class="sd1-box"/>
+  <rect x="380" y="32" width="80" height="48" rx="8" class="sd1-box"/>
+  <text x="60"  y="64" class="sd1-tok">이</text>
+  <text x="150" y="64" class="sd1-tok">결과</text>
+  <text x="240" y="64" class="sd1-tok">는</text>
+  <text x="330" y="64" class="sd1-tok">매우</text>
+  <text x="420" y="64" class="sd1-tok">흥미</text>
+  <path d="M240,86 L240,104" class="sd1-arrow"/>
+  <!-- 2단: target 병렬 검증 (초록=수락, 빨강=거절) -->
+  <text x="240" y="124" class="sd1-cap">target이 forward 한 번으로</text>
+  <text x="240" y="146" class="sd1-cap">5개 위치를 병렬 검증</text>
+  <rect x="20"  y="158" width="80" height="66" rx="8" class="sd1-okbox"/>
+  <rect x="110" y="158" width="80" height="66" rx="8" class="sd1-okbox"/>
+  <rect x="200" y="158" width="80" height="66" rx="8" class="sd1-okbox"/>
+  <rect x="290" y="158" width="80" height="66" rx="8" class="sd1-nobox"/>
+  <rect x="380" y="158" width="80" height="66" rx="8" class="sd1-drop"/>
+  <path d="M51,176 l6,7 l12,-15"  class="sd1-okmark"/>
+  <path d="M141,176 l6,7 l12,-15" class="sd1-okmark"/>
+  <path d="M231,176 l6,7 l12,-15" class="sd1-okmark"/>
+  <path d="M321,167 L339,185 M339,167 L321,185" class="sd1-nomark"/>
+  <text x="60"  y="212" class="sd1-oksub">수락</text>
+  <text x="150" y="212" class="sd1-oksub">수락</text>
+  <text x="240" y="212" class="sd1-oksub">수락</text>
+  <text x="330" y="212" class="sd1-nosub">거절</text>
+  <text x="420" y="186" class="sd1-dsub">검증해도</text>
+  <text x="420" y="208" class="sd1-dsub">버려짐</text>
+  <path d="M240,230 L240,248" class="sd1-arrow"/>
+  <!-- 3단: 확정된 토큰 -->
+  <text x="240" y="268" class="sd1-cap">이번 iteration 확정: 4토큰</text>
+  <rect x="20"  y="280" width="80" height="58" rx="8" class="sd1-okbox"/>
+  <rect x="110" y="280" width="80" height="58" rx="8" class="sd1-okbox"/>
+  <rect x="200" y="280" width="80" height="58" rx="8" class="sd1-okbox"/>
+  <rect x="290" y="280" width="170" height="58" rx="8" class="sd1-newbox"/>
+  <text x="60"  y="317" class="sd1-oktxt">이</text>
+  <text x="150" y="317" class="sd1-oktxt">결과</text>
+  <text x="240" y="317" class="sd1-oktxt">는</text>
+  <text x="375" y="303" class="sd1-newtxt">target이</text>
+  <text x="375" y="325" class="sd1-newtxt">다시 뽑은 1개</text>
 </svg>
 </div>
 

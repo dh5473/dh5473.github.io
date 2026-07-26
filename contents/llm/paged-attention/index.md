@@ -30,49 +30,54 @@ KV Cache는 진행 중인 모든 요청이 GPU에 들고 있어야 하는 상태
 특히 외부 단편화가 문제입니다. 남은 메모리를 총량으로 따지면 새 요청을 받을 공간이 충분한데, **연속된 자리로는 없어서** 요청을 거절해야 하는 상황이 벌어집니다. 조각조각 흩어진 빈틈은 있지만, 정작 필요한 큰 한 덩어리가 나오지 않는 것입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 314" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 456" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="연속 할당 방식의 KV 메모리 낭비. 위쪽은 요청 A, B, C가 각각 16칸, 12칸, 20칸을 예약해두고 실제로는 2칸, 5칸, 3칸만 사용하는 모습. 아래쪽은 물리 메모리에 빈 공간 9칸이 3칸, 2칸, 4칸으로 흩어져 있어 연속 6칸이 필요한 요청 D가 거절되는 외부 단편화 상황.">
   <style>
-    .fr1-h    { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
-    .fr1-t    { fill: var(--text, #1c1917); font-size: 13px; }
-    .fr1-lb   { fill: var(--text, #1c1917); font-size: 15px; }
-    .fr1-sub  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .fr1-h    { fill: var(--text, #1c1917); font-size: 20px; font-weight: 700; }
+    .fr1-t    { fill: var(--text, #1c1917); font-size: 17px; }
+    .fr1-lb   { fill: var(--text, #1c1917); font-size: 20px; }
+    .fr1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .fr1-use  { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1; }
     .fr1-res  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1; }
     .fr1-occ  { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1; stroke-opacity: 0.4; }
     .fr1-free { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1; }
-    .fr1-ok   { fill: var(--text-success, #16a34a); font-size: 12px; text-anchor: middle; }
-    .fr1-bad  { fill: var(--text-danger, #dc2626); font-size: 13px; }
+    .fr1-ok   { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: middle; }
+    .fr1-bad  { fill: var(--text-danger, #dc2626); font-size: 17px; }
     .fr1-div  { stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .fr1-need { fill: none; stroke: var(--text-danger, #dc2626); stroke-width: 1.5; stroke-dasharray: 4 3; }
   </style>
-  <text x="8" y="16" class="fr1-h">연속 할당: 요청마다 최대 길이를 통째로 예약</text>
-  <text x="8" y="45" class="fr1-lb">요청 A</text>
-  <rect x="64" y="30" width="14" height="20" rx="2" class="fr1-use"/><rect x="79" y="30" width="14" height="20" rx="2" class="fr1-use"/><rect x="94" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="109" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="124" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="139" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="154" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="169" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="184" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="199" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="214" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="229" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="244" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="259" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="274" y="30" width="14" height="20" rx="2" class="fr1-res"/><rect x="289" y="30" width="14" height="20" rx="2" class="fr1-res"/>
-  <text x="311" y="45" class="fr1-sub">16칸 중 2칸</text>
-  <text x="8" y="73" class="fr1-lb">요청 B</text>
-  <rect x="64" y="58" width="14" height="20" rx="2" class="fr1-use"/><rect x="79" y="58" width="14" height="20" rx="2" class="fr1-use"/><rect x="94" y="58" width="14" height="20" rx="2" class="fr1-use"/><rect x="109" y="58" width="14" height="20" rx="2" class="fr1-use"/><rect x="124" y="58" width="14" height="20" rx="2" class="fr1-use"/><rect x="139" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="154" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="169" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="184" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="199" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="214" y="58" width="14" height="20" rx="2" class="fr1-res"/><rect x="229" y="58" width="14" height="20" rx="2" class="fr1-res"/>
-  <text x="251" y="73" class="fr1-sub">12칸 중 5칸</text>
-  <text x="8" y="101" class="fr1-lb">요청 C</text>
-  <rect x="64" y="86" width="14" height="20" rx="2" class="fr1-use"/><rect x="79" y="86" width="14" height="20" rx="2" class="fr1-use"/><rect x="94" y="86" width="14" height="20" rx="2" class="fr1-use"/><rect x="109" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="124" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="139" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="154" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="169" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="184" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="199" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="214" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="229" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="244" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="259" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="274" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="289" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="304" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="319" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="334" y="86" width="14" height="20" rx="2" class="fr1-res"/><rect x="349" y="86" width="14" height="20" rx="2" class="fr1-res"/>
-  <text x="371" y="101" class="fr1-sub">20칸 중 3칸</text>
-  <rect x="64" y="116" width="13" height="13" rx="2" class="fr1-use"/>
-  <text x="83" y="127" class="fr1-sub">실제 사용</text>
-  <rect x="148" y="116" width="13" height="13" rx="2" class="fr1-res"/>
-  <text x="167" y="127" class="fr1-sub">예약됐지만 빈 공간</text>
-  <text x="8" y="152" class="fr1-t">실제 사용은 20~40%, 나머지 60~80%가 예약된 채 낭비</text>
-  <line x1="8" y1="168" x2="472" y2="168" class="fr1-div"/>
-  <text x="8" y="192" class="fr1-h">외부 단편화: 총량은 남아도 연속된 자리가 없다</text>
-  <text x="8" y="209" class="fr1-sub">회색 = 다른 요청이 쓰는 중 · 초록 = 빈 공간</text>
-  <rect x="8" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="22" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="36" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="50" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="64" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="78" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="92" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="106" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="120" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="134" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="148" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="162" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="176" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="190" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="204" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="218" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="232" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="246" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="260" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="274" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="288" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="302" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="316" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="330" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="344" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="358" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="372" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="386" y="216" width="13" height="24" rx="2" class="fr1-free"/><rect x="400" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="414" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="428" y="216" width="13" height="24" rx="2" class="fr1-occ"/><rect x="442" y="216" width="13" height="24" rx="2" class="fr1-occ"/>
-  <text x="113" y="256" class="fr1-ok">3칸</text>
-  <text x="260" y="256" class="fr1-ok">2칸</text>
-  <text x="370" y="256" class="fr1-ok">4칸</text>
-  <rect x="8" y="266" width="83" height="20" rx="2" class="fr1-need"/>
-  <text x="100" y="281" class="fr1-t">요청 D: 연속 6칸이 필요</text>
-  <text x="8" y="306" class="fr1-bad">빈칸은 총 9칸이지만 최대 연속은 4칸, 그래서 거절</text>
+  <text x="8" y="22" class="fr1-h">연속 할당: 요청마다 최대 길이를 통째로 예약</text>
+  <!-- 요청 A: 16칸 예약, 2칸 사용 -->
+  <text x="8" y="52" class="fr1-lb">요청 A</text>
+  <text x="75" y="52" class="fr1-sub">16칸 중 2칸</text>
+  <rect x="8" y="62" width="20" height="22" rx="2" class="fr1-use"/><rect x="31" y="62" width="20" height="22" rx="2" class="fr1-use"/><rect x="54" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="77" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="100" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="123" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="146" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="169" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="192" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="215" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="238" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="261" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="284" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="307" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="330" y="62" width="20" height="22" rx="2" class="fr1-res"/><rect x="353" y="62" width="20" height="22" rx="2" class="fr1-res"/>
+  <!-- 요청 B: 12칸 예약, 5칸 사용 -->
+  <text x="8" y="112" class="fr1-lb">요청 B</text>
+  <text x="75" y="112" class="fr1-sub">12칸 중 5칸</text>
+  <rect x="8" y="122" width="20" height="22" rx="2" class="fr1-use"/><rect x="31" y="122" width="20" height="22" rx="2" class="fr1-use"/><rect x="54" y="122" width="20" height="22" rx="2" class="fr1-use"/><rect x="77" y="122" width="20" height="22" rx="2" class="fr1-use"/><rect x="100" y="122" width="20" height="22" rx="2" class="fr1-use"/><rect x="123" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="146" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="169" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="192" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="215" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="238" y="122" width="20" height="22" rx="2" class="fr1-res"/><rect x="261" y="122" width="20" height="22" rx="2" class="fr1-res"/>
+  <!-- 요청 C: 20칸 예약, 3칸 사용 -->
+  <text x="8" y="172" class="fr1-lb">요청 C</text>
+  <text x="75" y="172" class="fr1-sub">20칸 중 3칸</text>
+  <rect x="8" y="182" width="20" height="22" rx="2" class="fr1-use"/><rect x="31" y="182" width="20" height="22" rx="2" class="fr1-use"/><rect x="54" y="182" width="20" height="22" rx="2" class="fr1-use"/><rect x="77" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="100" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="123" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="146" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="169" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="192" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="215" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="238" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="261" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="284" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="307" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="330" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="353" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="376" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="399" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="422" y="182" width="20" height="22" rx="2" class="fr1-res"/><rect x="445" y="182" width="20" height="22" rx="2" class="fr1-res"/>
+  <!-- 범례 -->
+  <rect x="8" y="214" width="16" height="16" rx="2" class="fr1-use"/>
+  <text x="32" y="227" class="fr1-sub">실제 사용</text>
+  <rect x="125" y="214" width="16" height="16" rx="2" class="fr1-res"/>
+  <text x="149" y="227" class="fr1-sub">예약됐지만 빈 공간</text>
+  <text x="8" y="254" class="fr1-t">실제 사용은 20~40%, 나머지 60~80%가 예약된 채 낭비</text>
+  <line x1="8" y1="274" x2="472" y2="274" class="fr1-div"/>
+  <!-- 외부 단편화 -->
+  <text x="8" y="300" class="fr1-h">외부 단편화: 총량은 남아도 연속된 자리가 없다</text>
+  <text x="8" y="324" class="fr1-sub">회색 = 다른 요청이 쓰는 중 · 초록 = 빈 공간</text>
+  <rect x="8" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="22" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="36" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="50" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="64" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="78" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="92" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="106" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="120" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="134" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="148" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="162" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="176" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="190" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="204" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="218" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="232" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="246" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="260" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="274" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="288" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="302" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="316" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="330" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="344" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="358" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="372" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="386" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="400" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="414" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="428" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="442" y="334" width="13" height="26" rx="2" class="fr1-occ"/>
+  <text x="113" y="380" class="fr1-ok">3칸</text>
+  <text x="260" y="380" class="fr1-ok">2칸</text>
+  <text x="370" y="380" class="fr1-ok">4칸</text>
+  <rect x="8" y="392" width="83" height="26" rx="2" class="fr1-need"/>
+  <text x="100" y="410" class="fr1-t">요청 D: 연속 6칸이 필요</text>
+  <text x="8" y="440" class="fr1-bad">빈칸은 총 9칸이지만 최대 연속은 4칸, 그래서 거절</text>
 </svg>
 </div>
 
@@ -93,22 +98,22 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
 프로그램은 자기가 0번지부터 쭉 이어진 연속 메모리를 쓰고 있다고 믿습니다. 하지만 실제 물리 메모리(RAM)에서는 그렇지 않습니다. 메모리는 **고정 크기 페이지(page)**로 잘게 나뉘어 있고, 프로그램이 쓰는 논리적으로 연속된 주소는 물리적으로는 여기저기 흩어진 페이지에 담깁니다. 이 논리 주소와 물리 페이지의 대응을 **페이지 테이블(page table)**이 관리합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 258" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 305" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="운영체제 페이징의 논리 주소와 물리 메모리 매핑. 왼쪽에 논리 페이지 0, 1, 2가 연속으로 붙어 있고, 오른쪽 물리 메모리 풀에는 페이지 12, 47, 91이 다른 프로세스의 페이지들 사이에 흩어져 있다. 페이지 테이블이 논리 페이지 0을 물리 47로, 1을 12로, 2를 91로 잇는 화살표가 서로 교차한다.">
   <style>
-    .pg1-head { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .pg1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
     .pg1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pg1-pool { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pg1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
     .pg1-oth  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .pg1-lb   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .pg1-l    { fill: var(--text, #1c1917); font-size: 15px; }
-    .pg1-sub  { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
-    .pg1-r    { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: end; }
-    .pg1-cap  { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
-    .pg1-cap2 { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
+    .pg1-lb   { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
+    .pg1-l    { fill: var(--text, #1c1917); font-size: 20px; }
+    .pg1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .pg1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
+    .pg1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
+    .pg1-cap2 { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pg1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#pg1Head); }
   </style>
   <defs>
@@ -116,37 +121,40 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
       <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
     </marker>
   </defs>
-  <text x="99" y="18" class="pg1-head">논리 주소 공간 (연속)</text>
-  <text x="381" y="18" class="pg1-head">물리 메모리 (흩어짐)</text>
-  <rect x="8" y="34" width="182" height="44" rx="6" class="pg1-box"/>
-  <text x="99" y="52" class="pg1-lb">논리 페이지 0</text>
-  <text x="99" y="69" class="pg1-sub">0 ~ 4KB</text>
-  <rect x="8" y="78" width="182" height="44" rx="6" class="pg1-box"/>
-  <text x="99" y="96" class="pg1-lb">논리 페이지 1</text>
-  <text x="99" y="113" class="pg1-sub">4 ~ 8KB</text>
-  <rect x="8" y="122" width="182" height="44" rx="6" class="pg1-box"/>
-  <text x="99" y="140" class="pg1-lb">논리 페이지 2</text>
-  <text x="99" y="157" class="pg1-sub">8 ~ 12KB</text>
-  <rect x="290" y="28" width="182" height="180" rx="6" class="pg1-pool"/>
-  <rect x="298" y="36" width="166" height="28" rx="4" class="pg1-hit"/>
-  <text x="308" y="55" class="pg1-l">페이지 12</text>
-  <text x="456" y="55" class="pg1-r">4 ~ 8KB</text>
-  <rect x="298" y="70" width="166" height="22" rx="4" class="pg1-oth"/>
-  <text x="381" y="85" class="pg1-sub">다른 프로세스가 사용</text>
-  <rect x="298" y="98" width="166" height="28" rx="4" class="pg1-hit"/>
-  <text x="308" y="117" class="pg1-l">페이지 47</text>
-  <text x="456" y="117" class="pg1-r">0 ~ 4KB</text>
-  <rect x="298" y="132" width="166" height="22" rx="4" class="pg1-oth"/>
-  <text x="381" y="147" class="pg1-sub">다른 프로세스가 사용</text>
-  <rect x="298" y="160" width="166" height="28" rx="4" class="pg1-hit"/>
-  <text x="308" y="179" class="pg1-l">페이지 91</text>
-  <text x="456" y="179" class="pg1-r">8 ~ 12KB</text>
-  <text x="381" y="201" class="pg1-sub">...</text>
-  <path d="M194,56 C240,56 248,112 296,112" class="pg1-arr"/>
-  <path d="M194,100 C240,100 248,50 296,50" class="pg1-arr"/>
-  <path d="M194,144 C240,144 248,174 296,174" class="pg1-arr"/>
-  <text x="240" y="230" class="pg1-cap">페이지 테이블이 논리 → 물리 매핑을 관리</text>
-  <text x="240" y="248" class="pg1-cap2">물리 페이지가 흩어져 있어도 프로그램은 연속으로 본다</text>
+  <text x="8" y="20" class="pg1-head">논리 주소 공간 (연속)</text>
+  <text x="250" y="20" class="pg1-head">물리 메모리 (흩어짐)</text>
+  <!-- 논리 주소 공간 -->
+  <rect x="8" y="36" width="150" height="52" rx="6" class="pg1-box"/>
+  <text x="83" y="60" class="pg1-lb">논리 페이지 0</text>
+  <text x="83" y="80" class="pg1-sub">0 ~ 4KB</text>
+  <rect x="8" y="88" width="150" height="52" rx="6" class="pg1-box"/>
+  <text x="83" y="112" class="pg1-lb">논리 페이지 1</text>
+  <text x="83" y="132" class="pg1-sub">4 ~ 8KB</text>
+  <rect x="8" y="140" width="150" height="52" rx="6" class="pg1-box"/>
+  <text x="83" y="164" class="pg1-lb">논리 페이지 2</text>
+  <text x="83" y="184" class="pg1-sub">8 ~ 12KB</text>
+  <!-- 물리 메모리 풀 -->
+  <rect x="250" y="30" width="222" height="218" rx="6" class="pg1-pool"/>
+  <rect x="258" y="38" width="206" height="34" rx="4" class="pg1-hit"/>
+  <text x="268" y="61" class="pg1-l">페이지 12</text>
+  <text x="454" y="61" class="pg1-r">4 ~ 8KB</text>
+  <rect x="258" y="78" width="206" height="28" rx="4" class="pg1-oth"/>
+  <text x="361" y="97" class="pg1-sub">다른 프로세스가 사용</text>
+  <rect x="258" y="112" width="206" height="34" rx="4" class="pg1-hit"/>
+  <text x="268" y="135" class="pg1-l">페이지 47</text>
+  <text x="454" y="135" class="pg1-r">0 ~ 4KB</text>
+  <rect x="258" y="152" width="206" height="28" rx="4" class="pg1-oth"/>
+  <text x="361" y="171" class="pg1-sub">다른 프로세스가 사용</text>
+  <rect x="258" y="186" width="206" height="34" rx="4" class="pg1-hit"/>
+  <text x="268" y="209" class="pg1-l">페이지 91</text>
+  <text x="454" y="209" class="pg1-r">8 ~ 12KB</text>
+  <text x="361" y="238" class="pg1-sub">...</text>
+  <!-- 논리 → 물리 매핑 -->
+  <path d="M162,62 C205,62 210,129 246,129" class="pg1-arr"/>
+  <path d="M162,114 C205,114 210,55 246,55" class="pg1-arr"/>
+  <path d="M162,166 C205,166 210,203 246,203" class="pg1-arr"/>
+  <text x="240" y="274" class="pg1-cap">페이지 테이블이 논리 → 물리 매핑을 관리</text>
+  <text x="240" y="296" class="pg1-cap2">물리 페이지가 흩어져 있어도 프로그램은 연속으로 본다</text>
 </svg>
 </div>
 
@@ -161,22 +169,22 @@ PagedAttention은 페이징을 KV Cache에 그대로 옮겨옵니다. 이름의 
 KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(block)**으로 잘게 나눕니다. 블록 하나는 기본적으로 **16개 토큰**의 Key와 Value를 담습니다(`--block-size`로 조정 가능). 그리고 각 시퀀스는 자신의 **블록 테이블(block table)**을 갖습니다. 페이지 테이블과 정확히 같은 역할로, 시퀀스의 논리 블록이 물리 메모리의 어느 블록에 담겨 있는지를 매핑합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 258" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 305" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="PagedAttention 블록 테이블의 논리 블록과 물리 블록 매핑. 왼쪽에 논리 블록 0(토큰 0~15), 1(토큰 16~31), 2(토큰 32~47)가 연속으로 붙어 있고, 오른쪽 물리 블록 풀에는 블록 3, 7, 9가 다른 시퀀스가 쓰는 블록들 사이에 흩어져 있다. 블록 테이블이 논리 블록 0을 물리 블록 7로, 1을 3으로, 2를 9로 잇는 화살표가 서로 교차한다.">
   <style>
-    .bt1-head { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .bt1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
     .bt1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .bt1-pool { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .bt1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
     .bt1-oth  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .bt1-lb   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .bt1-l    { fill: var(--text, #1c1917); font-size: 15px; }
-    .bt1-sub  { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
-    .bt1-r    { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: end; }
-    .bt1-cap  { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
-    .bt1-cap2 { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
+    .bt1-lb   { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
+    .bt1-l    { fill: var(--text, #1c1917); font-size: 20px; }
+    .bt1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .bt1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
+    .bt1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
+    .bt1-cap2 { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .bt1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#bt1Head); }
   </style>
   <defs>
@@ -184,37 +192,40 @@ KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(
       <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
     </marker>
   </defs>
-  <text x="99" y="18" class="bt1-head">시퀀스의 논리 블록 (연속)</text>
-  <text x="381" y="18" class="bt1-head">물리 블록 풀 (흩어짐)</text>
-  <rect x="8" y="34" width="182" height="44" rx="6" class="bt1-box"/>
-  <text x="99" y="52" class="bt1-lb">논리 블록 0</text>
-  <text x="99" y="69" class="bt1-sub">토큰 0 ~ 15</text>
-  <rect x="8" y="78" width="182" height="44" rx="6" class="bt1-box"/>
-  <text x="99" y="96" class="bt1-lb">논리 블록 1</text>
-  <text x="99" y="113" class="bt1-sub">토큰 16 ~ 31</text>
-  <rect x="8" y="122" width="182" height="44" rx="6" class="bt1-box"/>
-  <text x="99" y="140" class="bt1-lb">논리 블록 2</text>
-  <text x="99" y="157" class="bt1-sub">토큰 32 ~ 47</text>
-  <rect x="290" y="28" width="182" height="180" rx="6" class="bt1-pool"/>
-  <rect x="298" y="36" width="166" height="28" rx="4" class="bt1-hit"/>
-  <text x="308" y="55" class="bt1-l">블록 3</text>
-  <text x="456" y="55" class="bt1-r">토큰 16 ~ 31</text>
-  <rect x="298" y="70" width="166" height="22" rx="4" class="bt1-oth"/>
-  <text x="381" y="85" class="bt1-sub">다른 시퀀스가 사용</text>
-  <rect x="298" y="98" width="166" height="28" rx="4" class="bt1-hit"/>
-  <text x="308" y="117" class="bt1-l">블록 7</text>
-  <text x="456" y="117" class="bt1-r">토큰 0 ~ 15</text>
-  <rect x="298" y="132" width="166" height="22" rx="4" class="bt1-oth"/>
-  <text x="381" y="147" class="bt1-sub">다른 시퀀스가 사용</text>
-  <rect x="298" y="160" width="166" height="28" rx="4" class="bt1-hit"/>
-  <text x="308" y="179" class="bt1-l">블록 9</text>
-  <text x="456" y="179" class="bt1-r">토큰 32 ~ 47</text>
-  <text x="381" y="201" class="bt1-sub">...</text>
-  <path d="M194,56 C240,56 248,112 296,112" class="bt1-arr"/>
-  <path d="M194,100 C240,100 248,50 296,50" class="bt1-arr"/>
-  <path d="M194,144 C240,144 248,174 296,174" class="bt1-arr"/>
-  <text x="240" y="230" class="bt1-cap">블록 테이블이 논리 → 물리 매핑을 관리</text>
-  <text x="240" y="248" class="bt1-cap2">논리 순서 0, 1, 2가 물리 7, 3, 9로 흩어져도 문제없다</text>
+  <text x="8" y="20" class="bt1-head">시퀀스의 논리 블록 (연속)</text>
+  <text x="250" y="20" class="bt1-head">물리 블록 풀 (흩어짐)</text>
+  <!-- 시퀀스의 논리 블록 -->
+  <rect x="8" y="36" width="150" height="52" rx="6" class="bt1-box"/>
+  <text x="83" y="60" class="bt1-lb">논리 블록 0</text>
+  <text x="83" y="80" class="bt1-sub">토큰 0 ~ 15</text>
+  <rect x="8" y="88" width="150" height="52" rx="6" class="bt1-box"/>
+  <text x="83" y="112" class="bt1-lb">논리 블록 1</text>
+  <text x="83" y="132" class="bt1-sub">토큰 16 ~ 31</text>
+  <rect x="8" y="140" width="150" height="52" rx="6" class="bt1-box"/>
+  <text x="83" y="164" class="bt1-lb">논리 블록 2</text>
+  <text x="83" y="184" class="bt1-sub">토큰 32 ~ 47</text>
+  <!-- 물리 블록 풀 -->
+  <rect x="250" y="30" width="222" height="218" rx="6" class="bt1-pool"/>
+  <rect x="258" y="38" width="206" height="34" rx="4" class="bt1-hit"/>
+  <text x="268" y="61" class="bt1-l">블록 3</text>
+  <text x="454" y="61" class="bt1-r">토큰 16 ~ 31</text>
+  <rect x="258" y="78" width="206" height="28" rx="4" class="bt1-oth"/>
+  <text x="361" y="97" class="bt1-sub">다른 시퀀스가 사용</text>
+  <rect x="258" y="112" width="206" height="34" rx="4" class="bt1-hit"/>
+  <text x="268" y="135" class="bt1-l">블록 7</text>
+  <text x="454" y="135" class="bt1-r">토큰 0 ~ 15</text>
+  <rect x="258" y="152" width="206" height="28" rx="4" class="bt1-oth"/>
+  <text x="361" y="171" class="bt1-sub">다른 시퀀스가 사용</text>
+  <rect x="258" y="186" width="206" height="34" rx="4" class="bt1-hit"/>
+  <text x="268" y="209" class="bt1-l">블록 9</text>
+  <text x="454" y="209" class="bt1-r">토큰 32 ~ 47</text>
+  <text x="361" y="238" class="bt1-sub">...</text>
+  <!-- 논리 → 물리 매핑 -->
+  <path d="M162,62 C205,62 210,129 246,129" class="bt1-arr"/>
+  <path d="M162,114 C205,114 210,55 246,55" class="bt1-arr"/>
+  <path d="M162,166 C205,166 210,203 246,203" class="bt1-arr"/>
+  <text x="240" y="274" class="bt1-cap">블록 테이블이 논리 → 물리 매핑을 관리</text>
+  <text x="240" y="296" class="bt1-cap2">논리 순서 0, 1, 2가 물리 7, 3, 9로 흩어져도 문제없다</text>
 </svg>
 </div>
 

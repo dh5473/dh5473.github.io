@@ -5,13 +5,13 @@ category: 'LLM'
 series: 'llm-serving'
 seriesOrder: 8
 tags: ['LLM Serving', 'vLLM', 'Structured Output', 'Tensor Parallelism', 'CUDA Graph']
-summary: 'vLLM V1 엔진의 프로세스 구조부터 gpu_memory_utilization, max_model_len, CUDA graph, Tensor Parallelism까지 서빙 핵심 인자를 엔진 동작 원리로부터 설명하고, Gemma 4 31B 실전 설정으로 종합합니다.'
+summary: 'vLLM V1 엔진의 프로세스 구조부터 gpu_memory_utilization, max_model_len, CUDA graph, Structured Output, Tensor Parallelism까지 서빙 핵심 인자를 엔진 동작 원리로부터 설명합니다.'
 thumbnail: './thumbnail.png'
 ---
 
 vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나도 처리하지 않았는데 GPU 메모리가 이미 90% 넘게 차 있습니다. ps로 확인하면 프로세스도 하나가 아니라 서너 개씩 떠 있습니다. 처음 보면 뭔가 잘못된 것 같지만, 둘 다 의도된 설계입니다.
 
-이번 글에서는 vLLM 서버를 실제로 띄울 때 마주치는 이런 현상들을 엔진 구조로부터 설명합니다. V1 엔진이 프로세스를 어떻게 나누는지 먼저 보고, 서빙 설정의 뼈대가 되는 엔진 인자들(`gpu_memory_utilization`, `max_model_len`, `max_num_seqs`, `max_num_batched_tokens`, `enforce_eager`)이 각각 엔진의 어디를 건드리는지 짚은 뒤, 출력 형식을 강제하는 structured output과 GPU 여러 장에 모델을 나누는 Tensor Parallelism을 거쳐 Gemma 4 31B 실전 설정으로 종합합니다. 기준은 vLLM v0.25.1(V1 엔진)입니다.
+이번 글에서는 vLLM 서버를 실제로 띄울 때 마주치는 이런 현상들을 엔진 구조로부터 설명합니다. V1 엔진이 프로세스를 어떻게 나누는지 먼저 보고, 서빙 설정의 뼈대가 되는 엔진 인자들(`gpu_memory_utilization`, `max_model_len`, `max_num_seqs`, `max_num_batched_tokens`, `enforce_eager`)이 각각 엔진의 어디를 건드리는지 짚은 뒤, 출력 형식을 강제하는 structured output과 GPU 여러 장에 모델을 나누는 Tensor Parallelism까지 다룹니다. 기준은 vLLM v0.25.1(V1 엔진)입니다.
 
 <br>
 
@@ -20,15 +20,15 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
 `vllm serve google/gemma-4-31B-it --tensor-parallel-size 2`를 실행하면 프로세스 4개가 뜹니다. API 서버 1개, EngineCore 1개, GPU 워커 2개(GPU당 1개)입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 460 268" style="width: 100%; height: auto; max-width: 460px;"
+<svg viewBox="0 0 460 340" style="width: 100%; height: auto; max-width: 460px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="vLLM V1 엔진의 프로세스 구조. HTTP 요청이 API 서버 프로세스로 들어가고, ZMQ로 EngineCore 프로세스에 전달된 뒤, shared memory 브로드캐스트로 GPU마다 하나씩 붙은 워커 프로세스로 내려갑니다.">
   <style>
     .vp1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .vp1-label { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .vp1-sub   { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
-    .vp1-note  { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: start; }
+    .vp1-label { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
+    .vp1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .vp1-note  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: start; }
     .vp1-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#vp1Arrow); }
     .vp1-line  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
   </style>
@@ -37,27 +37,27 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
       <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
-  <text x="230" y="16" class="vp1-sub">HTTP 요청 / 응답</text>
-  <path d="M230,24 L230,34" class="vp1-arrow"/>
-  <rect x="60" y="36" width="340" height="56" rx="8" class="vp1-box"/>
-  <text x="230" y="60" class="vp1-label">API 서버 (APIServer)</text>
-  <text x="230" y="80" class="vp1-sub">요청 수신, 토큰화, 디토큰화, 스트리밍</text>
-  <path d="M230,92 L230,116" class="vp1-arrow"/>
-  <text x="240" y="109" class="vp1-note">ZMQ</text>
-  <rect x="60" y="118" width="340" height="56" rx="8" class="vp1-box"/>
-  <text x="230" y="142" class="vp1-label">EngineCore</text>
-  <text x="230" y="162" class="vp1-sub">스케줄러 busy loop, KV Cache 블록 관리</text>
-  <path d="M230,174 L230,192" class="vp1-line"/>
-  <path d="M140,192 L320,192" class="vp1-line"/>
-  <path d="M140,192 L140,206" class="vp1-arrow"/>
-  <path d="M320,192 L320,206" class="vp1-arrow"/>
-  <text x="240" y="188" class="vp1-note">shared memory</text>
-  <rect x="60" y="208" width="160" height="52" rx="8" class="vp1-box"/>
-  <text x="140" y="230" class="vp1-label">Worker_TP0</text>
-  <text x="140" y="249" class="vp1-sub">GPU 0, forward 실행</text>
-  <rect x="240" y="208" width="160" height="52" rx="8" class="vp1-box"/>
-  <text x="320" y="230" class="vp1-label">Worker_TP1</text>
-  <text x="320" y="249" class="vp1-sub">GPU 1, forward 실행</text>
+  <text x="230" y="18" class="vp1-sub">HTTP 요청 / 응답</text>
+  <path d="M230,26 L230,38" class="vp1-arrow"/>
+  <rect x="20" y="40" width="420" height="72" rx="8" class="vp1-box"/>
+  <text x="230" y="70" class="vp1-label">API 서버 (APIServer)</text>
+  <text x="230" y="95" class="vp1-sub">요청 수신, 토큰화, 디토큰화, 스트리밍</text>
+  <path d="M230,112 L230,140" class="vp1-arrow"/>
+  <text x="240" y="131" class="vp1-note">ZMQ</text>
+  <rect x="20" y="142" width="420" height="72" rx="8" class="vp1-box"/>
+  <text x="230" y="172" class="vp1-label">EngineCore</text>
+  <text x="230" y="197" class="vp1-sub">스케줄러 busy loop, KV Cache 블록 관리</text>
+  <path d="M230,214 L230,238" class="vp1-line"/>
+  <path d="M120,238 L340,238" class="vp1-line"/>
+  <path d="M120,238 L120,258" class="vp1-arrow"/>
+  <path d="M340,238 L340,258" class="vp1-arrow"/>
+  <text x="240" y="232" class="vp1-note">shared memory</text>
+  <rect x="20" y="260" width="200" height="68" rx="8" class="vp1-box"/>
+  <text x="120" y="288" class="vp1-label">Worker_TP0</text>
+  <text x="120" y="313" class="vp1-sub">GPU 0, forward 실행</text>
+  <rect x="240" y="260" width="200" height="68" rx="8" class="vp1-box"/>
+  <text x="340" y="288" class="vp1-label">Worker_TP1</text>
+  <text x="340" y="313" class="vp1-sub">GPU 1, forward 실행</text>
 </svg>
 </div>
 
@@ -84,31 +84,31 @@ vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니�
 예약한 메모리를 어디에 쓰는지는 시작 순서를 보면 드러납니다. 가중치를 올린 다음, vLLM은 최대 크기 배치로 더미 forward를 한 번 돌려서 활성값이 정점에서 얼마나 먹는지, NCCL 버퍼 같은 PyTorch 밖 메모리가 얼마인지, CUDA graph가 얼마를 쓸지 측정하고 추정합니다. 그리고 예산에서 이것들을 뺀 **나머지 전부를 KV Cache 풀로** 만듭니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 200" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 212" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="80GB GPU에 gpu_memory_utilization 0.92를 적용한 73.6GB 예산을 모델 가중치, 활성값 피크와 CUDA graph, KV Cache 풀 세 몫으로 나눈 가로 막대. KV Cache 풀은 앞의 두 몫을 뺀 나머지 전부를 차지합니다.">
   <style>
-    .vm1-title  { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .vm1-title  { fill: var(--text, #1c1917); font-size: 21px; text-anchor: middle; }
     .vm1-fixed  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .vm1-act    { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
     .vm1-kv     { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .vm1-in     { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
-    .vm1-legend { fill: var(--text, #1c1917); font-size: 13px; text-anchor: start; }
+    .vm1-in     { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
+    .vm1-legend { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }
   </style>
-  <text x="240" y="22" class="vm1-title">80GB GPU × 0.92 = 73.6GB 예산</text>
-  <rect x="20" y="38" width="150" height="42" rx="4" class="vm1-fixed"/>
-  <text x="95" y="64" class="vm1-in">가중치</text>
-  <rect x="170" y="38" width="90" height="42" class="vm1-act"/>
-  <text x="215" y="64" class="vm1-in">활성값</text>
-  <rect x="260" y="38" width="200" height="42" rx="4" class="vm1-kv"/>
-  <text x="360" y="64" class="vm1-in" fill="#ffffff">KV Cache 풀</text>
-  <rect x="60" y="106" width="14" height="14" rx="3" class="vm1-fixed"/>
-  <text x="84" y="118" class="vm1-legend">모델 가중치 (고정)</text>
-  <rect x="60" y="134" width="14" height="14" rx="3" class="vm1-act"/>
-  <text x="84" y="146" class="vm1-legend">활성값 피크 + CUDA graph (시작 시 추정)</text>
-  <rect x="60" y="162" width="14" height="14" rx="3" class="vm1-kv"/>
-  <text x="84" y="174" class="vm1-legend">KV Cache 풀 (남는 것 전부)</text>
+  <text x="240" y="28" class="vm1-title">80GB GPU × 0.92 = 73.6GB 예산</text>
+  <rect x="20" y="46" width="150" height="52" rx="4" class="vm1-fixed"/>
+  <text x="95" y="78" class="vm1-in">가중치</text>
+  <rect x="170" y="46" width="90" height="52" class="vm1-act"/>
+  <text x="215" y="78" class="vm1-in">활성값</text>
+  <rect x="260" y="46" width="200" height="52" rx="4" class="vm1-kv"/>
+  <text x="360" y="78" class="vm1-in" fill="#ffffff">KV Cache 풀</text>
+  <rect x="20" y="118" width="16" height="16" rx="3" class="vm1-fixed"/>
+  <text x="46" y="131" class="vm1-legend">모델 가중치 (고정)</text>
+  <rect x="20" y="152" width="16" height="16" rx="3" class="vm1-act"/>
+  <text x="46" y="165" class="vm1-legend">활성값 피크 + CUDA graph (시작 시 추정)</text>
+  <rect x="20" y="186" width="16" height="16" rx="3" class="vm1-kv"/>
+  <text x="46" y="199" class="vm1-legend">KV Cache 풀 (남는 것 전부)</text>
 </svg>
 </div>
 
@@ -243,35 +243,6 @@ TP 값을 고를 때는 제약도 있습니다. attention head 수가 TP로 나�
 
 <br>
 
-## Gemma 4 31B 서빙 설정으로 종합하기
-
-이제 배운 것을 전부 모아 실제 설정을 읽어보겠습니다. vLLM 공식 레시피의 Gemma 4 31B 서빙 커맨드입니다. A100/H100 80GB 2장 기준입니다.
-
-```bash
-vllm serve google/gemma-4-31B-it \
-  --tensor-parallel-size 2 \
-  --max-model-len 32768 \
-  --gpu-memory-utilization 0.90
-```
-
-플래그마다 이유가 있습니다.
-
-**`--tensor-parallel-size 2`**: 31B 모델의 BF16 가중치는 약 59GB입니다. 80GB 한 장에 올라가긴 하지만 활성값과 CUDA graph 몫을 빼면 KV 풀이 거의 남지 않습니다. 두 장에 나누면 GPU당 가중치가 30GB 수준으로 내려가 KV 여유가 확보됩니다. 공식 레시피의 가이드도 처리량 최대화는 TP 1에서 2, 지연 최소화는 TP 4에서 8, 균형은 TP 2입니다.
-
-**`--max-model-len 32768`**: Gemma 4 31B의 컨텍스트는 256K인데, 기본값을 그대로 두면 시작 검사와 최대 동시성 계산이 전부 256K 요청 기준이 됩니다. 레시피도 실제 워크로드 길이에 맞춰 내리라고 명시합니다. 32K로 내리면 같은 KV 풀에서 보장되는 동시성이 8배로 올라갑니다.
-
-**`--gpu-memory-utilization 0.90`**: 기본값 0.92보다 약간 보수적인 값으로, 레시피 권장 범위는 0.85에서 0.95입니다.
-
-Gemma 4라서 더 얹을 수 있는 최적화도 있습니다.
-
-- 텍스트 전용 서비스라면 `--limit-mm-per-prompt '{"image": 0, "audio": 0}'`으로 멀티모달 입력을 끄고 인코더 몫의 메모리를 아낍니다.
-- KV 풀을 더 키우고 싶으면 `--kv-cache-dtype fp8`이 KV를 절반 크기로 만들어 토큰 용량을 두 배로 늘립니다. 정밀도를 낮추는 만큼 품질 확인은 필요합니다.
-- 80GB 두 장이 없다면 Google이 공개한 QAT W4A16 체크포인트(`google/gemma-4-31B-it-qat-w4a16-ct`)가 가중치 메모리를 66% 줄여줍니다(59.0GB에서 19.8GB로).
-
-마지막으로 구조 이야기 하나를 짚어두겠습니다. 256K 컨텍스트를 서빙할 수 있는 것은 Gemma 4의 어텐션 구조 덕이 큽니다. 레이어 6개 중 5개는 최근 1024토큰만 보는 슬라이딩 윈도우 방식이라 KV도 그만큼만 유지하고, 전체 시퀀스의 KV를 들고 가는 것은 6개 중 1개인 global 레이어뿐입니다. 요청당 KV가 작으니 같은 풀에서 훨씬 많은 요청을 받습니다.
-
-<br>
-
 ## 마치며
 
 이번 글의 설정들은 결국 하나의 질문으로 모입니다. 가중치라는 고정비를 빼고 남는 메모리와 연산을 어디에 쓸 것인가. `gpu_memory_utilization`과 `max_model_len`은 남는 메모리를 KV 풀로 바꾸는 손잡이고, 스케줄러의 두 인자와 CUDA graph는 남는 연산을 배치와 커널 재생으로 채우는 손잡이며, TP는 그 판 자체를 GPU 여러 장으로 넓히는 선택입니다. 다음 글에서는 시리즈의 마지막으로, TTFT와 TPOT 같은 성능 지표를 정의하고 그 지표를 근거로 오늘 본 인자들을 튜닝하는 방법을 다루겠습니다.
@@ -299,4 +270,3 @@ Gemma 4라서 더 얹을 수 있는 최적화도 있습니다.
 - [vLLM Structured Outputs](https://docs.vllm.ai/en/latest/features/structured_outputs.html)
 - [XGrammar: Flexible and Efficient Structured Generation Engine for Large Language Models](https://arxiv.org/abs/2411.15100)
 - [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](https://arxiv.org/abs/1909.08053)
-- [vLLM Recipes: Google Gemma 4](https://github.com/vllm-project/recipes/blob/main/Google/Gemma4.md)
