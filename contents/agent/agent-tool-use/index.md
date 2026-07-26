@@ -28,43 +28,44 @@ Claude Code에 "deprecated된 모듈을 import하는 파일을 전부 찾아줘"
 **ACI(Agent-Computer Interface)**는 모델이 도구와 상호작용하는 인터페이스입니다. HCI가 사람을 위한 버튼, 메뉴, 레이아웃을 설계하듯, ACI는 모델을 위한 도구 이름, 설명, 파라미터 스키마, 에러 메시지를 설계합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 250" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
+<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
   <defs>
     <marker id="aciArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
   <style>
-    .aci-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .aci-main { font-size: 16px; fill: var(--text, #1c1917); }
-    .aci-sub { font-size: 15px; fill: var(--text, #1c1917); }
-    .aci-tag { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .aci-title { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
+    .aci-main { font-size: 22px; fill: var(--text, #1c1917); }
+    .aci-sub { font-size: 20px; fill: var(--text, #1c1917); }
+    .aci-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
     .aci-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .aci-hub { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
     .aci-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#aciArrow); }
   </style>
   <!-- panel 1: HCI -->
-  <text x="20" y="24" class="aci-title">HCI: 사람을 위한 인터페이스</text>
-  <rect x="20" y="42" width="76" height="64" rx="8" class="aci-box"/>
-  <text x="58" y="80" class="aci-main" text-anchor="middle">사람</text>
-  <line x1="100" y1="74" x2="122" y2="74" class="aci-line"/>
-  <rect x="128" y="38" width="212" height="72" rx="8" class="aci-hub"/>
-  <text x="234" y="64" class="aci-tag" text-anchor="middle">UI 설계</text>
-  <text x="234" y="90" class="aci-sub" text-anchor="middle">버튼 · 메뉴 · 레이아웃</text>
-  <line x1="344" y1="74" x2="366" y2="74" class="aci-line"/>
-  <rect x="372" y="42" width="88" height="64" rx="8" class="aci-box"/>
-  <text x="416" y="80" class="aci-sub" text-anchor="middle">소프트웨어</text>
+  <text x="14" y="24" class="aci-title">HCI: 사람을 위한 인터페이스</text>
+  <rect x="140" y="36" width="200" height="44" rx="8" class="aci-box"/>
+  <text x="240" y="66" class="aci-main" text-anchor="middle">사람</text>
+  <line x1="240" y1="84" x2="240" y2="104" class="aci-line"/>
+  <rect x="40" y="110" width="400" height="76" rx="8" class="aci-hub"/>
+  <text x="240" y="138" class="aci-tag" text-anchor="middle">UI 설계</text>
+  <text x="240" y="168" class="aci-sub" text-anchor="middle">버튼 · 메뉴 · 레이아웃</text>
+  <line x1="240" y1="190" x2="240" y2="210" class="aci-line"/>
+  <rect x="140" y="216" width="200" height="44" rx="8" class="aci-box"/>
+  <text x="240" y="245" class="aci-sub" text-anchor="middle">소프트웨어</text>
   <!-- panel 2: ACI -->
-  <text x="20" y="152" class="aci-title">ACI: 모델을 위한 인터페이스</text>
-  <rect x="20" y="170" width="76" height="64" rx="8" class="aci-box"/>
-  <text x="58" y="208" class="aci-main" text-anchor="middle">모델</text>
-  <line x1="100" y1="202" x2="122" y2="202" class="aci-line"/>
-  <rect x="128" y="166" width="212" height="72" rx="8" class="aci-hub"/>
-  <text x="234" y="192" class="aci-sub" text-anchor="middle">도구 이름 · 설명</text>
-  <text x="234" y="216" class="aci-sub" text-anchor="middle">파라미터 · 에러 메시지</text>
-  <line x1="344" y1="202" x2="366" y2="202" class="aci-line"/>
-  <rect x="372" y="170" width="88" height="64" rx="8" class="aci-box"/>
-  <text x="416" y="208" class="aci-sub" text-anchor="middle">시스템</text>
+  <text x="14" y="300" class="aci-title">ACI: 모델을 위한 인터페이스</text>
+  <rect x="140" y="312" width="200" height="44" rx="8" class="aci-box"/>
+  <text x="240" y="342" class="aci-main" text-anchor="middle">모델</text>
+  <line x1="240" y1="360" x2="240" y2="380" class="aci-line"/>
+  <rect x="40" y="386" width="400" height="100" rx="8" class="aci-hub"/>
+  <text x="240" y="414" class="aci-tag" text-anchor="middle">도구 설계</text>
+  <text x="240" y="444" class="aci-sub" text-anchor="middle">도구 이름 · 설명</text>
+  <text x="240" y="472" class="aci-sub" text-anchor="middle">파라미터 · 에러 메시지</text>
+  <line x1="240" y1="490" x2="240" y2="510" class="aci-line"/>
+  <rect x="140" y="516" width="200" height="44" rx="8" class="aci-box"/>
+  <text x="240" y="545" class="aci-sub" text-anchor="middle">시스템</text>
 </svg>
 </div>
 
@@ -105,52 +106,52 @@ Anthropic의 "Writing Effective Tools for AI Agents"와 "Building Effective Agen
 다섯 원칙은 도구 정의의 서로 다른 부분에 하나씩 대응합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
+<svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
   <defs>
     <marker id="tpArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
   <style>
-    .tp-head { font-size: 13px; fill: var(--text-muted, #78716c); }
-    .tp-key { font-size: 15px; fill: var(--primary, #0d9488); font-family: 'JetBrains Mono', monospace; }
-    .tp-name { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .tp-desc { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .tp-head { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .tp-key { font-size: 20px; fill: var(--primary, #0d9488); font-family: 'JetBrains Mono', monospace; }
+    .tp-name { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
+    .tp-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
     .tp-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .tp-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#tpArrow); }
   </style>
-  <text x="20" y="20" class="tp-head">도구 정의</text>
-  <text x="232" y="20" class="tp-head">적용 원칙</text>
+  <text x="16" y="22" class="tp-head">도구 정의</text>
+  <text x="200" y="22" class="tp-head">적용 원칙</text>
   <!-- row 1: name -->
-  <rect x="20" y="32" width="176" height="46" rx="6" class="tp-box"/>
-  <text x="108" y="61" class="tp-key" text-anchor="middle">name</text>
-  <line x1="200" y1="55" x2="224" y2="55" class="tp-line"/>
-  <text x="232" y="52" class="tp-name">원칙 2. 네이밍</text>
-  <text x="232" y="70" class="tp-desc">이름만으로 기능이 전달되게</text>
+  <rect x="16" y="36" width="152" height="56" rx="6" class="tp-box"/>
+  <text x="92" y="71" class="tp-key" text-anchor="middle">name</text>
+  <line x1="172" y1="64" x2="192" y2="64" class="tp-line"/>
+  <text x="200" y="58" class="tp-name">원칙 2. 네이밍</text>
+  <text x="200" y="82" class="tp-desc">이름만으로 기능이 전달되게</text>
   <!-- row 2: description -->
-  <rect x="20" y="86" width="176" height="46" rx="6" class="tp-box"/>
-  <text x="108" y="115" class="tp-key" text-anchor="middle">description</text>
-  <line x1="200" y1="109" x2="224" y2="109" class="tp-line"/>
-  <text x="232" y="106" class="tp-name">원칙 3. 설명은 프롬프트</text>
-  <text x="232" y="124" class="tp-desc">무엇을, 언제, 대안 도구까지</text>
+  <rect x="16" y="102" width="152" height="56" rx="6" class="tp-box"/>
+  <text x="92" y="137" class="tp-key" text-anchor="middle">description</text>
+  <line x1="172" y1="130" x2="192" y2="130" class="tp-line"/>
+  <text x="200" y="124" class="tp-name">원칙 3. 설명은 프롬프트</text>
+  <text x="200" y="148" class="tp-desc">무엇을, 언제, 대안 도구까지</text>
   <!-- row 3: parameters -->
-  <rect x="20" y="140" width="176" height="46" rx="6" class="tp-box"/>
-  <text x="108" y="169" class="tp-key" text-anchor="middle">parameters</text>
-  <line x1="200" y1="163" x2="224" y2="163" class="tp-line"/>
-  <text x="232" y="160" class="tp-name">원칙 1. 적을수록 좋다</text>
-  <text x="232" y="178" class="tp-desc">겹치는 도구를 하나로 통합</text>
+  <rect x="16" y="168" width="152" height="56" rx="6" class="tp-box"/>
+  <text x="92" y="203" class="tp-key" text-anchor="middle">parameters</text>
+  <line x1="172" y1="196" x2="192" y2="196" class="tp-line"/>
+  <text x="200" y="190" class="tp-name">원칙 1. 적을수록 좋다</text>
+  <text x="200" y="214" class="tp-desc">겹치는 도구를 하나로 통합</text>
   <!-- row 4: return -->
-  <rect x="20" y="194" width="176" height="46" rx="6" class="tp-box"/>
-  <text x="108" y="223" class="tp-key" text-anchor="middle">return</text>
-  <line x1="200" y1="217" x2="224" y2="217" class="tp-line"/>
-  <text x="232" y="214" class="tp-name">원칙 4. 최소한의 토큰</text>
-  <text x="232" y="232" class="tp-desc">의미 있는 값, 상한, 안내</text>
+  <rect x="16" y="234" width="152" height="56" rx="6" class="tp-box"/>
+  <text x="92" y="269" class="tp-key" text-anchor="middle">return</text>
+  <line x1="172" y1="262" x2="192" y2="262" class="tp-line"/>
+  <text x="200" y="256" class="tp-name">원칙 4. 최소한의 토큰</text>
+  <text x="200" y="280" class="tp-desc">의미 있는 값, 상한, 안내</text>
   <!-- row 5: error -->
-  <rect x="20" y="248" width="176" height="46" rx="6" class="tp-box"/>
-  <text x="108" y="277" class="tp-key" text-anchor="middle">error</text>
-  <line x1="200" y1="271" x2="224" y2="271" class="tp-line"/>
-  <text x="232" y="268" class="tp-name">원칙 5. Poka-yoke</text>
-  <text x="232" y="286" class="tp-desc">실행 가능한 에러, 실수 차단</text>
+  <rect x="16" y="300" width="152" height="56" rx="6" class="tp-box"/>
+  <text x="92" y="335" class="tp-key" text-anchor="middle">error</text>
+  <line x1="172" y1="328" x2="192" y2="328" class="tp-line"/>
+  <text x="200" y="322" class="tp-name">원칙 5. Poka-yoke</text>
+  <text x="200" y="346" class="tp-desc">실행 가능한 에러, 실수 차단</text>
 </svg>
 </div>
 
@@ -332,61 +333,61 @@ Claude Code의 도구 설계에서 이 구분이 선명하게 드러납니다. `
 같은 호출이 두 번 들어갔을 때 세 도구가 어떻게 갈리는지 보면 차이가 분명해집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 276" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
+<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
   <defs>
     <marker id="idemArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
     </marker>
   </defs>
   <style>
-    .idem-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .idem-tag { font-size: 13px; fill: var(--text-muted, #78716c); }
-    .idem-val { font-size: 15px; fill: var(--text, #1c1917); }
+    .idem-title { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
+    .idem-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .idem-val { font-size: 20px; fill: var(--text, #1c1917); }
     .idem-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .idem-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#idemArrow); }
     .idem-okbox { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .idem-oktext { font-size: 15px; font-weight: 700; fill: var(--text-success, #16a34a); }
+    .idem-oktext { font-size: 20px; font-weight: 700; fill: var(--text-success, #16a34a); }
     .idem-ngbox { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .idem-ngtext { font-size: 15px; font-weight: 700; fill: var(--text-danger, #dc2626); }
+    .idem-ngtext { font-size: 20px; font-weight: 700; fill: var(--text-danger, #dc2626); }
     .idem-ok { stroke: var(--text-success, #16a34a); stroke-width: 2; fill: none; }
     .idem-ng { stroke: var(--text-danger, #dc2626); stroke-width: 2; fill: none; }
   </style>
   <!-- row 1: Write -->
-  <text x="20" y="22" class="idem-title">Write: 파일 전체 덮어쓰기</text>
-  <rect x="20" y="30" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="85" y="50" class="idem-tag" text-anchor="middle">1회 호출</text>
-  <text x="85" y="69" class="idem-val" text-anchor="middle">파일 = A</text>
-  <line x1="154" y1="54" x2="176" y2="54" class="idem-line"/>
-  <rect x="182" y="30" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="247" y="50" class="idem-tag" text-anchor="middle">2회 호출</text>
-  <text x="247" y="69" class="idem-val" text-anchor="middle">파일 = A</text>
-  <rect x="330" y="38" width="130" height="32" rx="16" class="idem-okbox"/>
-  <path d="M348,54 l5,6 l10,-13" class="idem-ok"/>
-  <text x="404" y="59" class="idem-oktext" text-anchor="middle">멱등</text>
+  <text x="20" y="24" class="idem-title">Write: 파일 전체 덮어쓰기</text>
+  <rect x="20" y="32" width="128" height="56" rx="6" class="idem-box"/>
+  <text x="84" y="56" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="84" y="80" class="idem-val" text-anchor="middle">파일 = A</text>
+  <line x1="152" y1="60" x2="172" y2="60" class="idem-line"/>
+  <rect x="178" y="32" width="140" height="56" rx="6" class="idem-box"/>
+  <text x="248" y="56" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="248" y="80" class="idem-val" text-anchor="middle">파일 = A</text>
+  <rect x="324" y="42" width="136" height="36" rx="18" class="idem-okbox"/>
+  <path d="M344,60 l5,6 l10,-13" class="idem-ok"/>
+  <text x="412" y="67" class="idem-oktext" text-anchor="middle">멱등</text>
   <!-- row 2: Edit -->
-  <text x="20" y="118" class="idem-title">Edit: 문자열 매칭 후 치환</text>
-  <rect x="20" y="126" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="85" y="146" class="idem-tag" text-anchor="middle">1회 호출</text>
-  <text x="85" y="165" class="idem-val" text-anchor="middle">치환 완료</text>
-  <line x1="154" y1="150" x2="176" y2="150" class="idem-line"/>
-  <rect x="182" y="126" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="247" y="146" class="idem-tag" text-anchor="middle">2회 호출</text>
-  <text x="247" y="165" class="idem-val" text-anchor="middle">no changes</text>
-  <rect x="330" y="134" width="130" height="32" rx="16" class="idem-okbox"/>
-  <path d="M348,150 l5,6 l10,-13" class="idem-ok"/>
-  <text x="404" y="155" class="idem-oktext" text-anchor="middle">멱등</text>
+  <text x="20" y="128" class="idem-title">Edit: 문자열 매칭 후 치환</text>
+  <rect x="20" y="136" width="128" height="56" rx="6" class="idem-box"/>
+  <text x="84" y="160" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="84" y="184" class="idem-val" text-anchor="middle">치환 완료</text>
+  <line x1="152" y1="164" x2="172" y2="164" class="idem-line"/>
+  <rect x="178" y="136" width="140" height="56" rx="6" class="idem-box"/>
+  <text x="248" y="160" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="248" y="184" class="idem-val" text-anchor="middle">no changes</text>
+  <rect x="324" y="146" width="136" height="36" rx="18" class="idem-okbox"/>
+  <path d="M344,164 l5,6 l10,-13" class="idem-ok"/>
+  <text x="412" y="171" class="idem-oktext" text-anchor="middle">멱등</text>
   <!-- row 3: increment -->
-  <text x="20" y="214" class="idem-title">increment: 카운터 증분</text>
-  <rect x="20" y="222" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="85" y="242" class="idem-tag" text-anchor="middle">1회 호출</text>
-  <text x="85" y="261" class="idem-val" text-anchor="middle">count = 1</text>
-  <line x1="154" y1="246" x2="176" y2="246" class="idem-line"/>
-  <rect x="182" y="222" width="130" height="48" rx="6" class="idem-box"/>
-  <text x="247" y="242" class="idem-tag" text-anchor="middle">2회 호출</text>
-  <text x="247" y="261" class="idem-val" text-anchor="middle">count = 2</text>
-  <rect x="330" y="230" width="130" height="32" rx="16" class="idem-ngbox"/>
-  <path d="M347,240 l12,12 M359,240 l-12,12" class="idem-ng"/>
-  <text x="408" y="251" class="idem-ngtext" text-anchor="middle">비멱등</text>
+  <text x="20" y="232" class="idem-title">increment: 카운터 증분</text>
+  <rect x="20" y="240" width="128" height="56" rx="6" class="idem-box"/>
+  <text x="84" y="264" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="84" y="288" class="idem-val" text-anchor="middle">count = 1</text>
+  <line x1="152" y1="268" x2="172" y2="268" class="idem-line"/>
+  <rect x="178" y="240" width="140" height="56" rx="6" class="idem-box"/>
+  <text x="248" y="264" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="248" y="288" class="idem-val" text-anchor="middle">count = 2</text>
+  <rect x="324" y="250" width="136" height="36" rx="18" class="idem-ngbox"/>
+  <path d="M344,262 l12,12 M356,262 l-12,12" class="idem-ng"/>
+  <text x="412" y="275" class="idem-ngtext" text-anchor="middle">비멱등</text>
 </svg>
 </div>
 

@@ -22,75 +22,75 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
 에이전트 생태계에서 M개의 에이전트 플랫폼(Claude Code, Cursor, Windsurf, Codex 등)이 N개의 외부 서비스(GitHub, Slack, Jira, DB, 모니터링 도구 등)와 연결되어야 한다고 가정합니다. 표준이 없으면 M×N개의 커스텀 통합이 필요합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 480" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="표준이 없으면 에이전트 3개와 서비스 4개가 12개의 커스텀 통합을 필요로 하지만, MCP 표준 프로토콜을 경유하면 7개 구현으로 줄어드는 비교 다이어그램">
+<svg viewBox="0 0 480 560" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="표준이 없으면 에이전트 3개와 서비스 4개가 12개의 커스텀 통합을 필요로 하지만, MCP 표준 프로토콜을 경유하면 7개 구현으로 줄어드는 비교 다이어그램">
   <style>
-    .mn-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .mn-label { font-size: 13px; fill: var(--text, #1c1917); }
-    .mn-formula { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .mn-title { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
+    .mn-label { font-size: 19px; fill: var(--text, #1c1917); }
+    .mn-formula { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .mn-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .mn-mesh { stroke: var(--text-danger, #dc2626); stroke-width: 1; opacity: 0.5; }
     .mn-spoke { stroke: var(--primary, #0d9488); stroke-width: 1.8; }
     .mn-hub { fill: var(--primary, #0d9488); }
-    .mn-hub-text { font-size: 15px; font-weight: 700; fill: #ffffff; }
+    .mn-hub-text { font-size: 20px; font-weight: 700; fill: #ffffff; }
     .mn-divider { stroke: var(--border, #e7e5e4); stroke-width: 1; }
   </style>
   <!-- 위: 표준 없음 -->
-  <text x="240" y="20" text-anchor="middle" class="mn-title">위: 표준 없음, 조합마다 커스텀 통합</text>
-  <rect x="30" y="34" width="110" height="34" rx="6" class="mn-box" />
-  <rect x="185" y="34" width="110" height="34" rx="6" class="mn-box" />
-  <rect x="340" y="34" width="110" height="34" rx="6" class="mn-box" />
-  <text x="85" y="56" text-anchor="middle" class="mn-label">Claude Code</text>
-  <text x="240" y="56" text-anchor="middle" class="mn-label">Cursor</text>
-  <text x="395" y="56" text-anchor="middle" class="mn-label">Codex</text>
+  <text x="240" y="24" text-anchor="middle" class="mn-title">위: 표준 없음, 조합마다 커스텀 통합</text>
+  <rect x="20" y="40" width="136" height="42" rx="6" class="mn-box" />
+  <rect x="172" y="40" width="136" height="42" rx="6" class="mn-box" />
+  <rect x="324" y="40" width="136" height="42" rx="6" class="mn-box" />
+  <text x="88" y="68" text-anchor="middle" class="mn-label">Claude Code</text>
+  <text x="240" y="68" text-anchor="middle" class="mn-label">Cursor</text>
+  <text x="392" y="68" text-anchor="middle" class="mn-label">Codex</text>
   <!-- 12개 교차 연결 -->
-  <line x1="85" y1="68" x2="78" y2="150" class="mn-mesh" />
-  <line x1="85" y1="68" x2="186" y2="150" class="mn-mesh" />
-  <line x1="85" y1="68" x2="294" y2="150" class="mn-mesh" />
-  <line x1="85" y1="68" x2="402" y2="150" class="mn-mesh" />
-  <line x1="240" y1="68" x2="78" y2="150" class="mn-mesh" />
-  <line x1="240" y1="68" x2="186" y2="150" class="mn-mesh" />
-  <line x1="240" y1="68" x2="294" y2="150" class="mn-mesh" />
-  <line x1="240" y1="68" x2="402" y2="150" class="mn-mesh" />
-  <line x1="395" y1="68" x2="78" y2="150" class="mn-mesh" />
-  <line x1="395" y1="68" x2="186" y2="150" class="mn-mesh" />
-  <line x1="395" y1="68" x2="294" y2="150" class="mn-mesh" />
-  <line x1="395" y1="68" x2="402" y2="150" class="mn-mesh" />
-  <rect x="28" y="150" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="136" y="150" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="244" y="150" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="352" y="150" width="100" height="34" rx="6" class="mn-box" />
-  <text x="78" y="172" text-anchor="middle" class="mn-label">GitHub</text>
-  <text x="186" y="172" text-anchor="middle" class="mn-label">Slack</text>
-  <text x="294" y="172" text-anchor="middle" class="mn-label">Jira</text>
-  <text x="402" y="172" text-anchor="middle" class="mn-label">DB</text>
-  <text x="240" y="212" text-anchor="middle" class="mn-formula">3 × 4 = 12개 커스텀 통합</text>
-  <line x1="20" y1="234" x2="460" y2="234" class="mn-divider" />
+  <line x1="88" y1="82" x2="78" y2="170" class="mn-mesh" />
+  <line x1="88" y1="82" x2="186" y2="170" class="mn-mesh" />
+  <line x1="88" y1="82" x2="294" y2="170" class="mn-mesh" />
+  <line x1="88" y1="82" x2="402" y2="170" class="mn-mesh" />
+  <line x1="240" y1="82" x2="78" y2="170" class="mn-mesh" />
+  <line x1="240" y1="82" x2="186" y2="170" class="mn-mesh" />
+  <line x1="240" y1="82" x2="294" y2="170" class="mn-mesh" />
+  <line x1="240" y1="82" x2="402" y2="170" class="mn-mesh" />
+  <line x1="392" y1="82" x2="78" y2="170" class="mn-mesh" />
+  <line x1="392" y1="82" x2="186" y2="170" class="mn-mesh" />
+  <line x1="392" y1="82" x2="294" y2="170" class="mn-mesh" />
+  <line x1="392" y1="82" x2="402" y2="170" class="mn-mesh" />
+  <rect x="28" y="170" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="136" y="170" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="244" y="170" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="352" y="170" width="100" height="42" rx="6" class="mn-box" />
+  <text x="78" y="198" text-anchor="middle" class="mn-label">GitHub</text>
+  <text x="186" y="198" text-anchor="middle" class="mn-label">Slack</text>
+  <text x="294" y="198" text-anchor="middle" class="mn-label">Jira</text>
+  <text x="402" y="198" text-anchor="middle" class="mn-label">DB</text>
+  <text x="240" y="248" text-anchor="middle" class="mn-formula">3 × 4 = 12개 커스텀 통합</text>
+  <line x1="20" y1="274" x2="460" y2="274" class="mn-divider" />
   <!-- 아래: MCP 경유 -->
-  <text x="240" y="258" text-anchor="middle" class="mn-title">아래: MCP 표준 하나를 경유</text>
-  <rect x="30" y="272" width="110" height="34" rx="6" class="mn-box" />
-  <rect x="185" y="272" width="110" height="34" rx="6" class="mn-box" />
-  <rect x="340" y="272" width="110" height="34" rx="6" class="mn-box" />
-  <text x="85" y="294" text-anchor="middle" class="mn-label">Claude Code</text>
-  <text x="240" y="294" text-anchor="middle" class="mn-label">Cursor</text>
-  <text x="395" y="294" text-anchor="middle" class="mn-label">Codex</text>
-  <line x1="85" y1="306" x2="85" y2="342" class="mn-spoke" />
-  <line x1="240" y1="306" x2="240" y2="342" class="mn-spoke" />
-  <line x1="395" y1="306" x2="395" y2="342" class="mn-spoke" />
-  <rect x="28" y="342" width="424" height="34" rx="6" class="mn-hub" />
-  <text x="240" y="364" text-anchor="middle" class="mn-hub-text">MCP 표준 프로토콜</text>
-  <line x1="78" y1="376" x2="78" y2="412" class="mn-spoke" />
-  <line x1="186" y1="376" x2="186" y2="412" class="mn-spoke" />
-  <line x1="294" y1="376" x2="294" y2="412" class="mn-spoke" />
-  <line x1="402" y1="376" x2="402" y2="412" class="mn-spoke" />
-  <rect x="28" y="412" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="136" y="412" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="244" y="412" width="100" height="34" rx="6" class="mn-box" />
-  <rect x="352" y="412" width="100" height="34" rx="6" class="mn-box" />
-  <text x="78" y="434" text-anchor="middle" class="mn-label">GitHub</text>
-  <text x="186" y="434" text-anchor="middle" class="mn-label">Slack</text>
-  <text x="294" y="434" text-anchor="middle" class="mn-label">Jira</text>
-  <text x="402" y="434" text-anchor="middle" class="mn-label">DB</text>
-  <text x="240" y="468" text-anchor="middle" class="mn-formula">3 + 4 = 7개 구현</text>
+  <text x="240" y="308" text-anchor="middle" class="mn-title">아래: MCP 표준 하나를 경유</text>
+  <rect x="20" y="324" width="136" height="42" rx="6" class="mn-box" />
+  <rect x="172" y="324" width="136" height="42" rx="6" class="mn-box" />
+  <rect x="324" y="324" width="136" height="42" rx="6" class="mn-box" />
+  <text x="88" y="352" text-anchor="middle" class="mn-label">Claude Code</text>
+  <text x="240" y="352" text-anchor="middle" class="mn-label">Cursor</text>
+  <text x="392" y="352" text-anchor="middle" class="mn-label">Codex</text>
+  <line x1="88" y1="366" x2="88" y2="404" class="mn-spoke" />
+  <line x1="240" y1="366" x2="240" y2="404" class="mn-spoke" />
+  <line x1="392" y1="366" x2="392" y2="404" class="mn-spoke" />
+  <rect x="20" y="404" width="440" height="42" rx="6" class="mn-hub" />
+  <text x="240" y="432" text-anchor="middle" class="mn-hub-text">MCP 표준 프로토콜</text>
+  <line x1="78" y1="446" x2="78" y2="484" class="mn-spoke" />
+  <line x1="186" y1="446" x2="186" y2="484" class="mn-spoke" />
+  <line x1="294" y1="446" x2="294" y2="484" class="mn-spoke" />
+  <line x1="402" y1="446" x2="402" y2="484" class="mn-spoke" />
+  <rect x="28" y="484" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="136" y="484" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="244" y="484" width="100" height="42" rx="6" class="mn-box" />
+  <rect x="352" y="484" width="100" height="42" rx="6" class="mn-box" />
+  <text x="78" y="512" text-anchor="middle" class="mn-label">GitHub</text>
+  <text x="186" y="512" text-anchor="middle" class="mn-label">Slack</text>
+  <text x="294" y="512" text-anchor="middle" class="mn-label">Jira</text>
+  <text x="402" y="512" text-anchor="middle" class="mn-label">DB</text>
+  <text x="240" y="548" text-anchor="middle" class="mn-formula">3 + 4 = 7개 구현</text>
 </svg>
 </div>
 
@@ -118,11 +118,12 @@ MCP는 Microsoft의 LSP(Language Server Protocol)에서 영감을 받았습니�
 MCP는 세 가지 역할로 구성됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 344" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Host 안의 Client 세 개가 각각 하나의 MCP Server와 1대1로 연결되고, 각 Server는 GitHub API, Slack API, PostgreSQL 같은 실제 서비스에 연결되는 3계층 구조">
+<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Host 안의 Client 세 개가 각각 하나의 MCP Server와 1대1로 연결되고, 각 Server는 GitHub API, Slack API, PostgreSQL 같은 실제 서비스에 연결되는 3계층 구조">
   <style>
-    .hcs-h { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .hcs-l { font-size: 13px; fill: var(--text, #1c1917); }
-    .hcs-s { font-size: 12px; fill: var(--text-muted, #78716c); }
+    .hcs-h { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
+    .hcs-l { font-size: 19px; fill: var(--text, #1c1917); }
+    .hcs-s { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .hcs-band { fill: var(--bg, #fafaf8); }
     .hcs-host { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .hcs-client { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .hcs-server { fill: var(--bg, #fafaf8); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
@@ -135,41 +136,43 @@ MCP는 세 가지 역할로 구성됩니다.
     </marker>
   </defs>
   <!-- Host 계층 -->
-  <rect x="20" y="20" width="440" height="112" rx="8" class="hcs-host" />
-  <text x="38" y="46" class="hcs-h">Host (에이전트 앱)</text>
-  <rect x="32" y="72" width="124" height="44" rx="6" class="hcs-client" />
-  <rect x="178" y="72" width="124" height="44" rx="6" class="hcs-client" />
-  <rect x="324" y="72" width="124" height="44" rx="6" class="hcs-client" />
-  <text x="94" y="99" text-anchor="middle" class="hcs-l">Client 1</text>
-  <text x="240" y="99" text-anchor="middle" class="hcs-l">Client 2</text>
-  <text x="386" y="99" text-anchor="middle" class="hcs-l">Client 3</text>
+  <rect x="20" y="20" width="440" height="120" rx="8" class="hcs-host" />
+  <text x="38" y="52" class="hcs-h">Host (에이전트 앱)</text>
+  <rect x="32" y="68" width="124" height="56" rx="6" class="hcs-client" />
+  <rect x="178" y="68" width="124" height="56" rx="6" class="hcs-client" />
+  <rect x="324" y="68" width="124" height="56" rx="6" class="hcs-client" />
+  <text x="94" y="103" text-anchor="middle" class="hcs-l">Client 1</text>
+  <text x="240" y="103" text-anchor="middle" class="hcs-l">Client 2</text>
+  <text x="386" y="103" text-anchor="middle" class="hcs-l">Client 3</text>
   <!-- Client에서 Server로 -->
-  <line x1="94" y1="132" x2="94" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <line x1="240" y1="132" x2="240" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <line x1="386" y1="132" x2="386" y2="170" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <text x="167" y="156" text-anchor="middle" class="hcs-s">MCP (JSON-RPC 2.0)</text>
+  <line x1="94" y1="140" x2="94" y2="196" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="240" y1="140" x2="240" y2="196" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="386" y1="140" x2="386" y2="196" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <rect x="98" y="155" width="284" height="28" rx="14" class="hcs-band" />
+  <text x="240" y="174" text-anchor="middle" class="hcs-s">MCP (JSON-RPC 2.0)</text>
   <!-- Server 계층 -->
-  <rect x="32" y="172" width="124" height="56" rx="6" class="hcs-server" />
-  <rect x="178" y="172" width="124" height="56" rx="6" class="hcs-server" />
-  <rect x="324" y="172" width="124" height="56" rx="6" class="hcs-server" />
-  <text x="94" y="196" text-anchor="middle" class="hcs-l">Server 1</text>
-  <text x="240" y="196" text-anchor="middle" class="hcs-l">Server 2</text>
-  <text x="386" y="196" text-anchor="middle" class="hcs-l">Server 3</text>
-  <text x="94" y="216" text-anchor="middle" class="hcs-s">GitHub</text>
-  <text x="240" y="216" text-anchor="middle" class="hcs-s">Slack</text>
-  <text x="386" y="216" text-anchor="middle" class="hcs-s">DB</text>
+  <rect x="32" y="198" width="124" height="68" rx="6" class="hcs-server" />
+  <rect x="178" y="198" width="124" height="68" rx="6" class="hcs-server" />
+  <rect x="324" y="198" width="124" height="68" rx="6" class="hcs-server" />
+  <text x="94" y="228" text-anchor="middle" class="hcs-l">Server 1</text>
+  <text x="240" y="228" text-anchor="middle" class="hcs-l">Server 2</text>
+  <text x="386" y="228" text-anchor="middle" class="hcs-l">Server 3</text>
+  <text x="94" y="253" text-anchor="middle" class="hcs-s">GitHub</text>
+  <text x="240" y="253" text-anchor="middle" class="hcs-s">Slack</text>
+  <text x="386" y="253" text-anchor="middle" class="hcs-s">DB</text>
   <!-- Server에서 외부 서비스로 -->
-  <line x1="94" y1="228" x2="94" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <line x1="240" y1="228" x2="240" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <line x1="386" y1="228" x2="386" y2="266" class="hcs-arrow" marker-end="url(#hcsHead)" />
-  <text x="167" y="252" text-anchor="middle" class="hcs-s">각 서비스의 네이티브 API</text>
+  <line x1="94" y1="266" x2="94" y2="322" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="240" y1="266" x2="240" y2="322" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <line x1="386" y1="266" x2="386" y2="322" class="hcs-arrow" marker-end="url(#hcsHead)" />
+  <rect x="130" y="281" width="220" height="28" rx="14" class="hcs-band" />
+  <text x="240" y="300" text-anchor="middle" class="hcs-s">각 서비스의 네이티브 API</text>
   <!-- 외부 서비스 계층 -->
-  <rect x="32" y="268" width="124" height="52" rx="6" class="hcs-ext" />
-  <rect x="178" y="268" width="124" height="52" rx="6" class="hcs-ext" />
-  <rect x="324" y="268" width="124" height="52" rx="6" class="hcs-ext" />
-  <text x="94" y="299" text-anchor="middle" class="hcs-l">GitHub API</text>
-  <text x="240" y="299" text-anchor="middle" class="hcs-l">Slack API</text>
-  <text x="386" y="299" text-anchor="middle" class="hcs-l">PostgreSQL</text>
+  <rect x="32" y="324" width="124" height="52" rx="6" class="hcs-ext" />
+  <rect x="178" y="324" width="124" height="52" rx="6" class="hcs-ext" />
+  <rect x="324" y="324" width="124" height="52" rx="6" class="hcs-ext" />
+  <text x="94" y="357" text-anchor="middle" class="hcs-l">GitHub API</text>
+  <text x="240" y="357" text-anchor="middle" class="hcs-l">Slack API</text>
+  <text x="386" y="357" text-anchor="middle" class="hcs-l">PostgreSQL</text>
 </svg>
 </div>
 
@@ -206,11 +209,11 @@ MCP는 JSON-RPC 2.0 메시지 포맷을 사용하며, 두 가지 전송 방식�
 Client와 Server 사이의 세션은 세 단계를 거칩니다. 초기화(Initialization), 작업(Operation), 종료(Shutdown)입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="MCP 세션의 세 단계 시퀀스 다이어그램. 초기화 단계에서 initialize와 capabilities와 initialized를 교환하고, 작업 단계에서 tools/list와 tools/call을 주고받은 뒤, 종료 단계에서 전송 계층을 닫는다">
+<svg viewBox="0 0 480 490" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="MCP 세션의 세 단계 시퀀스 다이어그램. 초기화 단계에서 initialize와 capabilities와 initialized를 교환하고, 작업 단계에서 tools/list와 tools/call을 주고받은 뒤, 종료 단계에서 전송 계층을 닫는다">
   <style>
-    .lc-head { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .lc-phase { font-size: 13px; font-weight: 700; fill: var(--text, #1c1917); }
-    .lc-msg { font-size: 13px; fill: var(--text, #1c1917); }
+    .lc-head { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
+    .lc-phase { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
+    .lc-msg { font-size: 18px; fill: var(--text, #1c1917); }
     .lc-life { stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .lc-band { fill: var(--bg-muted, #eeecea); }
     .lc-req { stroke: var(--primary, #0d9488); stroke-width: 1.6; }
@@ -225,35 +228,35 @@ Client와 Server 사이의 세션은 세 단계를 거칩니다. 초기화(Initi
     </marker>
   </defs>
   <!-- 라이프라인 -->
-  <text x="110" y="22" text-anchor="middle" class="lc-head">Client</text>
-  <text x="390" y="22" text-anchor="middle" class="lc-head">Server</text>
-  <line x1="110" y1="34" x2="110" y2="382" class="lc-life" />
-  <line x1="390" y1="34" x2="390" y2="382" class="lc-life" />
+  <text x="60" y="24" text-anchor="middle" class="lc-head">Client</text>
+  <text x="420" y="24" text-anchor="middle" class="lc-head">Server</text>
+  <line x1="60" y1="36" x2="60" y2="472" class="lc-life" />
+  <line x1="420" y1="36" x2="420" y2="472" class="lc-life" />
   <!-- 1. 초기화 -->
-  <rect x="150" y="44" width="200" height="26" rx="13" class="lc-band" />
-  <text x="250" y="62" text-anchor="middle" class="lc-phase">1. 초기화 (Initialization)</text>
-  <text x="250" y="90" text-anchor="middle" class="lc-msg">initialize</text>
-  <line x1="114" y1="96" x2="386" y2="96" class="lc-req" marker-end="url(#lcReqHead)" />
-  <text x="250" y="118" text-anchor="middle" class="lc-msg">capabilities</text>
-  <line x1="386" y1="124" x2="114" y2="124" class="lc-res" marker-end="url(#lcResHead)" />
-  <text x="250" y="146" text-anchor="middle" class="lc-msg">notifications/initialized</text>
-  <line x1="114" y1="152" x2="386" y2="152" class="lc-req" marker-end="url(#lcReqHead)" />
+  <rect x="100" y="48" width="280" height="30" rx="15" class="lc-band" />
+  <text x="240" y="69" text-anchor="middle" class="lc-phase">1. 초기화 (Initialization)</text>
+  <text x="240" y="106" text-anchor="middle" class="lc-msg">initialize</text>
+  <line x1="64" y1="114" x2="416" y2="114" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="240" y="142" text-anchor="middle" class="lc-msg">capabilities</text>
+  <line x1="416" y1="150" x2="64" y2="150" class="lc-res" marker-end="url(#lcResHead)" />
+  <text x="240" y="178" text-anchor="middle" class="lc-msg">notifications/initialized</text>
+  <line x1="64" y1="186" x2="416" y2="186" class="lc-req" marker-end="url(#lcReqHead)" />
   <!-- 2. 작업 -->
-  <rect x="150" y="168" width="200" height="26" rx="13" class="lc-band" />
-  <text x="250" y="186" text-anchor="middle" class="lc-phase">2. 작업 (Operation)</text>
-  <text x="250" y="214" text-anchor="middle" class="lc-msg">tools/list</text>
-  <line x1="114" y1="220" x2="386" y2="220" class="lc-req" marker-end="url(#lcReqHead)" />
-  <text x="250" y="242" text-anchor="middle" class="lc-msg">tool definitions</text>
-  <line x1="386" y1="248" x2="114" y2="248" class="lc-res" marker-end="url(#lcResHead)" />
-  <text x="250" y="270" text-anchor="middle" class="lc-msg">tools/call</text>
-  <line x1="114" y1="276" x2="386" y2="276" class="lc-req" marker-end="url(#lcReqHead)" />
-  <text x="250" y="298" text-anchor="middle" class="lc-msg">result</text>
-  <line x1="386" y1="304" x2="114" y2="304" class="lc-res" marker-end="url(#lcResHead)" />
+  <rect x="100" y="204" width="280" height="30" rx="15" class="lc-band" />
+  <text x="240" y="225" text-anchor="middle" class="lc-phase">2. 작업 (Operation)</text>
+  <text x="240" y="262" text-anchor="middle" class="lc-msg">tools/list</text>
+  <line x1="64" y1="270" x2="416" y2="270" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="240" y="298" text-anchor="middle" class="lc-msg">tool definitions</text>
+  <line x1="416" y1="306" x2="64" y2="306" class="lc-res" marker-end="url(#lcResHead)" />
+  <text x="240" y="334" text-anchor="middle" class="lc-msg">tools/call</text>
+  <line x1="64" y1="342" x2="416" y2="342" class="lc-req" marker-end="url(#lcReqHead)" />
+  <text x="240" y="370" text-anchor="middle" class="lc-msg">result</text>
+  <line x1="416" y1="378" x2="64" y2="378" class="lc-res" marker-end="url(#lcResHead)" />
   <!-- 3. 종료 -->
-  <rect x="150" y="320" width="200" height="26" rx="13" class="lc-band" />
-  <text x="250" y="338" text-anchor="middle" class="lc-phase">3. 종료 (Shutdown)</text>
-  <text x="250" y="366" text-anchor="middle" class="lc-msg">stdin 닫기 또는 HTTP 연결 종료</text>
-  <line x1="114" y1="372" x2="386" y2="372" class="lc-req" marker-end="url(#lcReqHead)" />
+  <rect x="100" y="396" width="280" height="30" rx="15" class="lc-band" />
+  <text x="240" y="417" text-anchor="middle" class="lc-phase">3. 종료 (Shutdown)</text>
+  <text x="240" y="454" text-anchor="middle" class="lc-msg">stdin 닫기 또는 HTTP 연결 종료</text>
+  <line x1="64" y1="462" x2="416" y2="462" class="lc-req" marker-end="url(#lcReqHead)" />
 </svg>
 </div>
 
@@ -286,31 +289,32 @@ tools = [
 결과는 명확합니다. 작업 시작 전 컨텍스트 소비가 약 77,000 토큰에서 약 8,700 토큰으로 줄어 **85% 절감**. 단순히 토큰을 아끼는 것이 아니라, 모델이 58개 도구 중에서 올바른 도구를 고르는 정확도도 향상됩니다. Anthropic의 내부 평가에서 Opus 4의 MCP 도구 선택 정확도가 49%에서 74%로 올랐습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 230" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 작업 시작 전에 소비되는 토큰 비교. 기본 방식은 77,000 토큰으로 약 39퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
+<svg viewBox="0 0 480 288" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 작업 시작 전에 소비되는 토큰 비교. 기본 방식은 77,000 토큰으로 약 39퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
   <style>
-    .ctx-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-    .ctx-row { font-size: 13px; fill: var(--text, #1c1917); }
-    .ctx-sub { font-size: 12px; fill: var(--text-muted, #78716c); }
+    .ctx-title { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
+    .ctx-row { font-size: 19px; fill: var(--text, #1c1917); }
+    .ctx-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
     .ctx-track { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
     .ctx-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
     .ctx-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .ctx-bad-t { font-size: 13px; font-weight: 700; fill: var(--text-danger, #dc2626); }
-    .ctx-good-t { font-size: 13px; font-weight: 700; fill: var(--text-success, #16a34a); }
+    .ctx-bad-t { font-size: 18px; font-weight: 700; fill: var(--text-danger, #dc2626); }
+    .ctx-good-t { font-size: 18px; font-weight: 700; fill: var(--text-success, #16a34a); }
   </style>
-  <text x="240" y="20" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 작업 시작 전 소비되는 몫</text>
-  <!-- 기본 방식 -->
-  <text x="30" y="52" class="ctx-row">기본: 58개 도구 스키마를 전부 로딩</text>
-  <rect x="30" y="62" width="420" height="36" rx="4" class="ctx-track" />
-  <rect x="30" y="62" width="162" height="36" rx="4" class="ctx-bad" />
-  <text x="110" y="85" text-anchor="middle" class="ctx-bad-t">77,000</text>
-  <text x="320" y="85" text-anchor="middle" class="ctx-sub">남은 여유 123,000</text>
-  <!-- Tool Search 적용 -->
-  <text x="30" y="136" class="ctx-row">Tool Search: 메타 도구와 실제 사용분만</text>
-  <rect x="30" y="146" width="420" height="36" rx="4" class="ctx-track" />
-  <rect x="30" y="146" width="18" height="36" rx="4" class="ctx-good" />
-  <text x="58" y="169" class="ctx-good-t">8,700 (85% 절감)</text>
-  <text x="440" y="169" text-anchor="end" class="ctx-sub">남은 여유 191,300</text>
-  <text x="240" y="212" text-anchor="middle" class="ctx-sub">GitHub, Slack, Sentry, Grafana, Splunk 5개 서버 기준 (단위: 토큰)</text>
+  <text x="240" y="24" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 작업 시작 전 소비되는 몫</text>
+  <!-- 기본 방식: 트랙 420 = 200,000 토큰, 막대 162 = 77,000 토큰 -->
+  <text x="30" y="64" class="ctx-row">기본: 58개 도구 스키마를 전부 로딩</text>
+  <rect x="30" y="76" width="420" height="40" rx="4" class="ctx-track" />
+  <rect x="30" y="76" width="162" height="40" rx="4" class="ctx-bad" />
+  <text x="111" y="102" text-anchor="middle" class="ctx-bad-t">77,000</text>
+  <text x="321" y="102" text-anchor="middle" class="ctx-sub">남은 여유 123,000</text>
+  <!-- Tool Search 적용: 막대 18 = 8,700 토큰 -->
+  <text x="30" y="164" class="ctx-row">Tool Search: 메타 도구와 실제 사용분만</text>
+  <rect x="30" y="176" width="420" height="40" rx="4" class="ctx-track" />
+  <rect x="30" y="176" width="18" height="40" rx="4" class="ctx-good" />
+  <text x="58" y="202" class="ctx-good-t">8,700 (85% 절감)</text>
+  <text x="440" y="202" text-anchor="end" class="ctx-sub">남은 여유 191,300</text>
+  <text x="240" y="250" text-anchor="middle" class="ctx-sub">GitHub, Slack, Sentry, Grafana, Splunk</text>
+  <text x="240" y="270" text-anchor="middle" class="ctx-sub">5개 서버 기준 (단위: 토큰)</text>
 </svg>
 </div>
 
@@ -367,60 +371,60 @@ Programmatic Tool Calling이 "모델이 코드를 작성하고 도구 호출 결
 | **Code Execution with MCP** | 스키마 + 결과 모두 | 98.7% | MCP 작업 전반 개선 |
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 364" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 최적화 전략이 컨텍스트에서 제외하는 구간 비교. Tool Search는 도구 스키마를, Programmatic Tool Calling은 중간 결과를, Code Execution with MCP는 둘 다 제외하고 최종 출력만 남긴다">
+<svg viewBox="0 0 480 420" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 최적화 전략이 컨텍스트에서 제외하는 구간 비교. Tool Search는 도구 스키마를, Programmatic Tool Calling은 중간 결과를, Code Execution with MCP는 둘 다 제외하고 최종 출력만 남긴다">
   <style>
-    .st-name { font-size: 14px; font-weight: 700; }
+    .st-name { font-size: 19px; font-weight: 700; }
     .st-base { fill: var(--text, #1c1917); }
     .st-opt { fill: var(--primary, #0d9488); }
     .st-in { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .st-out { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.2; stroke-dasharray: 4 3; }
-    .st-in-t { font-size: 13px; fill: var(--text, #1c1917); }
-    .st-out-t { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .st-in-t { font-size: 19px; fill: var(--text, #1c1917); }
+    .st-out-t { font-size: 19px; fill: var(--text-muted, #78716c); }
     .st-strike { stroke: var(--text-muted, #78716c); stroke-width: 1.2; opacity: 0.6; }
-    .st-legend { font-size: 12px; fill: var(--text-muted, #78716c); }
+    .st-legend { font-size: 17px; fill: var(--text-muted, #78716c); }
   </style>
   <!-- 범례 -->
-  <rect x="22" y="8" width="14" height="12" rx="2" class="st-in" />
-  <text x="42" y="18" class="st-legend">컨텍스트에 포함</text>
-  <rect x="170" y="8" width="14" height="12" rx="2" class="st-out" />
-  <line x1="172" y1="10" x2="182" y2="18" class="st-strike" />
-  <text x="190" y="18" class="st-legend">컨텍스트에서 제외</text>
+  <rect x="22" y="8" width="16" height="16" rx="2" class="st-in" />
+  <text x="44" y="22" class="st-legend">컨텍스트에 포함</text>
+  <rect x="190" y="8" width="16" height="16" rx="2" class="st-out" />
+  <line x1="192" y1="10" x2="204" y2="22" class="st-strike" />
+  <text x="212" y="22" class="st-legend">컨텍스트에서 제외</text>
   <!-- 기본 -->
-  <text x="22" y="52" class="st-name st-base">기본 (최적화 없음)</text>
-  <rect x="22" y="60" width="136" height="40" rx="6" class="st-in" />
-  <text x="90" y="85" text-anchor="middle" class="st-in-t">도구 스키마</text>
-  <rect x="172" y="60" width="136" height="40" rx="6" class="st-in" />
-  <text x="240" y="85" text-anchor="middle" class="st-in-t">중간 결과</text>
-  <rect x="322" y="60" width="136" height="40" rx="6" class="st-in" />
-  <text x="390" y="85" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <text x="22" y="64" class="st-name st-base">기본 (최적화 없음)</text>
+  <rect x="22" y="74" width="136" height="44" rx="6" class="st-in" />
+  <text x="90" y="103" text-anchor="middle" class="st-in-t">도구 스키마</text>
+  <rect x="172" y="74" width="136" height="44" rx="6" class="st-in" />
+  <text x="240" y="103" text-anchor="middle" class="st-in-t">중간 결과</text>
+  <rect x="322" y="74" width="136" height="44" rx="6" class="st-in" />
+  <text x="390" y="103" text-anchor="middle" class="st-in-t">최종 출력</text>
   <!-- 전략 1 -->
-  <text x="22" y="134" class="st-name st-opt">전략 1. Tool Search</text>
-  <rect x="22" y="142" width="136" height="40" rx="6" class="st-out" />
-  <line x1="30" y1="150" x2="150" y2="174" class="st-strike" />
-  <text x="90" y="167" text-anchor="middle" class="st-out-t">도구 스키마</text>
-  <rect x="172" y="142" width="136" height="40" rx="6" class="st-in" />
-  <text x="240" y="167" text-anchor="middle" class="st-in-t">중간 결과</text>
-  <rect x="322" y="142" width="136" height="40" rx="6" class="st-in" />
-  <text x="390" y="167" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <text x="22" y="158" class="st-name st-opt">전략 1. Tool Search</text>
+  <rect x="22" y="168" width="136" height="44" rx="6" class="st-out" />
+  <line x1="30" y1="176" x2="150" y2="204" class="st-strike" />
+  <text x="90" y="197" text-anchor="middle" class="st-out-t">도구 스키마</text>
+  <rect x="172" y="168" width="136" height="44" rx="6" class="st-in" />
+  <text x="240" y="197" text-anchor="middle" class="st-in-t">중간 결과</text>
+  <rect x="322" y="168" width="136" height="44" rx="6" class="st-in" />
+  <text x="390" y="197" text-anchor="middle" class="st-in-t">최종 출력</text>
   <!-- 전략 2 -->
-  <text x="22" y="216" class="st-name st-opt">전략 2. Programmatic Tool Calling</text>
-  <rect x="22" y="224" width="136" height="40" rx="6" class="st-in" />
-  <text x="90" y="249" text-anchor="middle" class="st-in-t">도구 스키마</text>
-  <rect x="172" y="224" width="136" height="40" rx="6" class="st-out" />
-  <line x1="180" y1="232" x2="300" y2="256" class="st-strike" />
-  <text x="240" y="249" text-anchor="middle" class="st-out-t">중간 결과</text>
-  <rect x="322" y="224" width="136" height="40" rx="6" class="st-in" />
-  <text x="390" y="249" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <text x="22" y="252" class="st-name st-opt">전략 2. Programmatic Tool Calling</text>
+  <rect x="22" y="262" width="136" height="44" rx="6" class="st-in" />
+  <text x="90" y="291" text-anchor="middle" class="st-in-t">도구 스키마</text>
+  <rect x="172" y="262" width="136" height="44" rx="6" class="st-out" />
+  <line x1="180" y1="270" x2="300" y2="298" class="st-strike" />
+  <text x="240" y="291" text-anchor="middle" class="st-out-t">중간 결과</text>
+  <rect x="322" y="262" width="136" height="44" rx="6" class="st-in" />
+  <text x="390" y="291" text-anchor="middle" class="st-in-t">최종 출력</text>
   <!-- 전략 3 -->
-  <text x="22" y="298" class="st-name st-opt">전략 3. Code Execution with MCP</text>
-  <rect x="22" y="306" width="136" height="40" rx="6" class="st-out" />
-  <line x1="30" y1="314" x2="150" y2="338" class="st-strike" />
-  <text x="90" y="331" text-anchor="middle" class="st-out-t">도구 스키마</text>
-  <rect x="172" y="306" width="136" height="40" rx="6" class="st-out" />
-  <line x1="180" y1="314" x2="300" y2="338" class="st-strike" />
-  <text x="240" y="331" text-anchor="middle" class="st-out-t">중간 결과</text>
-  <rect x="322" y="306" width="136" height="40" rx="6" class="st-in" />
-  <text x="390" y="331" text-anchor="middle" class="st-in-t">최종 출력</text>
+  <text x="22" y="346" class="st-name st-opt">전략 3. Code Execution with MCP</text>
+  <rect x="22" y="356" width="136" height="44" rx="6" class="st-out" />
+  <line x1="30" y1="364" x2="150" y2="392" class="st-strike" />
+  <text x="90" y="385" text-anchor="middle" class="st-out-t">도구 스키마</text>
+  <rect x="172" y="356" width="136" height="44" rx="6" class="st-out" />
+  <line x1="180" y1="364" x2="300" y2="392" class="st-strike" />
+  <text x="240" y="385" text-anchor="middle" class="st-out-t">중간 결과</text>
+  <rect x="322" y="356" width="136" height="44" rx="6" class="st-in" />
+  <text x="390" y="385" text-anchor="middle" class="st-in-t">최종 출력</text>
 </svg>
 </div>
 

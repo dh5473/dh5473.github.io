@@ -24,13 +24,13 @@ Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고
 두 에이전트는 같은 문제(루프 반복)를 정반대 방식으로 풉니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Claude Code의 상태 유지 구조로 queryLoop 안에 messages 배열이 계속 살아 있고, 아래쪽은 Codex의 상태 재구성 구조로 매 턴 전체 히스토리를 다시 만들어 Responses API로 보낸다">
+<svg viewBox="0 0 480 448" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Claude Code의 상태 유지 구조로 queryLoop 안에 messages 배열이 계속 살아 있고, 아래쪽은 Codex의 상태 재구성 구조로 매 턴 전체 히스토리를 다시 만들어 Responses API로 보낸다">
 <style>
-.al1-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
-.al1-t{fill:var(--text,#1c1917);font-size:14px}
-.al1-s{fill:var(--text-muted,#78716c);font-size:13px}
-.al1-k{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
-.al1-a{fill:var(--accent,#d97706);font-size:15px;font-weight:600}
+.al1-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
+.al1-t{fill:var(--text,#1c1917);font-size:20px}
+.al1-s{fill:var(--text-muted,#78716c);font-size:17px}
+.al1-k{fill:var(--primary,#0d9488);font-size:20px;font-weight:600}
+.al1-a{fill:var(--accent,#d97706);font-size:20px;font-weight:600}
 .al1-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .al1-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
 </style>
@@ -38,25 +38,25 @@ Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고
 <marker id="al1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
 <!-- 위: Claude Code -->
-<text x="24" y="20" class="al1-h">Claude Code · 상태 유지</text>
-<rect x="24" y="32" width="392" height="118" rx="8" class="al1-box"/>
-<text x="44" y="58" class="al1-k">queryLoop() · AsyncGenerator</text>
-<text x="44" y="86" class="al1-t">messages = [...] 메모리에 누적</text>
-<text x="44" y="110" class="al1-t">yield event 로 이벤트를 흘려보냄</text>
-<text x="44" y="134" class="al1-s">루프가 살아 있는 동안 상태도 살아 있음</text>
+<text x="24" y="26" class="al1-h">Claude Code · 상태 유지</text>
+<rect x="24" y="42" width="392" height="140" rx="8" class="al1-box"/>
+<text x="44" y="74" class="al1-k">queryLoop() · AsyncGenerator</text>
+<text x="44" y="106" class="al1-t">messages = [...] 메모리에 누적</text>
+<text x="44" y="136" class="al1-t">yield event 로 이벤트를 흘려보냄</text>
+<text x="44" y="166" class="al1-s">루프가 살아 있는 동안 상태도 살아 있음</text>
 <!-- 상태 유지 회귀 화살표 -->
-<path d="M416 60 H444 V126 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
-<text x="24" y="170" class="al1-s">상태가 루프 프로세스 안에 유지된다</text>
+<path d="M416 76 H448 V160 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
+<text x="24" y="206" class="al1-s">상태가 루프 프로세스 안에 유지된다</text>
 <!-- 아래: Codex -->
-<text x="24" y="216" class="al1-h">Codex · 상태 재구성</text>
-<rect x="24" y="228" width="392" height="118" rx="8" class="al1-box"/>
-<text x="44" y="254" class="al1-a">while True:</text>
-<text x="44" y="282" class="al1-t">history = rebuild(전체 히스토리)</text>
-<text x="44" y="306" class="al1-t">POST /responses → SSE stream 수신</text>
-<text x="44" y="330" class="al1-s">append results · if done: break</text>
+<text x="24" y="254" class="al1-h">Codex · 상태 재구성</text>
+<rect x="24" y="270" width="392" height="140" rx="8" class="al1-box"/>
+<text x="44" y="302" class="al1-a">while True:</text>
+<text x="44" y="334" class="al1-t">history = rebuild(전체 히스토리)</text>
+<text x="44" y="364" class="al1-t">POST /responses → SSE stream 수신</text>
+<text x="44" y="394" class="al1-s">append results · if done: break</text>
 <!-- 매 턴 재구성 화살표 -->
-<path d="M416 256 H444 V322 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
-<text x="24" y="366" class="al1-s">매 턴마다 상태를 처음부터 다시 만든다</text>
+<path d="M416 304 H448 V388 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
+<text x="24" y="434" class="al1-s">매 턴마다 상태를 처음부터 다시 만든다</text>
 </svg>
 </div>
 
@@ -83,55 +83,58 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 ### 전체 흐름
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 466" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="한 턴의 6단계 파이프라인. 컨텍스트 조립, 전처리, 모델 호출, 도구 실행, 결과 누적, 판단 순으로 진행되며 도구 호출이 남아 있으면 1단계로 되돌아간다. 모델이 관여하는 단계는 3단계 하나뿐이다">
+<svg viewBox="0 0 480 668" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="한 턴의 6단계 파이프라인. 컨텍스트 조립, 전처리, 모델 호출, 도구 실행, 결과 누적, 판단 순으로 진행되며 도구 호출이 남아 있으면 1단계로 되돌아간다. 모델이 관여하는 단계는 3단계 하나뿐이다">
 <style>
-.al2-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
-.al2-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
-.al2-d{fill:var(--text-muted,#78716c);font-size:12.5px}
-.al2-s{fill:var(--text-muted,#78716c);font-size:13px}
+.al2-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
+.al2-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
+.al2-d{fill:var(--text-muted,#78716c);font-size:17px}
+.al2-s{fill:var(--text-muted,#78716c);font-size:18px}
 .al2-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .al2-ai{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
 .al2-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
-.al2-tag{fill:var(--primary,#0d9488);font-size:12.5px;font-weight:700}
+.al2-tag{fill:var(--primary,#0d9488);font-size:17px;font-weight:700}
 </style>
 <defs>
 <marker id="al2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
-<text x="20" y="20" class="al2-h">한 턴의 6단계 파이프라인</text>
+<text x="20" y="26" class="al2-h">한 턴의 6단계 파이프라인</text>
 <!-- 1 -->
-<rect x="20" y="36" width="392" height="48" rx="8" class="al2-box"/>
-<text x="36" y="58" class="al2-n">1. Context Assembly</text>
-<text x="36" y="76" class="al2-d">시스템 프롬프트 + 도구 정의 + 메시지 히스토리 조립</text>
-<path d="M216 84 V100" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<rect x="20" y="44" width="392" height="88" rx="8" class="al2-box"/>
+<text x="36" y="76" class="al2-n">1. Context Assembly</text>
+<text x="36" y="102" class="al2-d">시스템 프롬프트 + 도구 정의</text>
+<text x="36" y="124" class="al2-d">+ 메시지 히스토리 조립</text>
+<path d="M216 132 V150" class="al2-ln" marker-end="url(#al2Arrow)"/>
 <!-- 2 -->
-<rect x="20" y="100" width="392" height="48" rx="8" class="al2-box"/>
-<text x="36" y="122" class="al2-n">2. Pre-model Shapers</text>
-<text x="36" y="140" class="al2-d">5단계 전처리 (Budget Reduction, Snip, Microcompact …)</text>
-<path d="M216 148 V164" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<rect x="20" y="150" width="392" height="88" rx="8" class="al2-box"/>
+<text x="36" y="182" class="al2-n">2. Pre-model Shapers</text>
+<text x="36" y="208" class="al2-d">5단계 전처리 (Budget Reduction, Snip,</text>
+<text x="36" y="230" class="al2-d">Microcompact, Context Collapse …)</text>
+<path d="M216 238 V256" class="al2-ln" marker-end="url(#al2Arrow)"/>
 <!-- 3 (모델이 관여하는 유일한 단계) -->
-<rect x="20" y="164" width="392" height="48" rx="8" class="al2-ai"/>
-<text x="36" y="186" class="al2-n">3. Model Call</text>
-<text x="36" y="204" class="al2-d">API 호출 → SSE 스트리밍 응답 수신</text>
-<text x="336" y="192" class="al2-tag">AI 관여</text>
-<path d="M216 212 V228" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<rect x="20" y="256" width="392" height="66" rx="8" class="al2-ai"/>
+<text x="36" y="288" class="al2-n">3. Model Call</text>
+<text x="36" y="314" class="al2-d">API 호출 → SSE 스트리밍 응답 수신</text>
+<text x="336" y="288" class="al2-tag">AI 관여</text>
+<path d="M216 322 V340" class="al2-ln" marker-end="url(#al2Arrow)"/>
 <!-- 4 -->
-<rect x="20" y="228" width="392" height="48" rx="8" class="al2-box"/>
-<text x="36" y="250" class="al2-n">4. Tool Execution</text>
-<text x="36" y="268" class="al2-d">퍼미션 체크 → concurrent-safe / exclusive 분류 → 실행</text>
-<path d="M216 276 V292" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<rect x="20" y="340" width="392" height="88" rx="8" class="al2-box"/>
+<text x="36" y="372" class="al2-n">4. Tool Execution</text>
+<text x="36" y="398" class="al2-d">퍼미션 체크 → concurrent-safe /</text>
+<text x="36" y="420" class="al2-d">exclusive 분류 → 실행</text>
+<path d="M216 428 V446" class="al2-ln" marker-end="url(#al2Arrow)"/>
 <!-- 5 -->
-<rect x="20" y="292" width="392" height="48" rx="8" class="al2-box"/>
-<text x="36" y="314" class="al2-n">5. Accumulate</text>
-<text x="36" y="332" class="al2-d">도구 결과를 messages 배열에 추가</text>
-<path d="M216 340 V356" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<rect x="20" y="446" width="392" height="66" rx="8" class="al2-box"/>
+<text x="36" y="478" class="al2-n">5. Accumulate</text>
+<text x="36" y="504" class="al2-d">도구 결과를 messages 배열에 추가</text>
+<path d="M216 512 V530" class="al2-ln" marker-end="url(#al2Arrow)"/>
 <!-- 6 -->
-<rect x="20" y="356" width="392" height="48" rx="8" class="al2-box"/>
-<text x="36" y="378" class="al2-n">6. Decide</text>
-<text x="36" y="396" class="al2-d">도구 호출이 있으면 1단계로, 없으면 종료</text>
+<rect x="20" y="530" width="392" height="66" rx="8" class="al2-box"/>
+<text x="36" y="562" class="al2-n">6. Decide</text>
+<text x="36" y="588" class="al2-d">도구 호출이 있으면 1단계로, 없으면 종료</text>
 <!-- 되돌아가는 화살표 -->
-<path d="M412 380 H448 V60 H412" class="al2-ln" marker-end="url(#al2Arrow)"/>
-<text x="20" y="432" class="al2-s">3단계만 모델이 판단하고, 나머지 다섯 단계는</text>
-<text x="20" y="452" class="al2-s">전부 결정론적 인프라가 처리한다.</text>
+<path d="M412 562 H448 V76 H412" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<text x="20" y="632" class="al2-s">3단계만 모델이 판단하고, 나머지 다섯 단계는</text>
+<text x="20" y="656" class="al2-s">전부 결정론적 인프라가 처리한다.</text>
 </svg>
 </div>
 
@@ -144,12 +147,12 @@ Stage 1에서는 모델에게 보낼 프롬프트를 조립합니다. 시스템 
 Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인이 적용됩니다. 컨텍스트를 줄이고 다듬는 이 5단계를 arXiv 논문은 **Pre-model Shapers**라는 이름으로 분석합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 384" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Pre-model Shapers 5단계. 누적된 messages 배열이 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact를 차례로 거쳐 정제된 shaped_messages 배열이 된다">
+<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Pre-model Shapers 5단계. 누적된 messages 배열이 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact를 차례로 거쳐 정제된 shaped_messages 배열이 된다">
 <style>
-.al3-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
-.al3-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
-.al3-i{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
-.al3-num{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al3-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
+.al3-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
+.al3-i{fill:var(--primary,#0d9488);font-size:21px;font-weight:600}
+.al3-num{fill:var(--text-muted,#78716c);font-size:17px}
 .al3-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .al3-pill{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
 .al3-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
@@ -157,40 +160,40 @@ Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인
 <defs>
 <marker id="al3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
-<text x="20" y="20" class="al3-h">Pre-model Shapers (5단계)</text>
+<text x="20" y="26" class="al3-h">Pre-model Shapers (5단계)</text>
 <!-- 입력 -->
-<rect x="130" y="32" width="220" height="34" rx="17" class="al3-pill"/>
-<text x="150" y="54" class="al3-i">messages[]</text>
-<path d="M240 66 V80" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="112" y="44" width="256" height="44" rx="22" class="al3-pill"/>
+<text x="240" y="73" class="al3-i" text-anchor="middle">messages[]</text>
+<path d="M240 88 V104" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 1 -->
-<rect x="80" y="80" width="320" height="34" rx="8" class="al3-box"/>
-<text x="96" y="102" class="al3-num">1</text>
-<text x="120" y="102" class="al3-n">Budget Reduction</text>
-<path d="M240 114 V126" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="80" y="104" width="320" height="44" rx="8" class="al3-box"/>
+<text x="96" y="133" class="al3-num">1</text>
+<text x="120" y="133" class="al3-n">Budget Reduction</text>
+<path d="M240 148 V164" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 2 -->
-<rect x="80" y="126" width="320" height="34" rx="8" class="al3-box"/>
-<text x="96" y="148" class="al3-num">2</text>
-<text x="120" y="148" class="al3-n">Snip</text>
-<path d="M240 160 V172" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="80" y="164" width="320" height="44" rx="8" class="al3-box"/>
+<text x="96" y="193" class="al3-num">2</text>
+<text x="120" y="193" class="al3-n">Snip</text>
+<path d="M240 208 V224" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 3 -->
-<rect x="80" y="172" width="320" height="34" rx="8" class="al3-box"/>
-<text x="96" y="194" class="al3-num">3</text>
-<text x="120" y="194" class="al3-n">Microcompact</text>
-<path d="M240 206 V218" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="80" y="224" width="320" height="44" rx="8" class="al3-box"/>
+<text x="96" y="253" class="al3-num">3</text>
+<text x="120" y="253" class="al3-n">Microcompact</text>
+<path d="M240 268 V284" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 4 -->
-<rect x="80" y="218" width="320" height="34" rx="8" class="al3-box"/>
-<text x="96" y="240" class="al3-num">4</text>
-<text x="120" y="240" class="al3-n">Context Collapse</text>
-<path d="M240 252 V264" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="80" y="284" width="320" height="44" rx="8" class="al3-box"/>
+<text x="96" y="313" class="al3-num">4</text>
+<text x="120" y="313" class="al3-n">Context Collapse</text>
+<path d="M240 328 V344" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 5 -->
-<rect x="80" y="264" width="320" height="34" rx="8" class="al3-box"/>
-<text x="96" y="286" class="al3-num">5</text>
-<text x="120" y="286" class="al3-n">Auto-Compact</text>
-<path d="M240 298 V312" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<rect x="80" y="344" width="320" height="44" rx="8" class="al3-box"/>
+<text x="96" y="373" class="al3-num">5</text>
+<text x="120" y="373" class="al3-n">Auto-Compact</text>
+<path d="M240 388 V404" class="al3-ln" marker-end="url(#al3Arrow)"/>
 <!-- 출력 -->
-<rect x="130" y="312" width="220" height="34" rx="17" class="al3-pill"/>
-<text x="150" y="334" class="al3-i">shaped_messages[]</text>
-<text x="20" y="372" class="al3-num">매 턴 모델을 호출하기 직전에 전부 실행된다.</text>
+<rect x="112" y="404" width="256" height="44" rx="22" class="al3-pill"/>
+<text x="240" y="433" class="al3-i" text-anchor="middle">shaped_messages[]</text>
+<text x="20" y="482" class="al3-num">매 턴 모델을 호출하기 직전에 전부 실행된다.</text>
 </svg>
 </div>
 
@@ -239,13 +242,13 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 여러 도구 호출을 한꺼번에 흘려보내는 Parallelization 패턴이 실제로 작동하는 위치가 바로 이 Stage 4입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="스트리밍으로 도착한 도구 호출이 두 갈래로 나뉜다. Read와 Grep 같은 concurrent-safe 도구는 동시에 실행되고, Bash 같은 exclusive 도구는 퍼미션 체크를 거쳐 순차적으로 실행된 뒤 결과가 messages 배열에 쌓인다">
+<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="스트리밍으로 도착한 도구 호출이 두 갈래로 나뉜다. Read와 Grep 같은 concurrent-safe 도구는 동시에 실행되고, Bash 같은 exclusive 도구는 퍼미션 체크를 거쳐 순차적으로 실행된 뒤 결과가 messages 배열에 쌓인다">
 <style>
-.al4-h{fill:var(--text,#1c1917);font-size:15px;font-weight:700}
-.al4-t{fill:var(--text,#1c1917);font-size:13px}
-.al4-s{fill:var(--text-muted,#78716c);font-size:12.5px}
-.al4-ok{fill:var(--text-success,#16a34a);font-size:14px;font-weight:700}
-.al4-ex{fill:var(--text-warn,#d97706);font-size:14px;font-weight:700}
+.al4-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.al4-t{fill:var(--text,#1c1917);font-size:20px}
+.al4-s{fill:var(--text-muted,#78716c);font-size:17px}
+.al4-ok{fill:var(--text-success,#16a34a);font-size:20px;font-weight:700}
+.al4-ex{fill:var(--text-warn,#d97706);font-size:20px;font-weight:700}
 .al4-pill{fill:var(--bg-muted,#eeecea);stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .al4-pa{fill:var(--bg-success,#f0fdf4);stroke:var(--text-success,#16a34a);stroke-width:1.5}
 .al4-pb{fill:var(--bg-warn,#fffbeb);stroke:var(--text-warn,#d97706);stroke-width:1.5}
@@ -256,33 +259,33 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 <marker id="al4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
 <!-- 입력: 모델 응답 -->
-<rect x="130" y="16" width="220" height="34" rx="17" class="al4-pill"/>
-<text x="152" y="38" class="al4-h">모델 응답 (스트리밍)</text>
-<path d="M240 50 V66" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<rect x="100" y="16" width="280" height="44" rx="22" class="al4-pill"/>
+<text x="240" y="45" class="al4-h" text-anchor="middle">모델 응답 (스트리밍)</text>
+<path d="M240 60 V78" class="al4-ln" marker-end="url(#al4Arrow)"/>
 <!-- 갈래 1: concurrent-safe -->
-<rect x="20" y="66" width="440" height="100" rx="10" class="al4-pa"/>
-<text x="38" y="90" class="al4-ok">concurrent-safe · 동시 실행</text>
-<rect x="38" y="104" width="132" height="34" rx="8" class="al4-in"/>
-<text x="52" y="126" class="al4-t">Read(file_a)</text>
-<rect x="178" y="104" width="132" height="34" rx="8" class="al4-in"/>
-<text x="192" y="126" class="al4-t">Grep(pattern)</text>
-<rect x="318" y="104" width="124" height="34" rx="8" class="al4-in"/>
-<text x="332" y="126" class="al4-t">Read(file_b)</text>
-<text x="38" y="158" class="al4-s">읽기 전용이라 서로 충돌하지 않는다</text>
-<path d="M240 166 V182" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<rect x="20" y="78" width="440" height="184" rx="10" class="al4-pa"/>
+<text x="38" y="110" class="al4-ok">concurrent-safe · 동시 실행</text>
+<rect x="38" y="124" width="160" height="42" rx="8" class="al4-in"/>
+<text x="52" y="152" class="al4-t">Read(file_a)</text>
+<rect x="208" y="124" width="172" height="42" rx="8" class="al4-in"/>
+<text x="222" y="152" class="al4-t">Grep(pattern)</text>
+<rect x="38" y="174" width="160" height="42" rx="8" class="al4-in"/>
+<text x="52" y="202" class="al4-t">Read(file_b)</text>
+<text x="38" y="244" class="al4-s">읽기 전용이라 서로 충돌하지 않는다</text>
+<path d="M240 262 V280" class="al4-ln" marker-end="url(#al4Arrow)"/>
 <!-- 갈래 2: exclusive -->
-<rect x="20" y="182" width="440" height="100" rx="10" class="al4-pb"/>
-<text x="38" y="206" class="al4-ex">exclusive · 순차 실행</text>
-<rect x="38" y="220" width="180" height="34" rx="8" class="al4-in"/>
-<text x="52" y="242" class="al4-t">Bash(npm test)</text>
-<text x="232" y="242" class="al4-s">퍼미션 체크 후 실행</text>
-<text x="38" y="274" class="al4-s">상태를 바꾸므로 한 번에 하나씩</text>
-<path d="M240 282 V298" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<rect x="20" y="280" width="440" height="132" rx="10" class="al4-pb"/>
+<text x="38" y="312" class="al4-ex">exclusive · 순차 실행</text>
+<rect x="38" y="326" width="190" height="42" rx="8" class="al4-in"/>
+<text x="52" y="354" class="al4-t">Bash(npm test)</text>
+<text x="244" y="354" class="al4-s">퍼미션 체크 후 실행</text>
+<text x="38" y="392" class="al4-s">상태를 바꾸므로 한 번에 하나씩</text>
+<path d="M240 412 V430" class="al4-ln" marker-end="url(#al4Arrow)"/>
 <!-- 결과 누적 -->
-<rect x="110" y="298" width="260" height="34" rx="17" class="al4-pill"/>
-<text x="132" y="320" class="al4-h">결과 → messages[]에 추가</text>
-<text x="20" y="360" class="al4-s">거부(deny)된 도구도 루프를 멈추지 않는다.</text>
-<text x="20" y="382" class="al4-s">거부 결과가 라우팅 시그널로 모델에 전달된다.</text>
+<rect x="76" y="430" width="328" height="44" rx="22" class="al4-pill"/>
+<text x="240" y="459" class="al4-h" text-anchor="middle">결과 → messages[]에 추가</text>
+<text x="20" y="510" class="al4-s">거부(deny)된 도구도 루프를 멈추지 않는다.</text>
+<text x="20" y="534" class="al4-s">거부 결과가 라우팅 시그널로 모델에 전달된다.</text>
 </svg>
 </div>
 
@@ -319,13 +322,13 @@ Claude Code의 "상태 유지" 아키텍처를 살펴봤으니, 이제 Codex의 
 Codex의 한 턴은 다음과 같이 처리됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex의 Turn N 처리 과정. 클라이언트가 developer 메시지부터 이전 턴 도구 결과까지 전체 히스토리를 다시 만들어 Responses API에 POST하고, SSE 스트림으로 응답을 받아 샌드박스에서 도구를 실행한 뒤 다시 히스토리를 재구성한다">
+<svg viewBox="0 0 480 668" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex의 Turn N 처리 과정. 클라이언트가 developer 메시지부터 이전 턴 도구 결과까지 전체 히스토리를 다시 만들어 Responses API에 POST하고, SSE 스트림으로 응답을 받아 샌드박스에서 도구를 실행한 뒤 다시 히스토리를 재구성한다">
 <style>
-.al5-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
-.al5-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
-.al5-t{fill:var(--text,#1c1917);font-size:13px}
-.al5-s{fill:var(--text-muted,#78716c);font-size:12.5px}
-.al5-i{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
+.al5-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
+.al5-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
+.al5-t{fill:var(--text,#1c1917);font-size:20px}
+.al5-s{fill:var(--text-muted,#78716c);font-size:17px}
+.al5-i{fill:var(--primary,#0d9488);font-size:21px;font-weight:600}
 .al5-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .al5-api{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
 .al5-row{fill:var(--bg,#fafaf8);stroke:var(--border,#e7e5e4);stroke-width:1.2}
@@ -334,39 +337,40 @@ Codex의 한 턴은 다음과 같이 처리됩니다.
 <defs>
 <marker id="al5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
-<text x="20" y="20" class="al5-h">Turn N의 처리 과정</text>
+<text x="20" y="26" class="al5-h">Turn N의 처리 과정</text>
 <!-- 클라이언트: 히스토리 재구성 -->
-<rect x="20" y="32" width="392" height="188" rx="10" class="al5-box"/>
-<text x="38" y="56" class="al5-n">Client · history = rebuild_all()</text>
-<rect x="38" y="68" width="356" height="22" rx="5" class="al5-row"/>
-<text x="50" y="84" class="al5-t">developer_msg</text>
-<rect x="38" y="94" width="356" height="22" rx="5" class="al5-row"/>
-<text x="50" y="110" class="al5-t">config.toml</text>
-<rect x="38" y="120" width="356" height="22" rx="5" class="al5-row"/>
-<text x="50" y="136" class="al5-t">skill_files</text>
-<rect x="38" y="146" width="356" height="22" rx="5" class="al5-row"/>
-<text x="50" y="162" class="al5-t">environment</text>
-<rect x="38" y="172" width="356" height="22" rx="5" class="al5-row"/>
-<text x="50" y="188" class="al5-t">user_msg</text>
-<text x="38" y="210" class="al5-s">+ tool_results(turn 1 … N-1) 전체</text>
+<rect x="20" y="44" width="392" height="306" rx="10" class="al5-box"/>
+<text x="38" y="76" class="al5-n">Client</text>
+<text x="38" y="102" class="al5-t">history = rebuild_all()</text>
+<rect x="38" y="114" width="356" height="34" rx="6" class="al5-row"/>
+<text x="52" y="137" class="al5-t">developer_msg</text>
+<rect x="38" y="154" width="356" height="34" rx="6" class="al5-row"/>
+<text x="52" y="177" class="al5-t">config.toml</text>
+<rect x="38" y="194" width="356" height="34" rx="6" class="al5-row"/>
+<text x="52" y="217" class="al5-t">skill_files</text>
+<rect x="38" y="234" width="356" height="34" rx="6" class="al5-row"/>
+<text x="52" y="257" class="al5-t">environment</text>
+<rect x="38" y="274" width="356" height="34" rx="6" class="al5-row"/>
+<text x="52" y="297" class="al5-t">user_msg</text>
+<text x="38" y="334" class="al5-s">+ tool_results(turn 1 … N-1) 전체</text>
 <!-- 요청 -->
-<path d="M216 220 V250" class="al5-ln" marker-end="url(#al5Arrow)"/>
-<text x="228" y="240" class="al5-s">POST /v1/responses</text>
+<path d="M216 350 V392" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="228" y="378" class="al5-s">POST /v1/responses</text>
 <!-- API -->
-<rect x="130" y="250" width="220" height="40" rx="10" class="al5-api"/>
-<text x="152" y="276" class="al5-i">Responses API</text>
+<rect x="106" y="392" width="220" height="48" rx="10" class="al5-api"/>
+<text x="128" y="422" class="al5-i">Responses API</text>
 <!-- 응답 -->
-<path d="M216 290 V320" class="al5-ln" marker-end="url(#al5Arrow)"/>
-<text x="228" y="310" class="al5-s">SSE stream</text>
+<path d="M216 440 V482" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="228" y="468" class="al5-s">SSE stream</text>
 <!-- 클라이언트: 도구 실행 -->
-<rect x="20" y="320" width="392" height="90" rx="10" class="al5-box"/>
-<text x="38" y="344" class="al5-t">parse tool_calls</text>
-<text x="38" y="366" class="al5-t">execute in sandbox</text>
-<text x="38" y="388" class="al5-t">append results to history</text>
+<rect x="20" y="482" width="392" height="112" rx="10" class="al5-box"/>
+<text x="38" y="514" class="al5-t">parse tool_calls</text>
+<text x="38" y="546" class="al5-t">execute in sandbox</text>
+<text x="38" y="578" class="al5-t">append results to history</text>
 <!-- 다음 턴으로 되돌아가는 화살표 -->
-<path d="M412 364 H448 V56 H412" class="al5-ln" marker-end="url(#al5Arrow)"/>
-<text x="20" y="440" class="al5-s">tool_calls가 없으면 종료, 있으면 히스토리를</text>
-<text x="20" y="460" class="al5-s">처음부터 다시 만들어 Turn N+1을 보낸다.</text>
+<path d="M412 538 H448 V70 H412" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="20" y="628" class="al5-s">tool_calls가 없으면 종료, 있으면 히스토리를</text>
+<text x="20" y="652" class="al5-s">처음부터 다시 만들어 Turn N+1을 보낸다.</text>
 </svg>
 </div>
 
@@ -412,42 +416,42 @@ Claude Code의 6단계 파이프라인과 비교하면 구조가 훨씬 간결�
 핵심 원리는 단순합니다. 이전 요청과 새 요청의 처음 K개 토큰이 동일하면, 서버는 캐시된 결과를 재사용하고 새로운 토큰만 처리하는 구조입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 272" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="턴이 진행될수록 캐시 적중 구간이 길어지는 프롬프트 캐싱. Turn 1은 정적 프리픽스만 재사용하고 user_msg가 새 토큰이며, Turn 2와 Turn 3은 직전 턴의 프롬프트 전체가 캐시 프리픽스가 되고 새로 붙은 도구 결과만 새 토큰이다">
+<svg viewBox="0 0 480 380" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="턴이 진행될수록 캐시 적중 구간이 길어지는 프롬프트 캐싱. Turn 1은 정적 프리픽스만 재사용하고 user_msg가 새 토큰이며, Turn 2와 Turn 3은 직전 턴의 프롬프트 전체가 캐시 프리픽스가 되고 새로 붙은 도구 결과만 새 토큰이다">
 <style>
-.al6-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
-.al6-turn{fill:var(--text,#1c1917);font-size:14px;font-weight:600}
-.al6-s{fill:var(--text-muted,#78716c);font-size:12.5px}
-.al6-c{fill:var(--primary,#0d9488);font-size:12.5px;font-weight:600}
-.al6-w{fill:var(--accent,#d97706);font-size:12.5px;font-weight:600}
+.al6-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
+.al6-turn{fill:var(--text,#1c1917);font-size:20px;font-weight:600}
+.al6-s{fill:var(--text-muted,#78716c);font-size:17px}
+.al6-c{fill:var(--primary,#0d9488);font-size:17px;font-weight:600}
+.al6-w{fill:var(--accent,#d97706);font-size:17px;font-weight:600}
 .al6-cb{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
 .al6-wb{fill:var(--bg-warn,#fffbeb);stroke:var(--accent,#d97706);stroke-width:1.5}
 </style>
-<text x="20" y="20" class="al6-h">턴이 쌓일수록 길어지는 캐시 프리픽스</text>
+<text x="20" y="26" class="al6-h">턴이 쌓일수록 길어지는 캐시 프리픽스</text>
 <!-- 범례 -->
-<rect x="20" y="34" width="14" height="14" rx="3" class="al6-cb"/>
-<text x="40" y="46" class="al6-c">캐시 적중 (재사용)</text>
-<rect x="170" y="34" width="14" height="14" rx="3" class="al6-wb"/>
-<text x="190" y="46" class="al6-w">신규 토큰</text>
+<rect x="20" y="40" width="18" height="18" rx="4" class="al6-cb"/>
+<text x="46" y="55" class="al6-c">캐시 적중 (재사용)</text>
+<rect x="212" y="40" width="18" height="18" rx="4" class="al6-wb"/>
+<text x="238" y="55" class="al6-w">신규 토큰</text>
 <!-- Turn 1 -->
-<text x="16" y="86" class="al6-turn">Turn 1</text>
-<rect x="78" y="66" width="160" height="30" rx="5" class="al6-cb"/>
-<text x="88" y="86" class="al6-c">정적 프리픽스</text>
-<rect x="238" y="66" width="76" height="30" rx="5" class="al6-wb"/>
-<text x="246" y="86" class="al6-w">user_msg</text>
+<text x="20" y="92" class="al6-turn">Turn 1</text>
+<rect x="20" y="102" width="150" height="38" rx="6" class="al6-cb"/>
+<text x="30" y="127" class="al6-c">정적 프리픽스</text>
+<rect x="174" y="102" width="100" height="38" rx="6" class="al6-wb"/>
+<text x="186" y="127" class="al6-w">user_msg</text>
 <!-- Turn 2 -->
-<text x="16" y="140" class="al6-turn">Turn 2</text>
-<rect x="78" y="120" width="236" height="30" rx="5" class="al6-cb"/>
-<text x="88" y="140" class="al6-c">정적 프리픽스 + user_msg</text>
-<rect x="314" y="120" width="76" height="30" rx="5" class="al6-wb"/>
-<text x="322" y="140" class="al6-w">result_1</text>
+<text x="20" y="180" class="al6-turn">Turn 2</text>
+<rect x="20" y="190" width="240" height="38" rx="6" class="al6-cb"/>
+<text x="30" y="215" class="al6-c">정적 프리픽스 + user_msg</text>
+<rect x="264" y="190" width="100" height="38" rx="6" class="al6-wb"/>
+<text x="276" y="215" class="al6-w">result_1</text>
 <!-- Turn 3 -->
-<text x="16" y="194" class="al6-turn">Turn 3</text>
-<rect x="78" y="174" width="312" height="30" rx="5" class="al6-cb"/>
-<text x="88" y="194" class="al6-c">정적 프리픽스 + user_msg + result_1</text>
-<rect x="390" y="174" width="76" height="30" rx="5" class="al6-wb"/>
-<text x="398" y="194" class="al6-w">result_2</text>
-<text x="16" y="238" class="al6-s">정적 프리픽스 = developer message · config.toml ·</text>
-<text x="16" y="260" class="al6-s">skill files · environment</text>
+<text x="20" y="268" class="al6-turn">Turn 3</text>
+<rect x="20" y="278" width="340" height="38" rx="6" class="al6-cb"/>
+<text x="30" y="303" class="al6-c">정적 프리픽스 + user_msg + result_1</text>
+<rect x="364" y="278" width="100" height="38" rx="6" class="al6-wb"/>
+<text x="376" y="303" class="al6-w">result_2</text>
+<text x="20" y="342" class="al6-s">정적 프리픽스 = developer message ·</text>
+<text x="20" y="366" class="al6-s">config.toml · skill files · environment</text>
 </svg>
 </div>
 

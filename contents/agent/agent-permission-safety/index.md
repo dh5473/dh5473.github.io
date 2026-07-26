@@ -28,67 +28,67 @@ Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청�
 모델이 도구를 선택한 뒤, 그 특정 호출이 허용되는지를 7단계 파이프라인이 평가합니다. 이 글의 본론입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 500 700" style="width: 100%; height: auto; max-width: 500px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="퍼미션 판단의 2단계 구조. 위 패널은 모델 호출 전 사전 필터가 도구 목록을 축소하는 과정, 아래 패널은 모델이 도구를 선택한 뒤 실행 여부를 판단하는 과정을 보여줍니다.">
+<svg viewBox="0 0 480 858" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="퍼미션 판단의 2단계 구조. 위 패널은 모델 호출 전 사전 필터가 도구 목록을 축소하는 과정, 아래 패널은 모델이 도구를 선택한 뒤 실행 여부를 판단하는 과정을 보여줍니다.">
   <style>
     .pp2p-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pp2p-step { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pp2p-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
     .pp2p-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
     .pp2p-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .pp2p-hd { fill: var(--primary, #0d9488); font-size: 15px; font-weight: 600; text-anchor: middle; }
-    .pp2p-t { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .pp2p-s { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .pp2p-hd { fill: var(--primary, #0d9488); font-size: 20px; font-weight: 600; text-anchor: middle; }
+    .pp2p-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
+    .pp2p-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pp2p-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pp2pArr); }
   </style>
   <defs>
     <marker id="pp2pArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
   </defs>
   <!-- Phase 1 panel -->
-  <rect x="20" y="8" width="460" height="300" rx="10" class="pp2p-panel"/>
-  <text x="250" y="32" class="pp2p-hd">Phase 1: 사전 필터 (모델 호출 전)</text>
-  <rect x="80" y="44" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="65" class="pp2p-t">최대 54개 도구</text>
-  <line x1="250" y1="78" x2="250" y2="86" class="pp2p-arr"/>
-  <rect x="80" y="88" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="109" class="pp2p-t">퍼미션 모드 필터링</text>
-  <line x1="250" y1="122" x2="250" y2="130" class="pp2p-arr"/>
-  <rect x="80" y="132" width="340" height="32" rx="7" class="pp2p-deny"/>
-  <text x="250" y="153" class="pp2p-t">deny 규칙 적용</text>
-  <line x1="250" y1="166" x2="250" y2="174" class="pp2p-arr"/>
-  <rect x="80" y="176" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="197" class="pp2p-t">MCP 도구 통합</text>
-  <line x1="250" y1="210" x2="250" y2="218" class="pp2p-arr"/>
-  <rect x="80" y="220" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="241" class="pp2p-t">중복 제거</text>
-  <line x1="250" y1="254" x2="250" y2="262" class="pp2p-arr"/>
-  <rect x="80" y="264" width="340" height="32" rx="7" class="pp2p-key"/>
-  <text x="250" y="285" class="pp2p-t">모델에게 전달 (축소된 도구 목록)</text>
+  <rect x="10" y="8" width="460" height="372" rx="10" class="pp2p-panel"/>
+  <text x="240" y="38" class="pp2p-hd">Phase 1: 사전 필터 (모델 호출 전)</text>
+  <rect x="50" y="54" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="80" class="pp2p-t">최대 54개 도구</text>
+  <line x1="240" y1="96" x2="240" y2="106" class="pp2p-arr"/>
+  <rect x="50" y="108" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="134" class="pp2p-t">퍼미션 모드 필터링</text>
+  <line x1="240" y1="150" x2="240" y2="160" class="pp2p-arr"/>
+  <rect x="50" y="162" width="380" height="40" rx="8" class="pp2p-deny"/>
+  <text x="240" y="188" class="pp2p-t">deny 규칙 적용</text>
+  <line x1="240" y1="204" x2="240" y2="214" class="pp2p-arr"/>
+  <rect x="50" y="216" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="242" class="pp2p-t">MCP 도구 통합</text>
+  <line x1="240" y1="258" x2="240" y2="268" class="pp2p-arr"/>
+  <rect x="50" y="270" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="296" class="pp2p-t">중복 제거</text>
+  <line x1="240" y1="312" x2="240" y2="322" class="pp2p-arr"/>
+  <rect x="50" y="324" width="380" height="40" rx="8" class="pp2p-key"/>
+  <text x="240" y="350" class="pp2p-t">모델에게 전달 (축소된 도구 목록)</text>
   <!-- transition -->
-  <line x1="250" y1="312" x2="250" y2="338" class="pp2p-arr"/>
-  <text x="320" y="330" class="pp2p-s">모델 호출</text>
+  <line x1="240" y1="386" x2="240" y2="418" class="pp2p-arr"/>
+  <text x="256" y="406" class="pp2p-s" style="text-anchor: start">모델 호출</text>
   <!-- Phase 2 panel -->
-  <rect x="20" y="344" width="460" height="346" rx="10" class="pp2p-panel"/>
-  <text x="250" y="368" class="pp2p-hd">Phase 2: 사후 판단 (모델 호출 후)</text>
-  <rect x="80" y="380" width="340" height="32" rx="7" class="pp2p-key"/>
-  <text x="250" y="401" class="pp2p-t">모델이 선택한 도구 호출</text>
-  <line x1="250" y1="414" x2="250" y2="422" class="pp2p-arr"/>
-  <rect x="80" y="424" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="445" class="pp2p-t">모드 게이트</text>
-  <line x1="250" y1="458" x2="250" y2="466" class="pp2p-arr"/>
-  <rect x="80" y="468" width="340" height="32" rx="7" class="pp2p-deny"/>
-  <text x="250" y="489" class="pp2p-t">deny 규칙 검사</text>
-  <line x1="250" y1="502" x2="250" y2="510" class="pp2p-arr"/>
-  <rect x="80" y="512" width="340" height="32" rx="7" class="pp2p-allow"/>
-  <text x="250" y="533" class="pp2p-t">allow 규칙 검사</text>
-  <line x1="250" y1="546" x2="250" y2="554" class="pp2p-arr"/>
-  <rect x="80" y="556" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="577" class="pp2p-t">ML 분류기 (auto 모드)</text>
-  <line x1="250" y1="590" x2="250" y2="598" class="pp2p-arr"/>
-  <rect x="80" y="600" width="340" height="32" rx="7" class="pp2p-step"/>
-  <text x="250" y="621" class="pp2p-t">사용자 프롬프트 (필요시)</text>
-  <line x1="250" y1="634" x2="250" y2="642" class="pp2p-arr"/>
-  <rect x="80" y="644" width="340" height="32" rx="7" class="pp2p-key"/>
-  <text x="250" y="665" class="pp2p-t">실행 또는 거부 라우팅</text>
+  <rect x="10" y="422" width="460" height="426" rx="10" class="pp2p-panel"/>
+  <text x="240" y="452" class="pp2p-hd">Phase 2: 사후 판단 (모델 호출 후)</text>
+  <rect x="50" y="468" width="380" height="40" rx="8" class="pp2p-key"/>
+  <text x="240" y="494" class="pp2p-t">모델이 선택한 도구 호출</text>
+  <line x1="240" y1="510" x2="240" y2="520" class="pp2p-arr"/>
+  <rect x="50" y="522" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="548" class="pp2p-t">모드 게이트</text>
+  <line x1="240" y1="564" x2="240" y2="574" class="pp2p-arr"/>
+  <rect x="50" y="576" width="380" height="40" rx="8" class="pp2p-deny"/>
+  <text x="240" y="602" class="pp2p-t">deny 규칙 검사</text>
+  <line x1="240" y1="618" x2="240" y2="628" class="pp2p-arr"/>
+  <rect x="50" y="630" width="380" height="40" rx="8" class="pp2p-allow"/>
+  <text x="240" y="656" class="pp2p-t">allow 규칙 검사</text>
+  <line x1="240" y1="672" x2="240" y2="682" class="pp2p-arr"/>
+  <rect x="50" y="684" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="710" class="pp2p-t">ML 분류기 (auto 모드)</text>
+  <line x1="240" y1="726" x2="240" y2="736" class="pp2p-arr"/>
+  <rect x="50" y="738" width="380" height="40" rx="8" class="pp2p-step"/>
+  <text x="240" y="764" class="pp2p-t">사용자 프롬프트 (필요시)</text>
+  <line x1="240" y1="780" x2="240" y2="790" class="pp2p-arr"/>
+  <rect x="50" y="792" width="380" height="40" rx="8" class="pp2p-key"/>
+  <text x="240" y="818" class="pp2p-t">실행 또는 거부 라우팅</text>
 </svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
@@ -171,19 +171,20 @@ def should_prompt(mode: PermissionMode, tool_name: str,
 도구 호출이 도착하면 다음 7단계를 순서대로 거칩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 500 560" style="width: 100%; height: auto; max-width: 500px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
+<svg viewBox="0 0 480 624" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
   <style>
     .pps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pps-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
     .pps-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .pps-t { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-    .pps-s { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
-    .pps-chip { font-size: 14px; font-weight: 600; text-anchor: middle; fill: var(--bg, #fafaf8); }
-    .pps-ok { fill: var(--text-success, #16a34a); font-size: 13px; text-anchor: start; }
-    .pps-note { fill: var(--primary, #0d9488); font-size: 13px; text-anchor: middle; }
+    .pps-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
+    .pps-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .pps-chip { font-size: 20px; font-weight: 600; text-anchor: middle; fill: var(--bg, #fafaf8); }
+    .pps-ok { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: start; }
+    .pps-note { fill: var(--primary, #0d9488); font-size: 17px; text-anchor: middle; }
     .pps-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#ppsArr); }
     .pps-arr-d { stroke: var(--text-danger, #dc2626); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrD); }
     .pps-arr-a { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrA); }
+    .pps-join { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; }
   </style>
   <defs>
     <marker id="ppsArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
@@ -191,51 +192,54 @@ def should_prompt(mode: PermissionMode, tool_name: str,
     <marker id="ppsArrA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)"/></marker>
   </defs>
   <!-- Stage 1: Mode Gate -->
-  <rect x="70" y="12" width="250" height="50" rx="8" class="pps-box"/>
-  <text x="195" y="34" class="pps-t">1. Mode Gate</text>
-  <text x="195" y="54" class="pps-s">plan 모드면 쓰기 도구 차단</text>
-  <line x1="195" y1="64" x2="195" y2="82" class="pps-arr"/>
+  <rect x="20" y="12" width="300" height="56" rx="8" class="pps-box"/>
+  <text x="170" y="38" class="pps-t">1. Mode Gate</text>
+  <text x="170" y="60" class="pps-s">plan 모드면 쓰기 도구 차단</text>
+  <line x1="170" y1="70" x2="170" y2="86" class="pps-arr"/>
   <!-- Stage 2: Deny Rules -->
-  <rect x="70" y="84" width="250" height="38" rx="8" class="pps-deny"/>
-  <text x="195" y="108" class="pps-t" style="font-weight:600">2. Deny Rules</text>
-  <line x1="320" y1="103" x2="368" y2="103" class="pps-arr-d"/>
-  <rect x="376" y="87" width="90" height="32" rx="6" fill="var(--text-danger, #dc2626)"/>
-  <text x="421" y="108" class="pps-chip">DENY</text>
-  <line x1="195" y1="124" x2="195" y2="142" class="pps-arr"/>
+  <rect x="20" y="88" width="300" height="44" rx="8" class="pps-deny"/>
+  <text x="170" y="117" class="pps-t" style="font-weight:600">2. Deny Rules</text>
+  <line x1="322" y1="110" x2="344" y2="110" class="pps-arr-d"/>
+  <rect x="350" y="92" width="110" height="36" rx="6" fill="var(--text-danger, #dc2626)"/>
+  <text x="405" y="118" class="pps-chip">DENY</text>
+  <line x1="170" y1="134" x2="170" y2="150" class="pps-arr"/>
   <!-- Stage 3: Allow Rules -->
-  <rect x="70" y="144" width="250" height="38" rx="8" class="pps-allow"/>
-  <text x="195" y="168" class="pps-t" style="font-weight:600">3. Allow Rules</text>
-  <line x1="320" y1="163" x2="368" y2="163" class="pps-arr-a"/>
-  <rect x="376" y="147" width="90" height="32" rx="6" fill="var(--text-success, #16a34a)"/>
-  <text x="421" y="168" class="pps-chip">ALLOW</text>
-  <line x1="195" y1="184" x2="195" y2="202" class="pps-arr"/>
+  <rect x="20" y="152" width="300" height="44" rx="8" class="pps-allow"/>
+  <text x="170" y="181" class="pps-t" style="font-weight:600">3. Allow Rules</text>
+  <line x1="322" y1="174" x2="344" y2="174" class="pps-arr-a"/>
+  <rect x="350" y="156" width="110" height="36" rx="6" fill="var(--text-success, #16a34a)"/>
+  <text x="405" y="182" class="pps-chip">ALLOW</text>
+  <line x1="170" y1="198" x2="170" y2="214" class="pps-arr"/>
   <!-- Stage 4: ML Classifier -->
-  <rect x="70" y="204" width="250" height="50" rx="8" class="pps-box"/>
-  <text x="195" y="226" class="pps-t">4. ML Classifier</text>
-  <text x="195" y="246" class="pps-s">auto 모드일 때만 실행</text>
-  <line x1="320" y1="222" x2="352" y2="222" class="pps-arr-a"/>
-  <text x="360" y="227" class="pps-ok">safe</text>
-  <line x1="195" y1="256" x2="195" y2="286" class="pps-arr"/>
-  <text x="205" y="276" class="pps-s" style="text-anchor: start">risky</text>
+  <rect x="20" y="216" width="300" height="56" rx="8" class="pps-box"/>
+  <text x="170" y="242" class="pps-t">4. ML Classifier</text>
+  <text x="170" y="264" class="pps-s">auto 모드일 때만 실행</text>
+  <path d="M320 244 H400" class="pps-join"/>
+  <text x="330" y="236" class="pps-ok">safe</text>
+  <line x1="170" y1="274" x2="170" y2="304" class="pps-arr"/>
+  <text x="180" y="294" class="pps-s" style="text-anchor: start">risky</text>
   <!-- Stage 5: User Prompt -->
-  <rect x="70" y="290" width="250" height="38" rx="8" class="pps-box"/>
-  <text x="195" y="314" class="pps-t">5. User Prompt</text>
-  <line x1="320" y1="309" x2="352" y2="309" class="pps-arr-a"/>
-  <text x="360" y="314" class="pps-ok">approve</text>
-  <line x1="195" y1="330" x2="195" y2="360" class="pps-arr"/>
-  <text x="205" y="350" class="pps-s" style="text-anchor: start">deny</text>
+  <rect x="20" y="306" width="300" height="44" rx="8" class="pps-box"/>
+  <text x="170" y="335" class="pps-t">5. User Prompt</text>
+  <path d="M320 328 H400" class="pps-join"/>
+  <text x="330" y="320" class="pps-ok">approve</text>
+  <line x1="170" y1="352" x2="170" y2="382" class="pps-arr"/>
+  <text x="180" y="372" class="pps-s" style="text-anchor: start">deny</text>
   <!-- Stage 6: Denial Routing -->
-  <rect x="70" y="364" width="250" height="50" rx="8" class="pps-box"/>
-  <text x="195" y="386" class="pps-t">6. Denial Routing</text>
-  <text x="195" y="406" class="pps-s">거부 결과를 모델에게 전달</text>
-  <line x1="195" y1="416" x2="195" y2="434" class="pps-arr"/>
+  <rect x="20" y="384" width="300" height="56" rx="8" class="pps-box"/>
+  <text x="170" y="410" class="pps-t">6. Denial Routing</text>
+  <text x="170" y="432" class="pps-s">거부 결과를 모델에게 전달</text>
+  <line x1="170" y1="442" x2="170" y2="458" class="pps-arr"/>
   <!-- Stage 7: Execute or Route -->
-  <rect x="70" y="436" width="250" height="38" rx="8" class="pps-allow"/>
-  <text x="195" y="460" class="pps-t" style="font-weight:600">7. Execute or Route</text>
+  <rect x="20" y="460" width="300" height="44" rx="8" class="pps-allow"/>
+  <text x="170" y="489" class="pps-t" style="font-weight:600">7. Execute or Route</text>
+  <!-- safe / approve 합류 레일: Stage 7 박스로 직접 진입 -->
+  <path d="M400 244 V482 H326" class="pps-arr-a"/>
   <!-- Note -->
-  <rect x="20" y="492" width="460" height="54" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1" stroke-dasharray="4"/>
-  <text x="250" y="515" class="pps-note">핵심: Stage 2(deny)가 Stage 3(allow)보다 먼저 실행됩니다</text>
-  <text x="250" y="535" class="pps-note">deny에 매칭되면 allow를 검사하지 않고 즉시 거부합니다</text>
+  <rect x="10" y="524" width="460" height="88" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1" stroke-dasharray="4"/>
+  <text x="240" y="552" class="pps-note">핵심: Stage 2(deny)가 Stage 3(allow)보다</text>
+  <text x="240" y="576" class="pps-note">먼저 실행됩니다. deny에 매칭되면</text>
+  <text x="240" y="600" class="pps-note">allow를 검사하지 않고 즉시 거부합니다</text>
 </svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
