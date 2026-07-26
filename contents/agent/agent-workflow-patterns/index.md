@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 Claude Code에 "이 모듈을 세 개의 파일로 리팩터링해줘"라고 요청하면, 단순히 코드를 생성하는 것이 아닙니다. 먼저 모듈의 의존성 구조를 분석하고, 어떤 파일들로 나눌지 계획을 세웁니다. 그 다음 각 파일을 순차적으로 생성하면서, 파일 하나를 만들 때마다 기존 import가 깨지지 않았는지 확인합니다. 코드베이스가 크면 서브에이전트에게 파일 분석을 위임하기도 합니다.
 
-하나의 요청이 여러 패턴을 넘나들며 처리되는 것입니다. 이전 글에서 Anthropic의 다섯 가지 워크플로우 패턴을 표 하나로 요약했는데, 이 글에서는 각 패턴의 내부 구조를 뜯어보겠습니다. 어떤 상황에서 어떤 패턴을 선택해야 하는지, 프로덕션 에이전트는 실제로 이것을 어떻게 구현했는지, 그리고 순수 Python으로 각 패턴의 핵심을 직접 만들어 봅니다.
+하나의 요청이 여러 패턴을 넘나들며 처리되는 것입니다. Anthropic은 이런 처리 방식을 다섯 가지 워크플로우 패턴으로 정리했습니다. Prompt Chaining, Routing, Parallelization, Orchestrator-Workers, Evaluator-Optimizer. 이 글에서는 각 패턴의 내부 구조를 뜯어보겠습니다. 어떤 상황에서 어떤 패턴을 선택해야 하는지, 프로덕션 에이전트는 실제로 이것을 어떻게 구현했는지, 그리고 순수 Python으로 각 패턴의 핵심을 직접 만들어 봅니다.
 
 ---
 
@@ -25,29 +25,57 @@ OpenAI도 같은 입장입니다. "A Practical Guide to Building Agents"에서 "
 
 다섯 가지 패턴은 복잡도 순서로 나열됩니다. 아래쪽으로 갈수록 강력하지만, 비용과 디버깅 난이도도 함께 올라갑니다.
 
-```
-Single LLM call (optimized prompt)
-     |
-     | not enough?
-     v
-Prompt Chaining ---- fixed sequential steps
-     |
-     | input varies?
-     v
-Routing ------------ classify + branch
-     |
-     | need speed?
-     v
-Parallelization ---- concurrent subtasks
-     |
-     | subtasks unknown?
-     v
-Orchestrator-Workers  dynamic decomposition
-     |
-     | need iterative refinement?
-     v
-Evaluator-Optimizer - generate + critique loop
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 536" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="복잡도 순서로 나열한 워크플로우 패턴 사다리. 단일 LLM 호출에서 시작해 부족할 때만 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers, Evaluator-Optimizer 순으로 내려간다">
+<style>
+.wp1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.wp1-box-hi { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp1-t1 { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+.wp1-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp1-q { fill: var(--accent, #d97706); font-size: 12.5px; }
+.wp1-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+</style>
+<defs>
+<marker id="wp1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 1. 단일 호출 -->
+<rect class="wp1-box" x="40" y="8" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="29" text-anchor="middle">단일 LLM 호출</text>
+<text class="wp1-t2" x="190" y="46" text-anchor="middle">프롬프트 최적화로 해결</text>
+<path class="wp1-line" d="M 190 58 V 100" marker-end="url(#wp1Arrow)"/>
+<text class="wp1-q" x="202" y="83">부족한가?</text>
+<!-- 2. Prompt Chaining -->
+<rect class="wp1-box-hi" x="40" y="102" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="123" text-anchor="middle">Prompt Chaining</text>
+<text class="wp1-t2" x="190" y="140" text-anchor="middle">고정된 순차 단계</text>
+<path class="wp1-line" d="M 190 152 V 194" marker-end="url(#wp1Arrow)"/>
+<text class="wp1-q" x="202" y="177">입력 유형이 다양한가?</text>
+<!-- 3. Routing -->
+<rect class="wp1-box-hi" x="40" y="196" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="217" text-anchor="middle">Routing</text>
+<text class="wp1-t2" x="190" y="234" text-anchor="middle">분류 후 전문 핸들러로 분기</text>
+<path class="wp1-line" d="M 190 246 V 288" marker-end="url(#wp1Arrow)"/>
+<text class="wp1-q" x="202" y="271">속도가 필요한가?</text>
+<!-- 4. Parallelization -->
+<rect class="wp1-box-hi" x="40" y="290" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="311" text-anchor="middle">Parallelization</text>
+<text class="wp1-t2" x="190" y="328" text-anchor="middle">독립 하위 작업 동시 실행</text>
+<path class="wp1-line" d="M 190 340 V 382" marker-end="url(#wp1Arrow)"/>
+<text class="wp1-q" x="202" y="365">하위 작업이 미정인가?</text>
+<!-- 5. Orchestrator-Workers -->
+<rect class="wp1-box-hi" x="40" y="384" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="405" text-anchor="middle">Orchestrator-Workers</text>
+<text class="wp1-t2" x="190" y="422" text-anchor="middle">런타임 동적 분해</text>
+<path class="wp1-line" d="M 190 434 V 476" marker-end="url(#wp1Arrow)"/>
+<text class="wp1-q" x="202" y="459">반복 개선이 필요한가?</text>
+<!-- 6. Evaluator-Optimizer -->
+<rect class="wp1-box-hi" x="40" y="478" width="300" height="50" rx="8"/>
+<text class="wp1-t1" x="190" y="499" text-anchor="middle">Evaluator-Optimizer</text>
+<text class="wp1-t2" x="190" y="516" text-anchor="middle">생성과 평가의 루프</text>
+</svg>
+</div>
 
 핵심은 **위에서부터 시도하고, 부족할 때만 아래로 내려가는 것**입니다. 가장 단순한 Prompt Chaining으로 충분한 문제에 Orchestrator-Workers를 도입하면 복잡성만 늘고 디버깅이 어려워집니다. 이 다섯 패턴은 배타적이지 않습니다. 프로덕션 에이전트는 보통 여러 패턴을 조합합니다.
 
@@ -63,14 +91,63 @@ Anthropic의 정의는 명확합니다.
 
 단순히 LLM 호출을 연결하는 것과 Prompt Chaining의 차이는 **게이트(Gate)**에 있습니다. 게이트는 단계 사이에 끼워 넣는 프로그래밍적 검증입니다. LLM 호출이 아니라, 조건문이나 정규표현식 같은 결정론적 코드로 중간 결과를 확인합니다.
 
-```
-Step 1: Generate     Gate: validate     Step 2: Transform
-  [LLM call] ------> [format OK?] ------> [LLM call]
-                          |
-                          | fail
-                          v
-                     [retry / abort]
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Prompt Chaining 데이터 흐름. 첫 LLM 호출의 출력을 결정론적 게이트가 검증하고, 통과하면 두 번째 LLM 호출로 넘어가며 실패하면 첫 단계로 되돌아가 재생성한다">
+<style>
+.wp2-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp2-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp2-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
+.wp2-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp2-t1 { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+.wp2-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp2-pt { fill: var(--text-muted, #78716c); font-size: 14px; }
+.wp2-ok { fill: var(--text-success, #16a34a); font-size: 12.5px; }
+.wp2-no { fill: var(--text-danger, #dc2626); font-size: 12.5px; }
+.wp2-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.wp2-fail { stroke: var(--text-danger, #dc2626); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
+</style>
+<defs>
+<marker id="wp2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+<marker id="wp2ArrowFail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #dc2626)"/>
+</marker>
+</defs>
+<!-- 입력 -->
+<rect class="wp2-pill" x="180" y="8" width="200" height="32" rx="16"/>
+<text class="wp2-pt" x="280" y="29" text-anchor="middle">요청</text>
+<path class="wp2-line" d="M 280 40 V 60" marker-end="url(#wp2Arrow)"/>
+<!-- Step 1 -->
+<rect class="wp2-llm" x="180" y="62" width="200" height="60" rx="8"/>
+<text class="wp2-t1" x="280" y="88" text-anchor="middle">Step 1: 생성</text>
+<text class="wp2-t2" x="280" y="107" text-anchor="middle">LLM 호출 · 비결정적</text>
+<path class="wp2-line" d="M 280 122 V 148" marker-end="url(#wp2Arrow)"/>
+<!-- 게이트 -->
+<rect class="wp2-gate" x="180" y="150" width="200" height="60" rx="4"/>
+<text class="wp2-t1" x="280" y="176" text-anchor="middle">게이트: 형식 검증</text>
+<text class="wp2-t2" x="280" y="195" text-anchor="middle">if · regex · 결정론적</text>
+<path class="wp2-line" d="M 280 210 V 236" marker-end="url(#wp2Arrow)"/>
+<text class="wp2-ok" x="290" y="228">통과</text>
+<!-- 실패 되돌림 -->
+<path class="wp2-fail" d="M 180 180 H 96 V 92 H 174" marker-end="url(#wp2ArrowFail)"/>
+<text class="wp2-no" x="174" y="172" text-anchor="end">실패</text>
+<text class="wp2-no" x="136" y="84" text-anchor="middle">재생성</text>
+<!-- Step 2 -->
+<rect class="wp2-llm" x="180" y="238" width="200" height="60" rx="8"/>
+<text class="wp2-t1" x="280" y="264" text-anchor="middle">Step 2: 변환</text>
+<text class="wp2-t2" x="280" y="283" text-anchor="middle">LLM 호출</text>
+<path class="wp2-line" d="M 280 298 V 318" marker-end="url(#wp2Arrow)"/>
+<!-- 결과 -->
+<rect class="wp2-final" x="180" y="320" width="200" height="32" rx="16"/>
+<text class="wp2-pt" x="280" y="341" text-anchor="middle">결과</text>
+<!-- 범례 -->
+<rect class="wp2-llm" x="60" y="362" width="20" height="14" rx="4"/>
+<text class="wp2-t2" x="86" y="373">LLM 호출</text>
+<rect class="wp2-gate" x="200" y="362" width="20" height="14" rx="2"/>
+<text class="wp2-t2" x="226" y="373">결정론적 코드</text>
+</svg>
+</div>
 
 게이트가 중요한 이유는 간단합니다. LLM은 비결정적입니다. 첫 번째 단계의 출력이 예상 형식과 다르면, 게이트 없이는 두 번째 단계가 엉뚱한 입력을 받고 조용히 잘못된 결과를 만들어 냅니다. 게이트는 이 문제를 중간에서 잡아줍니다.
 
@@ -120,6 +197,55 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 - **LLM 기반 분류**: 모델이 입력을 읽고 카테고리를 판단. 유연하지만 비용 발생
 - **프로그래밍적 분류**: 키워드 매칭, 정규표현식, 임베딩 유사도. 빠르고 저렴하지만 유연성이 떨어짐
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 288" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보낸다">
+<style>
+.wp3-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.wp3-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
+.wp3-t1 { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+.wp3-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp3-pt { fill: var(--text-muted, #78716c); font-size: 14px; }
+.wp3-line { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
+.wp3-skip { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; opacity: 0.5; }
+</style>
+<defs>
+<marker id="wp3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+<marker id="wp3ArrowSkip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 입력 -->
+<rect class="wp3-pill" x="160" y="8" width="160" height="32" rx="16"/>
+<text class="wp3-pt" x="240" y="29" text-anchor="middle">사용자 요청</text>
+<path class="wp3-line" d="M 240 40 V 62" marker-end="url(#wp3Arrow)"/>
+<!-- 분류기 -->
+<rect class="wp3-llm" x="120" y="64" width="240" height="60" rx="8"/>
+<text class="wp3-t1" x="240" y="90" text-anchor="middle">분류 (Classify)</text>
+<text class="wp3-t2" x="240" y="109" text-anchor="middle">저렴한 모델 또는 규칙 기반</text>
+<!-- 분기 버스 -->
+<path class="wp3-line" d="M 240 124 V 146" />
+<path class="wp3-skip" d="M 85 146 H 395" />
+<path class="wp3-skip" d="M 85 146 V 178" marker-end="url(#wp3ArrowSkip)"/>
+<path class="wp3-line" d="M 240 146 V 178" marker-end="url(#wp3Arrow)"/>
+<path class="wp3-skip" d="M 395 146 V 178" marker-end="url(#wp3ArrowSkip)"/>
+<!-- 핸들러 -->
+<rect class="wp3-idle" x="15" y="180" width="140" height="60" rx="8"/>
+<text class="wp3-t1" x="85" y="206" text-anchor="middle">billing</text>
+<text class="wp3-t2" x="85" y="225" text-anchor="middle">결제 API</text>
+<rect class="wp3-llm" x="170" y="180" width="140" height="60" rx="8"/>
+<text class="wp3-t1" x="240" y="206" text-anchor="middle">technical</text>
+<text class="wp3-t2" x="240" y="225" text-anchor="middle">문서 · 코드 검색</text>
+<rect class="wp3-idle" x="325" y="180" width="140" height="60" rx="8"/>
+<text class="wp3-t1" x="395" y="206" text-anchor="middle">general</text>
+<text class="wp3-t2" x="395" y="225" text-anchor="middle">단순 질의응답</text>
+<!-- 설명 -->
+<text class="wp3-t2" x="240" y="268" text-anchor="middle">실선이 선택된 경로. 요청 하나당 한 갈래만 실행됩니다</text>
+</svg>
+</div>
+
 Routing이 빛나는 순간은 **모델 라우팅**입니다. Anthropic은 쉬운 질문에는 Haiku 같은 빠르고 저렴한 모델을, 어렵거나 복잡한 질문에는 Sonnet 같은 유능한 모델을 쓰는 예시를 제시합니다. 같은 작업을 비용 1/10로 처리할 수 있는 경우가 많습니다.
 
 ### 프로덕션에서의 Routing
@@ -163,12 +289,62 @@ Anthropic은 Parallelization을 두 가지로 나눕니다.
 - **Sectioning**: 독립적인 하위 작업을 동시에 실행하고 결과를 합친다
 - **Voting**: 같은 작업을 여러 번 실행해서 다수결로 신뢰도를 높인다
 
-```
-Sectioning:                    Voting:
-Input --+-- Task A --+         Input --+-- LLM call 1 --+
-        +-- Task B --+- Merge          +-- LLM call 2 --+- Majority
-        +-- Task C --+                 +-- LLM call 3 --+
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Parallelization의 두 하위 패턴. 위쪽 Sectioning은 서로 다른 세 하위 작업을 동시에 실행해 결과를 병합하고, 아래쪽 Voting은 같은 프롬프트를 세 번 실행해 다수결로 집계한다">
+<style>
+.wp4-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp4-merge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp4-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
+.wp4-hd { fill: var(--text, #1c1917); font-size: 13.5px; font-weight: 700; }
+.wp4-t1 { fill: var(--text, #1c1917); font-size: 14px; font-weight: 600; }
+.wp4-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp4-pt { fill: var(--text-muted, #78716c); font-size: 13px; }
+.wp4-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+</style>
+<defs>
+<marker id="wp4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- Sectioning 패널 -->
+<text class="wp4-hd" x="8" y="18">Sectioning · 서로 다른 하위 작업</text>
+<rect class="wp4-pill" x="8" y="60" width="88" height="32" rx="16"/>
+<text class="wp4-pt" x="52" y="81" text-anchor="middle">입력</text>
+<path class="wp4-line" d="M 96 76 H 126 M 126 44 V 108"/>
+<path class="wp4-line" d="M 126 44 H 146" marker-end="url(#wp4Arrow)"/>
+<path class="wp4-line" d="M 126 76 H 146" marker-end="url(#wp4Arrow)"/>
+<path class="wp4-line" d="M 126 108 H 146" marker-end="url(#wp4Arrow)"/>
+<rect class="wp4-llm" x="150" y="30" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="49" text-anchor="middle">보안 리뷰</text>
+<rect class="wp4-llm" x="150" y="62" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="81" text-anchor="middle">성능 리뷰</text>
+<rect class="wp4-llm" x="150" y="94" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="113" text-anchor="middle">스타일 리뷰</text>
+<path class="wp4-line" d="M 330 44 H 352 M 330 76 H 352 M 330 108 H 352 M 352 44 V 108"/>
+<path class="wp4-line" d="M 352 76 H 372" marker-end="url(#wp4Arrow)"/>
+<rect class="wp4-merge" x="376" y="60" width="96" height="32" rx="4"/>
+<text class="wp4-t1" x="424" y="81" text-anchor="middle">병합</text>
+<!-- Voting 패널 -->
+<text class="wp4-hd" x="8" y="168">Voting · 같은 작업 반복</text>
+<rect class="wp4-pill" x="8" y="210" width="88" height="32" rx="16"/>
+<text class="wp4-pt" x="52" y="231" text-anchor="middle">입력</text>
+<path class="wp4-line" d="M 96 226 H 126 M 126 194 V 258"/>
+<path class="wp4-line" d="M 126 194 H 146" marker-end="url(#wp4Arrow)"/>
+<path class="wp4-line" d="M 126 226 H 146" marker-end="url(#wp4Arrow)"/>
+<path class="wp4-line" d="M 126 258 H 146" marker-end="url(#wp4Arrow)"/>
+<rect class="wp4-llm" x="150" y="180" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="199" text-anchor="middle">LLM 호출 1</text>
+<rect class="wp4-llm" x="150" y="212" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="231" text-anchor="middle">LLM 호출 2</text>
+<rect class="wp4-llm" x="150" y="244" width="180" height="28" rx="6"/>
+<text class="wp4-t1" x="240" y="263" text-anchor="middle">LLM 호출 3</text>
+<path class="wp4-line" d="M 330 194 H 352 M 330 226 H 352 M 330 258 H 352 M 352 194 V 258"/>
+<path class="wp4-line" d="M 352 226 H 372" marker-end="url(#wp4Arrow)"/>
+<rect class="wp4-merge" x="376" y="210" width="96" height="32" rx="4"/>
+<text class="wp4-t1" x="424" y="231" text-anchor="middle">다수결</text>
+<text class="wp4-t2" x="240" y="292" text-anchor="middle">세 갈래 모두 실행됩니다. 소요 시간은 가장 느린 호출 하나에 맞춰집니다</text>
+</svg>
+</div>
 
 Anthropic이 강조하는 핵심 인사이트가 있습니다. "복잡한 작업에서 여러 고려사항이 있을 때, 각 고려사항을 별도의 LLM 호출로 분리하면 각 측면에 집중할 수 있어 성능이 향상된다." 하나의 프롬프트에 "번역도 하고, 안전성도 검사하고, 요약도 해줘"라고 하면 모든 작업의 품질이 떨어집니다. 분리해서 동시에 실행하면 속도는 빨라지고 품질은 올라갑니다.
 
@@ -209,6 +385,61 @@ Orchestrator-Workers는 겉보기에 Prompt Chaining과 비슷하지만, 결정�
 > "중앙 LLM이 작업을 동적으로 분해하고, 워커 LLM에게 위임하고, 결과를 종합한다."
 
 Prompt Chaining에서는 단계가 **개발자에 의해 미리 정해져** 있습니다. "1단계: 생성, 2단계: 검증, 3단계: 번역"이 코드에 고정되어 있죠. Orchestrator-Workers에서는 **모델이 런타임에 하위 작업을 결정**합니다. "이 프로젝트의 버그를 고쳐줘"라는 요청을 받으면, 어떤 파일을 분석할지, 몇 개의 워커가 필요한지, 어떤 순서로 작업할지를 모델이 판단합니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Orchestrator-Workers 데이터 흐름. 중앙 오케스트레이터가 요청을 런타임에 하위 작업으로 분해해 여러 워커에게 위임하고, 돌아온 결과를 다시 종합해 최종 답변을 만든다">
+<style>
+.wp5-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp5-hub { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2.6; }
+.wp5-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
+.wp5-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp5-t1 { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+.wp5-t15 { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
+.wp5-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp5-pt { fill: var(--text-muted, #78716c); font-size: 14px; }
+.wp5-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+</style>
+<defs>
+<marker id="wp5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 입력 -->
+<rect class="wp5-pill" x="160" y="8" width="160" height="32" rx="16"/>
+<text class="wp5-pt" x="240" y="29" text-anchor="middle">복합 작업 요청</text>
+<path class="wp5-line" d="M 240 40 V 60" marker-end="url(#wp5Arrow)"/>
+<!-- 계획 -->
+<rect class="wp5-hub" x="110" y="62" width="260" height="60" rx="8"/>
+<text class="wp5-t1" x="240" y="88" text-anchor="middle">오케스트레이터: 계획</text>
+<text class="wp5-t2" x="240" y="107" text-anchor="middle">하위 작업을 런타임에 결정</text>
+<!-- 위임 버스 -->
+<path class="wp5-line" d="M 240 122 V 146 M 85 146 H 395"/>
+<path class="wp5-line" d="M 85 146 V 170" marker-end="url(#wp5Arrow)"/>
+<path class="wp5-line" d="M 240 146 V 170" marker-end="url(#wp5Arrow)"/>
+<path class="wp5-line" d="M 395 146 V 170" marker-end="url(#wp5Arrow)"/>
+<!-- 워커 -->
+<rect class="wp5-llm" x="15" y="172" width="140" height="56" rx="8"/>
+<text class="wp5-t15" x="85" y="196" text-anchor="middle">Worker 1</text>
+<text class="wp5-t2" x="85" y="215" text-anchor="middle">하위 작업 A</text>
+<rect class="wp5-llm" x="170" y="172" width="140" height="56" rx="8"/>
+<text class="wp5-t15" x="240" y="196" text-anchor="middle">Worker 2</text>
+<text class="wp5-t2" x="240" y="215" text-anchor="middle">하위 작업 B</text>
+<rect class="wp5-llm" x="325" y="172" width="140" height="56" rx="8"/>
+<text class="wp5-t15" x="395" y="196" text-anchor="middle">Worker 3</text>
+<text class="wp5-t2" x="395" y="215" text-anchor="middle">하위 작업 C</text>
+<!-- 회수 버스 -->
+<path class="wp5-line" d="M 85 228 V 252 M 240 228 V 252 M 395 228 V 252 M 85 252 H 395"/>
+<path class="wp5-line" d="M 240 252 V 276" marker-end="url(#wp5Arrow)"/>
+<!-- 종합 -->
+<rect class="wp5-hub" x="110" y="278" width="260" height="60" rx="8"/>
+<text class="wp5-t1" x="240" y="304" text-anchor="middle">오케스트레이터: 종합</text>
+<text class="wp5-t2" x="240" y="323" text-anchor="middle">워커 결과 통합</text>
+<path class="wp5-line" d="M 240 338 V 358" marker-end="url(#wp5Arrow)"/>
+<!-- 결과 -->
+<rect class="wp5-final" x="160" y="360" width="160" height="32" rx="16"/>
+<text class="wp5-pt" x="240" y="381" text-anchor="middle">최종 답변</text>
+</svg>
+</div>
 
 이 유연성 때문에, 코딩 에이전트들이 이 패턴을 가장 많이 사용합니다. 코드 수정은 미리 단계를 정할 수 없는 작업의 대표적인 예입니다.
 
@@ -271,22 +502,64 @@ async def worker(subtask: str) -> str:
 
 두 조건을 모두 만족하면 Evaluator-Optimizer가 빛납니다. Anthropic이 드는 예시는 문학 번역입니다. 번역의 뉘앙스, 어조, 문화적 맥락을 평가자가 지적하고, 생성자가 이를 반영해 개선하는 반복. 단순 번역은 한 번이면 충분하지만, 문학 번역은 반복할수록 품질이 올라갑니다.
 
-```
-Generator -------> Output -------> Evaluator
-    ^                                  |
-    |                                  | feedback
-    +-------- meets criteria? ---------+
-                    |
-                    | yes
-                    v
-               Final Output
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Evaluator-Optimizer 데이터 흐름. 생성자가 만든 응답을 평가자가 점수와 피드백으로 심사하고, 기준을 넘으면 최종 출력으로 나가며 못 넘으면 피드백을 안고 생성자로 되돌아간다">
+<style>
+.wp6-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp6-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp6-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
+.wp6-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp6-t1 { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+.wp6-t13 { fill: var(--text, #1c1917); font-size: 13px; font-weight: 600; }
+.wp6-t2 { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+.wp6-pt { fill: var(--text-muted, #78716c); font-size: 14px; }
+.wp6-ok { fill: var(--text-success, #16a34a); font-size: 12.5px; }
+.wp6-no { fill: var(--text-danger, #dc2626); font-size: 12.5px; }
+.wp6-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.wp6-back { stroke: var(--text-danger, #dc2626); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
+</style>
+<defs>
+<marker id="wp6Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+<marker id="wp6ArrowBack" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #dc2626)"/>
+</marker>
+</defs>
+<!-- 입력 -->
+<rect class="wp6-pill" x="180" y="8" width="200" height="32" rx="16"/>
+<text class="wp6-pt" x="280" y="29" text-anchor="middle">작업 요청</text>
+<path class="wp6-line" d="M 280 40 V 60" marker-end="url(#wp6Arrow)"/>
+<!-- 생성자 -->
+<rect class="wp6-llm" x="180" y="62" width="200" height="56" rx="8"/>
+<text class="wp6-t1" x="280" y="87" text-anchor="middle">Generator</text>
+<text class="wp6-t2" x="280" y="106" text-anchor="middle">응답 생성</text>
+<path class="wp6-line" d="M 280 118 V 140" marker-end="url(#wp6Arrow)"/>
+<!-- 평가자 -->
+<rect class="wp6-llm" x="180" y="142" width="200" height="56" rx="8"/>
+<text class="wp6-t1" x="280" y="167" text-anchor="middle">Evaluator</text>
+<text class="wp6-t2" x="280" y="186" text-anchor="middle">점수 + 구체적 피드백</text>
+<path class="wp6-line" d="M 280 198 V 220" marker-end="url(#wp6Arrow)"/>
+<!-- 판정 -->
+<rect class="wp6-gate" x="185" y="222" width="190" height="40" rx="4"/>
+<text class="wp6-t13" x="280" y="247" text-anchor="middle">기준 충족? (점수 8 이상)</text>
+<path class="wp6-line" d="M 280 262 V 284" marker-end="url(#wp6Arrow)"/>
+<text class="wp6-ok" x="290" y="278">예</text>
+<!-- 되돌림 -->
+<path class="wp6-back" d="M 185 242 H 96 V 90 H 174" marker-end="url(#wp6ArrowBack)"/>
+<text class="wp6-no" x="179" y="234" text-anchor="end">아니오</text>
+<text class="wp6-no" x="136" y="82" text-anchor="middle">피드백 반영</text>
+<!-- 최종 -->
+<rect class="wp6-final" x="180" y="286" width="200" height="32" rx="16"/>
+<text class="wp6-pt" x="280" y="307" text-anchor="middle">최종 출력</text>
+</svg>
+</div>
 
 핵심은 평가자가 단순히 점수만 매기는 게 아니라, **구체적인 개선 방향을 제시**한다는 것입니다. "7/10"이라는 점수만으로는 생성자가 무엇을 고쳐야 할지 모릅니다. "두 번째 문단의 비유가 원문의 어조와 맞지 않는다. 더 격식체로 바꿔라"같은 피드백이 있어야 실질적인 개선이 일어납니다.
 
 ### 프로덕션에서의 Evaluator-Optimizer
 
-Anthropic이 공개한 multi-agent research system이 이 패턴의 프로덕션 사례입니다. 리드 에이전트가 여러 서브에이전트에게 조사를 위임하고, 돌아온 결과의 품질을 평가합니다. 근거가 부족하거나 질문에 제대로 답하지 못한 결과는 구체적인 피드백과 함께 서브에이전트에게 다시 보냅니다. 서브에이전트가 개선된 결과를 제출하면 리드 에이전트가 다시 평가하는 반복 구조입니다. Anthropic은 이 패턴을 적용한 뒤 응답 품질이 90.2% 향상되었다고 보고했습니다.
+Anthropic이 공개한 multi-agent research system이 이 패턴의 프로덕션 사례입니다. 리드 에이전트가 여러 서브에이전트에게 조사를 위임하고, 돌아온 결과의 품질을 평가합니다. 근거가 부족하거나 질문에 제대로 답하지 못한 결과는 구체적인 피드백과 함께 서브에이전트에게 다시 보냅니다. 서브에이전트가 개선된 결과를 제출하면 리드 에이전트가 다시 평가하는 반복 구조입니다. Anthropic은 이 시스템 전체(Opus 4 리드 에이전트 + Sonnet 4 서브에이전트)가 내부 리서치 평가에서 단일 Opus 4 에이전트보다 90.2% 우수했다고 보고했습니다. 평가와 재작업 반복만의 기여분을 따로 떼어낸 수치는 아닙니다.
 
 Claude Code의 에이전트 루프도 넓은 의미에서 이 패턴의 요소를 가지고 있습니다. 에이전트가 코드를 수정하고 테스트를 실행해서 실패하면, 테스트 결과(평가)를 바탕으로 코드를 다시 수정합니다(개선). 다만 이것은 별도의 평가 모델이 아니라, 동일한 모델이 도구 실행 결과를 피드백으로 활용하는 구조입니다. multi-agent research system처럼 전용 평가자가 있는 것과는 구분할 필요가 있습니다.
 
@@ -366,7 +639,12 @@ Orchestrator-Workers가 5개 하위 작업을 생성하고, 각 워커가 Evalua
 
 다섯 가지 패턴은 결국 하나의 질문에 대한 다섯 가지 답입니다. "LLM 호출을 어떻게 구성할 것인가?" 순차적으로(Chaining), 분기해서(Routing), 동시에(Parallelization), 동적으로 위임해서(Orchestrator-Workers), 반복적으로 개선해서(Evaluator-Optimizer). 진짜 실력은 어떤 패턴을 쓸지가 아니라, 어떤 패턴이 **필요 없는지**를 아는 것에 있습니다.
 
-다음 글에서는 이 모든 패턴의 공통 기반인 도구(Tool)를 깊이 다룹니다. 도구가 잘못 설계되면 어떤 패턴을 써도 성능이 나오지 않습니다. Anthropic이 말하는 ACI(Agent-Computer Interface) 설계 원칙과, Claude Code 도구의 설계 원칙 및 실제 스키마를 분석해 보겠습니다.
+다섯 패턴은 모두 하나의 기반 위에 올라가 있습니다. 모델이 실제로 무언가를 하려면 도구(Tool)를 호출해야 하고, 도구의 이름과 파라미터와 반환 형식이 모델에게 어떻게 보이는지가 패턴의 성능을 좌우합니다. Anthropic이 ACI(Agent-Computer Interface)라고 부르는 이 설계 영역이 잘못되면, 어떤 패턴을 얹어도 결과가 나아지지 않습니다.
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent의 도구 설계: ACI 원칙부터 프로덕션 스키마까지](/agent/agent-tool-use/)
 
 ## 참고자료
 
