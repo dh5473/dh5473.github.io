@@ -11,41 +11,66 @@ thumbnail: './thumbnail.png'
 
 Claude Code에 테스트가 실패하는 파일을 고쳐달라고 요청하면, 파일을 읽고 수정한 뒤 테스트를 다시 실행합니다. 그런데 수정 내용이 길어서 응답이 중간에 잘리면 어떻게 될까요? 루프는 자동으로 `max_tokens`를 높여서 동일한 요청을 다시 시도합니다. 이 재시도는 모델이 결정한 것이 아닙니다. 루프의 **인프라**가 판단한 것입니다.
 
-[이전 글](/agent/context-engineering/)에서 에이전트의 유한한 토큰 윈도우를 관리하는 전략을 살펴봤습니다. 그 컨텍스트가 실제로 조립되고, 소비되고, 관리되는 기계 장치가 바로 에이전트 루프입니다. [첫 번째 글](/agent/what-is-ai-agent/)에서 "루프 자체는 놀라울 정도로 단순합니다. 복잡한 것은 루프 주변의 인프라"라고 했는데, 이제 그 인프라의 뚜껑을 열어보겠습니다.
+에이전트에게 주어진 토큰 윈도우는 유한하고, 그 컨텍스트가 실제로 조립되고 소비되고 정리되는 기계 장치가 바로 에이전트 루프입니다. 루프의 골격 자체는 "모델을 부르고, 도구를 실행하고, 결과를 붙여 다시 부른다"는 열 줄 남짓의 while 문에 불과합니다. 복잡한 것은 그 주변에 붙은 인프라입니다. 이제 그 인프라의 뚜껑을 열어보겠습니다.
 
 ---
 
 ## 루프의 두 가지 아키텍처
 
-[첫 번째 글](/agent/what-is-ai-agent/)에서 Claude Code는 "AsyncGenerator while-loop", Codex는 "Responses API 기반 재쿼리 루프"라고 한 줄로 비교했습니다. 이것은 단순한 구현 취향의 차이가 아니라, 근본적으로 다른 아키텍처 철학입니다.
+Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고, Codex의 루프는 Responses API 기반 재쿼리 루프입니다. 이것은 단순한 구현 취향의 차이가 아니라, 근본적으로 다른 아키텍처 철학입니다.
 
 ### 상태 유지 vs 상태 재구성
 
 두 에이전트는 같은 문제(루프 반복)를 정반대 방식으로 풉니다.
 
-```
-Claude Code (상태 유지)              Codex (상태 재구성)
-┌──────────────────────┐           ┌──────────────────────┐
-│  queryLoop()         │           │  while True:         │
-│  (AsyncGenerator)    │           │    history = []      │
-│                      │           │    rebuild(history)  │
-│  messages = [...]    │           │    POST /responses   │
-│  (메모리에 누적)        │           │    SSE stream 수신    │
-│                      │           │    append results    │
-│  yield event         │           │    if done: break    │
-│  yield event         │           │                      │
-└──────────────────────┘           └──────────────────────┘
-상태가 루프 안에 유지                    매 턴마다 상태를 재구성
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Claude Code의 상태 유지 구조로 queryLoop 안에 messages 배열이 계속 살아 있고, 아래쪽은 Codex의 상태 재구성 구조로 매 턴 전체 히스토리를 다시 만들어 Responses API로 보낸다">
+<style>
+.al1-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
+.al1-t{fill:var(--text,#1c1917);font-size:14px}
+.al1-s{fill:var(--text-muted,#78716c);font-size:13px}
+.al1-k{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
+.al1-a{fill:var(--accent,#d97706);font-size:15px;font-weight:600}
+.al1-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.al1-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="al1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<!-- 위: Claude Code -->
+<text x="24" y="20" class="al1-h">Claude Code · 상태 유지</text>
+<rect x="24" y="32" width="392" height="118" rx="8" class="al1-box"/>
+<text x="44" y="58" class="al1-k">queryLoop() · AsyncGenerator</text>
+<text x="44" y="86" class="al1-t">messages = [...] 메모리에 누적</text>
+<text x="44" y="110" class="al1-t">yield event 로 이벤트를 흘려보냄</text>
+<text x="44" y="134" class="al1-s">루프가 살아 있는 동안 상태도 살아 있음</text>
+<!-- 상태 유지 회귀 화살표 -->
+<path d="M416 60 H444 V126 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
+<text x="24" y="170" class="al1-s">상태가 루프 프로세스 안에 유지된다</text>
+<!-- 아래: Codex -->
+<text x="24" y="216" class="al1-h">Codex · 상태 재구성</text>
+<rect x="24" y="228" width="392" height="118" rx="8" class="al1-box"/>
+<text x="44" y="254" class="al1-a">while True:</text>
+<text x="44" y="282" class="al1-t">history = rebuild(전체 히스토리)</text>
+<text x="44" y="306" class="al1-t">POST /responses → SSE stream 수신</text>
+<text x="44" y="330" class="al1-s">append results · if done: break</text>
+<!-- 매 턴 재구성 화살표 -->
+<path d="M416 256 H444 V322 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
+<text x="24" y="366" class="al1-s">매 턴마다 상태를 처음부터 다시 만든다</text>
+</svg>
+</div>
 
 **Claude Code**는 `queryLoop()`이라는 AsyncGenerator 함수가 전체 세션을 관장합니다. 대화 히스토리는 메모리 내 `messages` 배열에 누적되고, 루프가 돌 때마다 이 배열을 직접 참조합니다. 상태가 프로세스 안에 살아있으므로, 루프 중간에 전처리를 끼워넣거나 에러 복구를 수행하기 쉽습니다.
 
 **Codex**는 매 턴마다 새로운 HTTP POST 요청을 Responses API에 보냅니다. 서버 측에 대화 상태가 남지 않으므로, 클라이언트가 전체 히스토리를 직접 재구성해서 보내야 합니다. Responses API는 `previous_response_id`라는 서버 측 상태 연결 기능을 제공하지만, Codex는 이것을 **의도적으로 사용하지 않습니다**.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 Zero Data Retention</strong><br>
-  OpenAI 블로그의 원문에 따르면, Codex가 <code>previous_response_id</code>를 쓰지 않는 이유는 "to keep requests fully stateless and support Zero Data Retention (ZDR) configurations"입니다. 요청의 stateless 유지와 ZDR 지원이 병렬적인 두 가지 이유이며, 그 결과 매 턴마다 클라이언트가 전체 히스토리를 직접 보내야 합니다.
-</div>
+:::info
+
+**Zero Data Retention**
+
+OpenAI 블로그의 원문에 따르면, Codex가 `previous_response_id`를 쓰지 않는 이유는 "to keep requests fully stateless and support Zero Data Retention (ZDR) configurations"입니다. 요청의 stateless 유지와 ZDR 지원이 병렬적인 두 가지 이유이며, 그 결과 매 턴마다 클라이언트가 전체 히스토리를 직접 보내야 합니다.
+
+:::
 
 흥미로운 점은 두 도구 모두 개발자의 로컬 머신에서 실행되는 CLI라는 것입니다. 같은 배포 환경임에도 상태 관리 방식이 정반대인 이유는, 설계 철학의 차이에서 비롯됩니다. Claude Code는 하네스 코드에 복잡한 인프라(전처리, 퍼미션, 에러 복구)를 내장하기 위해 상태를 프로세스 안에 유지합니다. Codex CLI는 요청을 stateless하게 유지하고 복잡도를 API 서비스에 위임하는 방식을 선택한 것입니다.
 
@@ -57,39 +82,119 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 
 ### 전체 흐름
 
-```
-한 턴의 6단계 파이프라인
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 466" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="한 턴의 6단계 파이프라인. 컨텍스트 조립, 전처리, 모델 호출, 도구 실행, 결과 누적, 판단 순으로 진행되며 도구 호출이 남아 있으면 1단계로 되돌아간다. 모델이 관여하는 단계는 3단계 하나뿐이다">
+<style>
+.al2-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
+.al2-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
+.al2-d{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al2-s{fill:var(--text-muted,#78716c);font-size:13px}
+.al2-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.al2-ai{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
+.al2-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+.al2-tag{fill:var(--primary,#0d9488);font-size:12.5px;font-weight:700}
+</style>
+<defs>
+<marker id="al2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<text x="20" y="20" class="al2-h">한 턴의 6단계 파이프라인</text>
+<!-- 1 -->
+<rect x="20" y="36" width="392" height="48" rx="8" class="al2-box"/>
+<text x="36" y="58" class="al2-n">1. Context Assembly</text>
+<text x="36" y="76" class="al2-d">시스템 프롬프트 + 도구 정의 + 메시지 히스토리 조립</text>
+<path d="M216 84 V100" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<!-- 2 -->
+<rect x="20" y="100" width="392" height="48" rx="8" class="al2-box"/>
+<text x="36" y="122" class="al2-n">2. Pre-model Shapers</text>
+<text x="36" y="140" class="al2-d">5단계 전처리 (Budget Reduction, Snip, Microcompact …)</text>
+<path d="M216 148 V164" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<!-- 3 (모델이 관여하는 유일한 단계) -->
+<rect x="20" y="164" width="392" height="48" rx="8" class="al2-ai"/>
+<text x="36" y="186" class="al2-n">3. Model Call</text>
+<text x="36" y="204" class="al2-d">API 호출 → SSE 스트리밍 응답 수신</text>
+<text x="336" y="192" class="al2-tag">AI 관여</text>
+<path d="M216 212 V228" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<!-- 4 -->
+<rect x="20" y="228" width="392" height="48" rx="8" class="al2-box"/>
+<text x="36" y="250" class="al2-n">4. Tool Execution</text>
+<text x="36" y="268" class="al2-d">퍼미션 체크 → concurrent-safe / exclusive 분류 → 실행</text>
+<path d="M216 276 V292" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<!-- 5 -->
+<rect x="20" y="292" width="392" height="48" rx="8" class="al2-box"/>
+<text x="36" y="314" class="al2-n">5. Accumulate</text>
+<text x="36" y="332" class="al2-d">도구 결과를 messages 배열에 추가</text>
+<path d="M216 340 V356" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<!-- 6 -->
+<rect x="20" y="356" width="392" height="48" rx="8" class="al2-box"/>
+<text x="36" y="378" class="al2-n">6. Decide</text>
+<text x="36" y="396" class="al2-d">도구 호출이 있으면 1단계로, 없으면 종료</text>
+<!-- 되돌아가는 화살표 -->
+<path d="M412 380 H448 V60 H412" class="al2-ln" marker-end="url(#al2Arrow)"/>
+<text x="20" y="432" class="al2-s">3단계만 모델이 판단하고, 나머지 다섯 단계는</text>
+<text x="20" y="452" class="al2-s">전부 결정론적 인프라가 처리한다.</text>
+</svg>
+</div>
 
-[1. Context Assembly]   시스템 프롬프트 + 도구 정의 + 메시지 히스토리 조립
-         │
-[2. Pre-model Shapers]  5단계 전처리 (Budget Reduction, Snip, Microcompact, ...)
-         │
-[3. Model Call]         API 호출 → SSE 스트리밍 응답 수신
-         │
-[4. Tool Execution]     퍼미션 체크 → concurrent-safe/exclusive 분류 → 실행
-         │
-[5. Accumulate]         도구 결과를 messages 배열에 추가
-         │
-[6. Decide]             도구 호출이 있으면 → 1로 돌아감, 없으면 → 종료
-```
-
-[첫 번째 글](/agent/what-is-ai-agent/)에서 "AI가 판단하는 로직은 전체의 1.6%에 불과하다"고 했습니다. 이 파이프라인에서 실제로 AI가 관여하는 단계는 Stage 3(Model Call) 하나뿐입니다. 나머지 5단계는 전부 결정론적 인프라입니다.
+에이전트 하네스 코드에서 AI가 실제로 판단하는 로직은 전체의 1.6%에 불과합니다. 이 파이프라인이 그 숫자의 근거입니다. 실제로 AI가 관여하는 단계는 Stage 3(Model Call) 하나뿐이고, 나머지 5단계는 전부 결정론적 인프라입니다.
 
 ### Stage 1-2: 컨텍스트 조립과 전처리
 
-Stage 1에서는 모델에게 보낼 프롬프트를 조립합니다. 시스템 프롬프트, 도구 스키마([두 번째 글](/agent/agent-workflow-patterns/)에서 다룬 `assembleToolPool()`의 결과물), CLAUDE.md 계층 구조([이전 글](/agent/context-engineering/)에서 다룬 JIT 로딩), 그리고 지금까지 누적된 메시지 히스토리가 합쳐집니다.
+Stage 1에서는 모델에게 보낼 프롬프트를 조립합니다. 시스템 프롬프트, `assembleToolPool()`이 그 턴에 필요한 도구만 골라 만든 도구 스키마, 필요한 시점에 읽어 들이는 CLAUDE.md 계층 구조, 그리고 지금까지 누적된 메시지 히스토리가 합쳐집니다.
 
-Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인이 적용됩니다. [이전 글](/agent/context-engineering/)에서 "5단계 컴팩션 파이프라인"이라 소개한 것을 arXiv 논문에서는 **Pre-model Shapers**라는 이름으로 분석합니다.
+Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인이 적용됩니다. 컨텍스트를 줄이고 다듬는 이 5단계를 arXiv 논문은 **Pre-model Shapers**라는 이름으로 분석합니다.
 
-```
-Pre-model Shapers (5단계)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 384" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Pre-model Shapers 5단계. 누적된 messages 배열이 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact를 차례로 거쳐 정제된 shaped_messages 배열이 된다">
+<style>
+.al3-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
+.al3-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
+.al3-i{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
+.al3-num{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al3-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.al3-pill{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
+.al3-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="al3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<text x="20" y="20" class="al3-h">Pre-model Shapers (5단계)</text>
+<!-- 입력 -->
+<rect x="130" y="32" width="220" height="34" rx="17" class="al3-pill"/>
+<text x="150" y="54" class="al3-i">messages[]</text>
+<path d="M240 66 V80" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 1 -->
+<rect x="80" y="80" width="320" height="34" rx="8" class="al3-box"/>
+<text x="96" y="102" class="al3-num">1</text>
+<text x="120" y="102" class="al3-n">Budget Reduction</text>
+<path d="M240 114 V126" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 2 -->
+<rect x="80" y="126" width="320" height="34" rx="8" class="al3-box"/>
+<text x="96" y="148" class="al3-num">2</text>
+<text x="120" y="148" class="al3-n">Snip</text>
+<path d="M240 160 V172" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 3 -->
+<rect x="80" y="172" width="320" height="34" rx="8" class="al3-box"/>
+<text x="96" y="194" class="al3-num">3</text>
+<text x="120" y="194" class="al3-n">Microcompact</text>
+<path d="M240 206 V218" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 4 -->
+<rect x="80" y="218" width="320" height="34" rx="8" class="al3-box"/>
+<text x="96" y="240" class="al3-num">4</text>
+<text x="120" y="240" class="al3-n">Context Collapse</text>
+<path d="M240 252 V264" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 5 -->
+<rect x="80" y="264" width="320" height="34" rx="8" class="al3-box"/>
+<text x="96" y="286" class="al3-num">5</text>
+<text x="120" y="286" class="al3-n">Auto-Compact</text>
+<path d="M240 298 V312" class="al3-ln" marker-end="url(#al3Arrow)"/>
+<!-- 출력 -->
+<rect x="130" y="312" width="220" height="34" rx="17" class="al3-pill"/>
+<text x="150" y="334" class="al3-i">shaped_messages[]</text>
+<text x="20" y="372" class="al3-num">매 턴 모델을 호출하기 직전에 전부 실행된다.</text>
+</svg>
+</div>
 
-messages[] ──► Budget Reduction ──► Snip ──► Microcompact
-                                                  │
-                    shaped_messages[] ◄── Auto-Compact ◄── Context Collapse
-```
-
-이전 글에서 컴팩션의 전략적 trade-off를 살펴봤습니다. 여기서 중요한 것은 이 전처리가 **매 턴마다** 실행된다는 점입니다. 컨텍스트가 가득 찼을 때만 작동하는 비상 장치가 아니라, 매 턴 모델 호출 전에 컨텍스트를 정리하는 정기적 유지보수에 가깝습니다. 각 단계의 상세한 작동 메커니즘은 다음 글에서 다루겠습니다.
+여기서 중요한 것은 이 전처리가 **매 턴마다** 실행된다는 점입니다. 컨텍스트가 가득 찼을 때만 작동하는 비상 장치가 아니라, 매 턴 모델 호출 전에 컨텍스트를 정리하는 정기적 유지보수에 가깝습니다.
 
 ### Stage 3: 모델 호출과 스트리밍
 
@@ -131,40 +236,77 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 
 모델 응답에 도구 호출이 포함되어 있으면 실행 단계로 넘어갑니다. 여기서 흥미로운 최적화가 일어납니다. `StreamingToolExecutor`는 모델의 **응답이 완전히 끝나기 전에** 도구 실행을 시작합니다. 스트림에서 도구 호출 블록이 하나씩 나올 때마다 즉시 실행을 개시하는 것입니다.
 
-[두 번째 글](/agent/agent-workflow-patterns/)에서 Parallelization 패턴을 살펴봤는데, 그 패턴이 실제로 작동하는 위치가 바로 이 Stage 4입니다.
+여러 도구 호출을 한꺼번에 흘려보내는 Parallelization 패턴이 실제로 작동하는 위치가 바로 이 Stage 4입니다.
 
-```
-모델 응답 (스트리밍)
-    │
-    ├─ tool_use: Read(file_a)    ──┐
-    ├─ tool_use: Grep(pattern)   ──┤  concurrent-safe → 동시 실행
-    ├─ tool_use: Read(file_b)    ──┘
-    │
-    └─ tool_use: Bash(npm test)  ──────► exclusive → 순차 실행
-                                              │
-                                     퍼미션 체크 후 실행
-                                              │
-                                     결과 → messages[]에 추가
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="스트리밍으로 도착한 도구 호출이 두 갈래로 나뉜다. Read와 Grep 같은 concurrent-safe 도구는 동시에 실행되고, Bash 같은 exclusive 도구는 퍼미션 체크를 거쳐 순차적으로 실행된 뒤 결과가 messages 배열에 쌓인다">
+<style>
+.al4-h{fill:var(--text,#1c1917);font-size:15px;font-weight:700}
+.al4-t{fill:var(--text,#1c1917);font-size:13px}
+.al4-s{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al4-ok{fill:var(--text-success,#16a34a);font-size:14px;font-weight:700}
+.al4-ex{fill:var(--text-warn,#d97706);font-size:14px;font-weight:700}
+.al4-pill{fill:var(--bg-muted,#eeecea);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.al4-pa{fill:var(--bg-success,#f0fdf4);stroke:var(--text-success,#16a34a);stroke-width:1.5}
+.al4-pb{fill:var(--bg-warn,#fffbeb);stroke:var(--text-warn,#d97706);stroke-width:1.5}
+.al4-in{fill:var(--bg,#fafaf8);stroke:var(--border,#e7e5e4);stroke-width:1.2}
+.al4-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="al4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<!-- 입력: 모델 응답 -->
+<rect x="130" y="16" width="220" height="34" rx="17" class="al4-pill"/>
+<text x="152" y="38" class="al4-h">모델 응답 (스트리밍)</text>
+<path d="M240 50 V66" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<!-- 갈래 1: concurrent-safe -->
+<rect x="20" y="66" width="440" height="100" rx="10" class="al4-pa"/>
+<text x="38" y="90" class="al4-ok">concurrent-safe · 동시 실행</text>
+<rect x="38" y="104" width="132" height="34" rx="8" class="al4-in"/>
+<text x="52" y="126" class="al4-t">Read(file_a)</text>
+<rect x="178" y="104" width="132" height="34" rx="8" class="al4-in"/>
+<text x="192" y="126" class="al4-t">Grep(pattern)</text>
+<rect x="318" y="104" width="124" height="34" rx="8" class="al4-in"/>
+<text x="332" y="126" class="al4-t">Read(file_b)</text>
+<text x="38" y="158" class="al4-s">읽기 전용이라 서로 충돌하지 않는다</text>
+<path d="M240 166 V182" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<!-- 갈래 2: exclusive -->
+<rect x="20" y="182" width="440" height="100" rx="10" class="al4-pb"/>
+<text x="38" y="206" class="al4-ex">exclusive · 순차 실행</text>
+<rect x="38" y="220" width="180" height="34" rx="8" class="al4-in"/>
+<text x="52" y="242" class="al4-t">Bash(npm test)</text>
+<text x="232" y="242" class="al4-s">퍼미션 체크 후 실행</text>
+<text x="38" y="274" class="al4-s">상태를 바꾸므로 한 번에 하나씩</text>
+<path d="M240 282 V298" class="al4-ln" marker-end="url(#al4Arrow)"/>
+<!-- 결과 누적 -->
+<rect x="110" y="298" width="260" height="34" rx="17" class="al4-pill"/>
+<text x="132" y="320" class="al4-h">결과 → messages[]에 추가</text>
+<text x="20" y="360" class="al4-s">거부(deny)된 도구도 루프를 멈추지 않는다.</text>
+<text x="20" y="382" class="al4-s">거부 결과가 라우팅 시그널로 모델에 전달된다.</text>
+</svg>
+</div>
 
 도구는 두 범주로 분류됩니다. `Read`, `Grep` 같은 읽기 전용 도구는 **concurrent-safe**(동시 실행 가능)로, `Bash`, `Edit`, `Write` 같은 상태 변경 도구는 **exclusive**로 분류됩니다. concurrent-safe 도구는 동시에 실행되고, exclusive 도구는 순차적으로 실행됩니다. 같은 파일을 읽는 것은 안전하지만, 동시에 수정하면 충돌이 발생하기 때문입니다.
 
-퍼미션 체크도 이 단계에서 일어납니다. 논문에서 퍼미션 게이트는 독립적인 단계로 분리되어 있을 만큼 중요한 아키텍처 요소입니다. Claude Code는 7가지 퍼미션 모드를 정의하는데, 사용자에게 노출되는 5개(plan, default, acceptEdits, dontAsk, bypassPermissions)와 feature-gated인 `auto`(ML 분류기 기반), 서브에이전트 전용인 `bubble`(상위로 에스컬레이션)이 있습니다. 퍼미션 시스템의 상세한 구조는 [퍼미션 글](/agent/agent-permission-safety/)에서 다룹니다.
+퍼미션 체크도 이 단계에서 일어납니다. 논문에서 퍼미션 게이트는 독립적인 단계로 분리되어 있을 만큼 중요한 아키텍처 요소입니다. Claude Code는 7가지 퍼미션 모드를 정의하는데, 사용자에게 노출되는 5개(plan, default, acceptEdits, dontAsk, bypassPermissions)와 feature-gated인 `auto`(ML 분류기 기반), 서브에이전트 전용인 `bubble`(상위로 에스컬레이션)이 있습니다.
 
 한 가지 중요한 설계 결정이 있습니다. 사용자가 도구 실행을 거부(deny)하면, 루프가 중단되는 것이 아니라 거부 결과가 모델에게 **라우팅 시그널**로 전달됩니다. 모델은 이 시그널을 보고 다른 접근법을 시도할 수 있습니다.
 
 ### Stage 5-6: 누적과 판단
 
-도구 실행이 완료되면 결과가 `messages` 배열에 추가됩니다(Stage 5). [이전 글](/agent/context-engineering/)에서 "50턴 후 도구 결과만 250,000 토큰에 달한다"고 했는데, 그 토큰이 축적되는 곳이 바로 이 Stage 5입니다.
+도구 실행이 완료되면 결과가 `messages` 배열에 추가됩니다(Stage 5). 50턴짜리 세션이면 도구 결과만으로 250,000 토큰에 달하는데, 그 토큰이 축적되는 곳이 바로 이 Stage 5입니다.
 
 Stage 6의 판단 로직 자체는 단순합니다. 어시스턴트 메시지에 도구 호출이 포함되어 있으면 Stage 1로 돌아가고, 텍스트만 있으면 루프를 종료합니다. Anthropic의 "Building Effective Agents" 가이드가 설명하는 기본 루프 패턴의 종료 조건 그대로입니다.
 
 하지만 실제 구현에는 한 가지 핵심적인 설계 요소가 있습니다. arXiv 논문은 `queryLoop()` 안에 **7개의 continue site**를 식별합니다. continue site란 루프가 다시 시작할 수 있는 지점으로, 상태를 점진적으로 변경(mutate)하지 않고 **통째로 교체(whole-object assignment)**하는 방식으로 관리됩니다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 왜 whole-object assignment인가</strong><br>
-  상태를 점진적으로 변경하면 중간 상태가 오염될 위험이 있습니다. 에러 복구 시 "어디까지 변경되었는가"를 추적해야 하기 때문입니다. 대신 상태를 통째로 교체하면, 각 continue site가 일종의 체크포인트 역할을 합니다. 에러가 발생하면 마지막 체크포인트의 상태로 깨끗하게 복귀할 수 있습니다.
-</div>
+:::tip
+
+**왜 whole-object assignment인가**
+
+상태를 점진적으로 변경하면 중간 상태가 오염될 위험이 있습니다. 에러 복구 시 "어디까지 변경되었는가"를 추적해야 하기 때문입니다. 대신 상태를 통째로 교체하면, 각 continue site가 일종의 체크포인트 역할을 합니다. 에러가 발생하면 마지막 체크포인트의 상태로 깨끗하게 복귀할 수 있습니다.
+
+:::
 
 ---
 
@@ -176,28 +318,57 @@ Claude Code의 "상태 유지" 아키텍처를 살펴봤으니, 이제 Codex의 
 
 Codex의 한 턴은 다음과 같이 처리됩니다.
 
-```
-Turn N의 처리 과정
-
-[Client]                           [Responses API]
-   │                                     │
-   │  history = rebuild_all()            │
-   │  prompt = [                         │
-   │    developer_msg,                   │
-   │    config_toml,                     │
-   │    skill_files,                     │
-   │    environment,                     │
-   │    user_msg,                        │
-   │    ...tool_results(turn 1..N-1)     │
-   │  ]                                  │
-   │──── POST /v1/responses ──────────► │
-   │◄──── SSE stream ─────────────────  │
-   │  parse tool_calls                   │
-   │  execute in sandbox                 │
-   │  append results to history          │
-   │                                     │
-   │  if no tool_calls: done             │
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex의 Turn N 처리 과정. 클라이언트가 developer 메시지부터 이전 턴 도구 결과까지 전체 히스토리를 다시 만들어 Responses API에 POST하고, SSE 스트림으로 응답을 받아 샌드박스에서 도구를 실행한 뒤 다시 히스토리를 재구성한다">
+<style>
+.al5-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
+.al5-n{fill:var(--text,#1c1917);font-size:15px;font-weight:600}
+.al5-t{fill:var(--text,#1c1917);font-size:13px}
+.al5-s{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al5-i{fill:var(--primary,#0d9488);font-size:15px;font-weight:600}
+.al5-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
+.al5-api{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
+.al5-row{fill:var(--bg,#fafaf8);stroke:var(--border,#e7e5e4);stroke-width:1.2}
+.al5-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="al5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<text x="20" y="20" class="al5-h">Turn N의 처리 과정</text>
+<!-- 클라이언트: 히스토리 재구성 -->
+<rect x="20" y="32" width="392" height="188" rx="10" class="al5-box"/>
+<text x="38" y="56" class="al5-n">Client · history = rebuild_all()</text>
+<rect x="38" y="68" width="356" height="22" rx="5" class="al5-row"/>
+<text x="50" y="84" class="al5-t">developer_msg</text>
+<rect x="38" y="94" width="356" height="22" rx="5" class="al5-row"/>
+<text x="50" y="110" class="al5-t">config.toml</text>
+<rect x="38" y="120" width="356" height="22" rx="5" class="al5-row"/>
+<text x="50" y="136" class="al5-t">skill_files</text>
+<rect x="38" y="146" width="356" height="22" rx="5" class="al5-row"/>
+<text x="50" y="162" class="al5-t">environment</text>
+<rect x="38" y="172" width="356" height="22" rx="5" class="al5-row"/>
+<text x="50" y="188" class="al5-t">user_msg</text>
+<text x="38" y="210" class="al5-s">+ tool_results(turn 1 … N-1) 전체</text>
+<!-- 요청 -->
+<path d="M216 220 V250" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="228" y="240" class="al5-s">POST /v1/responses</text>
+<!-- API -->
+<rect x="130" y="250" width="220" height="40" rx="10" class="al5-api"/>
+<text x="152" y="276" class="al5-i">Responses API</text>
+<!-- 응답 -->
+<path d="M216 290 V320" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="228" y="310" class="al5-s">SSE stream</text>
+<!-- 클라이언트: 도구 실행 -->
+<rect x="20" y="320" width="392" height="90" rx="10" class="al5-box"/>
+<text x="38" y="344" class="al5-t">parse tool_calls</text>
+<text x="38" y="366" class="al5-t">execute in sandbox</text>
+<text x="38" y="388" class="al5-t">append results to history</text>
+<!-- 다음 턴으로 되돌아가는 화살표 -->
+<path d="M412 364 H448 V56 H412" class="al5-ln" marker-end="url(#al5Arrow)"/>
+<text x="20" y="440" class="al5-s">tool_calls가 없으면 종료, 있으면 히스토리를</text>
+<text x="20" y="460" class="al5-s">처음부터 다시 만들어 Turn N+1을 보낸다.</text>
+</svg>
+</div>
 
 매 턴마다 클라이언트는 전체 대화 히스토리를 재구성합니다. developer message(샌드박스 설명), `config.toml` 설정, 프로젝트 스킬 파일, 환경 정보(작업 디렉터리, 셸 종류), 사용자 메시지, 그리고 이전 턴들의 모든 도구 결과가 하나의 배열로 합쳐져 API에 전송됩니다.
 
@@ -236,20 +407,49 @@ Claude Code의 6단계 파이프라인과 비교하면 구조가 훨씬 간결�
 
 ### 캐시 프리픽스 전략
 
-매 턴마다 전체 히스토리를 보내면 Turn N에서 보내는 총 토큰은 N에 비례하고, N턴에 걸쳐 누적된 전송량은 O(n^2)에 비례합니다. [이전 글](/agent/context-engineering/)에서 이 이차 비용 문제를 언급했는데, Codex는 **프롬프트 캐싱**으로 이 비용을 줄입니다.
+매 턴마다 전체 히스토리를 보내면 Turn N에서 보내는 총 토큰은 N에 비례하고, N턴에 걸쳐 누적된 전송량은 O(n^2)에 비례합니다. Codex는 **프롬프트 캐싱**으로 이 이차 비용을 줄입니다.
 
 핵심 원리는 단순합니다. 이전 요청과 새 요청의 처음 K개 토큰이 동일하면, 서버는 캐시된 결과를 재사용하고 새로운 토큰만 처리하는 구조입니다.
 
-```
-Turn 1: [developer │ config │ skills │ env │ user_msg]
-         ←── 정적 프리픽스 (캐시됨) ──→  ← new →
-
-Turn 2: [developer │ config │ skills │ env │ user_msg │ result_1]
-         ←──── 캐시 적중 (동일 프리픽스) ────→  ←─ new ─→
-
-Turn 3: [developer │ config │ skills │ env │ user_msg │ result_1 │ result_2]
-         ←──────── 캐시 적중 (프리픽스 성장) ──────────→  ← new →
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 272" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="턴이 진행될수록 캐시 적중 구간이 길어지는 프롬프트 캐싱. Turn 1은 정적 프리픽스만 재사용하고 user_msg가 새 토큰이며, Turn 2와 Turn 3은 직전 턴의 프롬프트 전체가 캐시 프리픽스가 되고 새로 붙은 도구 결과만 새 토큰이다">
+<style>
+.al6-h{fill:var(--text,#1c1917);font-size:16px;font-weight:700}
+.al6-turn{fill:var(--text,#1c1917);font-size:14px;font-weight:600}
+.al6-s{fill:var(--text-muted,#78716c);font-size:12.5px}
+.al6-c{fill:var(--primary,#0d9488);font-size:12.5px;font-weight:600}
+.al6-w{fill:var(--accent,#d97706);font-size:12.5px;font-weight:600}
+.al6-cb{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
+.al6-wb{fill:var(--bg-warn,#fffbeb);stroke:var(--accent,#d97706);stroke-width:1.5}
+</style>
+<text x="20" y="20" class="al6-h">턴이 쌓일수록 길어지는 캐시 프리픽스</text>
+<!-- 범례 -->
+<rect x="20" y="34" width="14" height="14" rx="3" class="al6-cb"/>
+<text x="40" y="46" class="al6-c">캐시 적중 (재사용)</text>
+<rect x="170" y="34" width="14" height="14" rx="3" class="al6-wb"/>
+<text x="190" y="46" class="al6-w">신규 토큰</text>
+<!-- Turn 1 -->
+<text x="16" y="86" class="al6-turn">Turn 1</text>
+<rect x="78" y="66" width="160" height="30" rx="5" class="al6-cb"/>
+<text x="88" y="86" class="al6-c">정적 프리픽스</text>
+<rect x="238" y="66" width="76" height="30" rx="5" class="al6-wb"/>
+<text x="246" y="86" class="al6-w">user_msg</text>
+<!-- Turn 2 -->
+<text x="16" y="140" class="al6-turn">Turn 2</text>
+<rect x="78" y="120" width="236" height="30" rx="5" class="al6-cb"/>
+<text x="88" y="140" class="al6-c">정적 프리픽스 + user_msg</text>
+<rect x="314" y="120" width="76" height="30" rx="5" class="al6-wb"/>
+<text x="322" y="140" class="al6-w">result_1</text>
+<!-- Turn 3 -->
+<text x="16" y="194" class="al6-turn">Turn 3</text>
+<rect x="78" y="174" width="312" height="30" rx="5" class="al6-cb"/>
+<text x="88" y="194" class="al6-c">정적 프리픽스 + user_msg + result_1</text>
+<rect x="390" y="174" width="76" height="30" rx="5" class="al6-wb"/>
+<text x="398" y="194" class="al6-w">result_2</text>
+<text x="16" y="238" class="al6-s">정적 프리픽스 = developer message · config.toml ·</text>
+<text x="16" y="260" class="al6-s">skill files · environment</text>
+</svg>
+</div>
 
 이 전략이 작동하려면 **정적 콘텐츠가 프롬프트 앞쪽에** 있어야 합니다. developer message, config, skill files 같은 변하지 않는 요소가 앞에 오고, 매 턴 달라지는 도구 결과가 뒤에 와야 캐시 프리픽스가 최대한 길어집니다. 도구 재정렬, 설정 변경, 샌드박스 변경 등은 이 프리픽스를 깨뜨리므로 캐시 효율이 떨어집니다.
 
@@ -263,10 +463,13 @@ Codex CLI도 개발자의 로컬 머신에서 실행되지만, 퍼미션 시스�
 
 참고로 Codex에는 별도의 **클라우드 버전**(Codex Cloud)도 있는데, 이쪽은 일회용 클라우드 컨테이너에서 실행되며 네트워크가 기본적으로 차단된 "two-phase runtime model"을 사용합니다. 이 글에서 비교하는 Codex는 Claude Code와 동일하게 로컬에서 실행되는 **Codex CLI**입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 같은 문제, 다른 해법</strong><br>
-  두 도구 모두 개발자의 로컬 머신에서 실행되지만, 안전성 확보 방식이 다릅니다. Claude Code는 도구별로 세분화된 퍼미션 파이프라인(7-mode, deny-first)을 운영합니다. Codex CLI는 OS 네이티브 샌드박스로 프로세스 자체를 격리합니다. 전자는 "이 도구를 허용할까?"를, 후자는 "이 프로세스가 뭘 할 수 있을까?"를 제어하는 것입니다.
-</div>
+:::info
+
+**같은 문제, 다른 해법**
+
+두 도구 모두 개발자의 로컬 머신에서 실행되지만, 안전성 확보 방식이 다릅니다. Claude Code는 도구별로 세분화된 퍼미션 파이프라인(7-mode, deny-first)을 운영합니다. Codex CLI는 OS 네이티브 샌드박스로 프로세스 자체를 격리합니다. 전자는 "이 도구를 허용할까?"를, 후자는 "이 프로세스가 뭘 할 수 있을까?"를 제어하는 것입니다.
+
+:::
 
 ---
 
@@ -338,10 +541,13 @@ async def resilient_loop(messages, tools, llm_call,
     return "최대 턴 수 도달"
 ```
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 프로덕션 필수 사항</strong><br>
-  에러 복구는 선택이 아닙니다. 50턴 이상의 긴 세션에서는 output token 부족, 컨텍스트 초과, 네트워크 오류 중 하나 이상이 거의 반드시 발생합니다. 프로덕션 에이전트를 구축한다면, 최소한 output escalation과 reactive compaction은 구현해야 합니다.
-</div>
+:::warning
+
+**프로덕션 필수 사항**
+
+에러 복구는 선택이 아닙니다. 50턴 이상의 긴 세션에서는 output token 부족, 컨텍스트 초과, 네트워크 오류 중 하나 이상이 거의 반드시 발생합니다. 프로덕션 에이전트를 구축한다면, 최소한 output escalation과 reactive compaction은 구현해야 합니다.
+
+:::
 
 Codex의 에러 복구는 아키텍처 자체에 내장되어 있습니다. 매 턴이 독립적인 HTTP 요청이므로, 실패한 요청을 단순히 재전송할 수 있습니다. Claude Code처럼 루프 내부에 정교한 복구 전략을 구현할 필요가 적은 셈입니다. 이것이 "상태 없는" 아키텍처의 이점 중 하나입니다.
 
@@ -381,7 +587,7 @@ Claude Code의 `TombstoneMessage`는 컴팩션으로 제거된 메시지의 자�
 
 ## 직접 구현: 에러 복구를 갖춘 에이전트 루프
 
-[이전 글](/agent/context-engineering/)에서 `ContextManager`와 기본 `agent_loop`을 구현했습니다. 이번에는 이 글에서 살펴본 루프 인프라를 추가합니다. safe/exclusive 도구 분류, output token escalation, reactive compaction을 갖춘 확장 버전입니다.
+지금까지 살펴본 루프 인프라를 코드로 옮겨 봅니다. 컨텍스트 누적과 컴팩션을 담당하는 `ContextManager`가 이미 있다고 보고, 그 위에 safe/exclusive 도구 분류, output token escalation, reactive compaction을 얹은 버전입니다.
 
 ```python
 import asyncio
@@ -394,7 +600,7 @@ async def production_loop(
     max_turns: int = 100,
 ):
     """에러 복구와 도구 동시성을 갖춘 에이전트 루프."""
-    ctx = ContextManager()  # Post 4에서 구현
+    ctx = ContextManager()  # 컨텍스트 누적과 컴팩션 담당
     ctx.messages.append({"role": "user", "content": task})
     max_tokens = 4096
     retries = 0
@@ -455,7 +661,7 @@ async def production_loop(
     return "최대 턴 수 도달"
 ```
 
-이 코드는 Post 4의 `agent_loop`과 비교하면 세 가지가 추가되었습니다.
+모델을 부르고 도구를 실행하는 기본 while 루프와 비교하면 세 가지가 추가되었습니다.
 
 | 추가 요소 | 코드 위치 | 대응하는 프로덕션 구현 |
 |-----------|-----------|----------------------|
@@ -469,15 +675,23 @@ async def production_loop(
 
 ## 한계와 열린 문제
 
-이 글에서 다루지 못한 깊이가 있습니다. Budget Reduction이 Snip과 어떻게 다른지, Context Collapse가 어떤 조건에서 발동되는지, Codex의 암호화 blob이 실제로 무엇을 보존하는지는 [다음 글](/agent/compaction-pipeline/)에서 다룹니다. 퍼미션 시스템의 deny-first 의미론과 ML 분류기의 위험도 판단 기준은 [퍼미션 글](/agent/agent-permission-safety/)에서 다룹니다. 이벤트 스트림 아키텍처가 제공하는 관찰성(observability), 즉 어떤 도구 호출이 어느 정도의 컨텍스트 증가를 일으켰는지, 실패한 턴을 재현할 수 있는지는 아직 열린 엔지니어링 문제입니다.
+이 글에서 다루지 못한 깊이가 있습니다. Budget Reduction이 Snip과 어떻게 다른지, Context Collapse가 어떤 조건에서 발동되는지, Codex의 암호화 blob이 실제로 무엇을 보존하는지는 컴팩션 파이프라인 자체를 해부해야 답할 수 있는 질문입니다. 퍼미션 시스템의 deny-first 의미론과 ML 분류기의 위험도 판단 기준도 이 글의 범위를 넘어섭니다. 이벤트 스트림 아키텍처가 제공하는 관찰성(observability), 즉 어떤 도구 호출이 어느 정도의 컨텍스트 증가를 일으켰는지, 실패한 턴을 재현할 수 있는지는 아직 열린 엔지니어링 문제입니다.
 
 ---
 
 ## 마치며
 
-[첫 번째 글](/agent/what-is-ai-agent/)에서 "AI가 판단하는 로직은 1.6%에 불과하다"고 했을 때, 그 숫자는 추상적인 통계에 불과했습니다. 이제 6단계 파이프라인을 따라가 보면, 왜 1.6%인지가 구체적으로 보입니다. 모델이 관여하는 Stage 3을 제외한 나머지(컨텍스트 조립, 전처리, 도구 실행, 에러 복구, 상태 관리)가 루프의 실체이고, 이 인프라 없이는 에이전트가 프로덕션에서 동작할 수 없습니다.
+"AI가 판단하는 로직은 1.6%에 불과하다"는 말은 숫자만 놓고 보면 추상적인 통계입니다. 하지만 6단계 파이프라인을 따라가 보면 왜 1.6%인지가 구체적으로 보입니다. 모델이 관여하는 Stage 3을 제외한 나머지(컨텍스트 조립, 전처리, 도구 실행, 에러 복구, 상태 관리)가 루프의 실체이고, 이 인프라 없이는 에이전트가 프로덕션에서 동작할 수 없습니다.
 
 다음 글에서는 이 루프의 Stage 2에 해당하는 전처리 파이프라인을 깊이 들어갑니다. Claude Code의 5단계 컴팩션(Budget Reduction부터 Auto-Compact까지)이 어떤 순서로, 어떤 기준으로 실행되는지, 그리고 Codex의 암호화 blob이 실제로 무엇을 보존하는지 살펴보겠습니다.
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지](/agent/agent-workflow-patterns/)
+- [AI Agent의 컨텍스트 엔지니어링: 유한한 토큰 윈도우를 다루는 네 가지 전략](/agent/context-engineering/)
+- [AI Agent의 컴팩션 파이프라인: 200K 토큰 윈도우를 지키는 다섯 단계](/agent/compaction-pipeline/)
+- [AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단](/agent/agent-permission-safety/)
 
 ## 참고자료
 
