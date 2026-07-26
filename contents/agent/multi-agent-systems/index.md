@@ -13,17 +13,17 @@ Anthropic의 multi-agent research system에 복잡한 질문을 던지면, 리�
 
 Anthropic이 보고한, 단일 에이전트 대비 **90.2%의 응답 품질 향상**. 하지만 그 이면에는 단일 에이전트에 없던 새로운 종류의 문제들이 있습니다. 에이전트들은 어떻게 조정되는가? 상태는 어떻게 공유하는가? 하나가 실패하면 나머지는 어떻게 되는가? 비용은 어떻게 통제하는가? 누가 누구를 신뢰하는가?
 
-[이전 글](/agent/agent-permission-safety/)에서 "여러 에이전트가 협력할 때 어떤 새로운 문제가 생기는지"를 예고했습니다. 이 글에서는 멀티에이전트 시스템이 만들어내는 다섯 가지 시스템 수준 문제를 해부합니다.
+이 글에서는 멀티에이전트 시스템이 만들어내는 다섯 가지 시스템 수준 문제를 해부합니다.
 
 ---
 
 ## 왜 멀티에이전트인가? 단일 에이전트가 부딪히는 벽
 
-단일 에이전트는 놀라울 만큼 많은 작업을 처리할 수 있습니다. [다섯 번째 글](/agent/agent-loop-anatomy/)의 에이전트 루프, [여섯 번째 글](/agent/compaction-pipeline/)의 컴팩션 파이프라인, [일곱 번째 글](/agent/agent-permission-safety/)의 퍼미션 시스템까지, 지금까지 살펴본 인프라는 모두 하나의 에이전트가 하나의 작업을 끝까지 처리하는 구조입니다.
+단일 에이전트는 놀라울 만큼 많은 작업을 처리할 수 있습니다. 모델 호출과 도구 실행을 반복하는 에이전트 루프, 컨텍스트가 한계에 다다르면 대화를 압축하는 컴팩션 파이프라인, 도구 실행 전에 위험을 판정하는 퍼미션 시스템. 이런 인프라는 모두 하나의 에이전트가 하나의 작업을 끝까지 처리한다는 전제 위에 서 있습니다.
 
 그런데 이 구조가 한계에 부딪히는 지점이 있습니다.
 
-가장 흔한 신호는 컨텍스트 포화입니다. 대규모 코드베이스에서 여러 파일을 동시에 분석해야 할 때, 하나의 컨텍스트 윈도우에 모든 정보를 담을 수 없습니다. [네 번째 글](/agent/context-engineering/)에서 다룬 컴팩션과 구조화된 노트로도 부족한 경우, 여러 에이전트가 각각의 컨텍스트 윈도우에서 독립적으로 탐색하고 결과만 취합하는 것이 더 효과적입니다.
+가장 흔한 신호는 컨텍스트 포화입니다. 대규모 코드베이스에서 여러 파일을 동시에 분석해야 할 때, 하나의 컨텍스트 윈도우에 모든 정보를 담을 수 없습니다. 컴팩션과 구조화된 노트로도 부족한 경우, 여러 에이전트가 각각의 컨텍스트 윈도우에서 독립적으로 탐색하고 결과만 취합하는 것이 더 효과적입니다.
 
 역할 분리가 필요한 경우도 있습니다. 코드를 작성하는 역할과 작성된 코드를 평가하는 역할을 같은 에이전트가 맡으면, 자기 평가 편향이 발생합니다. Anthropic의 harness 연구에서 에이전트가 자신의 작업을 평가할 때 "명백히 품질이 떨어지는 결과에도 자신있게 칭찬하는" 경향을 확인했습니다. 작업자와 평가자를 분리하는 것만으로 품질이 크게 개선됩니다.
 
@@ -52,7 +52,7 @@ Anthropic이 보고한, 단일 에이전트 대비 **90.2%의 응답 품질 향�
 
 하나의 중앙 에이전트가 작업을 분해하고, 워커 에이전트에게 위임하고, 결과를 종합하는 Orchestrator-Workers 구조입니다.
 
-Claude Code의 `AgentTool`이 대표적입니다. [두 번째 글](/agent/agent-workflow-patterns/)에서 다뤘듯이, 서브에이전트가 별도의 git worktree에서 격리 실행되고 요약만 부모에게 반환하는 사이드체인 구조입니다. Codex도 유사한 스타 구조를 사용하되, 깊이 1, 최대 6개 병렬 스레드로 제약합니다.
+Claude Code의 `AgentTool`이 대표적입니다. 서브에이전트가 별도의 git worktree에서 격리 실행되고 요약만 부모에게 반환하는 사이드체인 구조입니다. Codex도 유사한 스타 구조를 사용하되, 깊이 1, 최대 6개 병렬 스레드로 제약합니다.
 
 Anthropic의 multi-agent research system도 스타 토폴로지입니다. 리드 에이전트(Opus)가 3~5개의 서브에이전트(Sonnet)를 병렬로 실행하고, 결과를 평가한 뒤 추가 에이전트를 생성할지 결정합니다.
 
@@ -74,69 +74,68 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 
 ### 피어 토폴로지: 수평적 핸드오프
 
-중앙 오케스트레이터 없이 에이전트 간에 제어권이 수평으로 이동하는 구조입니다. [두 번째 글](/agent/agent-workflow-patterns/)에서 다뤘던 OpenAI의 triage agent 패턴이 여기에 해당합니다. 첫 번째 에이전트가 요청을 분류한 뒤, 전문화된 에이전트에게 대화 전체를 넘깁니다(핸드오프).
+중앙 오케스트레이터 없이 에이전트 간에 제어권이 수평으로 이동하는 구조입니다. OpenAI가 정리한 triage agent 패턴이 여기에 해당합니다. 첫 번째 에이전트가 요청을 분류한 뒤, 전문화된 에이전트에게 대화 전체를 넘깁니다(핸드오프).
 
 피어 토폴로지는 고객 지원처럼 요청 유형에 따라 전문가가 달라지는 도메인에 적합합니다. 하지만 제어 흐름을 추적하기 어렵고, 에이전트 간 상태 일관성을 보장하기 힘듭니다.
 
 <div style="text-align: center; margin: 24px 0;">
-<svg viewBox="0 0 850 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 850px; width: 100%;">
+<svg viewBox="0 0 480 596" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 가지 조정 토폴로지를 위에서 아래로 나란히 보여주는 그림. 스타는 오케스트레이터 하나가 워커 세 개에 작업을 위임하고, 파이프라인은 Planner에서 Generator, Evaluator로 이어지며 Evaluator가 Generator로 피드백을 돌려보내고 파일로 상태를 공유하며, 피어는 Triage가 전문가 A와 B로 요청을 넘기고 두 전문가끼리도 핸드오프합니다.">
 <style>
-.topo-box { stroke-width: 2; rx: 8; }
-.topo-text { font-family: 'Pretendard', sans-serif; font-size: 13px; text-anchor: middle; }
-.topo-label { font-family: 'Pretendard', sans-serif; font-size: 15px; font-weight: 700; text-anchor: middle; }
-.topo-sub { font-family: 'Pretendard', sans-serif; font-size: 11px; text-anchor: middle; }
-.topo-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowT); }
-.topo-arrow-bi { stroke-width: 2; fill: none; marker-end: url(#arrowT); marker-start: url(#arrowTR); }
+.tp8-title { font-size: 17px; font-weight: 700; text-anchor: middle; }
+.tp8-text { font-size: 15px; text-anchor: middle; }
+.tp8-sub { font-size: 13px; text-anchor: middle; }
+.tp8-arrow { stroke-width: 2; fill: none; marker-end: url(#tp8Head); }
+.tp8-arrow-bi { stroke-width: 2; fill: none; marker-end: url(#tp8Head); marker-start: url(#tp8HeadR); }
 </style>
 <defs>
-<marker id="arrowT" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
+<marker id="tp8Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)" />
 </marker>
-<marker id="arrowTR" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-<path d="M8,0 L0,3 L8,6" fill="var(--text, #1c1917)" />
+<marker id="tp8HeadR" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+<path d="M8,0 L0,3 L8,6" fill="var(--text-muted, #78716c)" />
 </marker>
 </defs>
-<!-- Star Topology -->
-<text x="130" y="24" class="topo-label" fill="var(--text, #1c1917)">스타</text>
-<rect x="80" y="50" width="100" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="130" y="77" class="topo-text" fill="var(--text, #1c1917)">오케스트레이터</text>
-<line x1="100" y1="94" x2="40" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<line x1="130" y1="94" x2="130" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<line x1="160" y1="94" x2="220" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<rect x="5" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="40" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 1</text>
-<rect x="95" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="130" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 2</text>
-<rect x="185" y="140" width="70" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="220" y="163" class="topo-text" fill="var(--text, #1c1917)">워커 3</text>
-<text x="130" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Claude Code AgentTool, Codex spawn_agent</text>
-<!-- Pipeline Topology -->
-<text x="420" y="24" class="topo-label" fill="var(--text, #1c1917)">파이프라인</text>
-<rect x="300" y="50" width="76" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="338" y="77" class="topo-text" fill="var(--text, #1c1917)">Planner</text>
-<line x1="376" y1="72" x2="396" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<rect x="400" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="443" y="77" class="topo-text" fill="var(--text, #1c1917)">Generator</text>
-<line x1="486" y1="72" x2="506" y2="72" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<rect x="510" y="50" width="86" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="553" y="77" class="topo-text" fill="var(--text, #1c1917)">Evaluator</text>
-<path d="M553,94 C553,120 443,120 443,94" class="topo-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
-<text x="498" y="118" class="topo-sub" fill="var(--text-muted, #78716c)">피드백</text>
-<rect x="340" y="140" width="160" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="420" y="163" class="topo-text" fill="var(--text, #1c1917)">파일 기반 상태 공유</text>
-<text x="420" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">Anthropic Harness (Planner/Generator/Evaluator)</text>
-<!-- Peer Topology -->
-<text x="720" y="24" class="topo-label" fill="var(--text, #1c1917)">피어</text>
-<rect x="675" y="50" width="90" height="44" class="topo-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="720" y="77" class="topo-text" fill="var(--text, #1c1917)">Triage</text>
-<line x1="695" y1="94" x2="655" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<line x1="745" y1="94" x2="790" y2="140" class="topo-arrow" stroke="var(--text, #1c1917)" />
-<rect x="610" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="655" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 A</text>
-<rect x="745" y="140" width="90" height="36" class="topo-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="790" y="163" class="topo-text" fill="var(--text, #1c1917)">전문가 B</text>
-<line x1="700" y1="158" x2="745" y2="158" class="topo-arrow-bi" stroke="var(--text, #1c1917)" stroke-dasharray="4,3" />
-<text x="720" y="200" class="topo-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
+<!-- 1. Star topology -->
+<text x="240" y="26" class="tp8-title" fill="var(--text, #1c1917)">스타: 중앙 오케스트레이터</text>
+<rect x="160" y="42" width="160" height="42" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="240" y="69" class="tp8-text" fill="var(--text, #1c1917)">오케스트레이터</text>
+<line x1="200" y1="84" x2="90" y2="110" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="240" y1="84" x2="240" y2="110" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="280" y1="84" x2="390" y2="110" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<rect x="20" y="114" width="140" height="38" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="90" y="139" class="tp8-text" fill="var(--text, #1c1917)">워커 1</text>
+<rect x="170" y="114" width="140" height="38" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="240" y="139" class="tp8-text" fill="var(--text, #1c1917)">워커 2</text>
+<rect x="320" y="114" width="140" height="38" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="390" y="139" class="tp8-text" fill="var(--text, #1c1917)">워커 3</text>
+<text x="240" y="176" class="tp8-sub" fill="var(--text-muted, #78716c)">Claude Code AgentTool, Codex spawn_agent</text>
+<!-- 2. Pipeline topology -->
+<text x="240" y="228" class="tp8-title" fill="var(--text, #1c1917)">파이프라인: 역할 기반 연결</text>
+<rect x="27" y="244" width="126" height="42" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="90" y="271" class="tp8-text" fill="var(--text, #1c1917)">Planner</text>
+<line x1="155" y1="265" x2="173" y2="265" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<rect x="177" y="244" width="126" height="42" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="240" y="271" class="tp8-text" fill="var(--text, #1c1917)">Generator</text>
+<line x1="305" y1="265" x2="323" y2="265" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<rect x="327" y="244" width="126" height="42" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="390" y="271" class="tp8-text" fill="var(--text, #1c1917)">Evaluator</text>
+<path d="M390,286 C390,318 240,318 240,288" class="tp8-arrow" stroke="var(--text-muted, #78716c)" stroke-dasharray="5,4" />
+<text x="315" y="326" class="tp8-sub" fill="var(--text-muted, #78716c)">피드백</text>
+<rect x="130" y="336" width="220" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="240" y="362" class="tp8-text" fill="var(--text, #1c1917)">파일 기반 상태 공유</text>
+<text x="240" y="398" class="tp8-sub" fill="var(--text-muted, #78716c)">Anthropic Harness (Planner / Generator / Evaluator)</text>
+<!-- 3. Peer topology -->
+<text x="240" y="450" class="tp8-title" fill="var(--text, #1c1917)">피어: 수평 핸드오프</text>
+<rect x="175" y="466" width="130" height="42" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="240" y="493" class="tp8-text" fill="var(--text, #1c1917)">Triage</text>
+<line x1="205" y1="508" x2="130" y2="534" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="275" y1="508" x2="350" y2="534" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<rect x="50" y="538" width="150" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="125" y="564" class="tp8-text" fill="var(--text, #1c1917)">전문가 A</text>
+<rect x="280" y="538" width="150" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="355" y="564" class="tp8-text" fill="var(--text, #1c1917)">전문가 B</text>
+<line x1="206" y1="558" x2="274" y2="558" class="tp8-arrow-bi" stroke="var(--text-muted, #78716c)" stroke-dasharray="5,4" />
+<text x="240" y="594" class="tp8-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
 </svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
@@ -161,7 +160,7 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 
 ### 격리 극단: 요약만 반환
 
-Claude Code의 사이드체인 아키텍처는 격리의 극단에 있습니다. [네 번째 글](/agent/context-engineering/)에서 다뤘듯이, 서브에이전트는 자체 컨텍스트 윈도우에서 실행되고 부모에게는 요약 텍스트만 반환합니다. 서브에이전트가 50번의 도구 호출로 25만 토큰을 소비하더라도, 부모의 컨텍스트에는 2,000 토큰 정도의 요약만 추가됩니다.
+Claude Code의 사이드체인 아키텍처는 격리의 극단에 있습니다. 서브에이전트는 자체 컨텍스트 윈도우에서 실행되고 부모에게는 요약 텍스트만 반환합니다. 서브에이전트가 50번의 도구 호출로 25만 토큰을 소비하더라도, 부모의 컨텍스트에는 2,000 토큰 정도의 요약만 추가됩니다.
 
 부모 컨텍스트가 오염되지 않지만, 서브에이전트끼리는 서로의 작업을 전혀 모릅니다. 두 서브에이전트가 같은 파일을 다른 방식으로 수정하면, 부모가 병합할 때 비로소 충돌이 발견됩니다.
 
@@ -200,11 +199,13 @@ Anthropic의 managed agents 아키텍처는 세 번째 접근을 보여줍니다
 
 이 설계에서 하네스는 컨테이너 안에 살지 않습니다. 컨테이너를 다른 도구처럼 호출합니다: `execute(name, input) -> string`. 컨테이너는 "소"(cattle)가 됩니다. 교체 가능하고 상태가 없습니다. 모든 상태는 세션 이벤트 로그에 있으므로, 하네스가 실패해도 새 하네스가 `wake(sessionId)`로 재부팅하고 `getSession(id)`로 이벤트 로그를 복원할 수 있습니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+:::info
 
-**분산 시스템과의 유사성.** 멀티에이전트의 상태 공유 문제는 분산 시스템의 오래된 문제와 구조적으로 같습니다. 사이드체인 격리는 마이크로서비스의 독립 데이터베이스와 비슷하고(일관성을 포기하고 자율성을 얻음), 파일 기반 프로토콜은 이벤트 소싱과 비슷한 면이 있고(progress.txt는 append-only로 변경 이력을 기록하고, Git 이력이 불변 로그 역할을 보완), 세션 이벤트 로그는 WAL(Write-Ahead Log)과 비슷합니다(장애 시 로그에서 상태를 재구성). 백엔드 엔지니어에게 이미 익숙한 패턴들입니다.
+**분산 시스템과의 유사성**
 
-</div>
+멀티에이전트의 상태 공유 문제는 분산 시스템의 오래된 문제와 구조적으로 같습니다. 사이드체인 격리는 마이크로서비스의 독립 데이터베이스와 비슷하고(일관성을 포기하고 자율성을 얻음), 파일 기반 프로토콜은 이벤트 소싱과 비슷한 면이 있고(progress.txt는 append-only로 변경 이력을 기록하고, Git 이력이 불변 로그 역할을 보완), 세션 이벤트 로그는 WAL(Write-Ahead Log)과 비슷합니다(장애 시 로그에서 상태를 재구성). 백엔드 엔지니어에게 이미 익숙한 패턴들입니다.
+
+:::
 
 | 접근 | 공유 범위 | 글로벌 일관성 | 간섭 위험 | 프로덕션 사례 |
 |------|----------|--------|-----------|-------------|
@@ -233,7 +234,7 @@ harness 아키텍처에서는 Evaluator가 이 역할을 합니다. Generator의
 
 ### 무한 루프 (Doom Loop)
 
-서브에이전트가 같은 작업을 반복하며 토큰과 시간을 소비하는 경우입니다. [다섯 번째 글](/agent/agent-loop-anatomy/)에서 단일 에이전트의 에러 복구 전략(턴 제한, 컨텍스트 초과 대응 등)을 다뤘는데, 멀티에이전트에서는 이 문제가 증폭됩니다. 스타 토폴로지에서 오케스트레이터는 워커의 중간 상태를 볼 수 없고, 최종 결과만 기다립니다. 파이프라인 토폴로지의 스프린트 단위 평가는 이 문제를 완화하지만, 스프린트 내부에서의 무한 루프는 여전히 탐지하기 어렵습니다.
+서브에이전트가 같은 작업을 반복하며 토큰과 시간을 소비하는 경우입니다. 단일 에이전트에도 턴 수 제한이나 컨텍스트 초과 대응 같은 에러 복구 장치가 있지만, 멀티에이전트에서는 이 문제가 증폭됩니다. 스타 토폴로지에서 오케스트레이터는 워커의 중간 상태를 볼 수 없고, 최종 결과만 기다립니다. 파이프라인 토폴로지의 스프린트 단위 평가는 이 문제를 완화하지만, 스프린트 내부에서의 무한 루프는 여전히 탐지하기 어렵습니다.
 
 프로덕션 시스템들의 격리 전략은 명확합니다.
 
@@ -251,7 +252,7 @@ harness 아키텍처에서는 Evaluator가 이 역할을 합니다. Generator의
 | 무한 루프 | 턴 수 제한, 토큰 예산 | 재귀 방지, 깊이/스레드 제한 | 타임아웃 후 부분 결과 수거 |
 | 자원 고갈 | 토큰 카운터, API 모니터링 | 에이전트별 예산 할당 | 계획을 외부 저장소에 보존 |
 
-Anthropic의 managed agents 아키텍처에서 눈에 띄는 설계가 있습니다. 하네스가 실패해도 세션 이벤트 로그에서 상태를 복원할 수 있어서, "하네스에 크래시를 견뎌야 할 것은 아무것도 없다"는 것입니다. 이것은 상태를 프로세스 외부에 보관하는 패턴으로, [다섯 번째 글](/agent/agent-loop-anatomy/)에서 다뤘던 Codex의 stateless 설계와 같은 원리입니다.
+Anthropic의 managed agents 아키텍처에서 눈에 띄는 설계가 있습니다. 하네스가 실패해도 세션 이벤트 로그에서 상태를 복원할 수 있어서, "하네스에 크래시를 견뎌야 할 것은 아무것도 없다"는 것입니다. 이것은 상태를 프로세스 외부에 보관하는 패턴으로, 세션을 디스크에 두고 프로세스 자체는 상태를 갖지 않는 Codex의 설계와 같은 원리입니다.
 
 ---
 
@@ -271,7 +272,7 @@ Anthropic의 연구에서 구체적인 수치가 나옵니다.
 
 - **에이전트는 일반 채팅 대비 약 4배의 토큰**을 사용합니다.
 - **멀티에이전트 시스템은 일반 채팅 대비 약 15배의 토큰**을 사용합니다.
-- BrowseComp 벤치마크에서 **토큰 사용량이 성능 분산의 80%를 설명**합니다.
+- BrowseComp 벤치마크에서 **단일 변수로는 토큰 사용량이 성능 분산의 80%를 설명**합니다. 가장 큰 설명력을 가진 변수입니다.
 
 harness 벤치마크는 더 구체적입니다.
 
@@ -288,7 +289,7 @@ harness 벤치마크는 더 구체적입니다.
 
 **1. 모델 라우팅.** 오케스트레이터에 고성능 모델, 워커에 효율적인 모델을 배치합니다. Anthropic의 multi-agent research system이 정확히 이 구조입니다. 리드 에이전트는 Opus, 서브에이전트는 Sonnet입니다. Anthropic은 "Sonnet 4로 업그레이드하는 것이 Sonnet 3.7에서 토큰 예산을 두 배로 늘리는 것보다 더 큰 성능 향상"을 보인다고 합니다. 더 좋은 모델을 쓰는 것이 더 많은 토큰을 쓰는 것보다 효율적입니다.
 
-**2. 에이전트별 컴팩션.** 각 서브에이전트 내부에서 [여섯 번째 글](/agent/compaction-pipeline/)의 컴팩션 파이프라인이 독립적으로 작동합니다.
+**2. 에이전트별 컴팩션.** 각 서브에이전트 내부에서 컴팩션 파이프라인이 독립적으로 작동합니다. 오래된 도구 결과를 잘라내고 대화를 요약하는 처리가 에이전트마다 따로 돌아가므로, 전체 토큰 사용량이 에이전트 수에 선형으로만 늘어납니다.
 
 **3. 조기 종료.** 에이전트별 토큰 예산을 설정하고, 초과 시 부분 결과를 반환합니다.
 
@@ -296,11 +297,13 @@ harness 벤치마크는 더 구체적입니다.
 
 **5. 프롬프트 캐싱.** Codex의 "정적 요소를 앞에, 가변 요소를 뒤에" 배치하는 전략이 서브에이전트에도 적용됩니다. 시스템 프롬프트와 공통 지침이 캐시되면, 여러 서브에이전트가 같은 캐시를 공유할 수 있습니다.
 
-<div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+:::note
 
-**비용과 품질의 trade-off.** Anthropic은 "멀티에이전트 시스템은 작업의 가치가 충분히 높은 경우에만 정당화된다"고 명시합니다. BrowseComp 벤치마크에서 토큰, 도구 호출 횟수, 모델 선택 세 요인이 성능 분산의 95%를 설명합니다. 토큰을 더 쓸수록 좋아지지만, 수확 체감이 있습니다. 최적의 에이전트 수와 토큰 예산은 작업의 경제적 가치에 의해 결정됩니다.
+**비용과 품질의 trade-off**
 
-</div>
+Anthropic은 "멀티에이전트 시스템은 작업의 가치가 충분히 높은 경우에만 정당화된다"고 명시합니다. BrowseComp 벤치마크에서 토큰 사용량에 도구 호출 횟수와 모델 선택을 더한 세 요인이 성능 분산의 95%를 설명합니다. 토큰을 더 쓸수록 좋아지지만, 수확 체감이 있습니다. 최적의 에이전트 수와 토큰 예산은 작업의 경제적 가치에 의해 결정됩니다.
+
+:::
 
 ---
 
@@ -310,51 +313,60 @@ harness 벤치마크는 더 구체적입니다.
 
 ### 에스컬레이션 프로토콜
 
-[일곱 번째 글](/agent/agent-permission-safety/)에서 `bubble` 모드의 존재와 `EscalateToParent`의 코드를 확인했습니다. 여기서는 이 메커니즘이 멀티에이전트 시스템에서 어떻게 작동하는지를 살펴봅니다.
+Claude Code의 퍼미션 모드 중에는 `bubble`이 있습니다. 판단을 자기 선에서 끝내지 않고 위로 올린다는 뜻입니다.
 
-서브에이전트가 `bubble` 모드로 실행 중일 때, 퍼미션이 필요한 도구 호출을 만나면 자체적으로 판단하지 않습니다. 대신 `EscalateToParent` 예외를 발생시켜 부모 에이전트로 올립니다. 부모 에이전트는 자신의 퍼미션 모드(default, auto, dontAsk 등)에 따라 [일곱 번째 글](/agent/agent-permission-safety/)의 deny-first 파이프라인으로 평가합니다. 평가 결과(허용 또는 거부)는 서브에이전트에게 돌아가고, 서브에이전트는 그 결과에 따라 실행을 계속하거나 대안을 찾습니다.
+서브에이전트가 `bubble` 모드로 실행 중일 때, 퍼미션이 필요한 도구 호출을 만나면 자체적으로 판단하지 않습니다. 대신 `EscalateToParent` 예외를 발생시켜 부모 에이전트로 올립니다. 부모 에이전트는 자신의 퍼미션 모드(default, auto, dontAsk 등)에 따라, 거부 규칙을 먼저 훑고 허용 규칙과 분류기를 차례로 거쳐 마지막에 사용자에게 묻는 deny-first 파이프라인으로 평가합니다. 평가 결과(허용 또는 거부)는 서브에이전트에게 돌아가고, 서브에이전트는 그 결과에 따라 실행을 계속하거나 대안을 찾습니다.
 
 <div style="text-align: center; margin: 24px 0;">
-<svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 640px; width: 100%;">
+<svg viewBox="0 0 480 384" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="bubble 모드 에스컬레이션 흐름도. 서브에이전트가 EscalateToParent로 부모 에이전트에게 판단을 올리고, 부모가 Deny-First 파이프라인으로 7단계 평가를 거친 뒤, 허용이면 도구를 실행하고 거부면 대안을 탐색하거나 중단합니다.">
 <style>
-.esc-box { stroke-width: 2; rx: 8; }
-.esc-text { font-family: 'Pretendard', sans-serif; font-size: 12px; text-anchor: middle; }
-.esc-label { font-family: 'Pretendard', sans-serif; font-size: 11px; }
-.esc-arrow { stroke-width: 2; fill: none; marker-end: url(#arrowE); }
+.es8-text { font-size: 15px; text-anchor: middle; }
+.es8-sub { font-size: 13px; text-anchor: middle; }
+.es8-note { font-size: 13px; }
+.es8-arrow { stroke-width: 2; fill: none; marker-end: url(#es8Head); }
+.es8-arrow-ok { stroke-width: 2; fill: none; marker-end: url(#es8HeadOk); }
+.es8-arrow-no { stroke-width: 2; fill: none; marker-end: url(#es8HeadNo); }
 </style>
 <defs>
-<marker id="arrowE" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text, #1c1917)" />
+<marker id="es8Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)" />
+</marker>
+<marker id="es8HeadOk" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)" />
+</marker>
+<marker id="es8HeadNo" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+<path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #dc2626)" />
 </marker>
 </defs>
-<!-- Sub-agent -->
-<rect x="20" y="30" width="130" height="50" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="85" y="52" class="esc-text" fill="var(--text, #1c1917)">서브에이전트</text>
-<text x="85" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(bubble 모드)</text>
-<!-- Arrow 1: escalate -->
-<line x1="150" y1="55" x2="210" y2="55" class="esc-arrow" stroke="var(--primary, #0d9488)" />
-<text x="180" y="47" class="esc-label" fill="var(--primary, #0d9488)" text-anchor="middle" font-size="10">EscalateToParent</text>
-<!-- Parent -->
-<rect x="215" y="30" width="130" height="50" class="esc-box" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" />
-<text x="280" y="52" class="esc-text" fill="var(--text, #1c1917)">부모 에이전트</text>
-<text x="280" y="68" class="esc-text" fill="var(--text-muted, #78716c)">(default/auto/dontAsk)</text>
-<!-- Arrow 2: to pipeline -->
-<line x1="345" y1="55" x2="405" y2="55" class="esc-arrow" stroke="var(--text, #1c1917)" />
-<!-- Pipeline -->
-<rect x="410" y="20" width="210" height="70" class="esc-box" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--border, #d6d3d1)" />
-<text x="515" y="45" class="esc-text" fill="var(--text, #1c1917)">Deny-First 파이프라인</text>
-<text x="515" y="62" class="esc-text" fill="var(--text-muted, #78716c)">Deny → Allow → 분류기 → 사용자</text>
-<text x="515" y="78" class="esc-text" fill="var(--text-muted, #78716c)">(7단계 평가)</text>
-<!-- Arrow 3: result back -->
-<path d="M515,90 L515,140 L85,140 L85,80" class="esc-arrow" stroke="var(--text, #1c1917)" stroke-dasharray="6,3" />
-<text x="300" y="155" class="esc-label" fill="var(--text, #1c1917)" text-anchor="middle">허용 또는 거부 결과 반환</text>
-<!-- Two outcomes -->
-<rect x="20" y="180" width="130" height="40" class="esc-box" fill="#10b981" fill-opacity="0.15" stroke="#10b981" />
-<text x="85" y="205" class="esc-text" fill="var(--text, #1c1917)">허용 → 도구 실행</text>
-<rect x="180" y="180" width="160" height="40" class="esc-box" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" />
-<text x="260" y="205" class="esc-text" fill="var(--text, #1c1917)">거부 → 대안 탐색/중단</text>
-<line x1="55" y1="160" x2="55" y2="175" class="esc-arrow" stroke="#10b981" />
-<line x1="115" y1="160" x2="230" y2="175" class="esc-arrow" stroke="#ef4444" />
+<!-- 1. Sub-agent -->
+<rect x="115" y="14" width="250" height="54" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="240" y="38" class="es8-text" fill="var(--text, #1c1917)">서브에이전트</text>
+<text x="240" y="58" class="es8-sub" fill="var(--text-muted, #78716c)">(bubble 모드)</text>
+<!-- 2. Escalate to parent -->
+<line x1="240" y1="68" x2="240" y2="98" class="es8-arrow" stroke="var(--primary, #0d9488)" />
+<text x="252" y="88" class="es8-note" fill="var(--primary, #0d9488)">EscalateToParent</text>
+<!-- 3. Parent agent -->
+<rect x="100" y="102" width="280" height="54" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<text x="240" y="126" class="es8-text" fill="var(--text, #1c1917)">부모 에이전트</text>
+<text x="240" y="146" class="es8-sub" fill="var(--text-muted, #78716c)">(default / auto / dontAsk)</text>
+<!-- 4. Deny-first pipeline -->
+<line x1="240" y1="156" x2="240" y2="182" class="es8-arrow" stroke="var(--text-muted, #78716c)" />
+<rect x="30" y="186" width="420" height="78" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
+<text x="240" y="212" class="es8-text" fill="var(--text, #1c1917)">Deny-First 파이프라인</text>
+<text x="240" y="234" class="es8-sub" fill="var(--text-muted, #78716c)">Deny → Allow → 분류기 → 사용자</text>
+<text x="240" y="254" class="es8-sub" fill="var(--text-muted, #78716c)">(7단계 평가)</text>
+<!-- 5. Result returns to sub-agent -->
+<line x1="240" y1="264" x2="240" y2="292" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="6,4" />
+<text x="252" y="286" class="es8-note" fill="var(--text-muted, #78716c)">평가 결과 반환</text>
+<!-- 6. Two outcomes -->
+<line x1="240" y1="292" x2="130" y2="316" class="es8-arrow-ok" stroke="var(--text-success, #16a34a)" stroke-dasharray="6,4" />
+<line x1="240" y1="292" x2="350" y2="316" class="es8-arrow-no" stroke="var(--text-danger, #dc2626)" stroke-dasharray="6,4" />
+<rect x="20" y="320" width="210" height="46" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
+<path d="M42,343 L50,351 L64,335" fill="none" stroke="var(--text-success, #16a34a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="145" y="349" class="es8-text" fill="var(--text, #1c1917)">허용 후 도구 실행</text>
+<rect x="250" y="320" width="210" height="46" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2" />
+<path d="M272,335 L286,349 M286,335 L272,349" fill="none" stroke="var(--text-danger, #dc2626)" stroke-width="2.5" stroke-linecap="round" />
+<text x="372" y="349" class="es8-text" fill="var(--text, #1c1917)">거부 후 대안 탐색</text>
 </svg>
 </div>
 <p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
@@ -411,19 +423,28 @@ Codex는 다른 접근을 취합니다. OS 수준 샌드박스가 에이전트�
 
 에이전트 간 통신에 표준화된 프로토콜이 없습니다. Claude Code는 함수 호출과 사이드체인, Anthropic Harness는 파일 기반, Codex는 SQLite 세션을 사용합니다. 각각의 내부 프로토콜은 시스템 간에 호환되지 않습니다. MCP(Model Context Protocol)가 에이전트와 외부 도구 사이의 표준을 만들고 있지만, 에이전트 간 통신은 아직 표준화되지 않았습니다.
 
-에이전트와 외부 도구를 표준화된 인터페이스로 연결하는 MCP와, 에이전트 간 통신을 표준화하려는 A2A 프로토콜은 [다음 글](/agent/mcp-protocol/)에서 다룹니다. 표준화된 트레이싱 포맷을 통한 멀티에이전트 관찰성, LLM-as-Judge를 넘어서는 체계적 평가 파이프라인 설계는 아직 열린 엔지니어링 문제입니다.
+에이전트 간 통신을 표준화하려는 A2A 같은 시도가 있지만, MCP만큼의 채택은 아직 없습니다. 표준화된 트레이싱 포맷을 통한 멀티에이전트 관찰성, LLM-as-Judge를 넘어서는 체계적 평가 파이프라인 설계도 아직 열린 엔지니어링 문제입니다.
 
 ---
 
 ## 마치며
 
-[첫 번째 글](/agent/what-is-ai-agent/)에서 출발한 이 시리즈는 하나의 에이전트를 해부하는 것으로 시작했습니다. 루프가 어떻게 돌아가는지, 컨텍스트를 어떻게 관리하는지, 도구 실행을 어떻게 통제하는지. 이 글에서 시야를 넓혔습니다. 여러 에이전트가 협력할 때, 단일 에이전트에 없던 다섯 가지 새로운 문제가 생깁니다. 조정 토폴로지, 상태 공유, 실패 전파, 토큰 경제학, 신뢰 경계.
+에이전트 하나를 해부하는 일은 비교적 명확합니다. 루프가 어떻게 돌아가는지, 컨텍스트를 어떻게 관리하는지, 도구 실행을 어떻게 통제하는지. 이 글에서는 시야를 한 단계 넓혔습니다. 여러 에이전트가 협력할 때, 단일 에이전트에 없던 다섯 가지 새로운 문제가 생깁니다. 조정 토폴로지, 상태 공유, 실패 전파, 토큰 경제학, 신뢰 경계.
 
 분산 시스템이 모놀리스에 없던 장애 모드를 만들어낸 것처럼, 멀티에이전트는 단일 에이전트에 없던 복잡성을 만들어냅니다. 해법도 분산 시스템에서 빌려올 수 있습니다. 격리, 이벤트 소싱, 최소 권한, 예산 제한, 체크포인트. 다만 에이전트에는 고유한 차원이 추가됩니다. 모델의 판단이 비결정적이고, 자신의 출력 품질을 과대평가할 수 있다는 것. 같은 입력에도 다른 경로를 택할 수 있고, 잘못된 경로를 택하고도 성공했다고 보고할 수 있으므로, 결정론적 시스템보다 더 방어적으로 설계해야 합니다.
 
-지금까지 에이전트 간의 통신은 함수 호출, 사이드체인, 에스컬레이션 같은 시스템 내부 메커니즘에 의존했습니다. 그런데 프로덕션에서는 에이전트가 미리 알 수 없는 외부 도구와도 연결되어야 합니다. [다음 글](/agent/mcp-protocol/)에서는 에이전트와 외부 서비스를 표준화된 인터페이스로 연결하는 MCP 프로토콜을 살펴봅니다.
+지금까지 에이전트 간의 통신은 함수 호출, 사이드체인, 에스컬레이션 같은 시스템 내부 메커니즘에 의존했습니다. 그런데 프로덕션에서는 에이전트가 미리 알 수 없는 외부 도구와도 연결되어야 합니다. 다음 글에서는 에이전트와 외부 서비스를 표준화된 인터페이스로 연결하는 MCP 프로토콜을 살펴봅니다.
 
 ---
+
+## 함께 보면 좋은 글
+
+- [AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지](/agent/agent-workflow-patterns/)
+- [AI Agent의 컨텍스트 엔지니어링: 유한한 토큰 윈도우를 다루는 네 가지 전략](/agent/context-engineering/)
+- [AI Agent 루프: 한 턴의 요청이 처리되는 6단계](/agent/agent-loop-anatomy/)
+- [AI Agent의 컴팩션 파이프라인: 200K 토큰 윈도우를 지키는 다섯 단계](/agent/compaction-pipeline/)
+- [AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단](/agent/agent-permission-safety/)
+- [AI Agent의 MCP: 에이전트가 외부 도구를 연결하는 표준 프로토콜](/agent/mcp-protocol/)
 
 ## 참고자료
 
