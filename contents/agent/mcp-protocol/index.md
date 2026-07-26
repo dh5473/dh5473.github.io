@@ -9,7 +9,7 @@ summary: 'MCP의 Client-Server 아키텍처와 세 가지 프리미티브, 도�
 thumbnail: './thumbnail.png'
 ---
 
-Claude Code에 GitHub, Slack, Sentry, Grafana, Splunk 다섯 개의 외부 서비스를 연결하면 58개의 도구가 등장합니다. 이 도구들의 스키마 정의만으로 약 72,000 토큰을 소비합니다. 대화가 시작되기도 전에 200K 토큰 윈도우의 4분의 1 이상이 도구 설명으로 채워지는 것입니다. 서비스를 추가할수록 상황은 악화됩니다. 도구가 많아질수록 에이전트가 오히려 느려지는 아이러니입니다.
+Claude Code에 GitHub, Slack, Sentry, Grafana, Splunk 다섯 개의 외부 서비스를 연결하면 58개의 도구가 등장합니다. 이 도구들의 스키마 정의만으로 약 55,000 토큰을 소비합니다. 대화가 시작되기도 전에 200K 토큰 윈도우의 4분의 1 이상이 도구 설명으로 채워지는 것입니다. 시스템 프롬프트와 대화 이력까지 더하면 작업을 시작하기도 전에 약 77,000 토큰이 나갑니다. 서비스를 추가할수록 남는 공간은 더 줄고, 모델이 고를 후보가 늘어나면서 올바른 도구를 집어낼 확률도 떨어집니다.
 
 이 문제의 근본 원인은 두 가지입니다. 첫째, 외부 서비스마다 연결 방식이 다릅니다. GitHub는 REST API, Slack은 WebSocket, Sentry는 GraphQL. 에이전트가 새로운 서비스를 추가할 때마다 커스텀 통합 코드를 작성해야 합니다. 둘째, 모든 도구의 스키마를 미리 로딩합니다. 58개 중 이번 대화에서 실제로 쓰이는 도구는 3~5개에 불과한데, 나머지 53개의 정의가 컨텍스트를 점유합니다.
 
@@ -94,7 +94,7 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
 </svg>
 </div>
 
-에이전트 3개와 서비스 10개라면 커스텀 통합이 30개 필요합니다. USB가 등장하기 전의 주변기기 시장과 같은 상황입니다. 프린터, 스캐너, 키보드가 각각 고유한 포트와 드라이버를 요구했고, 새 기기를 추가할 때마다 호환성 문제가 발생했습니다. USB가 이 문제를 M+N으로 줄인 것처럼, MCP는 에이전트와 외부 서비스 사이의 표준 인터페이스 역할을 합니다. 같은 조건에서 MCP를 경유하면 구현해야 할 것은 13개로 줄어듭니다.
+에이전트 3개와 서비스 4개라는 작은 조합에서도 커스텀 통합이 12개 필요하고, 서비스가 10개로 늘면 30개가 됩니다. USB가 등장하기 전의 주변기기 시장과 같은 상황입니다. 프린터, 스캐너, 키보드가 각각 고유한 포트와 드라이버를 요구했고, 새 기기를 추가할 때마다 호환성 문제가 발생했습니다. USB가 이 문제를 M+N으로 줄인 것처럼, MCP는 에이전트와 외부 서비스 사이의 표준 인터페이스 역할을 합니다. MCP를 경유하면 앞의 조합은 7개, 서비스가 10개로 늘어난 경우에도 13개 구현으로 줄어듭니다.
 
 MCP 이전에 Claude Code의 도구는 하드코딩된 내장 도구였습니다. `Read`, `Write`, `Bash`, `Grep` 같은 도구는 코드베이스에 직접 정의되어 있고, 새로운 도구를 추가하려면 소스 코드를 수정해야 했습니다.
 
@@ -267,7 +267,7 @@ MCP의 아키텍처가 M×N 문제를 풀었다면, 다음 문제는 규모입�
 
 ### 전략 1: Tool Search (85% 토큰 절감)
 
-기본적으로 MCP 서버의 모든 도구 스키마가 시스템 프롬프트에 포함됩니다. 앞서 본 58개 도구 시나리오에서 약 72,000 토큰입니다. Tool Search는 이 접근을 뒤집습니다.
+기본적으로 MCP 서버의 모든 도구 스키마가 시스템 프롬프트에 포함됩니다. 앞서 본 58개 도구 시나리오에서 약 55,000 토큰입니다. Tool Search는 이 접근을 뒤집습니다.
 
 핵심 아이디어는 **deferred schemas**(지연 스키마)입니다. 도구 정의에 `defer_loading: true`를 설정하면 해당 도구의 스키마가 초기 컨텍스트에서 제외됩니다. 대신 Tool Search라는 메타 도구만 로딩되고, LLM이 특정 기능이 필요할 때 이 메타 도구를 호출하여 관련 도구를 동적으로 탐색합니다.
 
@@ -283,10 +283,10 @@ tools = [
 # 필요할 때 동적으로 로딩: ~3-5개 도구 = ~5K tokens
 ```
 
-결과는 명확합니다. 72,000 토큰이 약 8,700 토큰으로 줄어들어 **85% 절감**. 단순히 토큰을 아끼는 것이 아니라, 모델이 58개 도구 중에서 올바른 도구를 고르는 정확도도 향상됩니다. Anthropic의 내부 평가에서 Opus 4의 MCP 도구 선택 정확도가 49%에서 74%로 올랐습니다.
+결과는 명확합니다. 작업 시작 전 컨텍스트 소비가 약 77,000 토큰에서 약 8,700 토큰으로 줄어 **85% 절감**. 단순히 토큰을 아끼는 것이 아니라, 모델이 58개 도구 중에서 올바른 도구를 고르는 정확도도 향상됩니다. Anthropic의 내부 평가에서 Opus 4의 MCP 도구 선택 정확도가 49%에서 74%로 올랐습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 230" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 도구 스키마가 차지하는 비중 비교. 기본 방식은 72,000 토큰으로 36퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
+<svg viewBox="0 0 480 230" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 작업 시작 전에 소비되는 토큰 비교. 기본 방식은 77,000 토큰으로 약 39퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
   <style>
     .ctx-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
     .ctx-row { font-size: 13px; fill: var(--text, #1c1917); }
@@ -297,13 +297,13 @@ tools = [
     .ctx-bad-t { font-size: 13px; font-weight: 700; fill: var(--text-danger, #dc2626); }
     .ctx-good-t { font-size: 13px; font-weight: 700; fill: var(--text-success, #16a34a); }
   </style>
-  <text x="240" y="20" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 도구 스키마가 차지하는 몫</text>
+  <text x="240" y="20" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 작업 시작 전 소비되는 몫</text>
   <!-- 기본 방식 -->
   <text x="30" y="52" class="ctx-row">기본: 58개 도구 스키마를 전부 로딩</text>
   <rect x="30" y="62" width="420" height="36" rx="4" class="ctx-track" />
-  <rect x="30" y="62" width="151" height="36" rx="4" class="ctx-bad" />
-  <text x="105" y="85" text-anchor="middle" class="ctx-bad-t">72,000</text>
-  <text x="315" y="85" text-anchor="middle" class="ctx-sub">남은 여유 128,000</text>
+  <rect x="30" y="62" width="162" height="36" rx="4" class="ctx-bad" />
+  <text x="110" y="85" text-anchor="middle" class="ctx-bad-t">77,000</text>
+  <text x="320" y="85" text-anchor="middle" class="ctx-sub">남은 여유 123,000</text>
   <!-- Tool Search 적용 -->
   <text x="30" y="136" class="ctx-row">Tool Search: 메타 도구와 실제 사용분만</text>
   <rect x="30" y="146" width="420" height="36" rx="4" class="ctx-track" />
@@ -430,7 +430,7 @@ Programmatic Tool Calling이 "모델이 코드를 작성하고 도구 호출 결
 
 ## 퍼미션과 신뢰 경계
 
-MCP 서버는 에이전트에게 새로운 능력을 부여하는 만큼, 새로운 보안 위험도 함께 가져옵니다. 내장 도구는 에이전트가 직접 정의한 퍼미션 파이프라인 안에서 통제되지만, MCP 도구에는 그 바깥에 또 하나의 신뢰 경계가 존재합니다.
+MCP 서버는 에이전트에게 새로운 능력을 부여하는 만큼, 새로운 보안 위험도 함께 가져옵니다. 내장 도구는 에이전트 개발팀이 정의한 퍼미션 파이프라인 안에서 통제되지만, MCP 도구에는 그 바깥에 또 하나의 신뢰 경계가 존재합니다.
 
 ### 내장 도구 vs MCP 도구
 
@@ -753,7 +753,7 @@ MCP가 "누구나 서버를 만들 수 있다"는 것은 장점이자 단점입�
 
 에이전트는 결국 "모델, 도구, 루프"라는 세 가지 요소로 이루어집니다. 그리고 시리즈 전체를 관통하는 숫자가 하나 있었습니다. Claude Code에서 AI가 판단하는 로직은 1.6%이고, 나머지 98.4%는 결정론적 인프라입니다. 이 시리즈는 그 98.4%가 무엇으로 구성되어 있는지를 하나씩 해부한 기록입니다. 워크플로우 패턴, 도구 설계, 컨텍스트 관리, 루프 아키텍처, 컴팩션, 퍼미션, 멀티에이전트 조정, 그리고 이 글에서 다룬 외부 연결 프로토콜까지.
 
-MCP가 그 인프라의 마지막 조각입니다. 에이전트가 자신의 내장 도구만으로는 할 수 없는 일, 외부 세계와의 연결을 표준화된 방식으로 가능하게 만듭니다. 에이전트 시스템의 가치는 결국 "무엇과 연결될 수 있는가"가 결정합니다. MCP는 그 연결의 비용을 M×N에서 M+N으로, 그리고 컨텍스트 비용을 85%에서 98.7%까지 줄이는 표준입니다.
+MCP가 그 인프라의 마지막 조각입니다. 에이전트가 자신의 내장 도구만으로는 할 수 없는 일, 외부 세계와의 연결을 표준화된 방식으로 가능하게 만듭니다. 에이전트 시스템의 가치는 결국 "무엇과 연결될 수 있는가"가 결정합니다. MCP는 그 연결의 비용을 M×N에서 M+N으로, 그리고 컨텍스트 비용을 85%에서 98.7%까지 절감하는 표준입니다.
 
 ## 함께 보면 좋은 글
 
@@ -770,4 +770,4 @@ MCP가 그 인프라의 마지막 조각입니다. 에이전트가 자신의 내
 - [Advanced Tool Use (Anthropic Engineering)](https://www.anthropic.com/engineering/advanced-tool-use)
 - [Building Effective Agents (Anthropic)](https://www.anthropic.com/engineering/building-effective-agents)
 - [Dive into Claude Code: The Design Space of AI Agent Systems (arXiv 2604.14228)](https://arxiv.org/abs/2604.14228)
-- [Agent2Agent Protocol (Google)](https://google.github.io/A2A/)
+- [Agent2Agent Protocol](https://a2a-protocol.org/)

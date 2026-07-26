@@ -135,7 +135,7 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 </svg>
 </div>
 
-에이전트 하네스 코드에서 AI가 실제로 판단하는 로직은 전체의 1.6%에 불과합니다. 이 파이프라인이 그 숫자의 근거입니다. 실제로 AI가 관여하는 단계는 Stage 3(Model Call) 하나뿐이고, 나머지 5단계는 전부 결정론적 인프라입니다.
+Claude Code를 역공학 분석한 arXiv 논문은 하네스 코드에서 AI가 실제로 판단하는 로직이 전체의 1.6%에 불과하다고 보고합니다. 이것은 코드량 기준 수치입니다. 단계 구성으로 봐도 방향은 같습니다. AI가 관여하는 단계는 Stage 3(Model Call) 하나뿐이고, 나머지 5단계는 전부 결정론적 인프라입니다.
 
 ### Stage 1-2: 컨텍스트 조립과 전처리
 
@@ -683,7 +683,7 @@ async def production_loop(
 
 "AI가 판단하는 로직은 1.6%에 불과하다"는 말은 숫자만 놓고 보면 추상적인 통계입니다. 하지만 6단계 파이프라인을 따라가 보면 왜 1.6%인지가 구체적으로 보입니다. 모델이 관여하는 Stage 3을 제외한 나머지(컨텍스트 조립, 전처리, 도구 실행, 에러 복구, 상태 관리)가 루프의 실체이고, 이 인프라 없이는 에이전트가 프로덕션에서 동작할 수 없습니다.
 
-다음 글에서는 이 루프의 Stage 2에 해당하는 전처리 파이프라인을 깊이 들어갑니다. Claude Code의 5단계 컴팩션(Budget Reduction부터 Auto-Compact까지)이 어떤 순서로, 어떤 기준으로 실행되는지, 그리고 Codex의 암호화 blob이 실제로 무엇을 보존하는지 살펴보겠습니다.
+다음 글에서는 이 루프의 Stage 2에 해당하는 전처리 파이프라인을 깊이 들어갑니다. Claude Code의 5단계 컴팩션(Budget Reduction부터 Auto-Compact까지)이 어떤 순서로, 어떤 기준으로 실행되는지 살펴보겠습니다.
 
 ## 함께 보면 좋은 글
 
@@ -699,4 +699,3 @@ async def production_loop(
 - [Unrolling the Codex Agent Loop (OpenAI)](https://openai.com/index/unrolling-the-codex-agent-loop/)
 - [Building Effective Agents (Anthropic)](https://www.anthropic.com/engineering/building-effective-agents)
 - [Effective Context Engineering for AI Agents (Anthropic)](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
-- [How the Agent Loop Works (Claude Code Docs)](https://docs.anthropic.com/en/docs/claude-code/agent-loop)

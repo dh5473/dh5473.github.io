@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청하면, `rm /tmp/cache/*.log`는 아무런 확인 없이 즉시 실행됩니다. 그런데 같은 세션에서 `rm -rf ~/Documents`를 실행하려 하면, 루프가 멈추고 사용자에게 승인을 요청합니다. 둘 다 `Bash` 도구로 `rm`을 실행하는 것입니다. 같은 도구, 같은 명령어인데 하나는 통과하고 하나는 차단됩니다. 모델이 도구 호출을 결정한 시점과 도구가 실제로 실행되는 시점 사이에 무엇이 있을까요?
 
-에이전트 루프 한 턴은 모델 응답 수신, 도구 호출 파싱, 퍼미션 판단, 도구 실행, 결과 반영의 순서로 흘러갑니다. 이 글이 해부하는 것은 그중 세 번째 자리, 즉 모델이 도구 호출을 결정한 순간과 도구가 실제로 실행되는 순간 사이에 끼어 있는 판단 계층입니다.
+그 사이에는 판단 계층이 하나 있습니다. 에이전트 루프는 모델 응답에서 도구 호출을 꺼낸 뒤 곧바로 실행하지 않고, 이 호출을 허용해도 되는지부터 결정합니다. 이 글은 도구 실행 직전에 놓인 그 계층을 해부합니다.
 
 ---
 
@@ -152,7 +152,7 @@ def should_prompt(mode: PermissionMode, tool_name: str,
     if tool_name in READ_ONLY_TOOLS:
         return False
     if mode == PermissionMode.ACCEPT_EDITS:
-        return tool_name not in {"Edit", "Write"}
+        return tool_name not in {"Edit", "Write"}  # Edit/Write만 프롬프트 면제
     if mode == PermissionMode.DONT_ASK:
         return is_high_risk(tool_name, context)
     if mode == PermissionMode.AUTO:
@@ -178,7 +178,7 @@ def should_prompt(mode: PermissionMode, tool_name: str,
     .pps-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
     .pps-t { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
     .pps-s { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
-    .pps-chip { font-size: 14px; font-weight: 600; text-anchor: middle; fill: #ffffff; }
+    .pps-chip { font-size: 14px; font-weight: 600; text-anchor: middle; fill: var(--bg, #fafaf8); }
     .pps-ok { fill: var(--text-success, #16a34a); font-size: 13px; text-anchor: start; }
     .pps-note { fill: var(--primary, #0d9488); font-size: 13px; text-anchor: middle; }
     .pps-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#ppsArr); }
@@ -499,7 +499,11 @@ class PermissionPipeline:
     async def evaluate(self, tool_call: dict,
                        context: list[dict],
                        llm_call=None) -> PermissionResult:
-        """7단계 deny-first 파이프라인."""
+        """7단계 deny-first 파이프라인.
+
+        반환값이 담는 것은 '허용 여부'입니다. 앞의 should_prompt()가
+        돌려주던 '프롬프트 필요 여부'와는 방향이 반대입니다.
+        """
         tool_name = tool_call["name"]
         call_repr = f"{tool_name}({tool_call.get('arguments', {})})"
 
@@ -637,4 +641,4 @@ Claude Code에서 AI 판단 로직이 차지하는 비중은 1.6%에 불과하�
 - [Building Effective Agents (Anthropic)](https://www.anthropic.com/engineering/building-effective-agents)
 - [A Practical Guide to Building Agents (OpenAI)](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
 - [Introducing Codex (OpenAI)](https://openai.com/index/introducing-codex/)
-- [How the Agent Loop Works (Claude Code Docs)](https://docs.anthropic.com/en/docs/claude-code/agent-loop)
+- [Claude Code Documentation](https://code.claude.com/docs/en/overview)

@@ -80,7 +80,7 @@ Claude Code의 Pre-model Shapers는 이 문제를 **"덜 파괴적인 필터부�
 
 | 단계 | 작동 원리 | LLM 호출 | 정보 손실 | 실행 시점 |
 |------|----------|---------|----------|----------|
-| Budget Reduction | 초과 출력을 참조로 교체 | 없음 | 없음 (복원 가능) | 매 턴 |
+| Budget Reduction | 초과 출력을 참조로 교체 | 없음 | 모델 시점에서 있음 (복원 가능) | 매 턴 |
 | Snip | 오래된 히스토리 구간 제거 | 없음 | 중간 | 매 턴 |
 | Microcompact | 개별 메시지를 LLM으로 압축 | 메시지당 1회 | 중간 | 매 턴 (메시지별 조건) |
 | Context Collapse | 대화 구간을 읽기 시점 투영 | 없음 | 모델 시점에서 높음 (원본 보존) | 임계값 초과 시 |
@@ -551,11 +551,15 @@ TombstoneMessage와 collapse store가 제공하는 관찰성(턴별 비용 귀�
 
 컴팩션이 정보를 얼마나 지울지 결정하는 파이프라인이라면, 도구 실행 직전의 퍼미션 판단은 에이전트가 실제 세계에 무엇을 할 수 있는지 결정하는 파이프라인입니다. 둘 다 하나의 큰 판단이 아니라 여러 단계의 작은 판단이 쌓이는 구조라는 점에서 같은 설계 철학 위에 있습니다.
 
+---
+
 ## 함께 보면 좋은 글
 
 - [AI Agent 루프: 한 턴의 요청이 처리되는 6단계](/agent/agent-loop-anatomy/)
 - [AI Agent의 컨텍스트 엔지니어링: 유한한 토큰 윈도우를 다루는 네 가지 전략](/agent/context-engineering/)
 - [AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단](/agent/agent-permission-safety/)
+
+---
 
 ## 참고자료
 
@@ -563,4 +567,4 @@ TombstoneMessage와 collapse store가 제공하는 관찰성(턴별 비용 귀�
 - [Unrolling the Codex Agent Loop (OpenAI)](https://openai.com/index/unrolling-the-codex-agent-loop/)
 - [Effective Context Engineering for AI Agents (Anthropic)](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 - [Building Effective Agents (Anthropic)](https://www.anthropic.com/engineering/building-effective-agents)
-- [How the Agent Loop Works (Claude Code Docs)](https://docs.anthropic.com/en/docs/claude-code/agent-loop)
+- [Claude Code Documentation](https://code.claude.com/docs/en/overview)

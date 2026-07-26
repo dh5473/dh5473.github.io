@@ -58,7 +58,7 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
 실제로는 이 둘이 깔끔하게 나뉘지 않습니다. 대부분의 프로덕션 시스템은 워크플로우적 요소(고정된 파이프라인)와 에이전트적 요소(모델의 동적 판단)가 혼합되어 있습니다. Anthropic도 이 점을 인정하며, 이를 하나의 스펙트럼으로 봅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있다.">
+<svg viewBox="0 0 290 348" style="width: 100%; height: auto; max-width: 290px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있다.">
   <defs>
     <linearGradient id="wa1Grad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="var(--text-muted, #78716c)" />

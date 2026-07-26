@@ -198,7 +198,7 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 - **프로그래밍적 분류**: 키워드 매칭, 정규표현식, 임베딩 유사도. 빠르고 저렴하지만 유연성이 떨어짐
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 288" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보낸다">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보낸다">
 <style>
 .wp3-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -242,7 +242,8 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 <text class="wp3-t1" x="395" y="206" text-anchor="middle">general</text>
 <text class="wp3-t2" x="395" y="225" text-anchor="middle">단순 질의응답</text>
 <!-- 설명 -->
-<text class="wp3-t2" x="240" y="268" text-anchor="middle">실선이 선택된 경로. 요청 하나당 한 갈래만 실행됩니다</text>
+<text class="wp3-t2" x="240" y="264" text-anchor="middle">세 핸들러 모두 LLM 호출입니다. 진한 테두리와 실선은</text>
+<text class="wp3-t2" x="240" y="282" text-anchor="middle">이번 요청이 지나간 갈래이고, 한 번에 하나만 실행됩니다</text>
 </svg>
 </div>
 
