@@ -23,7 +23,7 @@ Claude Code에 "이 프로젝트에서 버그를 찾아서 고쳐줘"라고 말�
 
 ### 2023: 네 개의 구성 요소
 
-2023년 OpenAI의 연구원 Lilian Weng이 작성한 글 "LLM Powered Autonomous Agents"는 에이전트 개념을 체계적으로 정리한 첫 번째 레퍼런스로 꼽힙니다. 그녀는 에이전트를 네 가지 구성 요소로 정의했습니다.
+2023년 OpenAI의 연구원 Lilian Weng이 작성한 글 "LLM Powered Autonomous Agents"는 에이전트 개념을 체계적으로 정리한 첫 번째 레퍼런스로 꼽힙니다. 이 글은 LLM을 에이전트의 두뇌로 놓고, 여기에 세 가지 구성 요소가 더해지는 구조로 에이전트를 정의합니다.
 
 ```
 Agent = LLM + Planning + Memory + Tool Use
@@ -57,18 +57,33 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
 
 실제로는 이 둘이 깔끔하게 나뉘지 않습니다. 대부분의 프로덕션 시스템은 워크플로우적 요소(고정된 파이프라인)와 에이전트적 요소(모델의 동적 판단)가 혼합되어 있습니다. Anthropic도 이 점을 인정하며, 이를 하나의 스펙트럼으로 봅니다.
 
-```
-Workflow                                                          Agent
-(predefined)                                                (LLM directs)
-    |                                                             |
-    v                                                             v
-----+----------+----------+--------------+---------------+---------->
-    |          |          |              |               |
-  Prompt    Routing  Paralleli-   Orchestrator-   Autonomous
-  Chaining           zation       Workers /         Agent
-                                  Evaluator-
-                                  Optimizer
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있다.">
+  <defs>
+    <linearGradient id="wa1Grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--text-muted, #78716c)" />
+      <stop offset="1" stop-color="var(--primary, #0d9488)" />
+    </linearGradient>
+  </defs>
+  <!-- 축 양 끝 라벨 -->
+  <text x="30" y="26" font-size="15" font-weight="700" fill="var(--text, #1c1917)">Workflow: 개발자가 정한 코드 경로</text>
+  <text x="30" y="322" font-size="15" font-weight="700" fill="var(--text, #1c1917)">Agent: LLM이 스스로 경로를 결정</text>
+  <!-- 스펙트럼 축 -->
+  <rect x="36" y="44" width="10" height="248" rx="5" fill="url(#wa1Grad)" />
+  <!-- 다섯 개 패턴 지점 -->
+  <circle cx="41" cy="72" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <text x="66" y="77" font-size="15" fill="var(--text, #1c1917)">Prompt Chaining</text>
+  <circle cx="41" cy="124" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <text x="66" y="129" font-size="15" fill="var(--text, #1c1917)">Routing</text>
+  <circle cx="41" cy="176" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <text x="66" y="181" font-size="15" fill="var(--text, #1c1917)">Parallelization</text>
+  <circle cx="41" cy="228" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <text x="66" y="224" font-size="15" fill="var(--text, #1c1917)">Orchestrator-Workers /</text>
+  <text x="66" y="244" font-size="15" fill="var(--text, #1c1917)">Evaluator-Optimizer</text>
+  <circle cx="41" cy="280" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <text x="66" y="285" font-size="15" fill="var(--text, #1c1917)">Autonomous Agent</text>
+</svg>
+</div>
 
 ---
 
@@ -82,27 +97,42 @@ Workflow                                                          Agent
 
 Anthropic은 이를 **"Augmented LLM"**이라는 개념으로 설명합니다. 날것의 LLM이 아니라, 도구와 검색과 메모리로 **증강된** LLM이 에이전트의 기본 빌딩 블록이라는 것입니다.
 
-```
-┌──────────────────────────────┐
-│       Augmented LLM          │
-│                              │
-│   ┌───────┐  ┌──────────┐   │
-│   │ Tools │  │ Retrieval │   │
-│   └───────┘  └──────────┘   │
-│        ┌──────────┐         │
-│        │  Memory  │         │
-│        └──────────┘         │
-│                              │
-│        LLM (Core)            │
-└──────────────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Augmented LLM 구조도. 도구, 검색, 메모리 세 요소가 중앙의 LLM 코어에 연결되어 하나의 증강된 LLM을 이룬다.">
+  <defs>
+    <marker id="wa2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+  </defs>
+  <!-- 바깥 컨테이너 -->
+  <rect x="16" y="16" width="448" height="268" rx="14" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="240" y="48" font-size="17" font-weight="700" text-anchor="middle" fill="var(--text, #1c1917)">Augmented LLM</text>
+  <!-- 증강 요소 세 가지 -->
+  <rect x="38" y="76" width="124" height="56" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="100" y="110" font-size="15" text-anchor="middle" fill="var(--text, #1c1917)">Tools</text>
+  <rect x="178" y="76" width="124" height="56" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="240" y="110" font-size="15" text-anchor="middle" fill="var(--text, #1c1917)">Retrieval</text>
+  <rect x="318" y="76" width="124" height="56" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="380" y="110" font-size="15" text-anchor="middle" fill="var(--text, #1c1917)">Memory</text>
+  <!-- 코어로 이어지는 연결선 -->
+  <line x1="100" y1="132" x2="176" y2="190" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <line x1="240" y1="132" x2="240" y2="190" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <line x1="380" y1="132" x2="304" y2="190" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <!-- 코어 -->
+  <rect x="150" y="196" width="180" height="62" rx="12" fill="var(--primary, #0d9488)" />
+  <text x="240" y="234" font-size="17" font-weight="700" text-anchor="middle" fill="#ffffff">LLM (Core)</text>
+</svg>
+</div>
 
 OpenAI의 가이드에서도 동일한 관점을 취합니다. 에이전트의 세 가지 기반 요소로 **모델(model)**, **도구(tools)**, **지시문(instructions)**을 제시하면서, 모델은 "에이전트의 의사결정 엔진"이라고 표현합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 모델 선택에 대한 OpenAI의 조언</strong><br>
-  "가장 똑똑한 모델로 프로토타입을 만들어서 성능 기준선을 잡고, 그 다음에 더 작은 모델로 교체하면서 비용-성능 트레이드오프를 찾아라." 처음부터 비용을 걱정해서 약한 모델로 시작하면, 모델의 한계인지 설계의 한계인지 구분할 수 없게 됩니다.
-</div>
+:::info
+
+**모델 선택에 대한 OpenAI의 조언**
+
+"가장 똑똑한 모델로 프로토타입을 만들어서 성능 기준선을 잡고, 그 다음에 더 작은 모델로 교체하면서 비용-성능 트레이드오프를 찾아라." 처음부터 비용을 걱정해서 약한 모델로 시작하면, 모델의 한계인지 설계의 한계인지 구분할 수 없게 됩니다.
+
+:::
 
 ### 2. 도구(Tools): 행동의 수단
 
@@ -128,23 +158,42 @@ Claude Code는 약 26개의 내장 도구를 가지고 있고, Codex도 유사�
 
 이 루프가 에이전트와 단순 LLM 호출을 근본적으로 구분합니다. 단순 호출은 한 번 질문하고 한 번 답하면 끝입니다. 에이전트는 목표를 달성할 때까지 루프를 반복합니다.
 
-```
-User Request
-      |
-      v
-+---------------------------+
-|  Model: decide next action | <-----------+
-+-------------+-------------+             |
-              |                            |
-        [text only?]                       |
-         /        \                        |
-       Yes         No (tool call)          |
-        |           |                      |
-        v           v                      |
-    Response   Execute tools -----> collect results
-                                           |
-                                     (loop back)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 500 360" style="width: 100%; height: auto; max-width: 500px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="에이전트 루프 흐름도. 사용자 요청이 모델에 들어가면 모델이 다음 행동을 결정하고, 도구 호출이 없으면 응답을 반환하며, 도구 호출이 있으면 도구를 실행해 결과를 수집한 뒤 다시 모델로 돌아간다.">
+  <defs>
+    <marker id="wa3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+    <marker id="wa3ArrowLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--accent, #d97706)" />
+    </marker>
+  </defs>
+  <!-- 입력 -->
+  <rect x="165" y="16" width="170" height="42" rx="21" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="250" y="43" font-size="16" text-anchor="middle" fill="var(--text, #1c1917)">사용자 요청</text>
+  <line x1="250" y1="58" x2="250" y2="78" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <!-- 모델 판단 -->
+  <rect x="110" y="80" width="280" height="56" rx="10" fill="var(--primary, #0d9488)" />
+  <text x="250" y="114" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff">모델: 다음 행동 결정</text>
+  <line x1="250" y1="136" x2="250" y2="154" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <!-- 분기 -->
+  <polygon points="250,158 340,200 250,242 160,200" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="250" y="206" font-size="15" text-anchor="middle" fill="var(--text, #1c1917)">도구 호출?</text>
+  <!-- 아니오: 종료 -->
+  <line x1="340" y1="200" x2="386" y2="200" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <text x="363" y="190" font-size="12" text-anchor="middle" fill="var(--text-muted, #78716c)">아니오</text>
+  <rect x="390" y="176" width="100" height="48" rx="10" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <text x="440" y="206" font-size="15" text-anchor="middle" fill="var(--text-success, #16a34a)">응답 반환</text>
+  <!-- 예: 도구 실행 -->
+  <line x1="250" y1="242" x2="250" y2="280" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <text x="264" y="266" font-size="12" fill="var(--text-muted, #78716c)">예</text>
+  <rect x="110" y="282" width="280" height="56" rx="10" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="250" y="316" font-size="15" text-anchor="middle" fill="var(--text, #1c1917)">도구 실행 후 결과 수집</text>
+  <!-- 루프 백 -->
+  <path d="M110,310 H55 V108 H104" fill="none" stroke="var(--accent, #d97706)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#wa3ArrowLoop)" />
+  <text x="64" y="214" font-size="12" fill="var(--accent, #d97706)">루프 반복</text>
+</svg>
+</div>
 
 이 패턴은 **ReAct(Reasoning + Acting)**로 알려져 있습니다. 생각하고(Reason), 행동하고(Act), 관찰하고(Observe), 다시 생각하는 순환입니다.
 
@@ -204,10 +253,13 @@ Anthropic은 이 패턴들에 대해 한 가지 원칙을 강조합니다.
 
 가장 단순한 Prompt Chaining으로 충분한 문제에 Orchestrator-Workers를 도입하면 복잡성만 늘고 디버깅이 어려워집니다. 복잡도는 필요할 때만 올려야 합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  다섯 가지 워크플로우 패턴 각각의 구현 방법과 실제 사례는 다음 글 <strong>"에이전트 워크플로우 패턴"</strong>에서 깊이 다룹니다.
-</div>
+:::info
+
+**참고**
+
+다섯 가지 워크플로우 패턴 각각의 구현 방법과 실제 사례는 다음 글 **"에이전트 워크플로우 패턴"**에서 깊이 다룹니다.
+
+:::
 
 ---
 
@@ -265,4 +317,4 @@ Claude Code의 아키텍처를 분석한 연구에서 흥미로운 수치가 있
 - [A Practical Guide to Building Agents (OpenAI)](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)
 - [LLM Powered Autonomous Agents (Lilian Weng)](https://lilianweng.github.io/posts/2023-06-23-agent/)
 - [Agentic Design Patterns (Andrew Ng)](https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/)
-- [What is an AI agent? (Simon Willison)](https://simonwillison.net/2025/Sep/30/designing-agentic-loops/)
+- [Designing agentic loops (Simon Willison)](https://simonwillison.net/2025/Sep/30/designing-agentic-loops/)
