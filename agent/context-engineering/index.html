@@ -57,34 +57,34 @@
 <h2>컨텍스트의 해부학</h2>
 <p>컨텍스트 윈도우에 무엇이 들어가는지를 먼저 이해해야 관리 전략을 세울 수 있습니다. 에이전트의 컨텍스트는 크게 네 가지 구성 요소로 나뉩니다. 50턴 에이전트 세션의 전형적인 컨텍스트 구성을 보면 이렇습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 258" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="50턴 시점 에이전트 세션의 200K 토큰 윈도우 구성 비율. 시스템 프롬프트 5퍼센트, 도구 정의 10퍼센트, 대화 메시지 15퍼센트, 도구 반환값이 70퍼센트를 차지한다.">
+<svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="50턴 시점 에이전트 세션의 200K 토큰 윈도우 구성 비율. 시스템 프롬프트 5퍼센트, 도구 정의 10퍼센트, 대화 메시지 15퍼센트, 도구 반환값이 70퍼센트를 차지한다.">
   <style>
-    .ce1-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
-    .ce1-label { fill: var(--text, #1c1917); font-size: 14px; }
-    .ce1-value { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .ce1-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
+    .ce1-label { fill: var(--text, #1c1917); font-size: 20px; }
+    .ce1-value { fill: var(--text-muted, #78716c); font-size: 17px; }
     .ce1-track { fill: var(--bg-muted, #eeecea); }
   </style>
-  <text x="20" y="22" class="ce1-title">200K 토큰 윈도우의 구성 비율 (50턴 시점)</text>
+  <text x="20" y="30" class="ce1-title">200K 토큰 윈도우 구성 비율 (50턴 시점)</text>
   <!-- row 1: system prompt -->
-  <text x="20" y="56" class="ce1-label">시스템 프롬프트 + CLAUDE.md</text>
-  <rect x="20" y="64" width="340" height="18" rx="3" class="ce1-track" />
-  <rect x="20" y="64" width="17" height="18" rx="3" fill="var(--primary, #0d9488)" />
-  <text x="460" y="78" text-anchor="end" class="ce1-value">~5% (10K)</text>
+  <text x="20" y="72" class="ce1-label">시스템 프롬프트 + CLAUDE.md</text>
+  <text x="460" y="72" text-anchor="end" class="ce1-value">~5% (10K)</text>
+  <rect x="20" y="82" width="440" height="20" rx="3" class="ce1-track" />
+  <rect x="20" y="82" width="22" height="20" rx="3" fill="var(--primary, #0d9488)" />
   <!-- row 2: tool definitions -->
-  <text x="20" y="108" class="ce1-label">도구 정의 (스키마)</text>
-  <rect x="20" y="116" width="340" height="18" rx="3" class="ce1-track" />
-  <rect x="20" y="116" width="34" height="18" rx="3" fill="var(--accent, #d97706)" />
-  <text x="460" y="130" text-anchor="end" class="ce1-value">~10% (20K)</text>
+  <text x="20" y="140" class="ce1-label">도구 정의 (스키마)</text>
+  <text x="460" y="140" text-anchor="end" class="ce1-value">~10% (20K)</text>
+  <rect x="20" y="150" width="440" height="20" rx="3" class="ce1-track" />
+  <rect x="20" y="150" width="44" height="20" rx="3" fill="var(--accent, #d97706)" />
   <!-- row 3: conversation messages -->
-  <text x="20" y="160" class="ce1-label">대화 메시지 (user / assistant)</text>
-  <rect x="20" y="168" width="340" height="18" rx="3" class="ce1-track" />
-  <rect x="20" y="168" width="51" height="18" rx="3" fill="var(--text-muted, #78716c)" />
-  <text x="460" y="182" text-anchor="end" class="ce1-value">~15% (30K)</text>
+  <text x="20" y="208" class="ce1-label">대화 메시지 (user / assistant)</text>
+  <text x="460" y="208" text-anchor="end" class="ce1-value">~15% (30K)</text>
+  <rect x="20" y="218" width="440" height="20" rx="3" class="ce1-track" />
+  <rect x="20" y="218" width="66" height="20" rx="3" fill="var(--text-muted, #78716c)" />
   <!-- row 4: tool results, the dominant consumer -->
-  <text x="20" y="212" class="ce1-label">도구 반환값 (누적)</text>
-  <rect x="20" y="220" width="340" height="18" rx="3" class="ce1-track" />
-  <rect x="20" y="220" width="238" height="18" rx="3" fill="var(--text-danger, #dc2626)" />
-  <text x="460" y="234" text-anchor="end" class="ce1-value">~70% (140K)</text>
+  <text x="20" y="276" class="ce1-label">도구 반환값 (누적)</text>
+  <text x="460" y="276" text-anchor="end" class="ce1-value">~70% (140K)</text>
+  <rect x="20" y="286" width="440" height="20" rx="3" class="ce1-track" />
+  <rect x="20" y="286" width="308" height="20" rx="3" fill="var(--text-danger, #dc2626)" />
 </svg>
 </div>
 <p>도구 반환값이 전체의 70%를 차지합니다. 컨텍스트 엔지니어링의 주된 전장이 어디인지를 보여주는 수치입니다.</p>
@@ -98,33 +98,35 @@
 <p>올바른 고도는 그 사이에 있습니다. “당신은 시니어 엔지니어입니다. 정확성을 속도보다 우선하세요. 코드 수정 후에는 반드시 테스트를 실행하세요.” 이런 수준의 행동 지침이 효과적입니다.</p>
 <p>Claude Code는 이 원칙을 시스템 프롬프트와 CLAUDE.md의 분리로 구현합니다. 에이전트의 핵심 행동 규칙은 시스템 프롬프트에 넣고, 프로젝트별 컨벤션과 설정은 CLAUDE.md 파일로 분리합니다. 루트 CLAUDE.md는 세션 시작 시 로딩되지만, 하위 디렉터리의 CLAUDE.md 파일은 에이전트가 해당 디렉터리에 접근할 때만 로딩되는 lazy loading 방식입니다. 관련 없는 디렉터리의 설정이 컨텍스트를 소비하지 않도록 하는 것입니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
+<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
   <style>
-    .ce2-main { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
-    .ce2-sub { fill: var(--text-muted, #78716c); font-size: 12px; }
-    .ce2-note { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .ce2-main { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
+    .ce2-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .ce2-note { fill: var(--text-muted, #78716c); font-size: 17px; }
     .ce2-rail { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
   </style>
   <!-- level 0: system prompt, always loaded -->
-  <rect x="20" y="16" width="440" height="38" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
-  <text x="36" y="40" class="ce2-main">시스템 프롬프트</text>
-  <text x="444" y="40" text-anchor="end" class="ce2-sub">핵심 행동 규칙 (항상 로드)</text>
+  <rect x="20" y="16" width="440" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <text x="36" y="45" class="ce2-main">시스템 프롬프트</text>
+  <text x="444" y="45" text-anchor="end" class="ce2-sub">핵심 행동 규칙 (항상 로드)</text>
   <!-- level 1: root CLAUDE.md, loaded at session start -->
-  <path d="M 32 54 L 32 93 L 44 93" class="ce2-rail" />
-  <rect x="44" y="74" width="416" height="38" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
-  <text x="60" y="98" class="ce2-main">CLAUDE.md (루트)</text>
-  <text x="444" y="98" text-anchor="end" class="ce2-sub">세션 시작 시 로드</text>
+  <path d="M 32 60 L 32 102 L 44 102" class="ce2-rail" />
+  <rect x="44" y="80" width="416" height="44" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="60" y="109" class="ce2-main">CLAUDE.md (루트)</text>
+  <text x="444" y="109" text-anchor="end" class="ce2-sub">세션 시작 시 로드</text>
   <!-- level 2: per-directory CLAUDE.md, lazily loaded -->
-  <path d="M 56 112 L 56 209" class="ce2-rail" />
-  <path d="M 56 151 L 68 151" class="ce2-rail" />
-  <path d="M 56 209 L 68 209" class="ce2-rail" />
-  <rect x="68" y="132" width="392" height="38" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
-  <text x="84" y="156" class="ce2-main">src/CLAUDE.md</text>
-  <text x="444" y="156" text-anchor="end" class="ce2-sub">src/ 접근 시 로드</text>
-  <rect x="68" y="190" width="392" height="38" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
-  <text x="84" y="214" class="ce2-main">tests/CLAUDE.md</text>
-  <text x="444" y="214" text-anchor="end" class="ce2-sub">tests/ 접근 시 로드</text>
-  <text x="20" y="250" class="ce2-note">점선 테두리: 에이전트가 해당 디렉터리에 접근할 때만 컨텍스트에 올라온다</text>
+  <path d="M 56 124 L 56 230" class="ce2-rail" />
+  <path d="M 56 166 L 68 166" class="ce2-rail" />
+  <path d="M 56 230 L 68 230" class="ce2-rail" />
+  <rect x="68" y="144" width="392" height="44" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="84" y="173" class="ce2-main">src/CLAUDE.md</text>
+  <text x="444" y="173" text-anchor="end" class="ce2-sub">src/ 접근 시 로드</text>
+  <rect x="68" y="208" width="392" height="44" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="84" y="237" class="ce2-main">tests/CLAUDE.md</text>
+  <text x="444" y="237" text-anchor="end" class="ce2-sub">tests/ 접근 시 로드</text>
+  <!-- caption split across two lines so it fits the 480 viewBox -->
+  <text x="20" y="284" class="ce2-note">점선 테두리: 에이전트가 해당 디렉터리에</text>
+  <text x="20" y="306" class="ce2-note">접근할 때만 컨텍스트에 올라온다</text>
 </svg>
 </div>
 <p>이 계층 구조가 바로 시스템 프롬프트에 적용된 컨텍스트 엔지니어링입니다. 모든 설정을 한꺼번에 올리지 않고, 에이전트가 실제로 해당 디렉터리의 파일을 읽을 때 관련 설정만 로딩합니다.</p>
@@ -140,39 +142,43 @@
 <h2>네 가지 컨텍스트 전략</h2>
 <p>컨텍스트가 유한한 자원이라면, 이를 관리하는 전략이 필요합니다. Anthropic의 가이드와 프로덕션 에이전트의 실전 사례에서 다루는 전략들을 네 가지로 정리할 수 있습니다. 이 전략들은 상호 배타적이 아니라 상호 보완적입니다. 프로덕션 에이전트는 대부분 네 가지를 조합해서 사용합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컨텍스트를 관리하는 네 가지 전략. 1번 JIT 검색, 2번 컴팩션, 3번 구조화된 노트, 4번 서브에이전트 격리를 차례로 정리한 그림.">
+<svg viewBox="0 0 480 518" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컨텍스트를 관리하는 네 가지 전략. 1번 JIT 검색, 2번 컴팩션, 3번 구조화된 노트, 4번 서브에이전트 격리를 차례로 정리한 그림.">
   <style>
-    .ce3-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
-    .ce3-name { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
-    .ce3-desc { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .ce3-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
+    .ce3-name { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
+    .ce3-desc { fill: var(--text-muted, #78716c); font-size: 18px; }
     .ce3-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .ce3-num { font-size: 15px; font-weight: 700; }
+    .ce3-num { font-size: 20px; font-weight: 700; }
   </style>
-  <text x="20" y="24" class="ce3-title">컨텍스트를 관리하는 네 가지 전략</text>
+  <text x="20" y="32" class="ce3-title">컨텍스트를 관리하는 네 가지 전략</text>
   <!-- strategy 1: just-in-time retrieval -->
-  <rect x="20" y="42" width="440" height="66" rx="8" class="ce3-card" />
-  <circle cx="52" cy="75" r="16" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2" />
-  <text x="52" y="80" text-anchor="middle" class="ce3-num" fill="var(--primary, #0d9488)">1</text>
-  <text x="84" y="70" class="ce3-name">JIT 검색</text>
-  <text x="84" y="92" class="ce3-desc">경량 식별자만 들고 있다가 필요할 때 도구로 가져온다</text>
+  <rect x="20" y="50" width="440" height="104" rx="8" class="ce3-card" />
+  <circle cx="50" cy="84" r="18" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2" />
+  <text x="50" y="91" text-anchor="middle" class="ce3-num" fill="var(--primary, #0d9488)">1</text>
+  <text x="82" y="92" class="ce3-name">JIT 검색</text>
+  <text x="36" y="122" class="ce3-desc">경량 식별자만 들고 있다가</text>
+  <text x="36" y="144" class="ce3-desc">필요할 때 도구로 가져온다</text>
   <!-- strategy 2: compaction -->
-  <rect x="20" y="118" width="440" height="66" rx="8" class="ce3-card" />
-  <circle cx="52" cy="151" r="16" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2" />
-  <text x="52" y="156" text-anchor="middle" class="ce3-num" fill="var(--accent, #d97706)">2</text>
-  <text x="84" y="146" class="ce3-name">컴팩션</text>
-  <text x="84" y="168" class="ce3-desc">대화 기록을 요약으로 압축해 윈도우 공간을 되찾는다</text>
+  <rect x="20" y="166" width="440" height="104" rx="8" class="ce3-card" />
+  <circle cx="50" cy="200" r="18" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2" />
+  <text x="50" y="207" text-anchor="middle" class="ce3-num" fill="var(--accent, #d97706)">2</text>
+  <text x="82" y="208" class="ce3-name">컴팩션</text>
+  <text x="36" y="238" class="ce3-desc">대화 기록을 요약으로 압축해</text>
+  <text x="36" y="260" class="ce3-desc">윈도우 공간을 되찾는다</text>
   <!-- strategy 3: structured note-taking -->
-  <rect x="20" y="194" width="440" height="66" rx="8" class="ce3-card" />
-  <circle cx="52" cy="227" r="16" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
-  <text x="52" y="232" text-anchor="middle" class="ce3-num" fill="var(--text-success, #16a34a)">3</text>
-  <text x="84" y="222" class="ce3-name">구조화된 노트</text>
-  <text x="84" y="244" class="ce3-desc">핵심 사실을 윈도우 바깥 파일에 기록해 둔다</text>
+  <rect x="20" y="282" width="440" height="104" rx="8" class="ce3-card" />
+  <circle cx="50" cy="316" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
+  <text x="50" y="323" text-anchor="middle" class="ce3-num" fill="var(--text-success, #16a34a)">3</text>
+  <text x="82" y="324" class="ce3-name">구조화된 노트</text>
+  <text x="36" y="354" class="ce3-desc">핵심 사실을 윈도우 바깥</text>
+  <text x="36" y="376" class="ce3-desc">파일에 기록해 둔다</text>
   <!-- strategy 4: subagent isolation -->
-  <rect x="20" y="270" width="440" height="66" rx="8" class="ce3-card" />
-  <circle cx="52" cy="303" r="16" fill="var(--bg, #fafaf8)" stroke="var(--text, #1c1917)" stroke-width="2" />
-  <text x="52" y="308" text-anchor="middle" class="ce3-num" fill="var(--text, #1c1917)">4</text>
-  <text x="84" y="298" class="ce3-name">서브에이전트 격리</text>
-  <text x="84" y="320" class="ce3-desc">탐색은 서브에이전트가 하고 부모는 요약만 받는다</text>
+  <rect x="20" y="398" width="440" height="104" rx="8" class="ce3-card" />
+  <circle cx="50" cy="432" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text, #1c1917)" stroke-width="2" />
+  <text x="50" y="439" text-anchor="middle" class="ce3-num" fill="var(--text, #1c1917)">4</text>
+  <text x="82" y="440" class="ce3-name">서브에이전트 격리</text>
+  <text x="36" y="470" class="ce3-desc">탐색은 서브에이전트가 하고</text>
+  <text x="36" y="492" class="ce3-desc">부모는 요약만 받는다</text>
 </svg>
 </div>
 <table>
@@ -232,37 +238,37 @@
 <p>컴팩션의 근본적 trade-off는 정보 손실입니다. 너무 공격적으로 압축하면 나중에 중요해질 미묘한 컨텍스트가 사라집니다. Anthropic은 컴팩션 프롬프트를 복잡한 에이전트 트레이스에서 튜닝하되, 먼저 재현율(recall)을 최대화한 뒤 정밀도를 높이라고 권장합니다.</p>
 <p>가장 안전한 초기 단계는 도구 호출과 결과를 정리하는 것입니다. 대화 깊은 곳에 있는 도구 결과를 에이전트가 다시 볼 필요가 있을까요? 대부분의 경우 그렇지 않습니다. Claude Code의 컴팩션 과정을 예시로 보면 이렇습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸다.">
+<svg viewBox="0 0 480 282" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸다.">
   <defs>
     <marker id="ce4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
     </marker>
   </defs>
   <style>
-    .ce4-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
-    .ce4-note { fill: var(--text-muted, #78716c); font-size: 13px; }
-    .ce4-small { font-size: 12px; }
+    .ce4-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
+    .ce4-note { fill: var(--text-muted, #78716c); font-size: 18px; }
+    .ce4-small { font-size: 17px; }
   </style>
   <!-- before compaction: 180K total, 150K of it tool results -->
-  <text x="20" y="24" class="ce4-title">컴팩션 전: 180K 토큰</text>
-  <rect x="20" y="36" width="73" height="32" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
-  <text x="56" y="57" text-anchor="middle" class="ce4-small" fill="var(--text-muted, #78716c)">30K</text>
-  <rect x="93" y="36" width="367" height="32" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5" />
-  <text x="276" y="57" text-anchor="middle" font-size="14" fill="var(--text-danger, #dc2626)">도구 결과 누적 150K</text>
+  <text x="20" y="28" class="ce4-title">컴팩션 전: 180K 토큰</text>
+  <rect x="20" y="42" width="73" height="38" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="56" y="67" text-anchor="middle" class="ce4-small" fill="var(--text-muted, #78716c)">30K</text>
+  <rect x="93" y="42" width="367" height="38" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5" />
+  <text x="276" y="67" text-anchor="middle" font-size="18" fill="var(--text-danger, #dc2626)">도구 결과 누적 150K</text>
   <!-- compaction step -->
-  <path d="M 240 80 L 240 110" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none" marker-end="url(#ce4Arrow)" />
-  <text x="252" y="100" class="ce4-note">컴팩션</text>
+  <path d="M 240 92 L 240 122" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none" marker-end="url(#ce4Arrow)" />
+  <text x="252" y="113" class="ce4-note">컴팩션</text>
   <!-- after compaction: 20K total, drawn at the same scale -->
-  <text x="20" y="136" class="ce4-title">컴팩션 후: 20K 토큰</text>
-  <rect x="20" y="148" width="49" height="32" rx="4" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
-  <text x="44" y="169" text-anchor="middle" class="ce4-small" fill="var(--text-success, #16a34a)">20K</text>
-  <rect x="69" y="148" width="391" height="32" rx="4" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
-  <text x="264" y="169" text-anchor="middle" class="ce4-note">확보된 공간 160K</text>
+  <text x="20" y="152" class="ce4-title">컴팩션 후: 20K 토큰</text>
+  <rect x="20" y="166" width="49" height="38" rx="4" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <text x="44" y="191" text-anchor="middle" class="ce4-small" fill="var(--text-success, #16a34a)">20K</text>
+  <rect x="69" y="166" width="391" height="38" rx="4" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="264" y="191" text-anchor="middle" class="ce4-note">확보된 공간 160K</text>
   <!-- what survives inside the 20K -->
-  <rect x="20" y="200" width="6" height="6" fill="var(--text-success, #16a34a)" />
-  <text x="34" y="206" class="ce4-note">요약: 아키텍처 결정, 미해결 이슈, 남은 작업</text>
-  <rect x="20" y="222" width="6" height="6" fill="var(--text-success, #16a34a)" />
-  <text x="34" y="228" class="ce4-note">최근 접근한 파일 5개 내용</text>
+  <rect x="20" y="228" width="8" height="8" fill="var(--text-success, #16a34a)" />
+  <text x="38" y="236" class="ce4-note">요약: 아키텍처 결정, 미해결 이슈, 남은 작업</text>
+  <rect x="20" y="256" width="8" height="8" fill="var(--text-success, #16a34a)" />
+  <text x="38" y="264" class="ce4-note">최근 접근한 파일 5개 내용</text>
 </svg>
 </div>
 <p>150K 토큰의 도구 결과가 핵심 결정을 보존한 수천 토큰의 요약으로 교체됩니다.</p>
@@ -280,42 +286,43 @@
 <p>Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 시스템으로 구현됩니다. 에이전트가 대화 중에 프로젝트에 대해 학습한 내용을 메모리 파일에 기록하고, 다음 세션에서 이를 참조합니다. 컨텍스트 윈도우의 크기 제한을 넘어서는 영속적 지식 축적이 가능해집니다.</p>
 <p>구조화된 노트의 핵심은 컴팩션과의 관계입니다. 컴팩션이 실행되기 전에 핵심 사실을 노트로 추출하면, 요약 과정에서 정보가 손실되더라도 노트가 이를 보완합니다. 일종의 이중 안전장치입니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 210" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있다.">
+<svg viewBox="0 0 480 252" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있다.">
   <defs>
     <marker id="ce5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
     </marker>
   </defs>
   <style>
-    .ce5-head { fill: var(--text-muted, #78716c); font-size: 13px; font-weight: 600; }
-    .ce5-main { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
-    .ce5-sub { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .ce5-head { fill: var(--text-muted, #78716c); font-size: 18px; font-weight: 600; }
+    .ce5-main { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
+    .ce5-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
     .ce5-flow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
   </style>
   <!-- timeline headers -->
-  <text x="85" y="22" text-anchor="middle" class="ce5-head">컴팩션 전</text>
-  <text x="240" y="22" text-anchor="middle" class="ce5-head">컴팩션 실행</text>
-  <text x="395" y="22" text-anchor="middle" class="ce5-head">컴팩션 후</text>
+  <text x="78" y="26" text-anchor="middle" class="ce5-head">컴팩션 전</text>
+  <text x="240" y="26" text-anchor="middle" class="ce5-head">컴팩션 실행</text>
+  <text x="400" y="26" text-anchor="middle" class="ce5-head">컴팩션 후</text>
   <!-- upper lane: the conversation history -->
-  <rect x="20" y="40" width="130" height="44" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
-  <text x="85" y="62" text-anchor="middle" class="ce5-main">대화 기록</text>
-  <text x="85" y="78" text-anchor="middle" class="ce5-sub">150K</text>
-  <path d="M 150 62 L 172 62" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <rect x="175" y="40" width="130" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5" />
-  <text x="240" y="62" text-anchor="middle" class="ce5-main">요약</text>
-  <text x="240" y="78" text-anchor="middle" class="ce5-sub">일부 정보 손실</text>
-  <path d="M 305 62 L 327 62" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <rect x="330" y="40" width="130" height="44" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
-  <text x="395" y="62" text-anchor="middle" class="ce5-main">요약 + 노트</text>
-  <text x="395" y="78" text-anchor="middle" class="ce5-sub">핵심 사실 복원</text>
+  <rect x="10" y="44" width="137" height="58" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="78" y="70" text-anchor="middle" class="ce5-main">대화 기록</text>
+  <text x="78" y="92" text-anchor="middle" class="ce5-sub">150K</text>
+  <path d="M 147 73 L 169 73" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <rect x="171" y="44" width="137" height="58" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5" />
+  <text x="240" y="70" text-anchor="middle" class="ce5-main">요약</text>
+  <text x="240" y="92" text-anchor="middle" class="ce5-sub">일부 정보 손실</text>
+  <path d="M 308 73 L 330 73" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <rect x="332" y="44" width="137" height="58" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <text x="400" y="70" text-anchor="middle" class="ce5-main">요약 + 노트</text>
+  <text x="400" y="92" text-anchor="middle" class="ce5-sub">핵심 사실 복원</text>
   <!-- lower lane: the note lives outside the context window -->
-  <path d="M 85 84 L 85 144" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <text x="97" y="118" class="ce5-sub">핵심 사실 추출</text>
-  <rect x="20" y="146" width="130" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
-  <text x="85" y="168" text-anchor="middle" class="ce5-main">노트</text>
-  <text x="85" y="184" text-anchor="middle" class="ce5-sub">윈도우 바깥에 보존</text>
-  <path d="M 150 168 L 395 168 L 395 88" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <text x="170" y="160" class="ce5-sub">컴팩션을 통과해 살아남는다</text>
+  <path d="M 78 102 L 78 152" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <text x="90" y="133" class="ce5-sub">핵심 사실 추출</text>
+  <rect x="10" y="154" width="137" height="82" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <text x="78" y="182" text-anchor="middle" class="ce5-main">노트</text>
+  <text x="78" y="204" text-anchor="middle" class="ce5-sub">윈도우 바깥에</text>
+  <text x="78" y="228" text-anchor="middle" class="ce5-sub">따로 보존</text>
+  <path d="M 147 192 L 400 192 L 400 106" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <text x="160" y="184" class="ce5-sub">컴팩션을 통과해 살아남는다</text>
 </svg>
 </div>
 <h3>전략 4: 서브에이전트 격리</h3>

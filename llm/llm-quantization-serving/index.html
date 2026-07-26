@@ -10,34 +10,34 @@
 <p>양자화 이름에 붙는 W와 A부터 풀겠습니다. W는 가중치(weight), A는 활성값(activation), 뒤의 숫자는 비트 수입니다. AWQ와 GPTQ는 가중치만 4비트로 줄이고 계산은 16비트로 하는 <strong>W4A16</strong>이고, FP8은 보통 가중치와 활성값을 모두 8비트로 줄이는 <strong>W8A8</strong>로 씁니다.</p>
 <p>이 구분이 중요한 이유는, 양자화가 건드릴 수 있는 자원이 하나가 아니기 때문입니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 236" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 294" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="양자화가 줄일 수 있는 세 가지 자원. 첫째 가중치가 차지하는 메모리를 줄이면 남는 GPU 메모리가 KV Cache 몫이 된다. 둘째 매 스텝 가중치를 읽는 양을 줄이면 memory-bound한 decode가 빨라진다. 셋째 행렬곱의 연산 정밀도를 낮추면 저정밀 텐서코어로 연산 자체가 빨라진다.">
   <style>
     .q1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .q1-badge { fill: var(--primary, #0d9488); }
-    .q1-num   { fill: #ffffff; font-size: 15px; text-anchor: middle; }
-    .q1-label { fill: var(--text, #1c1917); font-size: 15px; }
-    .q1-sub   { fill: var(--text-muted, #78716c); font-size: 12.5px; }
-    .q1-cap   { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .q1-num   { fill: #ffffff; font-size: 19px; text-anchor: middle; }
+    .q1-label { fill: var(--text, #1c1917); font-size: 21px; }
+    .q1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q1-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>
-  <text x="20" y="16" class="q1-cap">양자화가 줄일 수 있는 세 가지</text>
-  <rect x="20" y="30" width="440" height="58" rx="8" class="q1-box"/>
-  <circle cx="52" cy="59" r="14" class="q1-badge"/>
-  <text x="52" y="64" class="q1-num">1</text>
-  <text x="80" y="52" class="q1-label">가중치가 차지하는 메모리</text>
-  <text x="80" y="73" class="q1-sub">남는 GPU 메모리가 KV Cache 몫이 된다</text>
-  <rect x="20" y="98" width="440" height="58" rx="8" class="q1-box"/>
-  <circle cx="52" cy="127" r="14" class="q1-badge"/>
-  <text x="52" y="132" class="q1-num">2</text>
-  <text x="80" y="120" class="q1-label">매 스텝 가중치를 읽는 양</text>
-  <text x="80" y="141" class="q1-sub">memory-bound한 decode가 빨라진다</text>
-  <rect x="20" y="166" width="440" height="58" rx="8" class="q1-box"/>
-  <circle cx="52" cy="195" r="14" class="q1-badge"/>
-  <text x="52" y="200" class="q1-num">3</text>
-  <text x="80" y="188" class="q1-label">행렬곱의 연산 정밀도</text>
-  <text x="80" y="209" class="q1-sub">저정밀 텐서코어로 연산 자체가 빨라진다</text>
+  <text x="20" y="20" class="q1-cap">양자화가 줄일 수 있는 세 가지</text>
+  <rect x="20" y="36" width="440" height="74" rx="8" class="q1-box"/>
+  <circle cx="52" cy="73" r="16" class="q1-badge"/>
+  <text x="52" y="80" class="q1-num">1</text>
+  <text x="80" y="66" class="q1-label">가중치가 차지하는 메모리</text>
+  <text x="80" y="92" class="q1-sub">남는 GPU 메모리가 KV Cache 몫이 된다</text>
+  <rect x="20" y="122" width="440" height="74" rx="8" class="q1-box"/>
+  <circle cx="52" cy="159" r="16" class="q1-badge"/>
+  <text x="52" y="166" class="q1-num">2</text>
+  <text x="80" y="152" class="q1-label">매 스텝 가중치를 읽는 양</text>
+  <text x="80" y="178" class="q1-sub">memory-bound한 decode가 빨라진다</text>
+  <rect x="20" y="208" width="440" height="74" rx="8" class="q1-box"/>
+  <circle cx="52" cy="245" r="16" class="q1-badge"/>
+  <text x="52" y="252" class="q1-num">3</text>
+  <text x="80" y="238" class="q1-label">행렬곱의 연산 정밀도</text>
+  <text x="80" y="264" class="q1-sub">저정밀 텐서코어로 연산 자체가 빨라진다</text>
 </svg>
 </div>
 <p>①은 GPU 메모리 배분의 문제입니다. 가중치를 올리고 남은 메모리가 KV Cache 예산이고, 이 예산이 동시에 올려둘 수 있는 요청 수를 정합니다. 가중치가 절반으로 줄면 줄어든 만큼이 거의 그대로 KV Cache 예산에 더해집니다.</p>
@@ -48,31 +48,31 @@
 <h2>가중치만 줄이는 W4A16, GPTQ와 AWQ</h2>
 <p>먼저 숫자로 크기를 보겠습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 214" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 254" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Gemma 3 27B 가중치 크기 비교. bf16은 27B 곱하기 2바이트로 약 54GB, int4는 약 14.1GB. decode 한 스텝은 가중치 전체를 읽으므로 스텝마다 읽는 양이 약 4분의 1로 줄어든다.">
   <style>
-    .q2-cap   { fill: var(--text-muted, #78716c); font-size: 13px; }
-    .q2-name  { fill: var(--text, #1c1917); font-size: 15px; }
-    .q2-val   { fill: var(--text, #1c1917); font-size: 14px; }
+    .q2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q2-name  { fill: var(--text, #1c1917); font-size: 21px; }
+    .q2-val   { fill: var(--text, #1c1917); font-size: 18px; }
     .q2-bar16 { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q2-bar4  { fill: var(--primary, #0d9488); }
-    .q2-sub   { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+    .q2-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
     .q2-line  { stroke: var(--border, #e7e5e4); stroke-width: 1; }
   </style>
-  <text x="20" y="18" class="q2-cap">Gemma 3 27B 가중치 크기</text>
-  <text x="20" y="60" class="q2-name">bf16</text>
-  <rect x="90" y="36" width="350" height="30" rx="4" class="q2-bar16"/>
-  <text x="428" y="56" class="q2-val" text-anchor="end">54GB</text>
-  <text x="98" y="86" class="q2-sub">27B × 2바이트</text>
-  <text x="20" y="124" class="q2-name">int4</text>
-  <rect x="90" y="100" width="91" height="30" rx="4" class="q2-bar4"/>
-  <text x="191" y="120" class="q2-val">14.1GB</text>
-  <text x="98" y="150" class="q2-sub">Google 공식 수치</text>
-  <line x1="20" y1="164" x2="460" y2="164" class="q2-line"/>
-  <text x="20" y="184" class="q2-sub">decode 한 스텝 = 가중치 전체 읽기</text>
-  <text x="20" y="202" class="q2-sub">스텝마다 읽는 양이 약 1/4로 줄어든다</text>
+  <text x="20" y="22" class="q2-cap">Gemma 3 27B 가중치 크기</text>
+  <text x="20" y="68" class="q2-name">bf16</text>
+  <rect x="90" y="44" width="350" height="34" rx="4" class="q2-bar16"/>
+  <text x="428" y="68" class="q2-val" text-anchor="end">54GB</text>
+  <text x="98" y="98" class="q2-sub">27B × 2바이트</text>
+  <text x="20" y="142" class="q2-name">int4</text>
+  <rect x="90" y="118" width="91" height="34" rx="4" class="q2-bar4"/>
+  <text x="191" y="142" class="q2-val">14.1GB</text>
+  <text x="98" y="172" class="q2-sub">Google 공식 수치</text>
+  <line x1="20" y1="192" x2="460" y2="192" class="q2-line"/>
+  <text x="20" y="216" class="q2-sub">decode 한 스텝 = 가중치 전체 읽기</text>
+  <text x="20" y="240" class="q2-sub">스텝마다 읽는 양이 약 1/4로 줄어든다</text>
 </svg>
 </div>
 <p>80GB GPU에 올린다고 하면 bf16으로는 가중치를 빼고 26GB가 남는데, 4비트로 줄이면 66GB가 남습니다. 활성값 버퍼 같은 고정 오버헤드를 빼고 남는 것이 전부 KV 예산이니, 저배치에서는 decode 지연이 직접 줄고 남은 메모리로 배치를 더 태울 수도 있습니다.</p>
@@ -88,57 +88,57 @@
 <h2>연산까지 빨라지는 W8A8, FP8</h2>
 <p>FP8은 이름 그대로 8비트 부동소수점입니다. 같은 8비트라도 정수(INT8)와는 값을 배치하는 방식이 다릅니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="1바이트에 숫자를 담는 세 가지 방법의 비트 배치. INT8은 부호 1비트와 정수 7비트로 값 사이 간격이 균일하고 최대 플러스마이너스 127. E4M3는 부호 1비트, 지수 4비트, 가수 3비트의 부동소수점으로 0 근처가 촘촘하고 최대 플러스마이너스 448. E5M2는 지수를 5비트로 늘려 범위를 넓힌 형식으로 최대 플러스마이너스 57344.">
   <style>
-    .q3-cap  { fill: var(--text-muted, #78716c); font-size: 13px; }
-    .q3-name { fill: var(--text, #1c1917); font-size: 15px; }
-    .q3-max  { fill: var(--text, #1c1917); font-size: 13px; text-anchor: end; }
-    .q3-sub  { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+    .q3-cap  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q3-name { fill: var(--text, #1c1917); font-size: 21px; }
+    .q3-max  { fill: var(--text, #1c1917); font-size: 17px; text-anchor: end; }
+    .q3-sub  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .q3-cs   { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q3-ce   { fill: var(--bg-warn, #fffbeb); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q3-cm   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .q3-bs   { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
-    .q3-be   { fill: var(--text-warn, #d97706); font-size: 13px; text-anchor: middle; }
-    .q3-bm   { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .q3-bs   { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
+    .q3-be   { fill: var(--text-warn, #d97706); font-size: 18px; text-anchor: middle; }
+    .q3-bm   { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
   </style>
-  <text x="20" y="16" class="q3-cap">1바이트(8비트)에 숫자를 담는 방법</text>
-  <text x="20" y="36" class="q3-sub">S 부호 · E 지수 · M 가수 · I 정수</text>
-  <text x="20" y="70" class="q3-name">INT8</text>
-  <rect x="86" y="52" width="30" height="26" class="q3-cs"/><text x="101" y="70" class="q3-bs">S</text>
-  <rect x="116" y="52" width="30" height="26" class="q3-cm"/><text x="131" y="70" class="q3-bm">I</text>
-  <rect x="146" y="52" width="30" height="26" class="q3-cm"/><text x="161" y="70" class="q3-bm">I</text>
-  <rect x="176" y="52" width="30" height="26" class="q3-cm"/><text x="191" y="70" class="q3-bm">I</text>
-  <rect x="206" y="52" width="30" height="26" class="q3-cm"/><text x="221" y="70" class="q3-bm">I</text>
-  <rect x="236" y="52" width="30" height="26" class="q3-cm"/><text x="251" y="70" class="q3-bm">I</text>
-  <rect x="266" y="52" width="30" height="26" class="q3-cm"/><text x="281" y="70" class="q3-bm">I</text>
-  <rect x="296" y="52" width="30" height="26" class="q3-cm"/><text x="311" y="70" class="q3-bm">I</text>
-  <text x="460" y="70" class="q3-max">최대 ±127</text>
-  <text x="20" y="96" class="q3-sub">정수, 값 사이 간격이 균일</text>
-  <text x="20" y="134" class="q3-name">E4M3</text>
-  <rect x="86" y="116" width="30" height="26" class="q3-cs"/><text x="101" y="134" class="q3-bs">S</text>
-  <rect x="116" y="116" width="30" height="26" class="q3-ce"/><text x="131" y="134" class="q3-be">E</text>
-  <rect x="146" y="116" width="30" height="26" class="q3-ce"/><text x="161" y="134" class="q3-be">E</text>
-  <rect x="176" y="116" width="30" height="26" class="q3-ce"/><text x="191" y="134" class="q3-be">E</text>
-  <rect x="206" y="116" width="30" height="26" class="q3-ce"/><text x="221" y="134" class="q3-be">E</text>
-  <rect x="236" y="116" width="30" height="26" class="q3-cm"/><text x="251" y="134" class="q3-bm">M</text>
-  <rect x="266" y="116" width="30" height="26" class="q3-cm"/><text x="281" y="134" class="q3-bm">M</text>
-  <rect x="296" y="116" width="30" height="26" class="q3-cm"/><text x="311" y="134" class="q3-bm">M</text>
-  <text x="460" y="134" class="q3-max">최대 ±448</text>
-  <text x="20" y="160" class="q3-sub">부동소수점, 0 근처가 촘촘</text>
-  <text x="20" y="198" class="q3-name">E5M2</text>
-  <rect x="86" y="180" width="30" height="26" class="q3-cs"/><text x="101" y="198" class="q3-bs">S</text>
-  <rect x="116" y="180" width="30" height="26" class="q3-ce"/><text x="131" y="198" class="q3-be">E</text>
-  <rect x="146" y="180" width="30" height="26" class="q3-ce"/><text x="161" y="198" class="q3-be">E</text>
-  <rect x="176" y="180" width="30" height="26" class="q3-ce"/><text x="191" y="198" class="q3-be">E</text>
-  <rect x="206" y="180" width="30" height="26" class="q3-ce"/><text x="221" y="198" class="q3-be">E</text>
-  <rect x="236" y="180" width="30" height="26" class="q3-ce"/><text x="251" y="198" class="q3-be">E</text>
-  <rect x="266" y="180" width="30" height="26" class="q3-cm"/><text x="281" y="198" class="q3-bm">M</text>
-  <rect x="296" y="180" width="30" height="26" class="q3-cm"/><text x="311" y="198" class="q3-bm">M</text>
-  <text x="460" y="198" class="q3-max">최대 ±57344</text>
-  <text x="20" y="224" class="q3-sub">지수 비트를 늘려 범위를 넓힌 형식</text>
+  <text x="20" y="22" class="q3-cap">1바이트(8비트)에 숫자를 담는 방법</text>
+  <text x="20" y="48" class="q3-sub">S 부호 · E 지수 · M 가수 · I 정수</text>
+  <text x="20" y="99" class="q3-name">INT8</text>
+  <rect x="86" y="76" width="30" height="32" class="q3-cs"/><text x="101" y="99" class="q3-bs">S</text>
+  <rect x="116" y="76" width="30" height="32" class="q3-cm"/><text x="131" y="99" class="q3-bm">I</text>
+  <rect x="146" y="76" width="30" height="32" class="q3-cm"/><text x="161" y="99" class="q3-bm">I</text>
+  <rect x="176" y="76" width="30" height="32" class="q3-cm"/><text x="191" y="99" class="q3-bm">I</text>
+  <rect x="206" y="76" width="30" height="32" class="q3-cm"/><text x="221" y="99" class="q3-bm">I</text>
+  <rect x="236" y="76" width="30" height="32" class="q3-cm"/><text x="251" y="99" class="q3-bm">I</text>
+  <rect x="266" y="76" width="30" height="32" class="q3-cm"/><text x="281" y="99" class="q3-bm">I</text>
+  <rect x="296" y="76" width="30" height="32" class="q3-cm"/><text x="311" y="99" class="q3-bm">I</text>
+  <text x="460" y="98" class="q3-max">최대 ±127</text>
+  <text x="20" y="130" class="q3-sub">정수, 값 사이 간격이 균일</text>
+  <text x="20" y="177" class="q3-name">E4M3</text>
+  <rect x="86" y="154" width="30" height="32" class="q3-cs"/><text x="101" y="177" class="q3-bs">S</text>
+  <rect x="116" y="154" width="30" height="32" class="q3-ce"/><text x="131" y="177" class="q3-be">E</text>
+  <rect x="146" y="154" width="30" height="32" class="q3-ce"/><text x="161" y="177" class="q3-be">E</text>
+  <rect x="176" y="154" width="30" height="32" class="q3-ce"/><text x="191" y="177" class="q3-be">E</text>
+  <rect x="206" y="154" width="30" height="32" class="q3-ce"/><text x="221" y="177" class="q3-be">E</text>
+  <rect x="236" y="154" width="30" height="32" class="q3-cm"/><text x="251" y="177" class="q3-bm">M</text>
+  <rect x="266" y="154" width="30" height="32" class="q3-cm"/><text x="281" y="177" class="q3-bm">M</text>
+  <rect x="296" y="154" width="30" height="32" class="q3-cm"/><text x="311" y="177" class="q3-bm">M</text>
+  <text x="460" y="176" class="q3-max">최대 ±448</text>
+  <text x="20" y="208" class="q3-sub">부동소수점, 0 근처가 촘촘</text>
+  <text x="20" y="255" class="q3-name">E5M2</text>
+  <rect x="86" y="232" width="30" height="32" class="q3-cs"/><text x="101" y="255" class="q3-bs">S</text>
+  <rect x="116" y="232" width="30" height="32" class="q3-ce"/><text x="131" y="255" class="q3-be">E</text>
+  <rect x="146" y="232" width="30" height="32" class="q3-ce"/><text x="161" y="255" class="q3-be">E</text>
+  <rect x="176" y="232" width="30" height="32" class="q3-ce"/><text x="191" y="255" class="q3-be">E</text>
+  <rect x="206" y="232" width="30" height="32" class="q3-ce"/><text x="221" y="255" class="q3-be">E</text>
+  <rect x="236" y="232" width="30" height="32" class="q3-ce"/><text x="251" y="255" class="q3-be">E</text>
+  <rect x="266" y="232" width="30" height="32" class="q3-cm"/><text x="281" y="255" class="q3-bm">M</text>
+  <rect x="296" y="232" width="30" height="32" class="q3-cm"/><text x="311" y="255" class="q3-bm">M</text>
+  <text x="460" y="254" class="q3-max">최대 ±57344</text>
+  <text x="20" y="286" class="q3-sub">지수 비트를 늘려 범위를 넓힌 형식</text>
 </svg>
 </div>
 <p>LLM의 가중치와 활성값은 대부분 0 근처에 몰려 있고 가끔 큰 outlier가 섞여 있는 분포입니다. 균일 간격인 INT8은 outlier에 맞춰 간격을 잡으면 0 근처가 뭉개지는데, 부동소수점인 FP8은 0 근처를 촘촘하게 쓰면서 큰 값도 담습니다. FP8 형식을 제안한 NVIDIA와 Arm, Intel의 공동 논문은 같은 8비트 사후 양자화에서 INT8은 정확도가 크게 무너지고 E4M3는 유지된다는 것을 보였습니다. 추론에는 범위보다 정밀도가 중요해서 E4M3를 쓰고, E5M2는 값 범위가 널뛰는 학습 시 그래디언트용입니다.</p>
