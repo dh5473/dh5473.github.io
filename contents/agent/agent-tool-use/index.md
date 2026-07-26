@@ -13,7 +13,7 @@ Claude Code에 "deprecated된 모듈을 import하는 파일을 전부 찾아줘"
 
 정답은 도구의 이름, 설명, 파라미터 스키마에 있습니다. `Grep`이라는 이름은 "텍스트 패턴 검색"이라는 의도를 정확히 전달하고, 도구 설명에는 언제 이 도구를 써야 하는지가 명시되어 있습니다. 모델이 올바른 도구를 "알아서" 고르는 것처럼 보이지만, 실제로는 도구 설계가 그 선택을 유도한 것입니다.
 
-[이전 글](/agent/agent-workflow-patterns/)에서 다섯 가지 워크플로우 패턴을 살펴봤는데, 어떤 패턴을 쓰든 결국 도구 설계가 잘못되면 성능이 나오지 않습니다. 이 글에서는 Anthropic이 제안하는 **ACI(Agent-Computer Interface)** 설계 원칙과, 프로덕션 에이전트의 실제 도구 스키마를 분석합니다.
+프롬프트 체이닝이든 라우팅이든 오케스트레이터든, 어떤 워크플로우 패턴을 쓰더라도 결국 도구 설계가 잘못되면 성능이 나오지 않습니다. 이 글에서는 Anthropic이 제안하는 **ACI(Agent-Computer Interface)** 설계 원칙과, 프로덕션 에이전트의 실제 도구 스키마를 분석합니다.
 
 ---
 
@@ -27,17 +27,62 @@ Claude Code에 "deprecated된 모듈을 import하는 파일을 전부 찾아줘"
 
 **ACI(Agent-Computer Interface)**는 모델이 도구와 상호작용하는 인터페이스입니다. HCI가 사람을 위한 버튼, 메뉴, 레이아웃을 설계하듯, ACI는 모델을 위한 도구 이름, 설명, 파라미터 스키마, 에러 메시지를 설계합니다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 250" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
+  <defs>
+    <marker id="aciArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <style>
+    .aci-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .aci-main { font-size: 16px; fill: var(--text, #1c1917); }
+    .aci-sub { font-size: 15px; fill: var(--text, #1c1917); }
+    .aci-tag { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .aci-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .aci-hub { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .aci-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#aciArrow); }
+  </style>
+  <!-- panel 1: HCI -->
+  <text x="20" y="24" class="aci-title">HCI: 사람을 위한 인터페이스</text>
+  <rect x="20" y="42" width="76" height="64" rx="8" class="aci-box"/>
+  <text x="58" y="80" class="aci-main" text-anchor="middle">사람</text>
+  <line x1="100" y1="74" x2="122" y2="74" class="aci-line"/>
+  <rect x="128" y="38" width="212" height="72" rx="8" class="aci-hub"/>
+  <text x="234" y="64" class="aci-tag" text-anchor="middle">UI 설계</text>
+  <text x="234" y="90" class="aci-sub" text-anchor="middle">버튼 · 메뉴 · 레이아웃</text>
+  <line x1="344" y1="74" x2="366" y2="74" class="aci-line"/>
+  <rect x="372" y="42" width="88" height="64" rx="8" class="aci-box"/>
+  <text x="416" y="80" class="aci-sub" text-anchor="middle">소프트웨어</text>
+  <!-- panel 2: ACI -->
+  <text x="20" y="152" class="aci-title">ACI: 모델을 위한 인터페이스</text>
+  <rect x="20" y="170" width="76" height="64" rx="8" class="aci-box"/>
+  <text x="58" y="208" class="aci-main" text-anchor="middle">모델</text>
+  <line x1="100" y1="202" x2="122" y2="202" class="aci-line"/>
+  <rect x="128" y="166" width="212" height="72" rx="8" class="aci-hub"/>
+  <text x="234" y="192" class="aci-sub" text-anchor="middle">도구 이름 · 설명</text>
+  <text x="234" y="216" class="aci-sub" text-anchor="middle">파라미터 · 에러 메시지</text>
+  <line x1="344" y1="202" x2="366" y2="202" class="aci-line"/>
+  <rect x="372" y="170" width="88" height="64" rx="8" class="aci-box"/>
+  <text x="416" y="208" class="aci-sub" text-anchor="middle">시스템</text>
+</svg>
+</div>
+
 Anthropic은 에이전트 설계의 세 가지 원칙을 제시하는데, 세 번째가 ACI에 직접 해당합니다. "철저한 문서화와 테스트를 통해 ACI를 신중하게 설계하라(Carefully craft your agent-computer interface through thorough tool documentation and testing)." 나머지 두 원칙(단순성, 투명성)도 도구 설계에 자연스럽게 적용됩니다. 도구의 수와 복잡도를 최소화하고, 모델이 자신의 행동을 명시적으로 계획할 수 있도록 설계하는 것입니다.
 
 핵심 설계 휴리스틱은 한 문장으로 요약됩니다. **"Put yourself in the model's shoes."** 모델의 입장에서 생각하라.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ ACI 자가 점검</strong><br>
-  도구를 만들 때 이 세 가지 질문을 던져보라.<br>
-  1. 이 도구 이름만 보고 어떤 기능인지 알 수 있는가?<br>
-  2. 설명만 읽고 언제 써야 하는지 판단할 수 있는가?<br>
-  3. 에러 메시지만 보고 다음에 무엇을 해야 하는지 결정할 수 있는가?
-</div>
+:::tip
+
+**ACI 자가 점검**
+
+도구를 만들 때 이 세 가지 질문을 던져보라.
+
+1. 이 도구 이름만 보고 어떤 기능인지 알 수 있는가?
+2. 설명만 읽고 언제 써야 하는지 판단할 수 있는가?
+3. 에러 메시지만 보고 다음에 무엇을 해야 하는지 결정할 수 있는가?
+
+:::
 
 ### 프로덕션에서의 ACI
 
@@ -56,6 +101,58 @@ OpenAI도 같은 결론에 도달합니다. "A Practical Guide to Building Agent
 ## 도구 설계 5원칙
 
 Anthropic의 "Writing Effective Tools for AI Agents"와 "Building Effective Agents"에서 제시한 원칙들을 재구성하여 다섯 가지로 정리합니다. 추상적인 가이드라인이 아니라, Claude Code와 SWE-bench 같은 평가 환경에서 도구를 반복 개선하면서 추출한 실전 원칙입니다.
+
+다섯 원칙은 도구 정의의 서로 다른 부분에 하나씩 대응합니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
+  <defs>
+    <marker id="tpArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <style>
+    .tp-head { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .tp-key { font-size: 15px; fill: var(--primary, #0d9488); font-family: 'JetBrains Mono', monospace; }
+    .tp-name { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .tp-desc { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .tp-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .tp-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#tpArrow); }
+  </style>
+  <text x="20" y="20" class="tp-head">도구 정의</text>
+  <text x="232" y="20" class="tp-head">적용 원칙</text>
+  <!-- row 1: name -->
+  <rect x="20" y="32" width="176" height="46" rx="6" class="tp-box"/>
+  <text x="108" y="61" class="tp-key" text-anchor="middle">name</text>
+  <line x1="200" y1="55" x2="224" y2="55" class="tp-line"/>
+  <text x="232" y="52" class="tp-name">원칙 2. 네이밍</text>
+  <text x="232" y="70" class="tp-desc">이름만으로 기능이 전달되게</text>
+  <!-- row 2: description -->
+  <rect x="20" y="86" width="176" height="46" rx="6" class="tp-box"/>
+  <text x="108" y="115" class="tp-key" text-anchor="middle">description</text>
+  <line x1="200" y1="109" x2="224" y2="109" class="tp-line"/>
+  <text x="232" y="106" class="tp-name">원칙 3. 설명은 프롬프트</text>
+  <text x="232" y="124" class="tp-desc">무엇을, 언제, 대안 도구까지</text>
+  <!-- row 3: parameters -->
+  <rect x="20" y="140" width="176" height="46" rx="6" class="tp-box"/>
+  <text x="108" y="169" class="tp-key" text-anchor="middle">parameters</text>
+  <line x1="200" y1="163" x2="224" y2="163" class="tp-line"/>
+  <text x="232" y="160" class="tp-name">원칙 1. 적을수록 좋다</text>
+  <text x="232" y="178" class="tp-desc">겹치는 도구를 하나로 통합</text>
+  <!-- row 4: return -->
+  <rect x="20" y="194" width="176" height="46" rx="6" class="tp-box"/>
+  <text x="108" y="223" class="tp-key" text-anchor="middle">return</text>
+  <line x1="200" y1="217" x2="224" y2="217" class="tp-line"/>
+  <text x="232" y="214" class="tp-name">원칙 4. 최소한의 토큰</text>
+  <text x="232" y="232" class="tp-desc">의미 있는 값, 상한, 안내</text>
+  <!-- row 5: error -->
+  <rect x="20" y="248" width="176" height="46" rx="6" class="tp-box"/>
+  <text x="108" y="277" class="tp-key" text-anchor="middle">error</text>
+  <line x1="200" y1="271" x2="224" y2="271" class="tp-line"/>
+  <text x="232" y="268" class="tp-name">원칙 5. Poka-yoke</text>
+  <text x="232" y="286" class="tp-desc">실행 가능한 에러, 실수 차단</text>
+</svg>
+</div>
 
 ### 원칙 1. 적을수록 좋다
 
@@ -147,10 +244,13 @@ Claude Code의 `Edit` 도구 설명을 보면 이 원칙이 어떻게 적용되�
 
 아래 설명에는 "무엇을 하는가"(문자열 치환), "전제 조건"(먼저 Read), "실패 조건"(old_string 고유하지 않으면), "행동 지침"(새 파일 생성보다 기존 파일 편집 선호)이 모두 포함되어 있습니다. 결국 도구 설명을 작성하는 것은 프롬프트 엔지니어링과 본질적으로 같은 작업인 셈입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  Anthropic은 "도구에도 프롬프트 엔지니어링만큼의 주의를 기울여라"고 말합니다. 도구 설명의 품질은 시스템 프롬프트의 품질만큼 에이전트 성능에 직접적인 영향을 미칩니다.
-</div>
+:::info
+
+**참고**
+
+Anthropic은 "도구에도 프롬프트 엔지니어링만큼의 주의를 기울여라"고 말합니다. 도구 설명의 품질은 시스템 프롬프트의 품질만큼 에이전트 성능에 직접적인 영향을 미칩니다.
+
+:::
 
 ### 원칙 4. 의미 있는 컨텍스트, 최소한의 토큰
 
@@ -172,10 +272,11 @@ Claude Code는 도구 반환값에 **25,000 토큰 상한**을 적용합니다. 
 
 ```python
 def truncate_tool_result(result: str, max_tokens: int = 25000) -> dict:
-    if len(result) <= max_tokens:
+    max_chars = max_tokens * 4  # 토큰 1개당 영문 약 4자로 잡은 근사치
+    if len(result) <= max_chars:
         return {"output": result, "truncated": False}
     return {
-        "output": result[:max_tokens],
+        "output": result[:max_chars],
         "truncated": True,
         "total_length": len(result),
         "suggestion": "Output truncated. Use a more specific query or grep for relevant sections."
@@ -228,6 +329,67 @@ def validate_file_path(path: str) -> str:
 
 Claude Code의 도구 설계에서 이 구분이 선명하게 드러납니다. `Write` 도구는 파일 전체를 덮어씁니다. 같은 내용으로 두 번 호출해도 결과는 동일합니다. `Edit` 도구는 diff 기반으로 동작하는데, 매칭되는 문자열을 찾아 교체합니다. 이미 교체된 상태에서 다시 호출하면 원본 문자열을 찾지 못해 "no changes made"를 반환하게 됩니다. 파일이 중복 수정되는 것을 구조적으로 방지하는 설계입니다.
 
+같은 호출이 두 번 들어갔을 때 세 도구가 어떻게 갈리는지 보면 차이가 분명해집니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 276" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
+  <defs>
+    <marker id="idemArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <style>
+    .idem-title { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+    .idem-tag { font-size: 13px; fill: var(--text-muted, #78716c); }
+    .idem-val { font-size: 15px; fill: var(--text, #1c1917); }
+    .idem-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .idem-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#idemArrow); }
+    .idem-okbox { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .idem-oktext { font-size: 15px; font-weight: 700; fill: var(--text-success, #16a34a); }
+    .idem-ngbox { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .idem-ngtext { font-size: 15px; font-weight: 700; fill: var(--text-danger, #dc2626); }
+    .idem-ok { stroke: var(--text-success, #16a34a); stroke-width: 2; fill: none; }
+    .idem-ng { stroke: var(--text-danger, #dc2626); stroke-width: 2; fill: none; }
+  </style>
+  <!-- row 1: Write -->
+  <text x="20" y="22" class="idem-title">Write: 파일 전체 덮어쓰기</text>
+  <rect x="20" y="30" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="85" y="50" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="85" y="69" class="idem-val" text-anchor="middle">파일 = A</text>
+  <line x1="154" y1="54" x2="176" y2="54" class="idem-line"/>
+  <rect x="182" y="30" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="247" y="50" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="247" y="69" class="idem-val" text-anchor="middle">파일 = A</text>
+  <rect x="330" y="38" width="130" height="32" rx="16" class="idem-okbox"/>
+  <path d="M348,54 l5,6 l10,-13" class="idem-ok"/>
+  <text x="404" y="59" class="idem-oktext" text-anchor="middle">멱등</text>
+  <!-- row 2: Edit -->
+  <text x="20" y="118" class="idem-title">Edit: 문자열 매칭 후 치환</text>
+  <rect x="20" y="126" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="85" y="146" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="85" y="165" class="idem-val" text-anchor="middle">치환 완료</text>
+  <line x1="154" y1="150" x2="176" y2="150" class="idem-line"/>
+  <rect x="182" y="126" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="247" y="146" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="247" y="165" class="idem-val" text-anchor="middle">no changes</text>
+  <rect x="330" y="134" width="130" height="32" rx="16" class="idem-okbox"/>
+  <path d="M348,150 l5,6 l10,-13" class="idem-ok"/>
+  <text x="404" y="155" class="idem-oktext" text-anchor="middle">멱등</text>
+  <!-- row 3: increment -->
+  <text x="20" y="214" class="idem-title">increment: 카운터 증분</text>
+  <rect x="20" y="222" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="85" y="242" class="idem-tag" text-anchor="middle">1회 호출</text>
+  <text x="85" y="261" class="idem-val" text-anchor="middle">count = 1</text>
+  <line x1="154" y1="246" x2="176" y2="246" class="idem-line"/>
+  <rect x="182" y="222" width="130" height="48" rx="6" class="idem-box"/>
+  <text x="247" y="242" class="idem-tag" text-anchor="middle">2회 호출</text>
+  <text x="247" y="261" class="idem-val" text-anchor="middle">count = 2</text>
+  <rect x="330" y="230" width="130" height="32" rx="16" class="idem-ngbox"/>
+  <path d="M347,240 l12,12 M359,240 l-12,12" class="idem-ng"/>
+  <text x="408" y="251" class="idem-ngtext" text-anchor="middle">비멱등</text>
+</svg>
+</div>
+
 직접 도구를 만들 때도 같은 원칙을 적용할 수 있습니다.
 
 ```python
@@ -252,10 +414,13 @@ async def increment_counter(name: str) -> dict:
 
 `set_config`는 몇 번을 호출해도 마지막 값이 유지됩니다. 반면 `increment_counter`는 호출할 때마다 값이 올라갑니다. 에이전트 환경에서 비멱등 도구는 확인 게이트(human-in-the-loop)를 필수로 두거나, 멱등한 대안(`set_counter(name, value)`)으로 교체하는 것이 안전합니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  append, increment, send 류의 비멱등 도구는 에이전트 환경에서 반드시 확인 게이트를 두거나, 멱등한 대안(upsert, set)으로 교체해야 합니다.
-</div>
+:::warning
+
+**주의**
+
+append, increment, send 류의 비멱등 도구는 에이전트 환경에서 반드시 확인 게이트를 두거나, 멱등한 대안(upsert, set)으로 교체해야 합니다.
+
+:::
 
 ---
 
@@ -277,7 +442,7 @@ async def increment_counter(name: str) -> dict:
 
 첫째, 파일 편집에서 두 시스템 모두 **diff 기반 접근**을 채택합니다. 줄 번호로 삽입하는 방식은 멱등성이 보장되지 않기 때문입니다. 줄 번호는 편집 후 바뀌므로, 같은 호출을 반복하면 엉뚱한 위치에 텍스트가 삽입됩니다. diff 기반이면 내용 자체를 매칭하므로 이 문제가 없습니다.
 
-둘째, 안전성 확보의 철학이 다릅니다. Claude Code는 **도구 수준에서 분류**([이전 글](/agent/agent-workflow-patterns/)에서 다룬 `partitionToolCalls()`)하여, 읽기 전용 도구는 병렬 실행하고 쓰기 도구는 순차 실행합니다. Codex는 **환경 수준에서 격리**하여, 모든 도구를 OS 네이티브 샌드박스(macOS Seatbelt / Linux bwrap+seccomp) 안에서 실행합니다. 기본적으로 네트워크가 차단되고 파일 쓰기가 작업 디렉터리로 제한되므로, 개별 도구의 안전성을 분류할 필요가 줄어드는 셈입니다. 같은 목표를 서로 다른 레이어에서 해결하는 것입니다.
+둘째, 안전성 확보의 철학이 다릅니다. Claude Code는 **도구 수준에서 분류**(`partitionToolCalls()`가 도구 호출을 safe와 exclusive로 나눕니다)하여, 읽기 전용 도구는 병렬 실행하고 쓰기 도구는 순차 실행합니다. Codex는 **환경 수준에서 격리**하여, 모든 도구를 OS 네이티브 샌드박스(macOS Seatbelt / Linux bwrap+seccomp) 안에서 실행합니다. 기본적으로 네트워크가 차단되고 파일 쓰기가 작업 디렉터리로 제한되므로, 개별 도구의 안전성을 분류할 필요가 줄어드는 셈입니다. 같은 목표를 서로 다른 레이어에서 해결하는 것입니다.
 
 ---
 
@@ -378,7 +543,7 @@ async def execute_search_codebase(
 
 ### 도구 폭발 문제
 
-에이전트가 MCP를 통해 외부 서비스를 연결하기 시작하면, 도구 수가 급격히 늘어납니다. Anthropic의 예시를 보면, GitHub, Slack, Sentry, Grafana, Splunk 등 5개 MCP 서버를 연결했을 때 58개 도구의 정의만으로 약 55,000 토큰을 소비합니다. 대화가 시작되기도 전에 컨텍스트의 상당 부분이 도구 설명으로 채워지는 셈입니다. Anthropic의 Tool Search 기능은 도구 정의를 동적으로 로드하는 방식으로 이 문제에 접근합니다. MCP와 Tool Search의 구조는 [MCP 글](/agent/mcp-protocol/)에서 다룹니다.
+에이전트가 MCP를 통해 외부 서비스를 연결하기 시작하면, 도구 수가 급격히 늘어납니다. Anthropic의 예시를 보면, GitHub, Slack, Sentry, Grafana, Splunk 등 5개 MCP 서버를 연결했을 때 58개 도구의 정의만으로 약 55,000 토큰을 소비합니다. 대화가 시작되기도 전에 컨텍스트의 상당 부분이 도구 설명으로 채워지는 셈입니다. Anthropic의 Tool Search 기능은 모든 도구 정의를 미리 싣는 대신 필요한 시점에 동적으로 로드하는 방식으로 이 문제에 접근합니다.
 
 ### 설명과 평가의 순환
 
@@ -386,7 +551,7 @@ async def execute_search_codebase(
 
 ### 비멱등 연산의 현실
 
-이메일 전송, 결제 처리, 외부 API 호출 같은 연산은 본질적으로 비멱등합니다. "취소하고 다시 보내기"가 불가능한 작업에서 에이전트의 재시도는 실제 피해를 만들 수 있습니다. Claude Code가 이런 도구에 확인 게이트(사용자 승인)를 필수로 두는 것은 기술적 한계에 대한 현실적 해법이며, 이 판단 과정의 내부는 [퍼미션 시스템 글](/agent/agent-permission-safety/)에서 다룹니다.
+이메일 전송, 결제 처리, 외부 API 호출 같은 연산은 본질적으로 비멱등합니다. "취소하고 다시 보내기"가 불가능한 작업에서 에이전트의 재시도는 실제 피해를 만들 수 있습니다. Claude Code가 이런 도구에 확인 게이트(사용자 승인)를 필수로 두는 것은 기술적 한계에 대한 현실적 해법입니다. 도구를 실행하기 전에 위험도를 판정하고 승인을 요구할지 결정하는 퍼미션 계층이 그 역할을 맡습니다.
 
 ---
 
@@ -395,6 +560,18 @@ async def execute_search_codebase(
 도구 설계는 API 설계나 UX 설계에 가깝습니다. 모델이 사용자이고, 도구 스키마가 인터페이스입니다. 잘 설계된 도구는 모델의 행동을 자연스럽게 올바른 방향으로 유도하고, 잘못 설계된 도구는 어떤 프롬프트 엔지니어링으로도 보완하기 어렵습니다. 결국 ACI에 투자하는 시간이 프롬프트를 다듬는 시간보다 훨씬 높은 수익을 가져다 줍니다.
 
 다음 글에서는 도구가 반환한 결과가 쌓이는 공간, 즉 컨텍스트를 다룹니다. 유한한 토큰 윈도우 안에서 모델이 올바른 정보를 올바른 시점에 볼 수 있도록 설계하는 컨텍스트 엔지니어링을 살펴보겠습니다.
+
+<br>
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지](/agent/agent-workflow-patterns/)
+- [AI Agent의 컨텍스트 엔지니어링: 유한한 토큰 윈도우를 다루는 네 가지 전략](/agent/context-engineering/)
+- [AI Agent의 MCP: 에이전트가 외부 도구를 연결하는 표준 프로토콜](/agent/mcp-protocol/)
+- [AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단](/agent/agent-permission-safety/)
+
+<br>
 
 ## 참고자료
 
