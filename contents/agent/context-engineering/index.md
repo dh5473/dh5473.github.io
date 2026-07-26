@@ -13,7 +13,7 @@ Claude Code에 수십 개 파일에 걸친 대규모 리팩터링을 요청하�
 
 이것은 모델이 "나빠진" 게 아닙니다. 도구 호출 결과, 파일 내용, 에러 메시지가 쌓이면서 컨텍스트 윈도우가 포화 상태에 도달한 것입니다. 초반에 확인했던 컨벤션 정보가 수백 개의 도구 결과 사이에 묻히고, 모델의 주의(attention)가 분산되는 현상. 벤치마크 연구에서 밝혀진 **context rot**이라는 개념이 이 현상을 설명합니다.
 
-[이전 글](/agent/agent-tool-use/)에서 도구 설계 원칙을 살펴봤는데, 완벽하게 설계된 도구라도 그 결과가 쌓이는 공간인 컨텍스트가 관리되지 않으면 성능이 무너집니다. 이 글에서는 "어떤 정보를, 언제, 어떤 형태로 모델에게 보여줄 것인가"를 설계하는 **컨텍스트 엔지니어링**을 살펴봅니다.
+도구를 아무리 정교하게 설계해도, 그 결과가 쌓이는 공간인 컨텍스트가 관리되지 않으면 성능은 무너집니다. 이 글에서는 "어떤 정보를, 언제, 어떤 형태로 모델에게 보여줄 것인가"를 설계하는 **컨텍스트 엔지니어링**을 살펴봅니다.
 
 ---
 
@@ -23,7 +23,7 @@ Claude Code에 수십 개 파일에 걸친 대규모 리팩터링을 요청하�
 
 프롬프트 엔지니어링은 모델에게 전달하는 지시문을 다듬는 기술입니다. "이렇게 말하면 더 좋은 답이 나온다"는 접근으로, 단일 턴 질의응답에서는 충분히 효과적입니다.
 
-그런데 에이전트는 루프를 돌립니다. [첫 번째 글](/agent/what-is-ai-agent/)에서 살펴본 것처럼, 에이전트는 도구를 호출하고 결과를 확인하고 다시 판단하는 과정을 반복합니다. 한 턴의 도구 호출이 5,000 토큰의 결과를 반환한다면, 50턴 후에는 도구 결과만 250,000 토큰에 달합니다. 처음에 정성 들여 작성한 시스템 프롬프트가 전체 컨텍스트의 1~2%에 불과해지는 셈입니다.
+그런데 에이전트는 루프를 돌립니다. 도구를 호출하고, 결과를 확인하고, 다시 판단하는 과정을 반복합니다. 한 턴의 도구 호출이 5,000 토큰의 결과를 반환한다면, 50턴 후에는 도구 결과만 250,000 토큰에 달합니다. 처음에 정성 들여 작성한 시스템 프롬프트가 전체 컨텍스트의 1~2%에 불과해지는 셈입니다.
 
 이 상황에서 "프롬프트를 더 잘 쓰자"는 접근으로는 부족합니다. 문제는 프롬프트의 품질이 아니라, 모델이 매 턴마다 보게 되는 전체 정보의 구성이기 때문입니다. Andrej Karpathy는 이 관점의 전환을 이렇게 표현했습니다.
 
@@ -39,19 +39,21 @@ Karpathy는 별도의 발표에서 LLM을 CPU에, 컨텍스트 윈도우를 RAM(
 
 트랜스포머 아키텍처에서 모든 토큰은 다른 모든 토큰과 상호 참조합니다. n개 토큰이 있으면 n²개의 쌍별 관계가 생기는 구조입니다. 컨텍스트가 길어질수록 이 관계망이 급격하게 복잡해지고, 모델의 주의력이 분산됩니다.
 
-```
-토큰 수       쌍별 관계     상대적 복잡도
-10,000     →  100M        →  1x
-50,000     →  2.5B        →  25x
-200,000    →  40B         →  400x
-```
+| 토큰 수 | 쌍별 관계 | 상대적 복잡도 |
+|---|---|---|
+| 10,000 | 100M | 1x |
+| 50,000 | 2.5B | 25x |
+| 200,000 | 40B | 400x |
 
 결과는 성능의 급격한 절벽이 아니라 점진적 기울기입니다. 모델은 긴 컨텍스트에서도 작동하지만, 정보 검색과 장거리 추론의 정밀도가 떨어지게 됩니다. 이러한 복잡도 증가가 context rot의 한 가지 원인으로 작용합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 컨텍스트 엔지니어링의 핵심 원칙</strong><br>
-  Anthropic은 이 원칙을 한 문장으로 요약합니다. "원하는 결과의 가능성을 최대화하는, 가장 작은 고신호(high-signal) 토큰 집합을 찾아라." 컨텍스트 엔지니어링은 무엇을 포함할지만큼 무엇을 제외할지가 중요합니다.
-</div>
+:::info
+
+**컨텍스트 엔지니어링의 핵심 원칙**
+
+Anthropic은 이 원칙을 한 문장으로 요약합니다. "원하는 결과의 가능성을 최대화하는, 가장 작은 고신호(high-signal) 토큰 집합을 찾아라." 컨텍스트 엔지니어링은 무엇을 포함할지만큼 무엇을 제외할지가 중요합니다.
+
+:::
 
 정리하면, **컨텍스트 엔지니어링**이란 유한한 컨텍스트 윈도우 안에서 올바른 정보를 올바른 시점에 올바른 형태로 제공하는 설계 규율입니다.
 
@@ -61,14 +63,37 @@ Karpathy는 별도의 발표에서 LLM을 CPU에, 컨텍스트 윈도우를 RAM(
 
 컨텍스트 윈도우에 무엇이 들어가는지를 먼저 이해해야 관리 전략을 세울 수 있습니다. 에이전트의 컨텍스트는 크게 네 가지 구성 요소로 나뉩니다. 50턴 에이전트 세션의 전형적인 컨텍스트 구성을 보면 이렇습니다.
 
-```
-[200K 토큰 윈도우의 구성 비율 예시: 50턴 시점]
-
-시스템 프롬프트 + CLAUDE.md    ██                  ~5%   (10K)
-도구 정의 (스키마)             ████                ~10%  (20K)
-대화 메시지 (user/assistant)  ██████              ~15%  (30K)
-도구 반환값 (누적)             ████████████████████ ~70%  (140K)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 258" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="50턴 시점 에이전트 세션의 200K 토큰 윈도우 구성 비율. 시스템 프롬프트 5퍼센트, 도구 정의 10퍼센트, 대화 메시지 15퍼센트, 도구 반환값이 70퍼센트를 차지한다.">
+  <style>
+    .ce1-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
+    .ce1-label { fill: var(--text, #1c1917); font-size: 14px; }
+    .ce1-value { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .ce1-track { fill: var(--bg-muted, #eeecea); }
+  </style>
+  <text x="20" y="22" class="ce1-title">200K 토큰 윈도우의 구성 비율 (50턴 시점)</text>
+  <!-- row 1: system prompt -->
+  <text x="20" y="56" class="ce1-label">시스템 프롬프트 + CLAUDE.md</text>
+  <rect x="20" y="64" width="340" height="18" rx="3" class="ce1-track" />
+  <rect x="20" y="64" width="17" height="18" rx="3" fill="var(--primary, #0d9488)" />
+  <text x="460" y="78" text-anchor="end" class="ce1-value">~5% (10K)</text>
+  <!-- row 2: tool definitions -->
+  <text x="20" y="108" class="ce1-label">도구 정의 (스키마)</text>
+  <rect x="20" y="116" width="340" height="18" rx="3" class="ce1-track" />
+  <rect x="20" y="116" width="34" height="18" rx="3" fill="var(--accent, #d97706)" />
+  <text x="460" y="130" text-anchor="end" class="ce1-value">~10% (20K)</text>
+  <!-- row 3: conversation messages -->
+  <text x="20" y="160" class="ce1-label">대화 메시지 (user / assistant)</text>
+  <rect x="20" y="168" width="340" height="18" rx="3" class="ce1-track" />
+  <rect x="20" y="168" width="51" height="18" rx="3" fill="var(--text-muted, #78716c)" />
+  <text x="460" y="182" text-anchor="end" class="ce1-value">~15% (30K)</text>
+  <!-- row 4: tool results, the dominant consumer -->
+  <text x="20" y="212" class="ce1-label">도구 반환값 (누적)</text>
+  <rect x="20" y="220" width="340" height="18" rx="3" class="ce1-track" />
+  <rect x="20" y="220" width="238" height="18" rx="3" fill="var(--text-danger, #dc2626)" />
+  <text x="460" y="234" text-anchor="end" class="ce1-value">~70% (140K)</text>
+</svg>
+</div>
 
 도구 반환값이 전체의 70%를 차지합니다. 컨텍스트 엔지니어링의 주된 전장이 어디인지를 보여주는 수치입니다.
 
@@ -86,18 +111,42 @@ Anthropic은 시스템 프롬프트에 **"올바른 고도(right altitude)"**라
 
 Claude Code는 이 원칙을 시스템 프롬프트와 CLAUDE.md의 분리로 구현합니다. 에이전트의 핵심 행동 규칙은 시스템 프롬프트에 넣고, 프로젝트별 컨벤션과 설정은 CLAUDE.md 파일로 분리합니다. 루트 CLAUDE.md는 세션 시작 시 로딩되지만, 하위 디렉터리의 CLAUDE.md 파일은 에이전트가 해당 디렉터리에 접근할 때만 로딩되는 lazy loading 방식입니다. 관련 없는 디렉터리의 설정이 컨텍스트를 소비하지 않도록 하는 것입니다.
 
-```
-[시스템 프롬프트]          ← 핵심 행동 규칙 (항상 로드)
-  └─ CLAUDE.md (루트)     ← 프로젝트 전역 설정 (세션 시작 시 로드)
-      ├─ src/CLAUDE.md    ← 소스 코드 컨벤션 (src/ 접근 시 로드)
-      └─ tests/CLAUDE.md  ← 테스트 설정 (tests/ 접근 시 로드)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
+  <style>
+    .ce2-main { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
+    .ce2-sub { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .ce2-note { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .ce2-rail { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+  </style>
+  <!-- level 0: system prompt, always loaded -->
+  <rect x="20" y="16" width="440" height="38" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <text x="36" y="40" class="ce2-main">시스템 프롬프트</text>
+  <text x="444" y="40" text-anchor="end" class="ce2-sub">핵심 행동 규칙 (항상 로드)</text>
+  <!-- level 1: root CLAUDE.md, loaded at session start -->
+  <path d="M 32 54 L 32 93 L 44 93" class="ce2-rail" />
+  <rect x="44" y="74" width="416" height="38" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="60" y="98" class="ce2-main">CLAUDE.md (루트)</text>
+  <text x="444" y="98" text-anchor="end" class="ce2-sub">세션 시작 시 로드</text>
+  <!-- level 2: per-directory CLAUDE.md, lazily loaded -->
+  <path d="M 56 112 L 56 209" class="ce2-rail" />
+  <path d="M 56 151 L 68 151" class="ce2-rail" />
+  <path d="M 56 209 L 68 209" class="ce2-rail" />
+  <rect x="68" y="132" width="392" height="38" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="84" y="156" class="ce2-main">src/CLAUDE.md</text>
+  <text x="444" y="156" text-anchor="end" class="ce2-sub">src/ 접근 시 로드</text>
+  <rect x="68" y="190" width="392" height="38" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="84" y="214" class="ce2-main">tests/CLAUDE.md</text>
+  <text x="444" y="214" text-anchor="end" class="ce2-sub">tests/ 접근 시 로드</text>
+  <text x="20" y="250" class="ce2-note">점선 테두리: 에이전트가 해당 디렉터리에 접근할 때만 컨텍스트에 올라온다</text>
+</svg>
+</div>
 
 이 계층 구조가 바로 시스템 프롬프트에 적용된 컨텍스트 엔지니어링입니다. 모든 설정을 한꺼번에 올리지 않고, 에이전트가 실제로 해당 디렉터리의 파일을 읽을 때 관련 설정만 로딩합니다.
 
 ### 도구 정의는 컨텍스트를 소비한다
 
-[이전 글](/agent/agent-tool-use/)에서 도구 설계를 다뤘는데, 여기서 간과하기 쉬운 사실이 있습니다. 도구의 이름, 설명, 파라미터 스키마 자체가 컨텍스트 윈도우의 토큰을 소비한다는 점입니다.
+도구 설계를 이야기할 때 간과하기 쉬운 사실이 하나 있습니다. 도구의 이름, 설명, 파라미터 스키마 자체가 컨텍스트 윈도우의 토큰을 소비한다는 점입니다.
 
 도구 하나의 스키마는 수백에서 수천 토큰을 소비합니다. 도구가 20개면 수만 토큰, MCP 서버를 여러 개 연결해서 도구가 50개를 넘기면 수만에서 10만 토큰 가까이 소비될 수 있습니다. 200,000 토큰 윈도우에서 도구 정의만으로 상당 부분이 사라지는 셈입니다.
 
@@ -107,7 +156,7 @@ Claude Code는 이 문제를 두 가지 메커니즘으로 해결합니다. 첫�
 
 도구 정의보다 더 빠르게 컨텍스트를 소비하는 것은 도구 반환값입니다. 파일을 읽으면 파일 내용이, grep을 실행하면 검색 결과가, 테스트를 돌리면 테스트 출력이 컨텍스트에 쌓입니다.
 
-이전 글에서 다룬 25,000 토큰 상한이 개별 반환값의 크기를 제한하지만, 누적 효과는 막을 수 없습니다. 도구 호출 10번에 각 5,000 토큰이면 50,000 토큰, 30번이면 150,000 토큰입니다. 200,000 토큰 윈도우가 도구 결과만으로 가득 차는 것은 시간문제에 불과하게 됩니다.
+도구 반환값에 흔히 걸어두는 25,000 토큰 상한은 개별 반환값의 크기를 제한할 뿐, 누적 효과는 막지 못합니다. 도구 호출 10번에 각 5,000 토큰이면 50,000 토큰, 30번이면 150,000 토큰입니다. 200,000 토큰 윈도우가 도구 결과만으로 가득 차는 것은 시간문제에 불과하게 됩니다.
 
 Few-shot 예시에도 같은 관점이 적용됩니다. Anthropic은 예시의 효과를 강조하지만, 컨텍스트 엔지니어링 관점에서 보면 예시도 토큰을 소비합니다. 모든 엣지 케이스를 예시로 나열하는 것보다, 핵심 패턴을 보여주는 소수의 대표적 예시가 효과적입니다. Anthropic의 표현대로 "예시는 천 마디 말의 가치가 있는 그림"이기 때문입니다.
 
@@ -116,6 +165,43 @@ Few-shot 예시에도 같은 관점이 적용됩니다. Anthropic은 예시의 �
 ## 네 가지 컨텍스트 전략
 
 컨텍스트가 유한한 자원이라면, 이를 관리하는 전략이 필요합니다. Anthropic의 가이드와 프로덕션 에이전트의 실전 사례에서 다루는 전략들을 네 가지로 정리할 수 있습니다. 이 전략들은 상호 배타적이 아니라 상호 보완적입니다. 프로덕션 에이전트는 대부분 네 가지를 조합해서 사용합니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컨텍스트를 관리하는 네 가지 전략. 1번 JIT 검색, 2번 컴팩션, 3번 구조화된 노트, 4번 서브에이전트 격리를 차례로 정리한 그림.">
+  <style>
+    .ce3-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
+    .ce3-name { fill: var(--text, #1c1917); font-size: 16px; font-weight: 600; }
+    .ce3-desc { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .ce3-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .ce3-num { font-size: 15px; font-weight: 700; }
+  </style>
+  <text x="20" y="24" class="ce3-title">컨텍스트를 관리하는 네 가지 전략</text>
+  <!-- strategy 1: just-in-time retrieval -->
+  <rect x="20" y="42" width="440" height="66" rx="8" class="ce3-card" />
+  <circle cx="52" cy="75" r="16" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2" />
+  <text x="52" y="80" text-anchor="middle" class="ce3-num" fill="var(--primary, #0d9488)">1</text>
+  <text x="84" y="70" class="ce3-name">JIT 검색</text>
+  <text x="84" y="92" class="ce3-desc">경량 식별자만 들고 있다가 필요할 때 도구로 가져온다</text>
+  <!-- strategy 2: compaction -->
+  <rect x="20" y="118" width="440" height="66" rx="8" class="ce3-card" />
+  <circle cx="52" cy="151" r="16" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2" />
+  <text x="52" y="156" text-anchor="middle" class="ce3-num" fill="var(--accent, #d97706)">2</text>
+  <text x="84" y="146" class="ce3-name">컴팩션</text>
+  <text x="84" y="168" class="ce3-desc">대화 기록을 요약으로 압축해 윈도우 공간을 되찾는다</text>
+  <!-- strategy 3: structured note-taking -->
+  <rect x="20" y="194" width="440" height="66" rx="8" class="ce3-card" />
+  <circle cx="52" cy="227" r="16" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
+  <text x="52" y="232" text-anchor="middle" class="ce3-num" fill="var(--text-success, #16a34a)">3</text>
+  <text x="84" y="222" class="ce3-name">구조화된 노트</text>
+  <text x="84" y="244" class="ce3-desc">핵심 사실을 윈도우 바깥 파일에 기록해 둔다</text>
+  <!-- strategy 4: subagent isolation -->
+  <rect x="20" y="270" width="440" height="66" rx="8" class="ce3-card" />
+  <circle cx="52" cy="303" r="16" fill="var(--bg, #fafaf8)" stroke="var(--text, #1c1917)" stroke-width="2" />
+  <text x="52" y="308" text-anchor="middle" class="ce3-num" fill="var(--text, #1c1917)">4</text>
+  <text x="84" y="298" class="ce3-name">서브에이전트 격리</text>
+  <text x="84" y="320" class="ce3-desc">탐색은 서브에이전트가 하고 부모는 요약만 받는다</text>
+</svg>
+</div>
 
 | 전략 | 핵심 아이디어 | 적용 시점 | trade-off |
 |------|-------------|----------|-----------|
@@ -138,10 +224,13 @@ Claude Code가 대규모 데이터베이스 분석을 할 때의 패턴이 좋�
 
 실전에서 가장 효과적인 접근은 **하이브리드 전략**입니다. Claude Code가 이 모델을 사용합니다. CLAUDE.md 파일은 세션 시작 시 즉시 로딩되어 프로젝트 컨텍스트를 제공하고, `grep`과 `glob` 같은 도구는 필요한 파일을 just-in-time으로 검색합니다. 사전 로딩의 속도와 에이전틱 검색의 유연성을 결합한 셈입니다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 하이브리드 전략 설계 기준</strong><br>
-  어떤 정보를 사전 로딩하고 어떤 정보를 JIT로 가져올지 결정하는 기준은 간단합니다. 변하지 않는 프로젝트 설정(코딩 컨벤션, 빌드 설정)은 사전 로딩. 매번 달라지는 파일 내용과 검색 결과는 JIT. Anthropic의 조언대로 "가장 단순하게 작동하는 것"이 최선입니다.
-</div>
+:::tip
+
+**하이브리드 전략 설계 기준**
+
+어떤 정보를 사전 로딩하고 어떤 정보를 JIT로 가져올지 결정하는 기준은 간단합니다. 변하지 않는 프로젝트 설정(코딩 컨벤션, 빌드 설정)은 사전 로딩. 매번 달라지는 파일 내용과 검색 결과는 JIT. Anthropic의 조언대로 "가장 단순하게 작동하는 것"이 최선입니다.
+
+:::
 
 ### 전략 2: 컴팩션
 
@@ -157,24 +246,50 @@ Claude Code가 대규모 데이터베이스 분석을 할 때의 패턴이 좋�
 
 가장 안전한 초기 단계는 도구 호출과 결과를 정리하는 것입니다. 대화 깊은 곳에 있는 도구 결과를 에이전트가 다시 볼 필요가 있을까요? 대부분의 경우 그렇지 않습니다. Claude Code의 컴팩션 과정을 예시로 보면 이렇습니다.
 
-```
-[컴팩션 전: 180K 토큰]
-시스템 프롬프트 → 사용자 요청 → Read(파일 A) → 결과(3K) →
-Edit(파일 A) → 결과(1K) → Bash(테스트) → 결과(5K) →
-Read(파일 B) → 결과(4K) → ... (150K 도구 결과)
-
-[컴팩션 후: 20K 토큰]
-시스템 프롬프트 → [요약: 파일 A를 수정하고 테스트 통과.
-파일 B의 import 구조 확인 완료. 남은 작업: 파일 C, D 수정]
-→ 최근 접근 파일 5개 내용
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸다.">
+  <defs>
+    <marker id="ce4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+  </defs>
+  <style>
+    .ce4-title { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
+    .ce4-note { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .ce4-small { font-size: 12px; }
+  </style>
+  <!-- before compaction: 180K total, 150K of it tool results -->
+  <text x="20" y="24" class="ce4-title">컴팩션 전: 180K 토큰</text>
+  <rect x="20" y="36" width="73" height="32" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="56" y="57" text-anchor="middle" class="ce4-small" fill="var(--text-muted, #78716c)">30K</text>
+  <rect x="93" y="36" width="367" height="32" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5" />
+  <text x="276" y="57" text-anchor="middle" font-size="14" fill="var(--text-danger, #dc2626)">도구 결과 누적 150K</text>
+  <!-- compaction step -->
+  <path d="M 240 80 L 240 110" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none" marker-end="url(#ce4Arrow)" />
+  <text x="252" y="100" class="ce4-note">컴팩션</text>
+  <!-- after compaction: 20K total, drawn at the same scale -->
+  <text x="20" y="136" class="ce4-title">컴팩션 후: 20K 토큰</text>
+  <rect x="20" y="148" width="49" height="32" rx="4" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <text x="44" y="169" text-anchor="middle" class="ce4-small" fill="var(--text-success, #16a34a)">20K</text>
+  <rect x="69" y="148" width="391" height="32" rx="4" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
+  <text x="264" y="169" text-anchor="middle" class="ce4-note">확보된 공간 160K</text>
+  <!-- what survives inside the 20K -->
+  <rect x="20" y="200" width="6" height="6" fill="var(--text-success, #16a34a)" />
+  <text x="34" y="206" class="ce4-note">요약: 아키텍처 결정, 미해결 이슈, 남은 작업</text>
+  <rect x="20" y="222" width="6" height="6" fill="var(--text-success, #16a34a)" />
+  <text x="34" y="228" class="ce4-note">최근 접근한 파일 5개 내용</text>
+</svg>
+</div>
 
 150K 토큰의 도구 결과가 핵심 결정을 보존한 수천 토큰의 요약으로 교체됩니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 컴팩션의 깊이</strong><br>
-  Claude Code의 5단계 컴팩션 파이프라인(Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact)과 Codex의 암호화 blob 방식의 내부 구조는 [컴팩션 글](/agent/compaction-pipeline/)에서 다룹니다. 여기서는 컴팩션이 왜 필요하고 어떤 trade-off가 있는지에 집중합니다.
-</div>
+:::info
+
+**컴팩션의 깊이**
+
+Claude Code는 컴팩션을 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact의 5단계 파이프라인으로 나누어 실행하고, Codex는 압축 결과를 암호화된 blob으로 다룹니다. 각 단계가 어떤 순서로 어떤 조건에서 실행되는지는 그 자체로 하나의 주제이고, 여기서는 컴팩션이 왜 필요하고 어떤 trade-off가 있는지에 집중합니다.
+
+:::
 
 ### 전략 3: 구조화된 노트 (에이전틱 메모리)
 
@@ -190,11 +305,45 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
 
 구조화된 노트의 핵심은 컴팩션과의 관계입니다. 컴팩션이 실행되기 전에 핵심 사실을 노트로 추출하면, 요약 과정에서 정보가 손실되더라도 노트가 이를 보완합니다. 일종의 이중 안전장치입니다.
 
-```
-[컴팩션 전]  대화 기록 → 핵심 사실 추출 → 노트에 기록
-[컴팩션 실행] 대화 기록 → 요약으로 교체 (일부 정보 손실)
-[컴팩션 후]  요약 + 노트 → 모델이 핵심 사실에 접근 가능
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 210" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있다.">
+  <defs>
+    <marker id="ce5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
+    </marker>
+  </defs>
+  <style>
+    .ce5-head { fill: var(--text-muted, #78716c); font-size: 13px; font-weight: 600; }
+    .ce5-main { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
+    .ce5-sub { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .ce5-flow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+  </style>
+  <!-- timeline headers -->
+  <text x="85" y="22" text-anchor="middle" class="ce5-head">컴팩션 전</text>
+  <text x="240" y="22" text-anchor="middle" class="ce5-head">컴팩션 실행</text>
+  <text x="395" y="22" text-anchor="middle" class="ce5-head">컴팩션 후</text>
+  <!-- upper lane: the conversation history -->
+  <rect x="20" y="40" width="130" height="44" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
+  <text x="85" y="62" text-anchor="middle" class="ce5-main">대화 기록</text>
+  <text x="85" y="78" text-anchor="middle" class="ce5-sub">150K</text>
+  <path d="M 150 62 L 172 62" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <rect x="175" y="40" width="130" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5" />
+  <text x="240" y="62" text-anchor="middle" class="ce5-main">요약</text>
+  <text x="240" y="78" text-anchor="middle" class="ce5-sub">일부 정보 손실</text>
+  <path d="M 305 62 L 327 62" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <rect x="330" y="40" width="130" height="44" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <text x="395" y="62" text-anchor="middle" class="ce5-main">요약 + 노트</text>
+  <text x="395" y="78" text-anchor="middle" class="ce5-sub">핵심 사실 복원</text>
+  <!-- lower lane: the note lives outside the context window -->
+  <path d="M 85 84 L 85 144" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <text x="97" y="118" class="ce5-sub">핵심 사실 추출</text>
+  <rect x="20" y="146" width="130" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <text x="85" y="168" text-anchor="middle" class="ce5-main">노트</text>
+  <text x="85" y="184" text-anchor="middle" class="ce5-sub">윈도우 바깥에 보존</text>
+  <path d="M 150 168 L 395 168 L 395 88" class="ce5-flow" marker-end="url(#ce5Arrow)" />
+  <text x="170" y="160" class="ce5-sub">컴팩션을 통과해 살아남는다</text>
+</svg>
+</div>
 
 ### 전략 4: 서브에이전트 격리
 
@@ -202,7 +351,7 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
 
 > "Each subagent might explore extensively, using tens of thousands of tokens or more, but returns only a condensed, distilled summary of its work (often 1,000-2,000 tokens)."
 
-[두 번째 글](/agent/agent-workflow-patterns/)에서 Orchestrator-Workers 패턴을 작업 분배의 관점에서 살펴봤습니다. 여기서 한 발 더 나아가면, 이 패턴은 컨텍스트 관리 전략이기도 합니다. 서브에이전트가 50번의 도구 호출로 25만 토큰을 소비하더라도, 부모 에이전트는 2,000 토큰의 요약만 받습니다. 서브에이전트의 상세한 탐색 과정이 부모의 컨텍스트를 오염시키지 않게 됩니다.
+오케스트레이터가 하위 작업을 워커에게 나눠주는 Orchestrator-Workers 패턴은 보통 작업 분배의 관점에서 이야기됩니다. 한 발 더 나아가면, 이 패턴은 컨텍스트 관리 전략이기도 합니다. 서브에이전트가 50번의 도구 호출로 25만 토큰을 소비하더라도, 부모 에이전트는 2,000 토큰의 요약만 받습니다. 서브에이전트의 상세한 탐색 과정이 부모의 컨텍스트를 오염시키지 않게 됩니다.
 
 Claude Code는 이를 **사이드체인(sidechain)** 아키텍처로 구현합니다. 서브에이전트의 대화 기록은 부모 에이전트의 메시지 배열이 아니라 별도의 사이드체인 파일에 저장됩니다. 서브에이전트가 완료되면 요약 텍스트만 부모에게 반환되고, 전체 대화 기록은 감사(audit) 목적으로 사이드체인에 남습니다. 부모 에이전트는 대규모 작업을 위임하고도 컨텍스트 풋프린트를 가볍게 유지할 수 있습니다.
 
@@ -357,12 +506,15 @@ async def delegate_to_subagent(task: str, tools: dict, llm_call):
     return summary
 ```
 
-이 함수를 `tools` 딕셔너리에 도구로 등록하면, 모델이 스스로 서브에이전트 위임을 결정할 수 있습니다. 전체 구현은 에이전트 루프를 다루는 다음 글에서 살펴봅니다.
+이 함수를 `tools` 딕셔너리에 도구로 등록하면, 모델이 스스로 서브에이전트 위임을 결정할 수 있습니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 프로덕션과의 차이</strong><br>
-  이 코드는 단일 <code>compact()</code> 호출로 전체 대화를 한 번에 압축합니다. 프로덕션 시스템은 상황에 따라 다른 전략을 선택하는 다단계 파이프라인을 사용합니다. Claude Code의 5단계 파이프라인에서 가벼운 단계(도구 결과 정리)가 먼저 실행되고, 무거운 단계(LLM 요약)는 마지막에만 실행됩니다.
-</div>
+:::warning
+
+**프로덕션과의 차이**
+
+이 코드는 단일 `compact()` 호출로 전체 대화를 한 번에 압축합니다. 프로덕션 시스템은 상황에 따라 다른 전략을 선택하는 다단계 파이프라인을 사용합니다. Claude Code의 5단계 파이프라인에서 가벼운 단계(도구 결과 정리)가 먼저 실행되고, 무거운 단계(LLM 요약)는 마지막에만 실행됩니다.
+
+:::
 
 ---
 
@@ -393,6 +545,14 @@ async def delegate_to_subagent(task: str, tools: dict, llm_call):
 컨텍스트 엔지니어링은 프롬프트 엔지니어링의 자연스러운 확장입니다. 단일 프롬프트를 다듬는 것에서, 에이전트의 전체 수명 동안 정보 흐름을 설계하는 것으로 관점이 이동합니다. Karpathy의 비유대로 컨텍스트 윈도우가 RAM이라면, 컨텍스트 엔지니어링은 그 RAM을 효율적으로 관리하는 운영체제를 설계하는 것입니다. 모델이 강력해질수록 덜 처방적인 엔지니어링이 필요해지겠지만, 컨텍스트를 유한하고 소중한 자원으로 다루는 원칙은 변하지 않을 것입니다.
 
 다음 글에서는 이 컨텍스트가 실제로 소비되는 공간, 즉 에이전트 루프의 내부를 해부합니다. Claude Code의 `queryLoop()`과 Codex의 Responses API 기반 루프가 한 턴을 어떻게 처리하는지 살펴보겠습니다.
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지](/agent/agent-workflow-patterns/)
+- [AI Agent의 도구 설계: ACI 원칙부터 프로덕션 스키마까지](/agent/agent-tool-use/)
+- [AI Agent의 컴팩션 파이프라인: 200K 토큰 윈도우를 지키는 다섯 단계](/agent/compaction-pipeline/)
+- [AI Agent 루프: 한 턴의 요청이 처리되는 6단계](/agent/agent-loop-anatomy/)
 
 ## 참고자료
 
