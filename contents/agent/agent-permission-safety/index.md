@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청하면, `rm /tmp/cache/*.log`는 아무런 확인 없이 즉시 실행됩니다. 그런데 같은 세션에서 `rm -rf ~/Documents`를 실행하려 하면, 루프가 멈추고 사용자에게 승인을 요청합니다. 둘 다 `Bash` 도구로 `rm`을 실행하는 것입니다. 같은 도구, 같은 명령어인데 하나는 통과하고 하나는 차단됩니다. 모델이 도구 호출을 결정한 시점과 도구가 실제로 실행되는 시점 사이에 무엇이 있을까요?
 
-[다섯 번째 글](/agent/agent-loop-anatomy/)에서 이 판단이 6단계 파이프라인의 Stage 4에 해당한다는 것을 확인했고, 7가지 퍼미션 모드의 이름을 나열했습니다. [여섯 번째 글](/agent/compaction-pipeline/)에서는 "에이전트가 도구를 실행하기 전에 어떤 기준으로 권한을 판단하는지, 즉 퍼미션 시스템의 내부를 살펴보겠다"고 약속했습니다. 이 글에서 그 약속을 이행합니다.
+에이전트 루프 한 턴은 모델 응답 수신, 도구 호출 파싱, 퍼미션 판단, 도구 실행, 결과 반영의 순서로 흘러갑니다. 이 글이 해부하는 것은 그중 세 번째 자리, 즉 모델이 도구 호출을 결정한 순간과 도구가 실제로 실행되는 순간 사이에 끼어 있는 판단 계층입니다.
 
 ---
 
@@ -21,29 +21,79 @@ Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청�
 
 **Phase 1: 사전 필터 (모델 호출 전)**
 
-[두 번째 글](/agent/agent-workflow-patterns/)에서 소개한 `assembleToolPool()`이 이 역할을 합니다. 5단계 필터를 거쳐 모델이 볼 수 있는 도구 목록 자체를 결정합니다.
+모델에게 넘길 도구 목록을 조립하는 `assembleToolPool()`이 이 역할을 합니다. 퍼미션 모드 필터링, deny 규칙 적용, MCP 도구 통합, 중복 제거를 차례로 거쳐 모델이 볼 수 있는 도구 목록 자체를 결정합니다.
 
 **Phase 2: 사후 판단 (모델 호출 후)**
 
 모델이 도구를 선택한 뒤, 그 특정 호출이 허용되는지를 7단계 파이프라인이 평가합니다. 이 글의 본론입니다.
 
-```
-Phase 1: 사전 필터 (Pre-model)           Phase 2: 사후 판단 (Post-model)
-
-최대 54개 도구                             모델이 선택한 도구 호출
-      │                                         │
-  퍼미션 모드 필터링                          모드 게이트
-      │                                         │
-  deny 규칙 적용                             deny 규칙 검사
-      │                                         │
-  MCP 도구 통합                              allow 규칙 검사
-      │                                         │
-  중복 제거                                  ML 분류기 (auto 모드)
-      │                                         │
-  모델에게 전달 ─────────►                   사용자 프롬프트 (필요시)
-  (축소된 도구 목록)        모델 호출              │
-                                             실행 또는 거부 라우팅
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 500 700" style="width: 100%; height: auto; max-width: 500px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="퍼미션 판단의 2단계 구조. 위 패널은 모델 호출 전 사전 필터가 도구 목록을 축소하는 과정, 아래 패널은 모델이 도구를 선택한 뒤 실행 여부를 판단하는 과정을 보여줍니다.">
+  <style>
+    .pp2p-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .pp2p-step { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .pp2p-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .pp2p-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .pp2p-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .pp2p-hd { fill: var(--primary, #0d9488); font-size: 15px; font-weight: 600; text-anchor: middle; }
+    .pp2p-t { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .pp2p-s { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .pp2p-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pp2pArr); }
+  </style>
+  <defs>
+    <marker id="pp2pArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
+  </defs>
+  <!-- Phase 1 panel -->
+  <rect x="20" y="8" width="460" height="300" rx="10" class="pp2p-panel"/>
+  <text x="250" y="32" class="pp2p-hd">Phase 1: 사전 필터 (모델 호출 전)</text>
+  <rect x="80" y="44" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="65" class="pp2p-t">최대 54개 도구</text>
+  <line x1="250" y1="78" x2="250" y2="86" class="pp2p-arr"/>
+  <rect x="80" y="88" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="109" class="pp2p-t">퍼미션 모드 필터링</text>
+  <line x1="250" y1="122" x2="250" y2="130" class="pp2p-arr"/>
+  <rect x="80" y="132" width="340" height="32" rx="7" class="pp2p-deny"/>
+  <text x="250" y="153" class="pp2p-t">deny 규칙 적용</text>
+  <line x1="250" y1="166" x2="250" y2="174" class="pp2p-arr"/>
+  <rect x="80" y="176" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="197" class="pp2p-t">MCP 도구 통합</text>
+  <line x1="250" y1="210" x2="250" y2="218" class="pp2p-arr"/>
+  <rect x="80" y="220" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="241" class="pp2p-t">중복 제거</text>
+  <line x1="250" y1="254" x2="250" y2="262" class="pp2p-arr"/>
+  <rect x="80" y="264" width="340" height="32" rx="7" class="pp2p-key"/>
+  <text x="250" y="285" class="pp2p-t">모델에게 전달 (축소된 도구 목록)</text>
+  <!-- transition -->
+  <line x1="250" y1="312" x2="250" y2="338" class="pp2p-arr"/>
+  <text x="320" y="330" class="pp2p-s">모델 호출</text>
+  <!-- Phase 2 panel -->
+  <rect x="20" y="344" width="460" height="346" rx="10" class="pp2p-panel"/>
+  <text x="250" y="368" class="pp2p-hd">Phase 2: 사후 판단 (모델 호출 후)</text>
+  <rect x="80" y="380" width="340" height="32" rx="7" class="pp2p-key"/>
+  <text x="250" y="401" class="pp2p-t">모델이 선택한 도구 호출</text>
+  <line x1="250" y1="414" x2="250" y2="422" class="pp2p-arr"/>
+  <rect x="80" y="424" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="445" class="pp2p-t">모드 게이트</text>
+  <line x1="250" y1="458" x2="250" y2="466" class="pp2p-arr"/>
+  <rect x="80" y="468" width="340" height="32" rx="7" class="pp2p-deny"/>
+  <text x="250" y="489" class="pp2p-t">deny 규칙 검사</text>
+  <line x1="250" y1="502" x2="250" y2="510" class="pp2p-arr"/>
+  <rect x="80" y="512" width="340" height="32" rx="7" class="pp2p-allow"/>
+  <text x="250" y="533" class="pp2p-t">allow 규칙 검사</text>
+  <line x1="250" y1="546" x2="250" y2="554" class="pp2p-arr"/>
+  <rect x="80" y="556" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="577" class="pp2p-t">ML 분류기 (auto 모드)</text>
+  <line x1="250" y1="590" x2="250" y2="598" class="pp2p-arr"/>
+  <rect x="80" y="600" width="340" height="32" rx="7" class="pp2p-step"/>
+  <text x="250" y="621" class="pp2p-t">사용자 프롬프트 (필요시)</text>
+  <line x1="250" y1="634" x2="250" y2="642" class="pp2p-arr"/>
+  <rect x="80" y="644" width="340" height="32" rx="7" class="pp2p-key"/>
+  <text x="250" y="665" class="pp2p-t">실행 또는 거부 라우팅</text>
+</svg>
+</div>
+<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
+  <em>퍼미션은 모델 호출 전후 두 지점에서 작동합니다. 위는 도구 목록 자체를 줄이는 사전 필터, 아래는 개별 호출을 평가하는 사후 판단입니다.</em>
+</p>
 
 이 2-phase 구조가 중요한 이유는 **정보 이론적 차이** 때문입니다. Phase 1에서 도구를 제거하면, 모델은 그 도구의 존재 자체를 모릅니다. 호출을 시도할 수도 없습니다. Phase 2에서 거부하면, 모델은 도구의 존재를 알고 호출을 시도했지만 차단된 것입니다. 전자가 구조적으로 더 강력한 제약입니다.
 
@@ -53,7 +103,7 @@ Phase 1: 사전 필터 (Pre-model)           Phase 2: 사후 판단 (Post-model)
 
 ## 7-Mode 스펙트럼
 
-[다섯 번째 글](/agent/agent-loop-anatomy/)에서 7개 모드의 이름을 나열했습니다. 여기서는 각 모드가 퍼미션 파이프라인의 동작을 어떻게 바꾸는지를 살펴봅니다.
+Claude Code의 퍼미션 모드는 모두 7개입니다. 각 모드가 퍼미션 파이프라인의 동작을 어떻게 바꾸는지를 살펴봅니다.
 
 | 모드 | 결정 주체 | 자동 승인 범위 | 프롬프트 대상 | 사용 사례 |
 |------|----------|--------------|-------------|----------|
@@ -116,103 +166,79 @@ def should_prompt(mode: PermissionMode, tool_name: str,
 
 ## Deny-First 파이프라인
 
-모드가 "얼마나 물어볼 것인가"를 결정한다면, deny-first 파이프라인은 "어떤 순서로 판단할 것인가"를 결정합니다. [다섯 번째 글](/agent/agent-loop-anatomy/)에서 "7-mode, deny-first"라는 라벨을 붙였는데, 여기서 "deny-first"의 실제 의미론을 살펴봅니다.
+모드가 "얼마나 물어볼 것인가"를 결정한다면, deny-first 파이프라인은 "어떤 순서로 판단할 것인가"를 결정합니다. Claude Code의 퍼미션 시스템을 흔히 "7-mode, deny-first"로 요약하는데, 뒤쪽 절반인 "deny-first"의 실제 의미론을 살펴봅니다.
 
 도구 호출이 도착하면 다음 7단계를 순서대로 거칩니다.
 
-<div style="text-align: center; margin: 24px 0;">
-<svg width="540" height="520" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif">
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 500 560" style="width: 100%; height: auto; max-width: 500px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
   <style>
-    .stage-box { fill: var(--bg-subtle, #f5f5f4); stroke: var(--border, #d6d3d1); stroke-width: 1.5; rx: 8; }
-    .deny-box { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #ef4444); stroke-width: 1.5; rx: 8; }
-    .allow-box { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #22c55e); stroke-width: 1.5; rx: 8; }
-    .decision { fill: var(--bg-subtle, #f5f5f4); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .label { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
-    .label-sm { fill: var(--text-muted, #78716c); font-size: 11px; text-anchor: middle; }
-    .result-label { font-size: 12px; font-weight: 600; text-anchor: middle; }
-    .arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#arrowP); }
-    .arrow-deny { stroke: var(--text-danger, #ef4444); stroke-width: 1.5; fill: none; marker-end: url(#arrowDeny); }
-    .arrow-allow { stroke: var(--text-success, #22c55e); stroke-width: 1.5; fill: none; marker-end: url(#arrowAllow); }
+    .pps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .pps-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .pps-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .pps-t { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .pps-s { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .pps-chip { font-size: 14px; font-weight: 600; text-anchor: middle; fill: #ffffff; }
+    .pps-ok { fill: var(--text-success, #16a34a); font-size: 13px; text-anchor: start; }
+    .pps-note { fill: var(--primary, #0d9488); font-size: 13px; text-anchor: middle; }
+    .pps-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#ppsArr); }
+    .pps-arr-d { stroke: var(--text-danger, #dc2626); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrD); }
+    .pps-arr-a { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrA); }
   </style>
   <defs>
-    <marker id="arrowP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
-    <marker id="arrowDeny" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #ef4444)"/></marker>
-    <marker id="arrowAllow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-success, #22c55e)"/></marker>
+    <marker id="ppsArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
+    <marker id="ppsArrD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #dc2626)"/></marker>
+    <marker id="ppsArrA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)"/></marker>
   </defs>
-
   <!-- Stage 1: Mode Gate -->
-  <rect x="170" y="10" width="200" height="36" class="stage-box"/>
-  <text x="270" y="33" class="label">1. Mode Gate</text>
-  <text x="270" y="60" class="label-sm">plan 모드면 쓰기 도구 차단</text>
-
-  <line x1="270" y1="46" x2="270" y2="70" class="arrow"/>
-
+  <rect x="70" y="12" width="250" height="50" rx="8" class="pps-box"/>
+  <text x="195" y="34" class="pps-t">1. Mode Gate</text>
+  <text x="195" y="54" class="pps-s">plan 모드면 쓰기 도구 차단</text>
+  <line x1="195" y1="64" x2="195" y2="82" class="pps-arr"/>
   <!-- Stage 2: Deny Rules -->
-  <rect x="170" y="70" width="200" height="36" class="deny-box"/>
-  <text x="270" y="93" class="label" style="font-weight:600">2. Deny Rules</text>
-
-  <!-- Deny exit -->
-  <line x1="370" y1="88" x2="460" y2="88" class="arrow-deny"/>
-  <rect x="460" y="74" width="60" height="28" rx="6" fill="var(--text-danger, #ef4444)"/>
-  <text x="490" y="93" class="result-label" fill="white">DENY</text>
-
-  <line x1="270" y1="106" x2="270" y2="130" class="arrow"/>
-
+  <rect x="70" y="84" width="250" height="38" rx="8" class="pps-deny"/>
+  <text x="195" y="108" class="pps-t" style="font-weight:600">2. Deny Rules</text>
+  <line x1="320" y1="103" x2="368" y2="103" class="pps-arr-d"/>
+  <rect x="376" y="87" width="90" height="32" rx="6" fill="var(--text-danger, #dc2626)"/>
+  <text x="421" y="108" class="pps-chip">DENY</text>
+  <line x1="195" y1="124" x2="195" y2="142" class="pps-arr"/>
   <!-- Stage 3: Allow Rules -->
-  <rect x="170" y="130" width="200" height="36" class="allow-box"/>
-  <text x="270" y="153" class="label" style="font-weight:600">3. Allow Rules</text>
-
-  <!-- Allow exit -->
-  <line x1="370" y1="148" x2="460" y2="148" class="arrow-allow"/>
-  <rect x="460" y="134" width="60" height="28" rx="6" fill="var(--text-success, #22c55e)"/>
-  <text x="490" y="153" class="result-label" fill="white">ALLOW</text>
-
-  <line x1="270" y1="166" x2="270" y2="190" class="arrow"/>
-
+  <rect x="70" y="144" width="250" height="38" rx="8" class="pps-allow"/>
+  <text x="195" y="168" class="pps-t" style="font-weight:600">3. Allow Rules</text>
+  <line x1="320" y1="163" x2="368" y2="163" class="pps-arr-a"/>
+  <rect x="376" y="147" width="90" height="32" rx="6" fill="var(--text-success, #16a34a)"/>
+  <text x="421" y="168" class="pps-chip">ALLOW</text>
+  <line x1="195" y1="184" x2="195" y2="202" class="pps-arr"/>
   <!-- Stage 4: ML Classifier -->
-  <rect x="170" y="190" width="200" height="36" class="stage-box"/>
-  <text x="270" y="213" class="label">4. ML Classifier</text>
-  <text x="270" y="240" class="label-sm">auto 모드일 때만 실행</text>
-
-  <!-- Classifier exits -->
-  <line x1="370" y1="208" x2="460" y2="208" class="arrow-allow"/>
-  <text x="480" y="212" class="label-sm" style="fill: var(--text-success, #22c55e)">safe</text>
-
-  <line x1="270" y1="226" x2="270" y2="260" class="arrow"/>
-  <text x="290" y="250" class="label-sm">risky</text>
-
+  <rect x="70" y="204" width="250" height="50" rx="8" class="pps-box"/>
+  <text x="195" y="226" class="pps-t">4. ML Classifier</text>
+  <text x="195" y="246" class="pps-s">auto 모드일 때만 실행</text>
+  <line x1="320" y1="222" x2="352" y2="222" class="pps-arr-a"/>
+  <text x="360" y="227" class="pps-ok">safe</text>
+  <line x1="195" y1="256" x2="195" y2="286" class="pps-arr"/>
+  <text x="205" y="276" class="pps-s" style="text-anchor: start">risky</text>
   <!-- Stage 5: User Prompt -->
-  <rect x="170" y="260" width="200" height="36" class="stage-box"/>
-  <text x="270" y="283" class="label">5. User Prompt</text>
-
-  <!-- Approve/Deny exits -->
-  <line x1="370" y1="278" x2="460" y2="278" class="arrow-allow"/>
-  <text x="490" y="282" class="label-sm" style="fill: var(--text-success, #22c55e)">approve</text>
-
-  <line x1="270" y1="296" x2="270" y2="330" class="arrow"/>
-  <text x="290" y="320" class="label-sm">deny</text>
-
+  <rect x="70" y="290" width="250" height="38" rx="8" class="pps-box"/>
+  <text x="195" y="314" class="pps-t">5. User Prompt</text>
+  <line x1="320" y1="309" x2="352" y2="309" class="pps-arr-a"/>
+  <text x="360" y="314" class="pps-ok">approve</text>
+  <line x1="195" y1="330" x2="195" y2="360" class="pps-arr"/>
+  <text x="205" y="350" class="pps-s" style="text-anchor: start">deny</text>
   <!-- Stage 6: Denial Routing -->
-  <rect x="170" y="330" width="200" height="36" class="stage-box"/>
-  <text x="270" y="353" class="label">6. Denial Routing</text>
-  <text x="270" y="380" class="label-sm">permission_denied → 모델</text>
-
-  <line x1="270" y1="366" x2="270" y2="410" class="arrow"/>
-
-  <!-- Stage 7: Execute -->
-  <rect x="170" y="410" width="200" height="36" class="allow-box"/>
-  <text x="270" y="433" class="label" style="font-weight:600">7. Execute or Route</text>
-
-  <!-- Note box -->
-  <rect x="20" y="460" width="500" height="40" rx="6" fill="var(--bg-subtle, #f5f5f4)" stroke="var(--primary, #0d9488)" stroke-width="1" stroke-dasharray="4"/>
-  <text x="270" y="477" class="label-sm" style="fill: var(--primary, #0d9488)">핵심: Stage 2(deny)가 Stage 3(allow)보다 먼저 실행됩니다</text>
-  <text x="270" y="492" class="label-sm" style="fill: var(--primary, #0d9488)">deny에 매칭되면 allow를 검사하지 않고 즉시 거부합니다</text>
+  <rect x="70" y="364" width="250" height="50" rx="8" class="pps-box"/>
+  <text x="195" y="386" class="pps-t">6. Denial Routing</text>
+  <text x="195" y="406" class="pps-s">거부 결과를 모델에게 전달</text>
+  <line x1="195" y1="416" x2="195" y2="434" class="pps-arr"/>
+  <!-- Stage 7: Execute or Route -->
+  <rect x="70" y="436" width="250" height="38" rx="8" class="pps-allow"/>
+  <text x="195" y="460" class="pps-t" style="font-weight:600">7. Execute or Route</text>
+  <!-- Note -->
+  <rect x="20" y="492" width="460" height="54" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1" stroke-dasharray="4"/>
+  <text x="250" y="515" class="pps-note">핵심: Stage 2(deny)가 Stage 3(allow)보다 먼저 실행됩니다</text>
+  <text x="250" y="535" class="pps-note">deny에 매칭되면 allow를 검사하지 않고 즉시 거부합니다</text>
 </svg>
 </div>
-<p align="center" style="color: #666; font-size: 14px;">
+<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
   <em>Deny-first 퍼미션 파이프라인의 7단계. Deny Rules가 Allow Rules보다 먼저 평가됩니다.</em>
 </p>
 
@@ -293,7 +319,7 @@ def evaluate_permission(
 
 ## ML 분류기: 파이프라인 속의 전문 감정인
 
-deny 규칙과 allow 규칙 사이를 빠져나간 도구 호출은 어떻게 될까요? `auto` 모드라면 ML 분류기가 판단합니다. [두 번째 글](/agent/agent-workflow-patterns/)에서 이 분류기(내부 코드명 `yoloClassifier`)의 2단계 구조와 오탐율(8.5%에서 0.4%로 감소)을 살펴봤습니다. 여기서는 분류기가 **무엇을 보고** 판단하는지를 다룹니다.
+deny 규칙과 allow 규칙 사이를 빠져나간 도구 호출은 어떻게 될까요? `auto` 모드라면 ML 분류기가 판단합니다. 내부 코드명 `yoloClassifier`로 불리는 이 분류기는 빠른 경로와 심층 경로를 잇는 2단계 구조를 쓰고, 그 덕분에 오탐율이 8.5%에서 0.4%까지 내려갔습니다. 여기서는 분류기가 **무엇을 보고** 판단하는지를 다룹니다.
 
 ### 분류기의 입력
 
@@ -325,11 +351,11 @@ deny 규칙과 allow 규칙 사이를 빠져나간 도구 호출은 어떻게 �
 
 ### 2단계 게이트의 경계 사례
 
-[두 번째 글](/agent/agent-workflow-patterns/)에서 분류기의 2단계 구조를 설명했습니다. Stage 1(빠른 경로)에서 Sonnet이 `max_tokens=64`로 빠르게 분류하고, safe면 즉시 실행, 그렇지 않으면 Stage 2(심층 경로)에서 chain-of-thought로 더 신중하게 판단합니다.
+분류기의 2단계 구조를 조금 더 풀어보겠습니다. Stage 1(빠른 경로)에서 Sonnet이 `max_tokens=64`로 빠르게 분류하고, safe면 즉시 실행, 그렇지 않으면 Stage 2(심층 경로)에서 chain-of-thought로 더 신중하게 판단합니다.
 
 경계 사례는 이 두 단계 사이에서 발생합니다. `git push origin main`을 생각해 보겠습니다. 프로젝트 작업 흐름에서 자연스러운 명령이지만, 원격 저장소에 영향을 주는 비가역적 작업이기도 합니다. Stage 1만으로는 컨텍스트가 부족합니다. Stage 2에서 "직전에 사용자가 push를 요청했는가?"를 확인하면 정확도가 올라갑니다.
 
-이 2단계 구조가 단일 단계보다 효과적인 이유는 비용 배분 때문입니다. 도구 호출의 대다수(읽기, 프로젝트 내 명령)는 Stage 1에서 즉시 safe로 분류됩니다. 비용이 높은 Stage 2는 실제로 판단이 어려운 소수의 호출에만 사용됩니다. [여섯 번째 글](/agent/compaction-pipeline/)에서 살펴본 컴팩션 파이프라인의 "덜 파괴적인 필터부터" 원칙과 같은 구조입니다.
+이 2단계 구조가 단일 단계보다 효과적인 이유는 비용 배분 때문입니다. 도구 호출의 대다수(읽기, 프로젝트 내 명령)는 Stage 1에서 즉시 safe로 분류됩니다. 비용이 높은 Stage 2는 실제로 판단이 어려운 소수의 호출에만 사용됩니다. 값싼 판단을 앞에 세우고 비싼 판단을 뒤로 미루는 배치는 컨텍스트를 줄이는 컴팩션 파이프라인이 "덜 파괴적인 필터부터" 적용하는 것과 같은 구조입니다.
 
 ```python
 from dataclasses import dataclass
@@ -391,7 +417,7 @@ async def yolo_classifier(
 
 ## Codex의 대안: OS 수준 샌드박스
 
-Claude Code가 도구 호출 하나하나를 7단계 파이프라인으로 판단하는 동안, Codex CLI는 전혀 다른 접근을 취합니다. 개별 도구가 아니라 **프로세스 전체를 격리**합니다. [다섯 번째 글](/agent/agent-loop-anatomy/)에서 Codex CLI의 OS 샌드박스(macOS Seatbelt, Linux bwrap+seccomp)와 Codex Cloud의 일회용 컨테이너를 소개했습니다. 여기서는 이 접근과 Claude Code의 도구 수준 퍼미션을 아키텍처적으로 비교합니다.
+Claude Code가 도구 호출 하나하나를 7단계 파이프라인으로 판단하는 동안, Codex CLI는 전혀 다른 접근을 취합니다. 개별 도구가 아니라 **프로세스 전체를 격리**합니다. Codex CLI는 macOS에서 Seatbelt, Linux에서 bwrap과 seccomp로 에이전트 프로세스를 감싸고, Codex Cloud는 아예 일회용 컨테이너 안에서 작업을 돌립니다. 이 접근과 Claude Code의 도구 수준 퍼미션을 아키텍처적으로 비교해 보겠습니다.
 
 핵심적인 차이는 **보호 경계의 단위**입니다. Claude Code의 퍼미션은 "이 `Bash(rm -rf /tmp/cache)` 호출을 허용할까?"를 판단합니다. Codex의 샌드박스는 "이 프로세스가 네트워크에 접근할 수 있는가? 이 경로에 쓸 수 있는가?"를 강제합니다. 전자는 도구 호출의 의미를 이해해야 하고, 후자는 시스템 콜 수준에서 기계적으로 차단합니다.
 
@@ -409,16 +435,19 @@ Claude Code가 도구 호출 하나하나를 7단계 파이프라인으로 판�
 
 이 차이는 우연이 아닙니다. Claude Code는 사용자가 터미널에 앉아서 대화하며 작업하는 **대화형 도구**입니다. 사용자가 실시간으로 판단에 참여할 수 있으므로, 세밀한 도구 수준 퍼미션이 의미 있습니다. Codex CLI의 주요 사용 모드는 작업을 맡기고 결과를 받는 **자율 실행**입니다. 실행 중에 사용자가 승인을 해줄 수 없으므로, OS 수준에서 가능한 행동 자체를 제한하는 것이 더 적합합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 같은 문제, 다른 해법의 근본 이유</strong><br>
-  "어떤 퍼미션 모델이 더 좋은가?"는 잘못된 질문입니다. 올바른 질문은 "사용자가 에이전트 실행 중에 참여할 수 있는가?"입니다. 참여할 수 있으면 도구 수준 퍼미션(Claude Code)이 유연합니다. 참여할 수 없으면 프로세스 수준 격리(Codex)가 안전합니다.
-</div>
+:::info
+
+**같은 문제, 다른 해법의 근본 이유**
+
+"어떤 퍼미션 모델이 더 좋은가?"는 잘못된 질문입니다. 올바른 질문은 "사용자가 에이전트 실행 중에 참여할 수 있는가?"입니다. 참여할 수 있으면 도구 수준 퍼미션(Claude Code)이 유연합니다. 참여할 수 없으면 프로세스 수준 격리(Codex)가 안전합니다.
+
+:::
 
 ---
 
 ## 거부는 종료가 아니다: Denial as Routing
 
-[다섯 번째 글](/agent/agent-loop-anatomy/)에서 "사용자가 도구 실행을 거부하면, 루프가 중단되는 것이 아니라 거부 결과가 모델에게 라우팅 시그널로 전달된다"고 했습니다. 이것이 실제로 어떻게 작동하는지 살펴보겠습니다.
+사용자가 도구 실행을 거부하면 루프가 그 자리에서 멈출 것 같지만, 실제로는 그렇지 않습니다. 거부 결과는 모델에게 전달되는 라우팅 시그널이 됩니다. 이것이 어떻게 작동하는지 살펴보겠습니다.
 
 사용자가 `Bash(rm -rf node_modules)` 호출을 거부하면, 퍼미션 파이프라인의 Stage 6에서 다음과 같은 메시지가 생성됩니다.
 
@@ -442,16 +471,19 @@ denied_result = {
 
 이 설계는 퍼미션 시스템을 단순한 **게이트**(통과/차단)가 아니라 **조향 장치**로 만듭니다. 거부는 정보입니다. "사용자는 이 방향을 원하지 않는다"는 신호가 모델의 다음 판단에 영향을 줍니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 permission_denied vs hard stop</strong><br>
-  전통적인 퍼미션 시스템(파일 시스템 권한, 방화벽 규칙 등)에서 거부는 오류입니다. 프로세스가 retry하지 않는 한, 거부된 작업은 실패로 끝납니다. 에이전트 퍼미션에서 거부는 <strong>피드백</strong>입니다. 모델이 거부를 읽고 대안을 생성할 수 있으므로, 하나의 거부가 더 나은 결과로 이어질 수 있습니다. [세 번째 글](/agent/agent-tool-use/)에서 다룬 비멱등 작업(이메일 발송, 결제 처리)의 확인 게이트도 이 메커니즘 위에서 작동합니다.
-</div>
+:::info
+
+**permission_denied vs hard stop**
+
+전통적인 퍼미션 시스템(파일 시스템 권한, 방화벽 규칙 등)에서 거부는 오류입니다. 프로세스가 retry하지 않는 한, 거부된 작업은 실패로 끝납니다. 에이전트 퍼미션에서 거부는 **피드백**입니다. 모델이 거부를 읽고 대안을 생성할 수 있으므로, 하나의 거부가 더 나은 결과로 이어질 수 있습니다. 이메일 발송이나 결제 처리처럼 되돌릴 수 없는 비멱등 작업 앞에 두는 확인 게이트도 이 메커니즘 위에서 작동합니다.
+
+:::
 
 ---
 
 ## 직접 구현: 퍼미션 파이프라인
 
-지금까지 살펴본 개념들을 하나의 `PermissionPipeline` 클래스로 통합합니다. [다섯 번째 글](/agent/agent-loop-anatomy/)에서 구현한 `production_loop`에 퍼미션 게이트를 추가하는 구조입니다.
+지금까지 살펴본 개념들을 하나의 `PermissionPipeline` 클래스로 통합합니다. 도구를 실행하기만 하던 기본 에이전트 루프에 퍼미션 게이트 하나를 끼워 넣는 구조입니다.
 
 ```python
 from dataclasses import dataclass, field
@@ -544,7 +576,7 @@ async def guarded_loop(
     return "최대 턴 수 도달"
 ```
 
-이 코드는 [다섯 번째 글](/agent/agent-loop-anatomy/)의 `production_loop`과 비교하면 한 가지가 추가되었습니다. 도구 실행 전에 `pipeline.evaluate()`가 호출되어, 허용된 호출만 실행하고 거부된 호출은 denial routing으로 처리합니다.
+퍼미션 게이트가 없는 기본 루프와 비교하면 추가된 것은 한 가지뿐입니다. 도구 실행 전에 `pipeline.evaluate()`가 호출되어, 허용된 호출만 실행하고 거부된 호출은 denial routing으로 처리합니다.
 
 | 이 코드 | 프로덕션 (Claude Code) |
 |---------|----------------------|
@@ -573,17 +605,29 @@ async def guarded_loop(
 
 Claude Code의 도구 수준 퍼미션은 유연하지만, 이론적으로 모델이 `Bash` 도구를 통해 위험한 명령을 분류기가 인식하지 못하는 방식으로 구성할 가능성이 있습니다. Codex의 OS 샌드박스는 이 문제를 OS가 차단하므로 더 견고하지만, 정당한 작업(패키지 설치를 위한 네트워크 접근 등)도 함께 차단합니다. 어느 쪽도 에이전트 자율성과 안전성 사이의 근본적 긴장을 완전히 해소하지는 못합니다.
 
-bubble 모드의 에스컬레이션 프로토콜이 멀티에이전트 환경에서 어떻게 작동하는지는 [멀티에이전트 글](/agent/multi-agent-systems/)에서, MCP 서버별 신뢰 수준 설정은 [MCP 글](/agent/mcp-protocol/)에서 다룹니다. 분류기 오탐율 0.4%를 자동으로 측정하고 개선하는 퍼미션 평가 체계는 아직 열린 엔지니어링 문제입니다.
+bubble 모드의 에스컬레이션 프로토콜을 여러 에이전트가 얽힌 환경으로 확장하는 일, MCP 서버마다 다른 신뢰 수준을 설정하는 일도 같은 긴장의 연장선에 있습니다. 분류기 오탐율 0.4%를 자동으로 측정하고 개선하는 퍼미션 평가 체계 역시 아직 열린 엔지니어링 문제입니다.
 
 ---
 
 ## 마치며
 
-[첫 번째 글](/agent/what-is-ai-agent/)에서 "Claude Code의 1.6%만이 AI 판단 로직이고, 나머지 98.4%는 결정론적 인프라"라고 했습니다. 이 시리즈를 통해 그 인프라를 하나씩 해부해 왔습니다. [다섯 번째 글](/agent/agent-loop-anatomy/)에서 루프의 6단계, [여섯 번째 글](/agent/compaction-pipeline/)에서 컴팩션의 5단계, 그리고 이 글에서 퍼미션의 7단계. 공통점이 있습니다. 모두 **다단계 파이프라인**이라는 것입니다. 한 번의 큰 판단이 아니라, 여러 단계의 작은 판단이 순서대로 쌓여서 최종 결정에 도달합니다.
+Claude Code에서 AI 판단 로직이 차지하는 비중은 1.6%에 불과하고, 나머지 98.4%는 결정론적 인프라입니다. 그 인프라를 뜯어보면 루프는 6단계, 컴팩션은 5단계, 그리고 퍼미션은 7단계로 쪼개져 있습니다. 공통점이 있습니다. 모두 **다단계 파이프라인**이라는 것입니다. 한 번의 큰 판단이 아니라, 여러 단계의 작은 판단이 순서대로 쌓여서 최종 결정에 도달합니다.
 
 퍼미션 시스템은 그중에서도 흥미로운 위치에 있습니다. 컴팩션 파이프라인은 정보를 제거하는 결정이지만, 퍼미션 파이프라인은 행동을 허용하는 결정입니다. 에이전트가 실제 세계에 영향을 미치는 접점이 도구 실행이고, 그 접점을 제어하는 것이 퍼미션입니다. 그래서 98.4%의 인프라 중에서도 가장 먼저 설계되어야 하는 부분입니다.
 
-지금까지 단일 에이전트의 내부를 살펴봤습니다. 루프, 컴팩션, 퍼미션 모두 하나의 에이전트가 하나의 작업을 처리하는 구조입니다. 하지만 프로덕션에서는 에이전트가 혼자 동작하지 않는 경우가 많습니다. [다음 글](/agent/multi-agent-systems/)에서는 여러 에이전트가 협력할 때 어떤 새로운 문제가 생기는지, 즉 멀티에이전트 시스템의 설계를 살펴봅니다.
+지금까지 단일 에이전트의 내부를 살펴봤습니다. 루프, 컴팩션, 퍼미션 모두 하나의 에이전트가 하나의 작업을 처리하는 구조입니다. 하지만 프로덕션에서는 에이전트가 혼자 동작하지 않는 경우가 많습니다. 다음 글에서는 여러 에이전트가 협력할 때 어떤 새로운 문제가 생기는지, 즉 멀티에이전트 시스템의 설계를 살펴봅니다.
+
+---
+
+## 함께 보면 좋은 글
+
+- [AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템](/agent/what-is-ai-agent/)
+- [AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지](/agent/agent-workflow-patterns/)
+- [AI Agent의 도구 설계: ACI 원칙부터 프로덕션 스키마까지](/agent/agent-tool-use/)
+- [AI Agent 루프: 한 턴의 요청이 처리되는 6단계](/agent/agent-loop-anatomy/)
+- [AI Agent의 컴팩션 파이프라인: 200K 토큰 윈도우를 지키는 다섯 단계](/agent/compaction-pipeline/)
+- [AI Agent의 멀티에이전트 시스템: 여러 에이전트가 협력할 때 생기는 다섯 가지 문제](/agent/multi-agent-systems/)
+- [AI Agent의 MCP: 에이전트가 외부 도구를 연결하는 표준 프로토콜](/agent/mcp-protocol/)
 
 ---
 
