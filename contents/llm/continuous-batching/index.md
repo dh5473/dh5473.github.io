@@ -9,7 +9,7 @@ summary: 'static batching이 GPU를 놀리는 이유부터, vLLM V1이 continuou
 thumbnail: './thumbnail.png'
 ---
 
-[3편](/llm/paged-attention/)에서 PagedAttention이 KV Cache를 블록들의 풀로 바꿔, 요청들이 GPU 메모리를 낭비 없이 나눠 쓸 수 있게 됐다고 했습니다. 그런데 블록 풀이 생겼다고 서빙이 저절로 빨라지지는 않습니다. 매 스텝마다 이 블록들을 **어떤 요청에 내어줄지**, 그리고 요청들을 **어떻게 배치로 묶을지** 정하는 주체가 따로 있어야 합니다. 그 주체가 스케줄러입니다.
+PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습니다. 덕분에 요청들이 GPU 메모리를 낭비 없이 나눠 쓸 수 있게 됐습니다. 그런데 블록 풀이 생겼다고 서빙이 저절로 빨라지지는 않습니다. 매 스텝마다 이 블록들을 **어떤 요청에 내어줄지**, 그리고 요청들을 **어떻게 배치로 묶을지** 정하는 주체가 따로 있어야 합니다. 그 주체가 스케줄러입니다.
 
 이 글에서는 vLLM의 스케줄러가 요청들을 매 스텝 어떻게 묶는지 살펴봅니다. 핵심은 두 가지, **continuous batching**과 **chunked prefill**입니다. 둘은 따로 등장한 기법이지만 vLLM V1에서는 하나의 스케줄러로 합쳐졌고, 그 구조를 이해하면 `max_num_batched_tokens` 같은 설정이 왜 그런 효과를 내는지도 자연스럽게 풀립니다.
 
@@ -17,21 +17,55 @@ thumbnail: './thumbnail.png'
 
 ## 배치를 통째로 묶으면 GPU가 논다
 
-여러 요청을 한 번에 처리하려면 배치로 묶어야 합니다. GPU는 요청 하나를 처리하든 여러 개를 처리하든 모델 가중치를 한 번 읽어오는데, 이 비용을 여러 요청이 나눠 질수록, 즉 배치가 클수록 요청당 부담이 줄어듭니다. 1편에서 decode가 memory-bound라 배치를 키우는 것이 처리량의 핵심이라고 한 이유가 이것입니다.
+여러 요청을 한 번에 처리하려면 배치로 묶어야 합니다. GPU는 요청 하나를 처리하든 여러 개를 처리하든 모델 가중치를 한 번 읽어오는데, 이 비용을 여러 요청이 나눠 질수록, 즉 배치가 클수록 요청당 부담이 줄어듭니다. decode는 메모리 대역폭에 묶인 memory-bound 단계라서, 배치를 키우는 것이 곧 처리량을 올리는 가장 확실한 방법이 됩니다.
 
 문제는 **어떻게 묶느냐**입니다. 가장 단순한 방식은 요청 여러 개를 모아 배치로 만들고, 그 배치를 통째로 시작해서 통째로 끝내는 것입니다. 이걸 static batching이라고 합니다. 그런데 LLM 요청은 생성하는 토큰 수가 제각각입니다. 어떤 요청은 세 단어로 끝나고, 어떤 요청은 소설 한 편을 씁니다.
 
-```
-Static batching: 배치가 통째로 시작해서 통째로 끝난다
-
-시간 →
-A  ███              (3스텝에 종료)
-B  ████████         (8스텝)
-C  ██████████████   (14스텝, 가장 김)
-D  ████             (4스텝)
-   └── A·B·D가 끝나도 그 자리는 빈 채로 남고,
-       가장 긴 C가 끝나야 배치 전체가 반납된다
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 226" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="static batching 간트 차트. 요청 A는 3스텝, B는 8스텝, D는 4스텝 만에 끝나지만 가장 긴 C가 14스텝을 채울 때까지 그 자리가 빈 슬롯으로 남아 낭비된다">
+  <style>
+    .cb1-title { fill: var(--text, #1c1917); font-size: 15px; }
+    .cb1-name  { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .cb1-sub   { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb1-run   { fill: var(--primary, #0d9488); }
+    .cb1-waste { fill: url(#cb1Hatch); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+    .cb1-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
+    .cb1-warn  { fill: var(--text-danger, #dc2626); font-size: 12px; text-anchor: middle; }
+  </style>
+  <defs>
+    <pattern id="cb1Hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="var(--bg-danger, #fef2f2)"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="var(--text-danger, #dc2626)" stroke-width="1.4" opacity="0.4"/>
+    </pattern>
+  </defs>
+  <text x="10" y="18" class="cb1-title">Static batching</text>
+  <text x="448" y="18" class="cb1-sub" text-anchor="end">시간 →</text>
+  <text x="36" y="61" class="cb1-name">A</text>
+  <rect x="56" y="44" width="84" height="24" rx="3" class="cb1-run"/>
+  <text x="98" y="60" class="cb1-in">3스텝</text>
+  <rect x="140" y="44" width="308" height="24" rx="3" class="cb1-waste"/>
+  <text x="294" y="60" class="cb1-warn">빈 슬롯 = 낭비</text>
+  <text x="36" y="95" class="cb1-name">B</text>
+  <rect x="56" y="78" width="224" height="24" rx="3" class="cb1-run"/>
+  <text x="168" y="94" class="cb1-in">8스텝</text>
+  <rect x="280" y="78" width="168" height="24" rx="3" class="cb1-waste"/>
+  <text x="36" y="129" class="cb1-name">C</text>
+  <rect x="56" y="112" width="392" height="24" rx="3" class="cb1-run"/>
+  <text x="252" y="128" class="cb1-in">14스텝 (가장 김)</text>
+  <text x="36" y="163" class="cb1-name">D</text>
+  <rect x="56" y="146" width="112" height="24" rx="3" class="cb1-run"/>
+  <text x="112" y="162" class="cb1-in">4스텝</text>
+  <rect x="168" y="146" width="280" height="24" rx="3" class="cb1-waste"/>
+  <rect x="56" y="184" width="14" height="12" rx="2" class="cb1-run"/>
+  <text x="76" y="194" class="cb1-sub">실행 중</text>
+  <rect x="140" y="184" width="14" height="12" rx="2" class="cb1-waste"/>
+  <text x="160" y="194" class="cb1-sub">빈 슬롯 (낭비)</text>
+  <text x="56" y="216" class="cb1-sub">가장 긴 C가 끝나야 배치 전체가 반납된다</text>
+</svg>
+</div>
 
 A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스텝을 채울 때까지 그 자리를 떠나지 못합니다. A가 비운 자리에 새 요청을 넣지도 못합니다. 배치를 통째로 관리하니까요. 결국 GPU는 이미 끝난 요청의 빈자리를 그대로 안은 채, 절반쯤 빈 배치를 계속 돌리게 됩니다. 요청 길이 편차가 클수록 이 낭비는 커집니다.
 
@@ -43,24 +77,68 @@ A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스�
 
 핵심은 배치 구성의 단위를 **요청 전체가 아니라 한 스텝(=한 번의 forward pass)**으로 낮춘 것입니다. 매 스텝이 끝나면 스케줄러가 배치를 다시 들여다봅니다. 답을 다 만든 요청은 그 즉시 배치에서 빠지고, 그 빈자리에 대기 중이던 요청이 바로 들어옵니다.
 
-```
-Continuous batching: 매 스텝마다 배치를 다시 구성한다
-
-스텝 t    [ A  B  C  D ]
-스텝 t+1  [ A  B  C  D ]
-스텝 t+2  [ E  B  C  D ]   A 완료 → 대기 중이던 E가 그 자리에 합류
-스텝 t+3  [ E  B  C  F ]   D 완료 → F가 합류
-스텝 t+4  [ E  G  C  F ]   B 완료 → G가 합류
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="continuous batching의 스텝별 배치 구성. 네 개의 슬롯이 매 스텝 다시 채워진다. A가 완료되면 E가, D가 완료되면 F가, B가 완료되면 G가 즉시 그 자리에 합류해 빈 슬롯이 생기지 않는다">
+  <style>
+    .cb2-title { fill: var(--text, #1c1917); font-size: 15px; }
+    .cb2-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb2-cell  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .cb2-new   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .cb2-req   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .cb2-nreq  { fill: var(--text-success, #16a34a); font-size: 15px; text-anchor: middle; }
+    .cb2-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
+  </style>
+  <text x="8" y="18" class="cb2-title">Continuous batching</text>
+  <text x="8" y="59" class="cb2-step">스텝 t</text>
+  <rect x="72" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="60" class="cb2-req">A</text>
+  <rect x="140" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="60" class="cb2-req">B</text>
+  <rect x="208" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="60" class="cb2-req">C</text>
+  <rect x="276" y="40" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="60" class="cb2-req">D</text>
+  <text x="8" y="95" class="cb2-step">스텝 t+1</text>
+  <rect x="72" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="96" class="cb2-req">A</text>
+  <rect x="140" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="96" class="cb2-req">B</text>
+  <rect x="208" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="96" class="cb2-req">C</text>
+  <rect x="276" y="76" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="96" class="cb2-req">D</text>
+  <text x="8" y="131" class="cb2-step">스텝 t+2</text>
+  <rect x="72" y="112" width="62" height="30" rx="5" class="cb2-new"/><text x="103" y="132" class="cb2-nreq">E</text>
+  <rect x="140" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="132" class="cb2-req">B</text>
+  <rect x="208" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="132" class="cb2-req">C</text>
+  <rect x="276" y="112" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="132" class="cb2-req">D</text>
+  <text x="348" y="132" class="cb2-note">A 완료, E 합류</text>
+  <text x="8" y="167" class="cb2-step">스텝 t+3</text>
+  <rect x="72" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="168" class="cb2-req">E</text>
+  <rect x="140" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="171" y="168" class="cb2-req">B</text>
+  <rect x="208" y="148" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="168" class="cb2-req">C</text>
+  <rect x="276" y="148" width="62" height="30" rx="5" class="cb2-new"/><text x="307" y="168" class="cb2-nreq">F</text>
+  <text x="348" y="168" class="cb2-note">D 완료, F 합류</text>
+  <text x="8" y="203" class="cb2-step">스텝 t+4</text>
+  <rect x="72" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="103" y="204" class="cb2-req">E</text>
+  <rect x="140" y="184" width="62" height="30" rx="5" class="cb2-new"/><text x="171" y="204" class="cb2-nreq">G</text>
+  <rect x="208" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="239" y="204" class="cb2-req">C</text>
+  <rect x="276" y="184" width="62" height="30" rx="5" class="cb2-cell"/><text x="307" y="204" class="cb2-req">F</text>
+  <text x="348" y="204" class="cb2-note">B 완료, G 합류</text>
+  <rect x="72" y="228" width="14" height="12" rx="2" class="cb2-cell"/>
+  <text x="92" y="238" class="cb2-note">진행 중</text>
+  <rect x="160" y="228" width="14" height="12" rx="2" class="cb2-new"/>
+  <text x="180" y="238" class="cb2-note">새로 합류</text>
+  <text x="72" y="256" class="cb2-note">빈 슬롯이 생기지 않아 매 스텝 배치가 꽉 찬다</text>
+</svg>
+</div>
 
 A가 끝난 다음 스텝에 곧바로 E가 그 자리를 채웁니다. 빈자리를 안고 도는 스텝이 사라지고, GPU는 매 스텝 최대한 꽉 찬 배치를 처리합니다. 요청 하나가 끝나기를 배치 전체가 기다리던 구조가, 요청 하나가 끝나면 그 자리만 갈아 끼우는 구조로 바뀐 셈입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  continuous batching은 운영체제의 선점형 시분할 스케줄링과 닮았습니다. 여러 프로세스가 CPU를 짧은 타임 슬라이스로 번갈아 쓰듯, 여러 요청이 매 스텝마다 GPU를 함께 씁니다. 다만 OS의 타임 슬라이스가 "시간"으로 끊긴다면, vLLM의 한 스텝은 "토큰 수"로 끊긴다는 점이 다릅니다.
-</div>
+:::info
 
-그런데 배치가 무한정 커지지는 않습니다. 요청들이 토큰을 생성할수록 각자의 블록이 늘어나고(2·3편), 블록 풀이 바닥나면 vLLM은 가장 뒤늦게 들어온 요청부터 선점(preemption)합니다. 선점된 요청의 블록은 풀에 반납되고, 그 요청은 나중에 자리가 나면 KV Cache를 다시 계산해 이어갑니다(recompute). 즉 동시 처리량은 블록 예산이라는 천장까지만 올라가고, 그 너머는 선점으로 되돌아옵니다.
+**참고**
+
+continuous batching은 운영체제의 선점형 시분할 스케줄링과 닮았습니다. 여러 프로세스가 CPU를 짧은 타임 슬라이스로 번갈아 쓰듯, 여러 요청이 매 스텝마다 GPU를 함께 씁니다. 다만 OS의 타임 슬라이스가 "시간"으로 끊긴다면, vLLM의 한 스텝은 "토큰 수"로 끊긴다는 점이 다릅니다.
+
+:::
+
+그런데 배치가 무한정 커지지는 않습니다. 요청들이 토큰을 생성할수록 각자가 붙들고 있는 KV Cache 블록이 늘어나고, 블록 풀이 바닥나면 vLLM은 가장 뒤늦게 들어온 요청부터 선점(preemption)합니다. 선점된 요청의 블록은 풀에 반납되고, 그 요청은 나중에 자리가 나면 KV Cache를 다시 계산해 이어갑니다(recompute). 즉 동시 처리량은 블록 예산이라는 천장까지만 올라가고, 그 너머는 선점으로 되돌아옵니다.
 
 <br>
 
@@ -68,16 +146,41 @@ A가 끝난 다음 스텝에 곧바로 E가 그 자리를 채웁니다. 빈자�
 
 continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치에 처음 합류할 때 한 가지 걸림돌이 남습니다. 바로 **prefill**입니다.
 
-1편에서 봤듯 요청 처리는 두 단계입니다. 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill, 그다음 토큰을 하나씩 만드는 decode. prefill은 프롬프트의 모든 토큰을 병렬로 계산하는 compute-bound 단계이고, decode는 토큰 하나를 만드는 memory-bound 단계입니다. 문제는 프롬프트가 길 때입니다. 8,000토큰짜리 프롬프트의 prefill은 연산량이 많아 한 스텝을 통째로 잡아먹습니다.
+요청 처리는 두 단계로 나뉩니다. 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill, 그다음 토큰을 하나씩 만드는 decode. prefill은 프롬프트의 모든 토큰을 병렬로 계산하는 compute-bound 단계이고, decode는 토큰 하나를 만드는 memory-bound 단계입니다. 문제는 프롬프트가 길 때입니다. 8,000토큰짜리 프롬프트의 prefill은 연산량이 많아 한 스텝을 통째로 잡아먹습니다.
 
-```
-Chunked prefill이 없다면
-
-스텝 t    [ decodeA  decodeB  decodeC ]       기존 3요청, 토큰 1개씩 생성
-스텝 t+1  [ prefillX (8,000토큰 통째) ]        A·B·C의 생성이 멈춘다
-스텝 t+2  [ decodeA  decodeB  decodeC ]       다시 재개
-             ↑ 스텝 t+1 동안 기존 사용자 화면의 토큰이 뚝 멈춘다
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 228" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="chunked prefill이 없을 때의 스텝 구성. 스텝 t와 t+2는 A B C의 decode로 채워지지만, 그 사이 스텝 t+1을 8000토큰짜리 긴 prefill이 통째로 차지해 기존 요청의 토큰 생성이 멈춘다">
+  <style>
+    .cb3-title { fill: var(--text, #1c1917); font-size: 15px; }
+    .cb3-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb3-dec   { fill: var(--primary, #0d9488); }
+    .cb3-pre   { fill: var(--accent, #d97706); }
+    .cb3-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
+    .cb3-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb3-warn  { fill: var(--text-danger, #dc2626); font-size: 12px; }
+  </style>
+  <text x="8" y="18" class="cb3-title">Chunked prefill이 없다면</text>
+  <text x="8" y="64" class="cb3-step">스텝 t</text>
+  <rect x="76" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="137" y="64" class="cb3-in">decode A</text>
+  <rect x="203" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="264" y="64" class="cb3-in">decode B</text>
+  <rect x="330" y="44" width="122" height="32" rx="4" class="cb3-dec"/><text x="391" y="64" class="cb3-in">decode C</text>
+  <text x="8" y="108" class="cb3-step">스텝 t+1</text>
+  <rect x="76" y="88" width="376" height="32" rx="4" class="cb3-pre"/>
+  <text x="264" y="108" class="cb3-in">prefill X (8,000토큰 통째)</text>
+  <text x="8" y="152" class="cb3-step">스텝 t+2</text>
+  <rect x="76" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="137" y="152" class="cb3-in">decode A</text>
+  <rect x="203" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="264" y="152" class="cb3-in">decode B</text>
+  <rect x="330" y="132" width="122" height="32" rx="4" class="cb3-dec"/><text x="391" y="152" class="cb3-in">decode C</text>
+  <rect x="76" y="180" width="14" height="12" rx="2" class="cb3-dec"/>
+  <text x="96" y="190" class="cb3-note">decode (memory-bound)</text>
+  <rect x="266" y="180" width="14" height="12" rx="2" class="cb3-pre"/>
+  <text x="286" y="190" class="cb3-note">prefill (compute-bound)</text>
+  <text x="76" y="216" class="cb3-warn">스텝 t+1 동안 A·B·C의 토큰 생성이 멈춘다</text>
+</svg>
+</div>
 
 새 요청 X의 긴 prefill이 스텝 t+1을 독점하는 동안, 이미 답을 받아보고 있던 A·B·C의 decode는 그 스텝에서 밀려납니다. 사용자 입장에서는 잘 나오던 토큰이 갑자기 한 박자 끊깁니다. 앞선 요청이 뒤에 온 긴 요청 때문에 멈추는, 전형적인 head-of-line blocking입니다.
 
@@ -89,16 +192,44 @@ Chunked prefill이 없다면
 
 해법은 단순합니다. 긴 prefill을 한 스텝에 통째로 밀어 넣지 말고, **여러 조각으로 잘라** 여러 스텝에 나눠 처리하는 것입니다. 이것이 chunked prefill입니다(Sarathi-Serve, 2024). 그리고 잘라낸 prefill 청크를, 진행 중인 요청들의 decode와 **같은 스텝에 함께** 태웁니다.
 
-```
-Chunked prefill: 긴 prefill을 잘라 decode와 같은 스텝에 태운다
-
-스텝 t    [ decodeA  decodeB  X청크 1/4 ]
-스텝 t+1  [ decodeA  decodeB  X청크 2/4 ]
-스텝 t+2  [ decodeA  decodeB  X청크 3/4 ]
-스텝 t+3  [ decodeA  decodeB  X청크 4/4 ]
-             ↑ A·B는 매 스텝 토큰을 계속 생성하고
-               X의 prefill은 네 스텝에 나눠 처리된다
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 250" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="chunked prefill을 적용한 스텝 구성. 스텝 t부터 t+3까지 매 스텝에 A와 B의 decode와 X의 prefill 청크가 함께 실려, 기존 요청의 토큰 생성이 끊기지 않는다">
+  <style>
+    .cb4-title { fill: var(--text, #1c1917); font-size: 15px; }
+    .cb4-step  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb4-dec   { fill: var(--primary, #0d9488); }
+    .cb4-pre   { fill: var(--accent, #d97706); }
+    .cb4-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
+    .cb4-note  { fill: var(--text-muted, #78716c); font-size: 12px; }
+    .cb4-ok    { fill: var(--text-success, #16a34a); font-size: 12px; }
+  </style>
+  <text x="8" y="18" class="cb4-title">Chunked prefill</text>
+  <text x="8" y="64" class="cb4-step">스텝 t</text>
+  <rect x="76" y="44" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="64" class="cb4-in">decode A</text>
+  <rect x="173" y="44" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="64" class="cb4-in">decode B</text>
+  <rect x="270" y="44" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="64" class="cb4-in">X 청크 1/4</text>
+  <text x="8" y="104" class="cb4-step">스텝 t+1</text>
+  <rect x="76" y="84" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="104" class="cb4-in">decode A</text>
+  <rect x="173" y="84" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="104" class="cb4-in">decode B</text>
+  <rect x="270" y="84" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="104" class="cb4-in">X 청크 2/4</text>
+  <text x="8" y="144" class="cb4-step">스텝 t+2</text>
+  <rect x="76" y="124" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="144" class="cb4-in">decode A</text>
+  <rect x="173" y="124" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="144" class="cb4-in">decode B</text>
+  <rect x="270" y="124" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="144" class="cb4-in">X 청크 3/4</text>
+  <text x="8" y="184" class="cb4-step">스텝 t+3</text>
+  <rect x="76" y="164" width="92" height="32" rx="4" class="cb4-dec"/><text x="122" y="184" class="cb4-in">decode A</text>
+  <rect x="173" y="164" width="92" height="32" rx="4" class="cb4-dec"/><text x="219" y="184" class="cb4-in">decode B</text>
+  <rect x="270" y="164" width="182" height="32" rx="4" class="cb4-pre"/><text x="361" y="184" class="cb4-in">X 청크 4/4</text>
+  <rect x="76" y="204" width="14" height="12" rx="2" class="cb4-dec"/>
+  <text x="96" y="214" class="cb4-note">decode (memory-bound)</text>
+  <rect x="266" y="204" width="14" height="12" rx="2" class="cb4-pre"/>
+  <text x="286" y="214" class="cb4-note">prefill (compute-bound)</text>
+  <text x="76" y="240" class="cb4-ok">A·B의 토큰 생성이 끊기지 않고, X의 prefill은 네 스텝에 나뉜다</text>
+</svg>
+</div>
 
 이제 X의 prefill이 진행되는 동안에도 A·B는 매 스텝 토큰을 하나씩 계속 만들어냅니다. 토큰이 끊기지 않습니다. head-of-line blocking이 사라진 것입니다.
 
@@ -106,10 +237,13 @@ Chunked prefill: 긴 prefill을 잘라 decode와 같은 스텝에 태운다
 
 물론 공짜는 아닙니다. prefill을 잘게 쪼갤수록 기존 decode의 끊김은 줄지만, prefill 자체는 조금 손해를 봅니다. 청크가 작아질수록 GPU가 한 번에 처리하는 연산량이 줄어 prefill의 계산 효율이 떨어지기 때문입니다. 그래서 청크를 얼마나 크게 자를지가 TTFT와 ITL 사이의 조절 손잡이가 됩니다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 팁</strong><br>
-  vLLM V1에서 chunked prefill은 기본으로 켜져 있습니다. V0 시절 인터넷 자료에는 <code>enable_chunked_prefill</code> 플래그로 켜고 끄던 이야기가 나오지만, V1에서는 스케줄러에 내장돼 별도로 켤 필요가 없습니다.
-</div>
+:::tip
+
+**팁**
+
+vLLM V1에서 chunked prefill은 기본으로 켜져 있습니다. V0 시절 인터넷 자료에는 `enable_chunked_prefill` 플래그로 켜고 끄던 이야기가 나오지만, V1에서는 스케줄러에 내장돼 별도로 켤 필요가 없습니다.
+
+:::
 
 <br>
 
@@ -121,19 +255,42 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 
 배분 순서에는 우선순위가 있습니다. 스케줄러는 먼저 진행 중인 요청(running 큐)의 decode부터 예산에 채웁니다. 그리고 남은 예산으로 대기 중인 요청(waiting 큐)의 prefill을 채우는데, 남은 예산에 다 안 들어가면 그만큼만 잘라서 넣습니다. 이 "잘라서 넣기"가 바로 chunked prefill입니다.
 
-```
-한 스텝의 토큰 예산 = max_num_batched_tokens (예: 8,192 토큰)
-
-먼저 running 큐의 decode부터 채운다
-   req_A (decode)  → 1 토큰
-   req_B (decode)  → 1 토큰
-   req_C (decode)  → 1 토큰                여기까지 3 토큰
-
-남은 예산(8,189)으로 waiting 큐의 prefill을 채운다
-   req_X (prefill) → 2,048 토큰 청크        누적 2,051 토큰
-
-  { A:1, B:1, C:1, X:2048 }  → 이 조합을 한 번의 forward pass로 실행
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 238" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 decode 요청 A B C가 1토큰씩 3토큰을 차지하고, 남은 예산으로 waiting 큐의 X가 2048토큰 prefill 청크를 채운다. 최종 스케줄 결과는 A 1, B 1, C 1, X 2048">
+  <style>
+    .cb5-title { fill: var(--text, #1c1917); font-size: 14px; text-anchor: middle; }
+    .cb5-dec   { fill: var(--primary, #0d9488); }
+    .cb5-pre   { fill: var(--accent, #d97706); }
+    .cb5-rest  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .cb5-in    { fill: #ffffff; font-size: 12px; text-anchor: middle; }
+    .cb5-muted { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; }
+    .cb5-s1    { fill: var(--primary, #0d9488); font-size: 13px; }
+    .cb5-s2    { fill: var(--accent, #d97706); font-size: 13px; }
+    .cb5-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
+  </style>
+  <defs>
+    <marker id="cb5Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <text x="240" y="20" class="cb5-title">한 스텝의 토큰 예산 = 8,192</text>
+  <rect x="20" y="36" width="44" height="38" rx="4" class="cb5-dec"/>
+  <text x="42" y="60" class="cb5-in">A B C</text>
+  <rect x="64" y="36" width="110" height="38" rx="4" class="cb5-pre"/>
+  <text x="119" y="60" class="cb5-in">X 청크 2,048</text>
+  <rect x="174" y="36" width="286" height="38" rx="4" class="cb5-rest"/>
+  <text x="317" y="60" class="cb5-muted">남은 예산 6,141 토큰</text>
+  <text x="20" y="102" class="cb5-s1">1. running 큐의 decode부터 채운다 (3토큰)</text>
+  <text x="20" y="126" class="cb5-s2">2. 남은 예산으로 waiting 큐의 prefill을 잘라 넣는다</text>
+  <path d="M240,140 L240,158" class="cb5-arrow"/>
+  <rect x="110" y="164" width="260" height="34" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+  <text x="240" y="186" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
+  <text x="240" y="222" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
+</svg>
+</div>
 
 이 그림 하나에 두 기법이 다 들어 있습니다. 매 스텝 배치를 새로 짜서 decode 요청을 채우는 것이 continuous batching이고, 긴 prefill이 예산에 안 맞아 잘려 들어가는 것이 chunked prefill입니다. 스케줄러는 그저 매 스텝 토큰 예산을 채울 뿐인데, 그 결과로 두 기법이 함께 굴러갑니다.
 
@@ -145,31 +302,14 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 
 스케줄러의 동작을 이해하면, vLLM 서버를 띄울 때 넘기는 두 인자가 각각 무엇을 바꾸는지가 분명해집니다.
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-  <thead>
-    <tr style="background: #f8f9fa;">
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">인자</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">무엇을 정하나</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">키우면</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>max_num_batched_tokens</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">한 스텝에 처리할 총 토큰 수. prefill 청크가 커질 수 있는 상한이기도 함</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">prefill을 크게 삼켜 TTFT·처리량이 올라가고, 대신 decode 끊김(ITL)이 커질 여지가 생김</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>max_num_seqs</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">한 스텝에 올릴 수 있는 최대 시퀀스(요청) 수</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">동시 처리량이 올라감. 단 블록 예산 한도 안에서만</td>
-    </tr>
-  </tbody>
-</table>
+| 인자 | 무엇을 정하나 | 키우면 |
+|---|---|---|
+| **`max_num_batched_tokens`** | 한 스텝에 처리할 총 토큰 수. prefill 청크가 커질 수 있는 상한이기도 함 | prefill을 크게 삼켜 TTFT·처리량이 올라가고, 대신 decode 끊김(ITL)이 커질 여지가 생김 |
+| **`max_num_seqs`** | 한 스텝에 올릴 수 있는 최대 시퀀스(요청) 수 | 동시 처리량이 올라감. 단 블록 예산 한도 안에서만 |
 
-`max_num_batched_tokens`는 곧 청크 크기의 상한입니다. 이 값을 작게(예: 2,048) 잡으면 긴 prefill이 잘게 쪼개져 기존 요청의 ITL이 매끄러워지고, 크게 잡으면 prefill을 한 번에 많이 삼켜 TTFT와 전체 처리량이 좋아집니다. 앞 절에서 본 TTFT와 ITL의 긴장을 조절하는 손잡이가 바로 이 값인 셈입니다.
+`max_num_batched_tokens`는 곧 청크 크기의 상한입니다. 이 값을 작게(예: 2,048) 잡으면 긴 prefill이 잘게 쪼개져 기존 요청의 ITL이 매끄러워지고, 크게 잡으면 prefill을 한 번에 많이 삼켜 TTFT와 전체 처리량이 좋아집니다. TTFT와 ITL 사이의 긴장을 조절하는 손잡이가 바로 이 값입니다.
 
-`max_num_seqs`는 배치에 동시에 올릴 요청 수의 상한입니다. 다만 이 값을 키운다고 처리량이 끝없이 오르지는 않습니다. 앞서 봤듯 동시 요청은 블록 예산이라는 천장까지만 실제로 올라가고, 그 너머는 선점으로 되돌아오기 때문입니다. 두 값 모두 하드웨어와 모델, 트래픽 특성에 따라 적정선이 달라지므로, 무엇을 우선할지(지연이냐 처리량이냐)를 정한 다음 거기에 맞춰가야 합니다.
+`max_num_seqs`는 배치에 동시에 올릴 요청 수의 상한입니다. 다만 이 값을 키운다고 처리량이 끝없이 오르지는 않습니다. 동시 요청 수는 블록 예산이라는 천장까지만 실제로 올라가고, 그 너머는 선점으로 되돌아오기 때문입니다. 두 값 모두 하드웨어와 모델, 트래픽 특성에 따라 적정선이 달라지므로, 무엇을 우선할지(지연이냐 처리량이냐)를 정한 다음 거기에 맞춰가야 합니다.
 
 <br>
 
@@ -178,6 +318,14 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 continuous batching과 chunked prefill은 결국 하나의 질문에 대한 답입니다. 한정된 GPU를 매 스텝 어떤 요청들로 채울 것인가. vLLM V1은 이 질문을 토큰 예산 하나로 환원해서, 끝난 요청을 즉시 갈아 끼우고 긴 prefill을 잘라 섞는 일을 같은 스케줄러 안에서 처리합니다.
 
 그런데 지금까지는 요청들이 저마다 다른 프롬프트를 들고 온다고 가정했습니다. 각자 자기 블록을 따로 쌓고, 스케줄러는 그 블록들을 나눠 줄 뿐이었죠. 만약 여러 요청이 **똑같은 프롬프트로 시작**한다면 어떨까요? 같은 KV를 요청마다 새로 만드는 건 낭비입니다. 다음 글에서는 이 공통 부분을 재사용하는 prefix caching과, 그 아이디어를 트리로 밀어붙인 SGLang의 RadixAttention을 살펴봅니다.
+
+<br>
+
+## 함께 보면 좋은 글
+
+- [Prefill과 Decode로 이해하는 LLM 추론 과정](/llm/llm-inference-process/)
+- [KV Cache가 LLM 서빙을 바꾸는 방식](/llm/kv-cache/)
+- [vLLM의 핵심 원리 PagedAttention 파헤치기](/llm/paged-attention/)
 
 <br>
 
