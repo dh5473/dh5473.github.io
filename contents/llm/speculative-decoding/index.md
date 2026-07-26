@@ -21,15 +21,73 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
 
 한 iteration은 이렇게 돌아갑니다. 먼저 **draft** 역할의 작은 모델이 토큰을 γ개 생성합니다. γ는 미리 그려놓을 draft 토큰 수로 보통 한 자릿수이고, 작은 모델이라 γ번을 돌아도 큰 모델 한 번보다 쌉니다. 그다음 **target**인 큰 모델이 forward 한 번으로 γ개 위치의 확률분포를 전부 계산합니다. 프롬프트를 병렬로 처리하던 prefill과 같은 병렬성입니다. 이제 각 위치에서 draft가 내놓은 토큰을 target의 분포와 비교해 수락하거나 거절합니다. 처음 거절이 난 위치에서는 target의 분포로 토큰을 다시 뽑고, 그 뒤에 남은 draft는 버립니다.
 
-```
-draft가 그린 다섯 토큰:   "이" "결과" "는" "매우" "흥미"
-
-                          target이 forward 한 번으로 다섯 위치를 병렬 검증
-                           ✓    ✓     ✓    ✗
-                          앞 3개 수락, 4번째에서 거절
-
-이번 iteration 확정:      "이" "결과" "는" + target이 다시 뽑은 1개 = 4토큰
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 262" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="draft 모델이 그린 다섯 개의 토큰을 target 모델이 forward 한 번으로 병렬 검증해 앞의 세 개를 수락하고 네 번째를 거절한 뒤 나머지 하나를 버리고, target이 다시 뽑은 토큰 한 개를 더해 이번 iteration에 네 토큰을 확정하는 과정">
+  <style>
+    .sd1-cap    { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+    .sd1-box    { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .sd1-tok    { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .sd1-okbox  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .sd1-oktxt  { fill: var(--text-success, #16a34a); font-size: 15px; text-anchor: middle; }
+    .sd1-oksub  { fill: var(--text-success, #16a34a); font-size: 12px; text-anchor: middle; }
+    .sd1-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .sd1-nobox  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .sd1-nosub  { fill: var(--text-danger, #dc2626); font-size: 12px; text-anchor: middle; }
+    .sd1-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3; fill: none; stroke-linecap: round; }
+    .sd1-drop   { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .sd1-dsub   { fill: var(--text-muted, #78716c); font-size: 12px; text-anchor: middle; opacity: 0.7; }
+    .sd1-newbox { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .sd1-newtxt { fill: var(--primary, #0d9488); font-size: 14px; text-anchor: middle; }
+    .sd1-arrow  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#sd1Arrow); }
+  </style>
+  <defs>
+    <marker id="sd1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+    </marker>
+  </defs>
+  <text x="240" y="16" class="sd1-cap">draft 모델이 토큰 5개를 미리 그린다</text>
+  <rect x="20"  y="26" width="80" height="40" rx="8" class="sd1-box"/>
+  <rect x="110" y="26" width="80" height="40" rx="8" class="sd1-box"/>
+  <rect x="200" y="26" width="80" height="40" rx="8" class="sd1-box"/>
+  <rect x="290" y="26" width="80" height="40" rx="8" class="sd1-box"/>
+  <rect x="380" y="26" width="80" height="40" rx="8" class="sd1-box"/>
+  <text x="60"  y="51" class="sd1-tok">이</text>
+  <text x="150" y="51" class="sd1-tok">결과</text>
+  <text x="240" y="51" class="sd1-tok">는</text>
+  <text x="330" y="51" class="sd1-tok">매우</text>
+  <text x="420" y="51" class="sd1-tok">흥미</text>
+  <path d="M240,72 L240,88" class="sd1-arrow"/>
+  <text x="240" y="106" class="sd1-cap">target이 forward 한 번으로 5개 위치를 병렬 검증</text>
+  <rect x="20"  y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
+  <rect x="110" y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
+  <rect x="200" y="116" width="80" height="48" rx="8" class="sd1-okbox"/>
+  <rect x="290" y="116" width="80" height="48" rx="8" class="sd1-nobox"/>
+  <rect x="380" y="116" width="80" height="48" rx="8" class="sd1-drop"/>
+  <path d="M52,134 l5,6 l10,-13"  class="sd1-okmark"/>
+  <path d="M142,134 l5,6 l10,-13" class="sd1-okmark"/>
+  <path d="M232,134 l5,6 l10,-13" class="sd1-okmark"/>
+  <path d="M323,128 L337,142 M337,128 L323,142" class="sd1-nomark"/>
+  <text x="60"  y="157" class="sd1-oksub">수락</text>
+  <text x="150" y="157" class="sd1-oksub">수락</text>
+  <text x="240" y="157" class="sd1-oksub">수락</text>
+  <text x="330" y="157" class="sd1-nosub">거절</text>
+  <text x="420" y="136" class="sd1-dsub">검증해도</text>
+  <text x="420" y="152" class="sd1-dsub">버려짐</text>
+  <path d="M240,170 L240,186" class="sd1-arrow"/>
+  <text x="240" y="204" class="sd1-cap">이번 iteration 확정: 4토큰</text>
+  <rect x="20"  y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
+  <rect x="110" y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
+  <rect x="200" y="214" width="80" height="40" rx="8" class="sd1-okbox"/>
+  <rect x="290" y="214" width="170" height="40" rx="8" class="sd1-newbox"/>
+  <text x="60"  y="239" class="sd1-oktxt">이</text>
+  <text x="150" y="239" class="sd1-oktxt">결과</text>
+  <text x="240" y="239" class="sd1-oktxt">는</text>
+  <text x="375" y="239" class="sd1-newtxt">target이 다시 뽑은 1개</text>
+</svg>
+</div>
 
 iteration 하나가 확정하는 토큰은 최소 1개, 최대 γ+1개입니다. 첫 토큰부터 거절되면 target이 다시 뽑은 1개만 남고, 전부 수락되면 target이 이미 계산해둔 그다음 위치의 분포에서 하나를 공짜로 더 뽑습니다. 어느 쪽이든 target의 가중치 읽기는 한 번입니다.
 
@@ -55,20 +113,11 @@ draft가 "매우"라는 토큰을 뽑아왔다고 하겠습니다. draft는 이 
 
 다만 "무손실"이 매번 같은 문장이 나온다는 뜻은 아닙니다. sampling에는 무작위성이 있으니 개별 문장은 달라질 수 있습니다. 보장되는 것은 어떤 문장이 나올 확률이 target 혼자 뽑을 때와 정확히 같다는 것, 즉 출력 품질이 통계적으로 동일하다는 것입니다. 무작위성이 없는 greedy(temperature 0)라면 문장 자체도 같게 나옵니다.
 
-그럼 얼마나 빨라질까요? 토큰 하나가 수락될 확률의 기댓값을 α라 하면, 원 논문의 공식으로 계산할 수 있습니다.
+그럼 얼마나 빨라질까요? 토큰 하나가 수락될 확률의 기댓값을 α, draft 토큰 수를 γ라 하면, iteration당 기대 확정 토큰 수 E는 원 논문의 공식으로 계산할 수 있습니다.
 
-```
-iteration당 기대 확정 토큰 수
+$$E = \frac{1 - \alpha^{\gamma+1}}{1 - \alpha}$$
 
-  E = (1 - α^(γ+1)) / (1 - α)
-
-  α: 토큰 하나가 수락될 확률의 기댓값
-  γ: draft 토큰 수
-
-  α = 0.8, γ = 4 라면   E = (1 - 0.8^5) / 0.2 ≈ 3.4
-
-  → target 가중치 읽기 한 번에 평균 3.4토큰
-```
+α = 0.8에 γ = 4를 넣으면 E = (1 - 0.8^5) / 0.2로 약 3.4가 나옵니다. target 가중치를 한 번 읽는 동안 평균 3.4토큰이 확정된다는 뜻입니다.
 
 draft도 공짜는 아니니 비용을 넣어보겠습니다. draft 1회 비용이 target 1회의 c배라 하면 전체 속도 개선은 E / (γc + 1)입니다. c = 0.05인 소형 draft라면 3.4 / 1.2로 약 2.8배가 나옵니다(여기 쓴 숫자들은 감을 잡기 위한 가정값입니다). 반대로 α가 낮으면 draft 비용만 얹혀서 손해가 됩니다.
 
@@ -86,42 +135,12 @@ speculative decoding의 성능은 결국 α, 즉 draft가 target을 얼마나 �
 
 **MTP**(multi-token prediction)는 모델이 draft를 내장하고 나오는 흐름입니다. DeepSeek-V3는 학습 품질을 올리려고 다음 토큰 하나를 더 예측하는 MTP 모듈을 뒀는데, 추론에서 이 모듈이 그대로 draft가 됩니다. 본체와 embedding, LM head를 공유하는 1레이어 모듈이라 EAGLE과 닮은꼴입니다. DeepSeek-V3 논문 기준으로 두 번째 토큰의 수락률이 주제를 가리지 않고 85%에서 90%였고, 생성 속도는 1.8배로 올랐습니다. Gemma 4도 같은 방식으로 쓸 수 있는 공식 draft 체크포인트를 배포합니다. 별도 학습도, 맞는 draft 모델을 찾는 수고도 필요 없어서, 서빙하려는 모델이 MTP를 지원한다면 첫 번째 선택지입니다.
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-  <thead>
-    <tr style="background: #f8f9fa;">
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">방식</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">draft의 출처</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">준비물</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">특징</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>draft 모델</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">같은 계열 소형 모델</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">vocabulary가 같은 소형 모델</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">준비가 간단, 수락률은 낮은 편</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>n-gram</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">프롬프트 문자열 매칭</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">없음</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">요약, RAG, 코드 수정처럼 복사가 많은 워크로드에 강함</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>EAGLE-3</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">target의 hidden state를 받는 전용 모듈</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">학습된 speculator 체크포인트</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">높은 수락률, 사실상 표준</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>MTP</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">모델에 내장된 예측 모듈</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">모델 제작자가 제공해야 함</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">준비 없이 바로, DeepSeek과 Gemma 4 등이 제공</td>
-    </tr>
-  </tbody>
-</table>
+| 방식 | draft의 출처 | 준비물 | 특징 |
+|---|---|---|---|
+| **draft 모델** | 같은 계열 소형 모델 | vocabulary가 같은 소형 모델 | 준비가 간단, 수락률은 낮은 편 |
+| **n-gram** | 프롬프트 문자열 매칭 | 없음 | 요약, RAG, 코드 수정처럼 복사가 많은 워크로드에 강함 |
+| **EAGLE-3** | target의 hidden state를 받는 전용 모듈 | 학습된 speculator 체크포인트 | 높은 수락률, 사실상 표준 |
+| **MTP** | 모델에 내장된 예측 모듈 | 모델 제작자가 제공해야 함 | 준비 없이 바로, DeepSeek과 Gemma 4 등이 제공 |
 
 <br>
 
@@ -139,10 +158,13 @@ vLLM이 공개한 실측 결과가 이 구도를 그대로 보여줍니다. 초�
 
 그리고 벤치마크 수치를 볼 때는 조건을 확인해야 합니다. EAGLE-3의 6.5배는 배치 1에 temperature 0인 학술 조건의 숫자입니다. 물론 배치가 크다고 무조건 손해라는 뜻은 아닙니다. 수락률이 높은 EAGLE 계열을 draft 길이까지 부하에 맞게 조여서 쓰면 큰 배치에서도 이득이 남습니다. 실제로 Llama 4를 EAGLE 계열로 서빙하는 Meta는 대규모 배치에서 1.4배에서 2.0배를 보고했습니다. 실서비스에서 기대할 수 있는 현실적인 상한이 이 2배 안팎이라고 보면 됩니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 켤까 말까의 판단 기준</strong><br>
-  트래픽이 낮고 토큰 간 지연이 중요한 서비스라면 켭니다. GPU가 포화된 고부하 상황에서 처리량을 최적화하는 중이라면 끄거나 draft 길이를 줄입니다. 출력이 입력을 많이 복사하는 워크로드라면 준비물 없는 n-gram부터 시도합니다. 어느 쪽이든 최종 결정은 실제 트래픽의 temperature와 도메인에서 수락률(acceptance rate)을 재본 다음에 내립니다.
-</div>
+:::info
+
+**켤까 말까의 판단 기준**
+
+트래픽이 낮고 토큰 간 지연이 중요한 서비스라면 켭니다. GPU가 포화된 고부하 상황에서 처리량을 최적화하는 중이라면 끄거나 draft 길이를 줄입니다. 출력이 입력을 많이 복사하는 워크로드라면 준비물 없는 n-gram부터 시도합니다. 어느 쪽이든 최종 결정은 실제 트래픽의 temperature와 도메인에서 수락률(acceptance rate)을 재본 다음에 내립니다.
+
+:::
 
 <br>
 
