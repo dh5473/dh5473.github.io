@@ -11,7 +11,7 @@ thumbnail: './thumbnail.png'
 
 서빙할 모델을 받으러 Hugging Face에 가면 같은 모델이 여러 벌 올라와 있습니다. 이름 뒤에 FP8이 붙은 것, AWQ가 붙은 것, GPTQ가 붙은 것. 전부 "양자화된 모델"이라는 설명이 달려 있는데, 무엇을 받아야 할까요? 셋 다 모델을 가볍게 만든다는 건 알겠는데, 그럼 셋은 서로 뭐가 다를까요?
 
-[5편](/llm/prefix-caching-radix-attention/)까지는 이미 있는 계산과 메모리를 아껴 쓰는 이야기였습니다. prefix caching은 이미 한 계산을 다시 하지 않는 기술이었지만, 캐시에 담기는 KV의 크기와 매 스텝 GPU가 읽는 가중치의 크기는 그대로였습니다. 양자화는 그 크기 자체를 줄입니다. 모델을 이루는 숫자들을 16비트 대신 8비트, 4비트로 표현하는 것입니다.
+지금까지는 이미 있는 계산과 메모리를 아껴 쓰는 이야기였습니다. prefix caching은 이미 한 계산을 다시 하지 않는 기술이었지만, 캐시에 담기는 KV의 크기와 매 스텝 GPU가 읽는 가중치의 크기는 그대로였습니다. 양자화는 그 크기 자체를 줄입니다. 모델을 이루는 숫자들을 16비트 대신 8비트, 4비트로 표현하는 것입니다.
 
 이 글에서는 양자화 기법들을 나열하는 대신, "무엇을 줄이면 무엇이 빨라지는가"라는 지도를 먼저 그리고 그 위에 FP8, AWQ, GPTQ를 올려놓습니다. vLLM은 v0.25.1을 기준으로 씁니다.
 
@@ -23,17 +23,41 @@ thumbnail: './thumbnail.png'
 
 이 구분이 중요한 이유는, 양자화가 건드릴 수 있는 자원이 하나가 아니기 때문입니다.
 
-```
-양자화가 줄일 수 있는 세 가지
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 236" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="양자화가 줄일 수 있는 세 가지 자원. 첫째 가중치가 차지하는 메모리를 줄이면 남는 GPU 메모리가 KV Cache 몫이 된다. 둘째 매 스텝 가중치를 읽는 양을 줄이면 memory-bound한 decode가 빨라진다. 셋째 행렬곱의 연산 정밀도를 낮추면 저정밀 텐서코어로 연산 자체가 빨라진다.">
+  <style>
+    .q1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+    .q1-badge { fill: var(--primary, #0d9488); }
+    .q1-num   { fill: #ffffff; font-size: 15px; text-anchor: middle; }
+    .q1-label { fill: var(--text, #1c1917); font-size: 15px; }
+    .q1-sub   { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+    .q1-cap   { fill: var(--text-muted, #78716c); font-size: 13px; }
+  </style>
+  <text x="20" y="16" class="q1-cap">양자화가 줄일 수 있는 세 가지</text>
+  <rect x="20" y="30" width="440" height="58" rx="8" class="q1-box"/>
+  <circle cx="52" cy="59" r="14" class="q1-badge"/>
+  <text x="52" y="64" class="q1-num">1</text>
+  <text x="80" y="52" class="q1-label">가중치가 차지하는 메모리</text>
+  <text x="80" y="73" class="q1-sub">남는 GPU 메모리가 KV Cache 몫이 된다</text>
+  <rect x="20" y="98" width="440" height="58" rx="8" class="q1-box"/>
+  <circle cx="52" cy="127" r="14" class="q1-badge"/>
+  <text x="52" y="132" class="q1-num">2</text>
+  <text x="80" y="120" class="q1-label">매 스텝 가중치를 읽는 양</text>
+  <text x="80" y="141" class="q1-sub">memory-bound한 decode가 빨라진다</text>
+  <rect x="20" y="166" width="440" height="58" rx="8" class="q1-box"/>
+  <circle cx="52" cy="195" r="14" class="q1-badge"/>
+  <text x="52" y="200" class="q1-num">3</text>
+  <text x="80" y="188" class="q1-label">행렬곱의 연산 정밀도</text>
+  <text x="80" y="209" class="q1-sub">저정밀 텐서코어로 연산 자체가 빨라진다</text>
+</svg>
+</div>
 
-  ① 가중치가 차지하는 메모리    →  남는 GPU 메모리가 KV Cache 몫이 된다
-  ② 매 스텝 가중치를 읽는 양    →  memory-bound한 decode가 빨라진다
-  ③ 행렬곱의 연산 정밀도        →  저정밀 텐서코어로 연산 자체가 빨라진다
-```
+①은 GPU 메모리 배분의 문제입니다. 가중치를 올리고 남은 메모리가 KV Cache 예산이고, 이 예산이 동시에 올려둘 수 있는 요청 수를 정합니다. 가중치가 절반으로 줄면 줄어든 만큼이 거의 그대로 KV Cache 예산에 더해집니다.
 
-①은 [2편](/llm/kv-cache/)과 [3편](/llm/paged-attention/)에서 본 구도 그대로입니다. 가중치를 올리고 남은 메모리가 KV Cache 예산이고, 이 예산이 동시에 올려둘 수 있는 요청 수를 정합니다. 가중치가 절반으로 줄면 줄어든 만큼이 거의 그대로 KV Cache 예산에 더해집니다.
-
-②는 [1편](/llm/llm-inference-process/)의 프레임입니다. decode는 토큰 하나를 뽑을 때마다 가중치 전체를 읽는 memory-bound 단계라, 읽을 데이터가 1/4이 되면 그 자체로 속도가 됩니다.
+②는 decode 단계의 성격에서 나옵니다. decode는 토큰 하나를 뽑을 때마다 가중치 전체를 읽는 memory-bound 단계라, 읽을 데이터가 1/4이 되면 그 자체로 속도가 됩니다.
 
 ③은 하드웨어 이야기입니다. GPU 텐서코어는 FP8이나 INT8 같은 낮은 정밀도에서 16비트보다 높은 처리량을 냅니다. H100의 FP8 행렬곱 처리량은 16비트의 2배입니다. 다만 이 경로를 타려면 가중치만이 아니라 **활성값까지** 낮은 비트여야 합니다. 행렬곱의 두 피연산자가 모두 같은 저정밀 형식이어야 하기 때문입니다.
 
@@ -45,15 +69,34 @@ W4A16은 ①과 ②를 얻고 ③은 포기합니다. W8A8은 셋 다 얻는 대
 
 먼저 숫자로 크기를 보겠습니다.
 
-```
-Gemma 3 27B 기준
-
-  bf16 가중치     27B × 2바이트  ≈ 54GB
-  int4 가중치     약 14.1GB        (Google 공식 수치)
-
-  decode 한 스텝 = 가중치 전체 읽기
-  스텝마다 읽는 양이 약 1/4로 줄어든다
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 214" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Gemma 3 27B 가중치 크기 비교. bf16은 27B 곱하기 2바이트로 약 54GB, int4는 약 14.1GB. decode 한 스텝은 가중치 전체를 읽으므로 스텝마다 읽는 양이 약 4분의 1로 줄어든다.">
+  <style>
+    .q2-cap   { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .q2-name  { fill: var(--text, #1c1917); font-size: 15px; }
+    .q2-val   { fill: var(--text, #1c1917); font-size: 14px; }
+    .q2-bar16 { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+    .q2-bar4  { fill: var(--primary, #0d9488); }
+    .q2-sub   { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+    .q2-line  { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+  </style>
+  <text x="20" y="18" class="q2-cap">Gemma 3 27B 가중치 크기</text>
+  <text x="20" y="60" class="q2-name">bf16</text>
+  <rect x="90" y="36" width="350" height="30" rx="4" class="q2-bar16"/>
+  <text x="428" y="56" class="q2-val" text-anchor="end">54GB</text>
+  <text x="98" y="86" class="q2-sub">27B × 2바이트</text>
+  <text x="20" y="124" class="q2-name">int4</text>
+  <rect x="90" y="100" width="91" height="30" rx="4" class="q2-bar4"/>
+  <text x="191" y="120" class="q2-val">14.1GB</text>
+  <text x="98" y="150" class="q2-sub">Google 공식 수치</text>
+  <line x1="20" y1="164" x2="460" y2="164" class="q2-line"/>
+  <text x="20" y="184" class="q2-sub">decode 한 스텝 = 가중치 전체 읽기</text>
+  <text x="20" y="202" class="q2-sub">스텝마다 읽는 양이 약 1/4로 줄어든다</text>
+</svg>
+</div>
 
 80GB GPU에 올린다고 하면 bf16으로는 가중치를 빼고 26GB가 남는데, 4비트로 줄이면 66GB가 남습니다. 활성값 버퍼 같은 고정 오버헤드를 빼고 남는 것이 전부 KV 예산이니, 저배치에서는 decode 지연이 직접 줄고 남은 메모리로 배치를 더 태울 수도 있습니다.
 
@@ -63,10 +106,13 @@ Gemma 3 27B 기준
 
 **AWQ**는 "중요한 것을 지키는" 접근입니다. 출발점은 모든 가중치가 똑같이 중요하지 않다는 관찰입니다. 흥미로운 건 중요한 가중치를 고르는 기준인데, 가중치 자신의 크기가 아니라 **그 가중치에 곱해지는 활성값의 크기**로 골라야 품질이 지켜집니다. activation-aware라는 이름이 여기서 나왔습니다. 큰 활성값과 만나는 1% 남짓의 채널을 16비트로 남겨두면 좋겠지만 혼합 정밀도는 하드웨어에서 비효율적이라, 대신 그 채널의 가중치를 미리 키워두고 활성값 쪽을 줄이는 스케일링으로 같은 보호 효과를 냅니다. 오차 흡수 같은 재구성 과정이 없어 calibration 데이터도 GPTQ보다 훨씬 적게 필요합니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 GPTQ vs AWQ, 뭐가 더 낫나</strong><br>
-  1차 소스끼리 결론이 갈립니다. AWQ 논문은 GPTQ가 calibration 데이터에 과적합될 수 있다고 지적하고, Red Hat(구 Neural Magic)의 대규모 평가는 양자화 범위의 상한을 조정하는 clipping까지 튜닝한 GPTQ가 AWQ보다 낫다고 보고합니다. 실무 관점의 결론은 "둘 다 정확도 회복률 96% 이상이고, 쓰려는 모델로 직접 평가해보기 전까지는 우열을 단정할 수 없다" 정도입니다.
-</div>
+:::info
+
+**GPTQ vs AWQ, 뭐가 더 낫나**
+
+1차 소스끼리 결론이 갈립니다. AWQ 논문은 GPTQ가 calibration 데이터에 과적합될 수 있다고 지적하고, Red Hat(구 Neural Magic)의 대규모 평가는 양자화 범위의 상한을 조정하는 clipping까지 튜닝한 GPTQ가 AWQ보다 낫다고 보고합니다. 실무 관점의 결론은 "둘 다 정확도 회복률 96% 이상이고, 쓰려는 모델로 직접 평가해보기 전까지는 우열을 단정할 수 없다" 정도입니다.
+
+:::
 
 한 가지 분명히 해둘 것이 있습니다. W4A16은 저장만 4비트고 **연산은 16비트**입니다. 행렬곱 직전에 가중치를 16비트로 복원해서 계산하므로, 연산 자체는 빨라지지 않습니다. 그래서 W4A16의 이득은 전부 ①메모리와 ②읽기량에서 나오고, 이 사실이 W8A8과의 승부 구도를 정합니다.
 
@@ -76,13 +122,60 @@ Gemma 3 27B 기준
 
 FP8은 이름 그대로 8비트 부동소수점입니다. 같은 8비트라도 정수(INT8)와는 값을 배치하는 방식이 다릅니다.
 
-```
-1바이트에 숫자를 담는 방법
-
-  INT8    S IIIIIII      정수, 값 사이 간격이 균일          최대 ±127
-  E4M3    S EEEE MMM     부동소수점, 0 근처가 촘촘          최대 ±448
-  E5M2    S EEEEE MM     지수 비트를 늘려 범위를 넓힌 형식   최대 ±57344
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="1바이트에 숫자를 담는 세 가지 방법의 비트 배치. INT8은 부호 1비트와 정수 7비트로 값 사이 간격이 균일하고 최대 플러스마이너스 127. E4M3는 부호 1비트, 지수 4비트, 가수 3비트의 부동소수점으로 0 근처가 촘촘하고 최대 플러스마이너스 448. E5M2는 지수를 5비트로 늘려 범위를 넓힌 형식으로 최대 플러스마이너스 57344.">
+  <style>
+    .q3-cap  { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .q3-name { fill: var(--text, #1c1917); font-size: 15px; }
+    .q3-max  { fill: var(--text, #1c1917); font-size: 13px; text-anchor: end; }
+    .q3-sub  { fill: var(--text-muted, #78716c); font-size: 12.5px; }
+    .q3-cs   { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+    .q3-ce   { fill: var(--bg-warn, #fffbeb); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+    .q3-cm   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+    .q3-bs   { fill: var(--text, #1c1917); font-size: 13px; text-anchor: middle; }
+    .q3-be   { fill: var(--text-warn, #d97706); font-size: 13px; text-anchor: middle; }
+    .q3-bm   { fill: var(--text-muted, #78716c); font-size: 13px; text-anchor: middle; }
+  </style>
+  <text x="20" y="16" class="q3-cap">1바이트(8비트)에 숫자를 담는 방법</text>
+  <text x="20" y="36" class="q3-sub">S 부호 · E 지수 · M 가수 · I 정수</text>
+  <text x="20" y="70" class="q3-name">INT8</text>
+  <rect x="86" y="52" width="30" height="26" class="q3-cs"/><text x="101" y="70" class="q3-bs">S</text>
+  <rect x="116" y="52" width="30" height="26" class="q3-cm"/><text x="131" y="70" class="q3-bm">I</text>
+  <rect x="146" y="52" width="30" height="26" class="q3-cm"/><text x="161" y="70" class="q3-bm">I</text>
+  <rect x="176" y="52" width="30" height="26" class="q3-cm"/><text x="191" y="70" class="q3-bm">I</text>
+  <rect x="206" y="52" width="30" height="26" class="q3-cm"/><text x="221" y="70" class="q3-bm">I</text>
+  <rect x="236" y="52" width="30" height="26" class="q3-cm"/><text x="251" y="70" class="q3-bm">I</text>
+  <rect x="266" y="52" width="30" height="26" class="q3-cm"/><text x="281" y="70" class="q3-bm">I</text>
+  <rect x="296" y="52" width="30" height="26" class="q3-cm"/><text x="311" y="70" class="q3-bm">I</text>
+  <text x="460" y="70" class="q3-max">최대 ±127</text>
+  <text x="20" y="96" class="q3-sub">정수, 값 사이 간격이 균일</text>
+  <text x="20" y="134" class="q3-name">E4M3</text>
+  <rect x="86" y="116" width="30" height="26" class="q3-cs"/><text x="101" y="134" class="q3-bs">S</text>
+  <rect x="116" y="116" width="30" height="26" class="q3-ce"/><text x="131" y="134" class="q3-be">E</text>
+  <rect x="146" y="116" width="30" height="26" class="q3-ce"/><text x="161" y="134" class="q3-be">E</text>
+  <rect x="176" y="116" width="30" height="26" class="q3-ce"/><text x="191" y="134" class="q3-be">E</text>
+  <rect x="206" y="116" width="30" height="26" class="q3-ce"/><text x="221" y="134" class="q3-be">E</text>
+  <rect x="236" y="116" width="30" height="26" class="q3-cm"/><text x="251" y="134" class="q3-bm">M</text>
+  <rect x="266" y="116" width="30" height="26" class="q3-cm"/><text x="281" y="134" class="q3-bm">M</text>
+  <rect x="296" y="116" width="30" height="26" class="q3-cm"/><text x="311" y="134" class="q3-bm">M</text>
+  <text x="460" y="134" class="q3-max">최대 ±448</text>
+  <text x="20" y="160" class="q3-sub">부동소수점, 0 근처가 촘촘</text>
+  <text x="20" y="198" class="q3-name">E5M2</text>
+  <rect x="86" y="180" width="30" height="26" class="q3-cs"/><text x="101" y="198" class="q3-bs">S</text>
+  <rect x="116" y="180" width="30" height="26" class="q3-ce"/><text x="131" y="198" class="q3-be">E</text>
+  <rect x="146" y="180" width="30" height="26" class="q3-ce"/><text x="161" y="198" class="q3-be">E</text>
+  <rect x="176" y="180" width="30" height="26" class="q3-ce"/><text x="191" y="198" class="q3-be">E</text>
+  <rect x="206" y="180" width="30" height="26" class="q3-ce"/><text x="221" y="198" class="q3-be">E</text>
+  <rect x="236" y="180" width="30" height="26" class="q3-ce"/><text x="251" y="198" class="q3-be">E</text>
+  <rect x="266" y="180" width="30" height="26" class="q3-cm"/><text x="281" y="198" class="q3-bm">M</text>
+  <rect x="296" y="180" width="30" height="26" class="q3-cm"/><text x="311" y="198" class="q3-bm">M</text>
+  <text x="460" y="198" class="q3-max">최대 ±57344</text>
+  <text x="20" y="224" class="q3-sub">지수 비트를 늘려 범위를 넓힌 형식</text>
+</svg>
+</div>
 
 LLM의 가중치와 활성값은 대부분 0 근처에 몰려 있고 가끔 큰 outlier가 섞여 있는 분포입니다. 균일 간격인 INT8은 outlier에 맞춰 간격을 잡으면 0 근처가 뭉개지는데, 부동소수점인 FP8은 0 근처를 촘촘하게 쓰면서 큰 값도 담습니다. FP8 형식을 제안한 NVIDIA와 Arm, Intel의 공동 논문은 같은 8비트 사후 양자화에서 INT8은 정확도가 크게 무너지고 E4M3는 유지된다는 것을 보였습니다. 추론에는 범위보다 정밀도가 중요해서 E4M3를 쓰고, E5M2는 값 범위가 널뛰는 학습 시 그래디언트용입니다.
 
@@ -98,48 +191,19 @@ INT8 W8A8도 같은 자리에 있는 선택지입니다. FP8 텐서코어가 없
 
 이제 지도를 완성할 수 있습니다. W4A16과 W8A8 중 무엇이 빠른가에는 고정된 답이 없고, **배치 크기가 정합니다**.
 
-배치가 작을 때 서빙 시간의 대부분은 memory-bound한 decode에 쓰입니다. 여기서는 매 스텝 읽는 가중치가 1/4인 W4A16이 이깁니다. 배치가 커지면 [4편](/llm/continuous-batching/)에서 본 continuous batching이 여러 요청의 연산을 한 행렬곱으로 묶습니다. 읽어온 가중치를 여러 요청이 나눠 쓰니 가중치 하나당 수행하는 연산이 배치만큼 늘고, 이르면 배치 수십 토큰 수준에서 **가중치 행렬곱의 병목이 읽기에서 연산으로 넘어갑니다.** 이 구간의 W4A16은 16비트로 복원해 계산하므로 읽기 이점은 사라지고 복원 비용만 남는 반면(원본 16비트보다 느려진다는 측정도 있습니다), W8A8은 저정밀 텐서코어로 연산 상한 자체가 2배라 역전합니다.
+배치가 작을 때 서빙 시간의 대부분은 memory-bound한 decode에 쓰입니다. 여기서는 매 스텝 읽는 가중치가 1/4인 W4A16이 이깁니다. 배치가 커지면 continuous batching이 여러 요청의 연산을 한 행렬곱으로 묶습니다. 읽어온 가중치를 여러 요청이 나눠 쓰니 가중치 하나당 수행하는 연산이 배치만큼 늘고, 이르면 배치 수십 토큰 수준에서 **가중치 행렬곱의 병목이 읽기에서 연산으로 넘어갑니다.** 이 구간의 W4A16은 16비트로 복원해 계산하므로 읽기 이점은 사라지고 복원 비용만 남는 반면(원본 16비트보다 느려진다는 측정도 있습니다), W8A8은 저정밀 텐서코어로 연산 상한 자체가 2배라 역전합니다.
 
 주의할 것은 이 역전이 GPU 전체가 compute-bound로 바뀐다는 뜻은 아니라는 점입니다. 요청마다 자기 몫의 KV Cache를 따로 읽어야 하는 어텐션은 배치가 커져도 memory-bound로 남아서, GPU 전체로 보면 고배치 decode도 여전히 메모리 대역폭을 한계까지 씁니다. 두 방식의 승부는 가중치 행렬곱 안에서만 갈리는 것이라, 컨텍스트가 길어 KV 읽기 비중이 큰 워크로드일수록 W8A8의 우위는 좁아집니다.
 
 Red Hat이 Llama 3.1 계열로 50만 회 이상 평가를 돌린 연구가 이 구도를 정량적으로 확인해줍니다. 요청을 하나씩 처리하는 동기 시나리오에서는 W4A16이 가장 효율적이었고(단일 스트림 평균 2.4배), 고배치 비동기 서빙에서는 대체로 W8A8이 최고 처리량을 냈습니다(평균 1.8배). 다만 비동기에서도 W4A16이 이기는 시나리오가 있고, 두 구간이 갈리는 경계 배치 크기도 모델과 하드웨어마다 달라서 보편적인 숫자는 없습니다. 정확도는 학술 벤치마크 평균으로 99% 안팎을 회복했고 가장 어려운 평가에서도 하한이 96%였는데, 특히 FP8은 모든 규모에서 사실상 무손실이었습니다.
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-  <thead>
-    <tr style="background: #f8f9fa;">
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">항목</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">W4A16 (AWQ, GPTQ)</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">W8A8 (FP8, INT8)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>가중치 압축</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">약 3.5배 (4비트 + 그룹 스케일 오버헤드)</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">약 2배</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>decode 가중치 읽기</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">약 1/4 (비트 수 기준)</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">약 1/2</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>저정밀 텐서코어 연산</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">없음 (16비트로 복원 후 연산)</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">있음</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>유리한 구간</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">저배치, 지연 민감</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">고배치, 처리량 중심</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;"><strong>정확도 회복률</strong></td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">평균 99% 안팎</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">평균 99% 안팎, FP8은 사실상 무손실</td>
-    </tr>
-  </tbody>
-</table>
+| 항목 | W4A16 (AWQ, GPTQ) | W8A8 (FP8, INT8) |
+|---|---|---|
+| **가중치 압축** | 약 3.5배 (4비트 + 그룹 스케일 오버헤드) | 약 2배 |
+| **decode 가중치 읽기** | 약 1/4 (비트 수 기준) | 약 1/2 |
+| **저정밀 텐서코어 연산** | 없음 (16비트로 복원 후 연산) | 있음 |
+| **유리한 구간** | 저배치, 지연 민감 | 고배치, 처리량 중심 |
+| **정확도 회복률** | 평균 99% 안팎 | 평균 99% 안팎, FP8은 사실상 무손실 |
 
 정리하면, 혼자 쓰는 GPU에서 응답 속도가 아쉬울 때는 W4A16, 서비스 트래픽을 받아내는 서버라면 W8A8이 기본 선택입니다. 이 시리즈의 관심사인 서빙 처리량 관점에서는 FP8이 첫 번째 후보가 됩니다.
 
@@ -149,54 +213,22 @@ Red Hat이 Llama 3.1 계열로 50만 회 이상 평가를 돌린 연구가 이 �
 
 배치 크기 다음의 변수는 GPU입니다. ③연산 이득은 텐서코어가 해당 정밀도를 지원해야 존재하기 때문에, GPU 세대가 후보를 먼저 걸러냅니다.
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-  <thead>
-    <tr style="background: #f8f9fa;">
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">세대</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">대표 GPU</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">INT8</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">FP8</th>
-      <th style="padding: 12px 16px; border: 1px solid #e9ecef; text-align: left;">현실적인 선택</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">Ampere</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">A100</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">없음</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">AWQ, GPTQ, INT8 W8A8</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">Ada Lovelace</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">L4, L40S</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">FP8</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">Hopper</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">H100, H200</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">FP8</td>
-    </tr>
-    <tr>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">Blackwell</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">B200</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">vLLM 미지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">지원</td>
-      <td style="padding: 12px 16px; border: 1px solid #e9ecef;">FP8, 그리고 FP4</td>
-    </tr>
-  </tbody>
-</table>
+| 세대 | 대표 GPU | INT8 | FP8 | 현실적인 선택 |
+|---|---|---|---|---|
+| Ampere | A100 | 지원 | 없음 | AWQ, GPTQ, INT8 W8A8 |
+| Ada Lovelace | L4, L40S | 지원 | 지원 | FP8 |
+| Hopper | H100, H200 | 지원 | 지원 | FP8 |
+| Blackwell | B200 | vLLM 미지원 | 지원 | FP8, 그리고 FP4 |
 
 핵심 분기는 Ampere입니다. A100에는 FP8 텐서코어가 없습니다. 그래서 Ampere에서 활성값까지 양자화하려면 INT8 W8A8이 유일한 길이고, 그게 번거로우면 W4A16(AWQ, GPTQ)이 자연스러운 선택입니다. 한 줄로 줄이면 "Ampere까지는 AWQ와 GPTQ 그리고 INT8, Ada와 Hopper부터는 FP8"입니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  Ampere에서 FP8 체크포인트를 띄우면 에러 없이 그대로 돌아갑니다. 하지만 이때 vLLM은 가중치만 FP8로 두고 연산은 16비트로 하는 weight-only 모드(W8A16)로 폴백합니다. 메모리 절감은 그대로 얻지만 FP8 연산의 처리량 이득은 없다는 뜻입니다. 반대로 Blackwell에서는 INT8 W8A8이 지원되지 않아 FP8로 가야 합니다. "돌아간다"와 "의도한 이득을 얻는다"는 다른 문제이니, 양자화 모델을 고를 때는 GPU 세대를 먼저 확인해야 합니다.
-</div>
+:::warning
+
+**주의**
+
+Ampere에서 FP8 체크포인트를 띄우면 에러 없이 그대로 돌아갑니다. 하지만 이때 vLLM은 가중치만 FP8로 두고 연산은 16비트로 하는 weight-only 모드(W8A16)로 폴백합니다. 메모리 절감은 그대로 얻지만 FP8 연산의 처리량 이득은 없다는 뜻입니다. 반대로 Blackwell에서는 INT8 W8A8이 지원되지 않아 FP8로 가야 합니다. "돌아간다"와 "의도한 이득을 얻는다"는 다른 문제이니, 양자화 모델을 고를 때는 GPU 세대를 먼저 확인해야 합니다.
+
+:::
 
 Blackwell 세대부터는 4비트 부동소수점(NVFP4)이 텐서코어에 들어왔습니다. W4A16의 압축률과 W8A8의 연산 이득을 한 번에 노리는 방향인데, 아직 하드웨어와 생태계가 최신 세대에 국한되어 있어 이 글에서는 존재만 짚어둡니다.
 
@@ -204,9 +236,9 @@ Blackwell 세대부터는 4비트 부동소수점(NVFP4)이 텐서코어에 들�
 
 ## KV Cache도 FP8로 줄인다
 
-지금까지는 가중치 이야기였는데, 양자화할 수 있는 대상이 하나 더 있습니다. 2편에서 세운 구도를 떠올려보면, 서빙 중 GPU 메모리의 나머지 큰 축은 KV Cache입니다. vLLM에서 `--kv-cache-dtype fp8`을 주면 KV를 16비트 대신 FP8(E4M3)로 저장합니다.
+지금까지는 가중치 이야기였는데, 양자화할 수 있는 대상이 하나 더 있습니다. 서빙 중 GPU 메모리에서 가중치 다음으로 큰 축은 요청마다 쌓이는 KV Cache입니다. vLLM에서 `--kv-cache-dtype fp8`을 주면 KV를 16비트 대신 FP8(E4M3)로 저장합니다.
 
-1차 효과는 메모리입니다. 같은 KV 예산에 두 배의 토큰이 들어가므로, 동시에 올려둘 수 있는 요청 수나 감당 가능한 컨텍스트 길이가 두 배로 늘어납니다. 3편의 블록으로 말하면 블록 하나에 같은 16토큰을 절반 크기로 담는 것입니다.
+1차 효과는 메모리입니다. 같은 KV 예산에 두 배의 토큰이 들어가므로, 동시에 올려둘 수 있는 요청 수나 감당 가능한 컨텍스트 길이가 두 배로 늘어납니다. PagedAttention의 블록으로 말하면 블록 하나에 같은 16토큰을 절반 크기로 담는 것입니다.
 
 어텐션 연산까지 빨라지는지는 백엔드에 달려 있습니다. FlashAttention 3 백엔드에서는 쿼리까지 FP8로 양자화해 어텐션 자체를 저정밀 도메인에서 계산하지만, 그 외 백엔드에서는 FP8이 저장 형식일 뿐이고 커널 안에서 복원해 16비트로 계산합니다. 그러니 KV Cache 양자화는 "어텐션이 빨라지는 기능"이 아니라 "KV 예산이 두 배가 되는 기능"으로 이해하는 것이 안전합니다.
 
@@ -233,6 +265,16 @@ Gemma가 대표적인 예입니다. Google은 Gemma 3에서 bf16 체크포인트
 양자화 지도를 한 장으로 접으면 이렇습니다. 무엇을 줄이느냐에 따라 효과가 다릅니다. 가중치 메모리를 줄이면 KV 예산이 늘고, 가중치 읽기를 줄이면 decode가 빨라지고, 활성값까지 줄여야 연산이 빨라집니다. W4A16(AWQ, GPTQ)은 앞의 둘을 크게 얻는 저배치의 답이고, W8A8(FP8, INT8)은 셋을 고르게 얻는 고배치 서빙의 답입니다. GPU 세대가 후보를 거르고(Ampere는 FP8 연산 불가), KV Cache는 FP8로 저장 공간을 한 번 더 벌 수 있으며, 품질이 아쉬우면 제작자가 내놓은 QAT 체크포인트를 찾아보면 됩니다.
 
 그런데 양자화가 줄인 것은 한 스텝에 읽는 바이트입니다. decode가 토큰 하나마다 가중치 전체를 읽어야 한다는 구조 자체는 그대로 남아 있습니다. 다음 글에서는 이 구조를 건드리는 speculative decoding을 살펴봅니다. 작은 모델이 토큰 여러 개를 미리 그려놓으면 큰 모델이 한 번의 읽기로 검증하는, 읽는 횟수 자체를 줄이는 기법입니다.
+
+<br>
+
+## 함께 보면 좋은 글
+
+- [Prefill과 Decode로 이해하는 LLM 추론 과정](/llm/llm-inference-process/)
+- [KV Cache가 LLM 서빙을 바꾸는 방식](/llm/kv-cache/)
+- [vLLM의 핵심 원리 PagedAttention 파헤치기](/llm/paged-attention/)
+- [Continuous Batching과 Chunked Prefill 완전 이해](/llm/continuous-batching/)
+- [Prefix Caching과 RadixAttention으로 보는 vLLM과 SGLang](/llm/prefix-caching-radix-attention/)
 
 <br>
 
