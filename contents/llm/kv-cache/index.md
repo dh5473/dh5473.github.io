@@ -9,7 +9,7 @@ summary: 'KV Cache가 왜 필요하고 어떻게 동작하는지, 그리고 이�
 thumbnail: './thumbnail.png'
 ---
 
-앞 글에서 LLM은 토큰을 하나씩 생성하고, 그 decode 단계가 memory-bound라서 여러 요청을 배치로 묶는 것이 처리량의 핵심이라고 했습니다. 그리고 그 끝에 조건이 하나 붙었습니다. 배치를 키우려면 요청마다 KV Cache가 GPU에 살아 있어야 한다는 것이었죠.
+LLM은 토큰을 하나씩 생성합니다. 이 decode 단계는 계산보다 메모리 대역폭에 먼저 묶이기 때문에, 여러 요청을 배치로 묶어 한 번에 처리하는 것이 처리량을 끌어올리는 핵심입니다. 그런데 여기에는 조건이 하나 붙습니다. 배치를 키우려면 요청마다 KV Cache가 GPU에 살아 있어야 합니다.
 
 KV Cache는 흔히 "추론 속도를 올리는 캐시" 정도로 소개됩니다. 하지만 실제로는 그 이상의 역할을 합니다. 진행 중인 모든 요청이 각자의 KV Cache를 메모리에 들고 있어야 하고, 이 캐시들을 어떻게 다루느냐가 서빙 시스템 설계의 중심이 되기 때문입니다. 이 글에서는 KV Cache가 정확히 무슨 일을 하는지, 그리고 왜 이것이 서빙 시스템의 중심에 놓이는지 살펴봅니다.
 
@@ -21,26 +21,83 @@ KV Cache는 흔히 "추론 속도를 올리는 캐시" 정도로 소개됩니다
 
 여기서 결정적인 사실이 하나 있습니다. **각 토큰의 Key와 Value는 한 번 계산되면 변하지 않습니다.** 3번째 토큰의 K, V는 4번째 토큰을 만들 때도, 100번째 토큰을 만들 때도 똑같습니다. 그런데 캐시가 없으면 매 스텝마다 이 K, V들을 처음부터 다시 계산해야 합니다.
 
-```
-캐시 없이 (매 스텝 앞부분을 다시 계산)
-
-스텝 1:  [K₁V₁]
-스텝 2:  [K₁V₁][K₂V₂]           ← K₁V₁을 또 계산
-스텝 3:  [K₁V₁][K₂V₂][K₃V₃]     ← K₁V₁, K₂V₂를 또 계산
-         └──── 매번 앞부분을 다시 만든다 ────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 360 200" style="width: 100%; height: auto; max-width: 360px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="캐시가 없을 때 매 스텝마다 앞선 토큰의 K, V를 다시 계산하는 모습">
+  <style>
+    .kv1-title { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .kv1-step  { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .kv1-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .kv1-redo  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .kv1-lab   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .kv1-labr  { fill: var(--text-danger, #dc2626); font-size: 15px; text-anchor: middle; }
+    .kv1-leg   { fill: var(--text-muted, #78716c); font-size: 12px; }
+  </style>
+  <text x="180" y="22" class="kv1-title">캐시 없이: 앞부분을 매번 다시 계산</text>
+  <text x="12" y="64" class="kv1-step">스텝 1</text>
+  <rect x="62" y="42" width="86" height="34" rx="6" class="kv1-new"/>
+  <text x="105" y="64" class="kv1-lab">K1 V1</text>
+  <text x="12" y="106" class="kv1-step">스텝 2</text>
+  <rect x="62" y="84" width="86" height="34" rx="6" class="kv1-redo"/>
+  <text x="105" y="106" class="kv1-labr">K1 V1</text>
+  <rect x="156" y="84" width="86" height="34" rx="6" class="kv1-new"/>
+  <text x="199" y="106" class="kv1-lab">K2 V2</text>
+  <text x="12" y="148" class="kv1-step">스텝 3</text>
+  <rect x="62" y="126" width="86" height="34" rx="6" class="kv1-redo"/>
+  <text x="105" y="148" class="kv1-labr">K1 V1</text>
+  <rect x="156" y="126" width="86" height="34" rx="6" class="kv1-redo"/>
+  <text x="199" y="148" class="kv1-labr">K2 V2</text>
+  <rect x="250" y="126" width="86" height="34" rx="6" class="kv1-new"/>
+  <text x="293" y="148" class="kv1-lab">K3 V3</text>
+  <rect x="64" y="170" width="13" height="13" rx="3" class="kv1-new"/>
+  <text x="83" y="181" class="kv1-leg">새로 계산</text>
+  <rect x="160" y="170" width="13" height="13" rx="3" class="kv1-redo"/>
+  <text x="179" y="181" class="kv1-leg">다시 계산 (낭비)</text>
+</svg>
+</div>
 
 토큰이 t개인 스텝에서 K, V를 t개 계산하고, 이걸 생성 길이만큼 반복하니 전체가 **O(n²)** 입니다. 그중 대부분이 이미 했던 계산의 반복이죠.
 
 KV Cache는 이 낭비를 없앱니다. 각 토큰의 K, V를 처음 계산할 때 저장해두고, 다음 스텝부터는 **새 토큰 하나의 K, V만 계산**해 캐시에 덧붙입니다. attention은 저장된 캐시를 읽기만 하면 됩니다.
 
-```
-KV Cache 사용 (새 토큰만 계산, 나머지는 읽기)
-
-스텝 1:  캐시=[K₁V₁]              새로 계산: K₁V₁
-스텝 2:  캐시=[K₁V₁, K₂V₂]        새로 계산: K₂V₂  (앞은 읽기만)
-스텝 3:  캐시=[K₁V₁, K₂V₂, K₃V₃]  새로 계산: K₃V₃  (앞은 읽기만)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 360 200" style="width: 100%; height: auto; max-width: 360px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="KV Cache를 쓸 때 앞선 토큰은 캐시에서 읽고 새 토큰의 K, V만 계산하는 모습">
+  <style>
+    .kv2-title { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .kv2-step  { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .kv2-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .kv2-hit   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .kv2-lab   { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
+    .kv2-labh  { fill: var(--text-success, #16a34a); font-size: 15px; text-anchor: middle; }
+    .kv2-leg   { fill: var(--text-muted, #78716c); font-size: 12px; }
+  </style>
+  <text x="180" y="22" class="kv2-title">KV Cache: 앞부분은 캐시에서 읽기</text>
+  <text x="12" y="64" class="kv2-step">스텝 1</text>
+  <rect x="62" y="42" width="86" height="34" rx="6" class="kv2-new"/>
+  <text x="105" y="64" class="kv2-lab">K1 V1</text>
+  <text x="12" y="106" class="kv2-step">스텝 2</text>
+  <rect x="62" y="84" width="86" height="34" rx="6" class="kv2-hit"/>
+  <text x="105" y="106" class="kv2-labh">K1 V1</text>
+  <rect x="156" y="84" width="86" height="34" rx="6" class="kv2-new"/>
+  <text x="199" y="106" class="kv2-lab">K2 V2</text>
+  <text x="12" y="148" class="kv2-step">스텝 3</text>
+  <rect x="62" y="126" width="86" height="34" rx="6" class="kv2-hit"/>
+  <text x="105" y="148" class="kv2-labh">K1 V1</text>
+  <rect x="156" y="126" width="86" height="34" rx="6" class="kv2-hit"/>
+  <text x="199" y="148" class="kv2-labh">K2 V2</text>
+  <rect x="250" y="126" width="86" height="34" rx="6" class="kv2-new"/>
+  <text x="293" y="148" class="kv2-lab">K3 V3</text>
+  <rect x="60" y="170" width="13" height="13" rx="3" class="kv2-new"/>
+  <text x="79" y="181" class="kv2-leg">새로 계산</text>
+  <rect x="156" y="170" width="13" height="13" rx="3" class="kv2-hit"/>
+  <text x="175" y="181" class="kv2-leg">캐시에서 읽기</text>
+</svg>
+</div>
 
 이렇게 하면 스텝당 계산량이 새 토큰 하나로 고정되어 전체가 **O(n)** 이 됩니다. 이 차이가 있어야 자기회귀 생성이 현실적인 속도로 돌아갑니다. KV Cache가 없으면 긴 텍스트 생성은 계산량이 제곱으로 불어나 사실상 불가능합니다.
 
@@ -58,12 +115,15 @@ LLM은 그렇지 않습니다. 한 요청이 100 토큰을 생성한다면, 그 
 
 그리고 서버는 이런 요청을 한 번에 수십 개씩 돌립니다. 그러면 GPU 안에서는 진행 중인 요청 수십 개의 캐시가 동시에 자리를 차지한 채 저마다 자라나고 있습니다.
 
-여기서 앞 글의 배칭 이야기와 맞물립니다. decode가 memory-bound라 배치를 키우는 것이 처리량에 중요하다고 했죠. 그런데 배치를 키운다는 건 결국 이 캐시들을 GPU에 더 많이 올린다는 뜻입니다. 커지고 길이도 제각각인 이 캐시들을 한정된 메모리에 욱여넣다가, 자리가 다 차면 더는 새 요청을 받지 못하고 뒤에 온 요청은 기다립니다.
+여기서 배칭과 맞물립니다. decode가 memory-bound인 이상 처리량을 올리려면 배치를 키워야 하는데, 배치를 키운다는 건 결국 이 캐시들을 GPU에 더 많이 올린다는 뜻입니다. 커지고 길이도 제각각인 이 캐시들을 한정된 메모리에 욱여넣다가, 자리가 다 차면 더는 새 요청을 받지 못하고 뒤에 온 요청은 기다립니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 핵심</strong><br>
-  LLM 서빙 시스템 설계의 상당 부분이 "KV Cache를 어떻게 관리하느냐"로 귀결됩니다. 앞으로 다룰 PagedAttention, continuous batching, prefix caching이 전부 이 하나의 자원을 둘러싸고 도는 이유가 여기에 있습니다.
-</div>
+:::info
+
+**핵심**
+
+LLM 서빙 시스템 설계의 상당 부분이 "KV Cache를 어떻게 관리하느냐"로 귀결됩니다. 앞으로 다룰 PagedAttention, continuous batching, prefix caching이 전부 이 하나의 자원을 둘러싸고 도는 이유가 여기에 있습니다.
+
+:::
 
 <br>
 
