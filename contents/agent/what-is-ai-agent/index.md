@@ -58,7 +58,7 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
 실제로는 이 둘이 깔끔하게 나뉘지 않습니다. 대부분의 프로덕션 시스템은 워크플로우적 요소(고정된 파이프라인)와 에이전트적 요소(모델의 동적 판단)가 혼합되어 있습니다. Anthropic도 이 점을 인정하며, 이를 하나의 스펙트럼으로 봅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 290 348" style="width: 100%; height: auto; max-width: 290px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있다.">
+<svg viewBox="0 0 290 348" style="width: 100%; height: auto; max-width: 290px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있습니다.">
   <defs>
     <linearGradient id="wa1Grad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="var(--text-muted, #78716c)" />
@@ -98,7 +98,7 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
 Anthropic은 이를 **"Augmented LLM"**이라는 개념으로 설명합니다. 날것의 LLM이 아니라, 도구와 검색과 메모리로 **증강된** LLM이 에이전트의 기본 빌딩 블록이라는 것입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Augmented LLM 구조도. 도구, 검색, 메모리 세 요소가 중앙의 LLM 코어에 연결되어 하나의 증강된 LLM을 이룬다.">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Augmented LLM 구조도. 도구, 검색, 메모리 세 요소가 중앙의 LLM 코어에 연결되어 하나의 증강된 LLM을 이룹니다.">
   <defs>
     <marker id="wa2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
@@ -159,7 +159,7 @@ Claude Code는 약 26개의 내장 도구를 가지고 있고, Codex도 유사�
 이 루프가 에이전트와 단순 LLM 호출을 근본적으로 구분합니다. 단순 호출은 한 번 질문하고 한 번 답하면 끝입니다. 에이전트는 목표를 달성할 때까지 루프를 반복합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 440 424" style="width: 100%; height: auto; max-width: 440px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="에이전트 루프 흐름도. 사용자 요청이 모델에 들어가면 모델이 다음 행동을 결정하고, 도구 호출이 없으면 응답을 반환하며, 도구 호출이 있으면 도구를 실행해 결과를 수집한 뒤 다시 모델로 돌아간다.">
+<svg viewBox="0 0 440 424" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="에이전트 루프 흐름도. 사용자 요청이 모델에 들어가면 모델이 다음 행동을 결정하고, 도구 호출이 없으면 응답을 반환하며, 도구 호출이 있으면 도구를 실행해 결과를 수집한 뒤 다시 모델로 돌아갑니다.">
   <defs>
     <marker id="wa3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
@@ -227,10 +227,10 @@ Andrew Ng은 이를 이렇게 비유합니다. zero-shot 호출은 에세이를 
 
 이 관찰에서 Andrew Ng은 네 가지 에이전틱 디자인 패턴을 제시했습니다.
 
-1. **Reflection**: 모델이 자신의 출력을 검토하고 개선점을 찾는다
-2. **Tool Use**: 외부 도구를 활용해 정보를 수집하거나 행동한다
-3. **Planning**: 복잡한 작업을 단계적으로 분해하고 실행한다
-4. **Multi-Agent Collaboration**: 여러 에이전트가 역할을 나눠 협업한다
+1. **Reflection**: 모델이 자신의 출력을 검토하고 개선점을 찾습니다
+2. **Tool Use**: 외부 도구를 활용해 정보를 수집하거나 행동합니다
+3. **Planning**: 복잡한 작업을 단계적으로 분해하고 실행합니다
+4. **Multi-Agent Collaboration**: 여러 에이전트가 역할을 나눠 협업합니다
 
 이 패턴들은 서로 배타적이지 않습니다. 프로덕션 에이전트는 보통 이 중 여러 개를 조합합니다. Claude Code는 네 가지를 모두 사용합니다. 도구를 호출하고(Tool Use), 결과를 검증하고(Reflection), 복잡한 작업을 단계적으로 수행하며(Planning), 서브에이전트에게 작업을 위임합니다(Multi-Agent).
 

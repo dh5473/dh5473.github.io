@@ -24,7 +24,7 @@ thumbnail: './thumbnail.png'
 변종 엔진은 이 merge-sort 과정에 한 단계를 추가합니다. 정렬하면서 **같은 ORDER BY 키를 가진 행들이 만나면**, 엔진별로 정해진 로직을 실행합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 516" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 516" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="기본 MergeTree 머지는 두 Part를 merge-sort로 합칠 뿐이지만, 변종 엔진 머지는 merge-sort 과정에 추가 로직을 끼워 넣어 같은 ORDER BY 키의 행을 엔진별로 처리한다는 비교 그림">
@@ -121,7 +121,7 @@ ORDER BY order_id;
 `ReplacingMergeTree(ver)`에서 `ver`은 버전 컬럼입니다. 같은 `order_id`를 가진 행이 여러 개 있으면, `ver` 값이 가장 큰 행 하나만 살아남습니다. `ver`을 지정하지 않으면 가장 최근에 생성된 Part(가장 나중에 INSERT된 데이터)의 행이 남습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 550" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 550" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="ReplacingMergeTree 머지 전에는 Part A와 Part B에 order_id 1이 각각 존재하지만, 머지 후에는 ver 값이 큰 행 하나만 남는다는 비교 그림">
@@ -263,7 +263,7 @@ ORDER BY (category, sale_date);
 `SummingMergeTree((revenue, order_count))`에서 괄호 안의 컬럼이 합산 대상입니다. 생략하면 ORDER BY에 포함되지 않은 모든 숫자 컬럼이 자동으로 합산됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 578" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 578" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="SummingMergeTree 머지 전에는 도서 05-01 키가 Part A와 Part B에 나뉘어 있지만, 머지 후에는 revenue와 count가 합산된 한 행으로 합쳐진다는 비교 그림">
@@ -434,7 +434,7 @@ GROUP BY event_date, category;
 `uniqMerge`는 저장된 중간 상태들을 병합해서 최종 결과를 도출합니다. 머지가 일어나면 같은 ORDER BY 키의 중간 상태끼리 자동으로 병합되므로, 시간이 지날수록 행 수가 줄어들면서도 정확도는 유지됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 405" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 405" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="AggregatingMergeTree는 INSERT 시 uniqState로 중간 상태를 저장하고, 머지 시점에 같은 키의 상태끼리 병합하며, SELECT 시 uniqMerge로 최종 값을 도출한다는 흐름 그림">
@@ -540,7 +540,7 @@ INSERT 흐름은 이렇습니다.
 머지할 때 같은 ORDER BY 키의 `+1`과 `-1` 쌍이 만나면 둘 다 삭제됩니다. 결과적으로 최종 상태만 남습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="CollapsingMergeTree 머지 전에는 접수 상태의 sign 플러스1 행과 마이너스1 행, 배송중 행 세 개가 남아 있지만, 머지 후에는 접수 쌍이 상쇄되어 배송중 행 하나만 남는다는 비교 그림">
@@ -605,7 +605,6 @@ INSERT 흐름은 이렇습니다.
 <text class="mv5-td" x="170" y="322" text-anchor="middle">배송중</text>
 <text class="mv5-td" x="270" y="322" text-anchor="middle">10000</text>
 <text class="mv5-td" x="355" y="322" text-anchor="middle">+1</text>
-<text class="mv5-m" x="240" y="368" text-anchor="middle">+1/-1 쌍이 사라지고 최종 상태만 남습니다</text>
 </svg>
 </div>
 

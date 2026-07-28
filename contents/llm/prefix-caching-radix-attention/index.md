@@ -32,10 +32,10 @@ vLLM은 KV Cache를 고정 크기 블록으로 쪼개 관리하고, 동시에 �
 얼마나 이득인지 숫자로 보겠습니다. 시스템 프롬프트가 2,048토큰이고 사용자 질문이 평균 50토큰인 챗봇을 생각해봅시다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="prefix caching 유무에 따른 요청당 prefill 토큰 수 비교. 캐시가 없으면 2,098 토큰을 전부 계산하고, 캐시가 있으면 시스템 프롬프트 2,048 토큰은 재사용해 실제 prefill은 50 토큰으로 줄어든다.">
+     role="img" aria-label="prefix caching 유무에 따른 요청당 prefill 토큰 수 비교. 캐시가 없으면 2,098 토큰을 전부 계산하고, 캐시가 있으면 시스템 프롬프트 2,048 토큰은 재사용해 실제 prefill은 50 토큰으로 줄어듭니다.">
   <style>
     .pc1-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: start; }
     .pc1-in    { font-size: 18px; text-anchor: middle; }
@@ -75,10 +75,10 @@ prefill은 GPU 연산량이 병목인 compute-bound 구간입니다. 그 연산�
 vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은 여기에 한 가지를 얹습니다. 블록이 가득 차는 순간, 그 블록에 해시를 하나 매겨두는 것입니다. 그런데 이 해시를 만드는 방식이 핵심입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 360" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 276" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="프롬프트를 16토큰 블록으로 자르고 해시를 사슬처럼 잇는 구조. 블록 0의 해시 h0은 블록 0의 토큰만으로 만들고, h1은 h0과 블록 1의 토큰으로, h2는 h1과 블록 2의 토큰으로 만든다. 부모 블록의 해시가 자식 블록의 키에 함께 들어간다.">
+     role="img" aria-label="프롬프트를 16토큰 블록으로 자르고 해시를 사슬처럼 잇는 구조. 블록 0의 해시 h0은 블록 0의 토큰만으로 만들고, h1은 h0과 블록 1의 토큰으로, h2는 h1과 블록 2의 토큰으로 만듭니다. 부모 블록의 해시가 자식 블록의 키에 함께 들어갑니다.">
   <style>
     .pc2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pc2-blk   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -97,35 +97,32 @@ vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은
       <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
     </marker>
   </defs>
-  <text x="240" y="24" class="pc2-cap">프롬프트를 16토큰씩 잘라 블록으로 만들고,</text>
-  <text x="240" y="46" class="pc2-cap">해시를 사슬처럼 잇는다</text>
+  <text x="240" y="24" class="pc2-cap">프롬프트를 16토큰씩 자른 블록과 해시 사슬</text>
   <!-- 블록 0 -->
-  <rect x="16" y="66" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="90" class="pc2-label">블록 0</text>
-  <text x="72" y="112" class="pc2-sub">토큰 1~16</text>
-  <path d="M132,94 L142,94" class="pc2-arrow"/>
-  <rect x="146" y="66" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="101" class="pc2-label">h0 = hash(∅, 블록0 토큰)</text>
-  <path d="M200,122 L200,143" class="pc2-chain"/>
-  <text x="210" y="139" class="pc2-side">부모 해시</text>
+  <rect x="16" y="44" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="68" class="pc2-label">블록 0</text>
+  <text x="72" y="90" class="pc2-sub">토큰 1~16</text>
+  <path d="M132,72 L142,72" class="pc2-arrow"/>
+  <rect x="146" y="44" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="79" class="pc2-label">h0 = hash(∅, 블록0 토큰)</text>
+  <path d="M200,100 L200,121" class="pc2-chain"/>
+  <text x="210" y="117" class="pc2-side">부모 해시</text>
   <!-- 블록 1 -->
-  <rect x="16" y="146" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="170" class="pc2-label">블록 1</text>
-  <text x="72" y="192" class="pc2-sub">토큰 17~32</text>
-  <path d="M132,174 L142,174" class="pc2-arrow"/>
-  <rect x="146" y="146" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="181" class="pc2-label">h1 = hash(h0, 블록1 토큰)</text>
-  <path d="M200,202 L200,223" class="pc2-chain"/>
-  <text x="210" y="219" class="pc2-side">부모 해시</text>
+  <rect x="16" y="124" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="148" class="pc2-label">블록 1</text>
+  <text x="72" y="170" class="pc2-sub">토큰 17~32</text>
+  <path d="M132,152 L142,152" class="pc2-arrow"/>
+  <rect x="146" y="124" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="159" class="pc2-label">h1 = hash(h0, 블록1 토큰)</text>
+  <path d="M200,180 L200,201" class="pc2-chain"/>
+  <text x="210" y="197" class="pc2-side">부모 해시</text>
   <!-- 블록 2 -->
-  <rect x="16" y="226" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="250" class="pc2-label">블록 2</text>
-  <text x="72" y="272" class="pc2-sub">토큰 33~48</text>
-  <path d="M132,254 L142,254" class="pc2-arrow"/>
-  <rect x="146" y="226" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="261" class="pc2-label">h2 = hash(h1, 블록2 토큰)</text>
-  <text x="240" y="316" class="pc2-cap">부모 블록의 해시가 자식 블록의 키에</text>
-  <text x="240" y="338" class="pc2-cap">함께 들어간다</text>
+  <rect x="16" y="204" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="228" class="pc2-label">블록 2</text>
+  <text x="72" y="250" class="pc2-sub">토큰 33~48</text>
+  <path d="M132,232 L142,232" class="pc2-arrow"/>
+  <rect x="146" y="204" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="239" class="pc2-label">h2 = hash(h1, 블록2 토큰)</text>
 </svg>
 </div>
 
@@ -142,10 +139,10 @@ vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은
 한 가지 주의할 성질이 있습니다. vLLM은 **가득 찬 블록만** 해시를 매기고 캐시합니다. 반쯤 찬 블록은 해시가 없고, 따라서 재사용도 안 됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 232" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 178" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="공유 접두사 2,040 토큰을 block_size 16으로 자른 모습. 블록 0부터 블록 126까지 2,032 토큰은 캐시 히트가 나고, 마지막 8 토큰은 블록을 채우지 못해 해시가 없어 재계산된다.">
+     role="img" aria-label="공유 접두사 2,040 토큰을 block_size 16으로 자른 모습. 블록 0부터 블록 126까지 2,032 토큰은 캐시 히트가 나고, 마지막 8 토큰은 블록을 채우지 못해 해시가 없어 재계산됩니다.">
   <style>
     .pc3-cap  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pc3-hit  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
@@ -174,8 +171,6 @@ vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은
   <text x="172" y="156" class="pc3-blk">블록 1</text>
   <text x="347" y="156" class="pc3-blk">블록 126</text>
   <text x="420" y="156" class="pc3-blk">미완성</text>
-  <text x="240" y="194" class="pc3-cap">가득 찬 블록만 해시를 매기므로</text>
-  <text x="240" y="216" class="pc3-cap">마지막 8 토큰은 재사용되지 않는다</text>
 </svg>
 </div>
 
@@ -223,10 +218,10 @@ radix tree는 trie(접두사 트리)의 압축판입니다. 갈림길 없이 이
 새 요청이 오면 루트에서 출발해 프롬프트와 일치하는 경로를 끝까지 따라갑니다. 따라간 만큼이 캐시 히트입니다. 일치가 노드 중간에서 끝나면 그 노드를 그 지점에서 둘로 쪼개 경계를 만들고(데이터 복사는 일어나지 않습니다), 거기서부터 새 가지가 자랍니다. 같은 시스템 프롬프트를 쓰는 요청들은 자연스럽게 한 몸통을 공유하고 질문 부분에서만 갈라지는 나무가 됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 664" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 616" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="같은 시스템 프롬프트를 공유하는 요청 A와 B를 두 엔진이 어떻게 다루는지 비교. 위쪽 vLLM은 h0, h1, h2까지 같은 해시가 나와 같은 물리 블록을 가리키고 마지막 블록에서만 a3과 b3으로 갈라진다. 아래쪽 SGLang은 루트에서 시스템 프롬프트 노드까지 한 몸통을 공유하고 그 아래에서 두 질문 노드로 갈라진다.">
+     role="img" aria-label="같은 시스템 프롬프트를 공유하는 요청 A와 B를 두 엔진이 어떻게 다루는지 비교. 위쪽 vLLM은 h0, h1, h2까지 같은 해시가 나와 같은 물리 블록을 가리키고 마지막 블록에서만 a3과 b3으로 갈라집니다. 아래쪽 SGLang은 루트에서 시스템 프롬프트 노드까지 한 몸통을 공유하고 그 아래에서 두 질문 노드로 갈라집니다.">
   <style>
     .pc4-req   { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }
     .pc4-head  { fill: var(--primary, #0d9488); font-size: 22px; text-anchor: middle; font-weight: 600; }
@@ -294,8 +289,6 @@ radix tree는 trie(접두사 트리)의 압축판입니다. 갈림길 없이 이
   <text x="352" y="560" class="pc4-lbl">배송 조회해줘</text>
   <text x="128" y="596" class="pc4-cap">요청 A</text>
   <text x="352" y="596" class="pc4-cap">요청 B</text>
-  <text x="240" y="630" class="pc4-cap">공통 접두사는 한 몸통으로 공유되고,</text>
-  <text x="240" y="652" class="pc4-cap">질문 부분에서만 갈라진다</text>
 </svg>
 </div>
 

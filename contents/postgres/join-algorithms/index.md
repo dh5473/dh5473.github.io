@@ -43,10 +43,10 @@ for each row r in outer:
 순진하게 구현하면 `|outer| × |inner|` 비용입니다. 실전에서 유용한 이유는 **안쪽에 인덱스가 있으면** 안쪽 루프가 인덱스 조회 한 번으로 끝나기 때문입니다. 이 경우 cost는 대략 `outer_rows × inner_index_lookup_cost` 로 줄어듭니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Nested Loop 조인의 동작. outer 관계의 각 행마다 inner 관계를 한 번씩 조회하는데, inner에 인덱스가 없으면 매번 전체 스캔이 되고 인덱스가 있으면 인덱스 조회 한 번으로 끝난다. 비용이 outer 행 수에 곱해진다는 점을 함께 보여준다.">
+     role="img" aria-label="Nested Loop 조인의 동작. outer 관계의 각 행마다 inner 관계를 한 번씩 조회하는데, inner에 인덱스가 없으면 매번 전체 스캔이 되고 인덱스가 있으면 인덱스 조회 한 번으로 끝납니다. 비용이 outer 행 수에 곱해진다는 점을 함께 보여줍니다.">
 <defs>
 <marker id="nlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
@@ -112,7 +112,7 @@ for each row r in outer:
 <text class="nl-cost" x="240" y="492" text-anchor="middle">비용 ≈ outer 행 수 × 인덱스 조회 1회</text>
 <path class="nl-div" d="M20 512 L460 512"/>
 <!-- 곱셈 강조 -->
-<text class="nl-note" x="240" y="540" text-anchor="middle">곱셈이라 outer가 커지면 그대로 불어난다</text>
+<text class="nl-note" x="240" y="540" text-anchor="middle">곱셈이라 outer에 비례해 증가</text>
 <text class="nl-eg" x="240" y="568" text-anchor="middle">outer 1행 → inner 조회 1번</text>
 <text class="nl-dg" x="240" y="594" text-anchor="middle">outer 10만 행 → inner 조회 10만 번</text>
 </svg>
@@ -184,10 +184,10 @@ Hash Join은 두 단계로 동작합니다.
 두 단계는 동시에 돌지 않습니다. build가 완전히 끝나야 probe가 시작됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Hash Join의 두 단계. 1단계 build에서 작은 쪽 관계를 해시해 메모리에 해시 테이블을 만들고, 2단계 probe에서 큰 쪽 관계를 훑으며 해시 테이블을 조회해 매칭된 결과 행을 만든다. 해시 테이블이 work_mem을 넘으면 여러 batch로 쪼개져 디스크를 오간다.">
+     role="img" aria-label="Hash Join의 두 단계. 1단계 build에서 작은 쪽 관계를 해시해 메모리에 해시 테이블을 만들고, 2단계 probe에서 큰 쪽 관계를 훑으며 해시 테이블을 조회해 매칭된 결과 행을 만듭니다. 해시 테이블이 work_mem을 넘으면 여러 batch로 쪼개져 디스크를 오갑니다.">
 <defs>
 <marker id="hjArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
 </defs>
@@ -201,7 +201,6 @@ Hash Join은 두 단계로 동작합니다.
 .hj-small { font-size: 17px; fill: var(--text-muted, #78716c); }
 .hj-okt   { font-size: 19px; fill: var(--text-success, #16a34a); font-weight: 600; }
 .hj-note  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
-.hj-eg    { font-size: 18px; fill: var(--text-muted, #78716c); }
 .hj-dg    { font-size: 18px; fill: var(--text-danger, #dc2626); }
 .hj-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
 .hj-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
@@ -261,8 +260,7 @@ Hash Join은 두 단계로 동작합니다.
 <text class="hj-body" x="182" y="521" text-anchor="middle">batch 2</text>
 <text class="hj-body" x="294" y="521" text-anchor="middle">batch 3</text>
 <text class="hj-body" x="406" y="521" text-anchor="middle">...</text>
-<text class="hj-eg" x="240" y="566" text-anchor="middle">한 batch씩 디스크에 내렸다 다시 올린다</text>
-<text class="hj-dg" x="240" y="594" text-anchor="middle">Batches: 16 이면 디스크 왕복이 16번</text>
+<text class="hj-dg" x="240" y="566" text-anchor="middle">Batches: 16 이면 디스크 왕복이 16번</text>
 </svg>
 </div>
 
@@ -315,10 +313,10 @@ FROM users u JOIN orders o ON o.user_id = u.id;
 Merge Join은 두 입력이 모두 **조인 키로 정렬**돼 있다는 전제 하에 동작합니다. 양쪽에 포인터를 하나씩 두고 앞에서부터 동시에 훑으면서, 값이 같으면 매칭 쌍을 만들고 값이 다르면 작은 쪽 포인터만 한 칸 전진시킵니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Merge Join의 동작. 조인 키로 정렬된 두 스트림을 앞에서부터 동시에 훑으며 값이 같은 칸끼리 매칭하고, 값이 다르면 작은 쪽 포인터만 전진시킨다. 인덱스가 정렬을 공급하면 Sort 비용이 사라진다는 점을 함께 보여준다.">
+     role="img" aria-label="Merge Join의 동작. 조인 키로 정렬된 두 스트림을 앞에서부터 동시에 훑으며 값이 같은 칸끼리 매칭하고, 값이 다르면 작은 쪽 포인터만 전진시킵니다. 인덱스가 정렬을 공급하면 Sort 비용이 사라진다는 점을 함께 보여줍니다.">
 <style>
 .mj-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
 .mj-sub   { font-size: 18px; fill: var(--text-muted, #78716c); }
@@ -383,10 +381,10 @@ Merge Join은 두 입력이 모두 **조인 키로 정렬**돼 있다는 전제 
 <text class="mj-head" x="240" y="434" text-anchor="middle">정렬 비용이 붙는지가 관건</text>
 <rect class="mj-box" x="20" y="450" width="440" height="66" rx="6"/>
 <text class="mj-head" x="38" y="478">정렬돼 있지 않으면</text>
-<text class="mj-small" x="38" y="504">Sort 노드 두 개가 붙어 Hash Join에 밀린다</text>
+<text class="mj-small" x="38" y="504">Sort 노드 두 개 추가, Hash Join에 밀림</text>
 <rect class="mj-boxok" x="20" y="528" width="440" height="66" rx="6"/>
 <text class="mj-okt" x="38" y="556">인덱스가 정렬 순서를 공급하면</text>
-<text class="mj-small" x="38" y="582">Sort 비용이 사라져 Merge Join이 이긴다</text>
+<text class="mj-small" x="38" y="582">Sort 비용 0, Merge Join 우세</text>
 </svg>
 </div>
 

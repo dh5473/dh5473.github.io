@@ -40,10 +40,10 @@ WAL을 다른 서버로 보내는 방법은 두 가지입니다.
 Streaming Replication의 핵심은 두 프로세스입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 618" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 618" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Streaming Replication 구조. 위쪽 Primary에서 backend들이 pg_wal에 WAL을 기록하고 walsender가 이를 읽어 TCP로 전송하면, 아래쪽 Standby의 walreceiver가 받아 pg_wal에 저장하고 startup process가 redo를 적용한다">
+     role="img" aria-label="Streaming Replication 구조. 위쪽 Primary에서 backend들이 pg_wal에 WAL을 기록하고 walsender가 이를 읽어 TCP로 전송하면, 아래쪽 Standby의 walreceiver가 받아 pg_wal에 저장하고 startup process가 redo를 적용합니다">
 <style>
 .rep1-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -184,8 +184,8 @@ FROM pg_replication_slots;
 
 어느 경우든 startup process에게는 두 가지 선택지가 있습니다.
 
-- redo를 기다린다 → SELECT가 끝날 때까지 **replication lag이 계속 쌓인다**
-- SELECT를 강제로 cancel한다 → 사용자가 에러를 받는다
+- redo를 기다립니다 → SELECT가 끝날 때까지 **replication lag이 계속 쌓입니다**
+- SELECT를 강제로 cancel합니다 → 사용자가 에러를 받습니다
 
 `max_standby_streaming_delay`(기본 30초)가 이 판단을 결정합니다. startup process가 이 시간만큼 기다려도 충돌이 해소되지 않으면 쿼리를 cancel합니다.
 
@@ -277,10 +277,10 @@ subscriber 측에서는 **apply worker** 프로세스가 수신한 변경을 적
 전체 경로를 놓고 보면 Streaming Replication과 어디서 갈라지는지가 드러납니다. walsender까지는 같지만, WAL을 바이트로 내보내는 대신 output plugin을 한 번 통과시켜 행 단위 변경으로 바꾼다는 점이 다릅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 606" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 606" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Logical Replication 구조. 위쪽 Publisher에서 walsender가 pg_wal의 WAL을 읽어 output plugin pgoutput으로 디코딩해 논리 변경 스트림을 만들고, TCP로 보내면 아래쪽 Subscriber의 apply worker가 구독 테이블에 적용한다">
+     role="img" aria-label="Logical Replication 구조. 위쪽 Publisher에서 walsender가 pg_wal의 WAL을 읽어 output plugin pgoutput으로 디코딩해 논리 변경 스트림을 만들고, TCP로 보내면 아래쪽 Subscriber의 apply worker가 구독 테이블에 적용합니다">
 <style>
 .rep2-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep2-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -394,10 +394,10 @@ FROM pg_stat_replication;
 LSN이 4단계로 나뉘어 있어서 병목 위치를 진단할 수 있습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 316" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="pg_stat_replication의 LSN 4단계. 위에서부터 sent_lsn(primary 전송), write_lsn(standby OS write), flush_lsn(standby 디스크 flush), replay_lsn(standby redo 적용) 순이며 각 구간의 차이가 크면 네트워크, 디스크 I/O, redo 속도 병목을 의심한다">
+     role="img" aria-label="pg_stat_replication의 LSN 4단계. 위에서부터 sent_lsn(primary 전송), write_lsn(standby OS write), flush_lsn(standby 디스크 flush), replay_lsn(standby redo 적용) 순이며 각 구간의 차이가 크면 네트워크, 디스크 I/O, redo 속도 병목을 의심합니다">
 <style>
 .rep3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep3-t { fill: var(--text, #1c1917); }
@@ -429,7 +429,6 @@ LSN이 4단계로 나뉘어 있어서 병목 위치를 진단할 수 있습니�
 <rect class="rep3-box" x="70" y="248" width="280" height="48" rx="6"/>
 <text class="rep3-t" x="210" y="270" font-size="19" text-anchor="middle">replay_lsn</text>
 <text class="rep3-m" x="210" y="289" font-size="17" text-anchor="middle">standby의 redo 적용</text>
-<text class="rep3-m" x="240" y="330" font-size="17" text-anchor="middle">구간 차이가 크면 옆의 병목을 의심합니다</text>
 </svg>
 </div>
 

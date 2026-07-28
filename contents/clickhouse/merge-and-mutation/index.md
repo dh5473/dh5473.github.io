@@ -24,7 +24,7 @@ PostgreSQL은 8KB 페이지 안에서 행을 직접 수정합니다(in-place upd
 MergeTree는 정반대의 선택을 합니다. INSERT가 들어오면 데이터를 `ORDER BY` 순서로 정렬해서 새로운 Part를 디스크에 **순차 쓰기(sequential write)**합니다. 기존 Part는 건드리지 않습니다. 락도 없고, 랜덤 I/O도 없습니다. 쓰기 처리량이 디스크 순차 대역폭에 비례해서 선형으로 스케일합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 RDB의 in-place update로 페이지 안에서 행을 직접 수정하며 락과 WAL, 랜덤 I/O가 따르는 구조. 아래쪽은 MergeTree의 append 방식으로 INSERT마다 불변 Part가 새로 생기고 백그라운드 머지가 이들을 하나로 합치는 구조.">
@@ -73,7 +73,7 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
 [Part 이름](/clickhouse/mergetree-internals/) `all_1_1_0`은 `{파티션}_{min_block}_{max_block}_{level}` 형식입니다. 머지가 일어나면 이 이름이 어떻게 바뀌는지 봅시다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="머지 전 all_1_1_0, all_2_2_0, all_3_3_0 세 개의 level 0 Part가 백그라운드 머지를 거쳐 block 범위 1부터 3까지를 담은 level 1 Part인 all_1_3_1 하나로 합쳐지는 과정.">
@@ -136,10 +136,10 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
 Part는 생성부터 삭제까지 세 단계를 거칩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제된다.">
+     role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제됩니다.">
 <style>.ch3c-n{font-size:21px;font-weight:700}.ch3c-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3c-l{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3cArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -201,10 +201,10 @@ ALTER TABLE orders DELETE WHERE order_id < 100;
 이 명령이 실행되면 ClickHouse는 조건에 매칭될 수 있는 **모든 Part를 통째로 재작성**합니다. Part 안의 데이터를 처음부터 끝까지 읽으면서 조건에 맞는 행을 수정(또는 제거)한 새 Part를 생성하고, 원본 Part를 inactive로 전환합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 428" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환된다.">
+     role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환됩니다.">
 <style>.ch3d-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-n{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-t{font-size:19px;fill:var(--text, #1c1917)}.ch3d-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3d-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3dArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -232,8 +232,6 @@ ALTER TABLE orders DELETE WHERE order_id < 100;
 <rect x="68" y="348" width="344" height="52" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
 <text x="88" y="381" class="ch3d-n">all_1_3_1</text>
 <text x="392" y="381" text-anchor="end" class="ch3d-s">inactive 전환</text>
-<!-- 캡션 -->
-<text x="240" y="446" text-anchor="middle" class="ch3d-s">1행만 바꿔도 Part 전체가 재작성됩니다</text>
 </svg>
 </div>
 

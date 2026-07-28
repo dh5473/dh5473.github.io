@@ -64,7 +64,7 @@ Anthropic은 이 원칙을 한 문장으로 요약합니다. "원하는 결과�
 컨텍스트 윈도우에 무엇이 들어가는지를 먼저 이해해야 관리 전략을 세울 수 있습니다. 에이전트의 컨텍스트는 크게 네 가지 구성 요소로 나뉩니다. 50턴 에이전트 세션의 전형적인 컨텍스트 구성을 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="50턴 시점 에이전트 세션의 200K 토큰 윈도우 구성 비율. 시스템 프롬프트 5퍼센트, 도구 정의 10퍼센트, 대화 메시지 15퍼센트, 도구 반환값이 70퍼센트를 차지한다.">
+<svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="50턴 시점 에이전트 세션의 200K 토큰 윈도우 구성 비율. 시스템 프롬프트 5퍼센트, 도구 정의 10퍼센트, 대화 메시지 15퍼센트, 도구 반환값이 70퍼센트를 차지합니다.">
   <style>
     .ce1-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
     .ce1-label { fill: var(--text, #1c1917); font-size: 20px; }
@@ -112,7 +112,7 @@ Anthropic은 시스템 프롬프트에 **"올바른 고도(right altitude)"**라
 Claude Code는 이 원칙을 시스템 프롬프트와 CLAUDE.md의 분리로 구현합니다. 에이전트의 핵심 행동 규칙은 시스템 프롬프트에 넣고, 프로젝트별 컨벤션과 설정은 CLAUDE.md 파일로 분리합니다. 루트 CLAUDE.md는 세션 시작 시 로딩되지만, 하위 디렉터리의 CLAUDE.md 파일은 에이전트가 해당 디렉터리에 접근할 때만 로딩되는 lazy loading 방식입니다. 관련 없는 디렉터리의 설정이 컨텍스트를 소비하지 않도록 하는 것입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
   <style>
     .ce2-main { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
     .ce2-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
@@ -138,9 +138,8 @@ Claude Code는 이 원칙을 시스템 프롬프트와 CLAUDE.md의 분리로 �
   <rect x="68" y="208" width="392" height="44" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
   <text x="84" y="237" class="ce2-main">tests/CLAUDE.md</text>
   <text x="444" y="237" text-anchor="end" class="ce2-sub">tests/ 접근 시 로드</text>
-  <!-- caption split across two lines so it fits the 480 viewBox -->
-  <text x="20" y="284" class="ce2-note">점선 테두리: 에이전트가 해당 디렉터리에</text>
-  <text x="20" y="306" class="ce2-note">접근할 때만 컨텍스트에 올라온다</text>
+  <!-- 범례 -->
+  <text x="20" y="284" class="ce2-note">점선 테두리 = 접근 시점에만 로드되는 지연 로딩</text>
 </svg>
 </div>
 
@@ -169,7 +168,7 @@ Few-shot 예시에도 같은 관점이 적용됩니다. Anthropic은 예시의 �
 컨텍스트가 유한한 자원이라면, 이를 관리하는 전략이 필요합니다. Anthropic의 가이드와 프로덕션 에이전트의 실전 사례에서 다루는 전략들을 네 가지로 정리할 수 있습니다. 이 전략들은 상호 배타적이 아니라 상호 보완적입니다. 프로덕션 에이전트는 대부분 네 가지를 조합해서 사용합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 518" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컨텍스트를 관리하는 네 가지 전략. 1번 JIT 검색, 2번 컴팩션, 3번 구조화된 노트, 4번 서브에이전트 격리를 차례로 정리한 그림.">
+<svg viewBox="0 0 480 518" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컨텍스트를 관리하는 네 가지 전략. 1번 JIT 검색, 2번 컴팩션, 3번 구조화된 노트, 4번 서브에이전트 격리를 차례로 정리한 그림.">
   <style>
     .ce3-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
     .ce3-name { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
@@ -184,28 +183,28 @@ Few-shot 예시에도 같은 관점이 적용됩니다. Anthropic은 예시의 �
   <text x="50" y="91" text-anchor="middle" class="ce3-num" fill="var(--primary, #0d9488)">1</text>
   <text x="82" y="92" class="ce3-name">JIT 검색</text>
   <text x="36" y="122" class="ce3-desc">경량 식별자만 들고 있다가</text>
-  <text x="36" y="144" class="ce3-desc">필요할 때 도구로 가져온다</text>
+  <text x="36" y="144" class="ce3-desc">필요할 때 도구로 조회</text>
   <!-- strategy 2: compaction -->
   <rect x="20" y="166" width="440" height="104" rx="8" class="ce3-card" />
   <circle cx="50" cy="200" r="18" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2" />
   <text x="50" y="207" text-anchor="middle" class="ce3-num" fill="var(--accent, #d97706)">2</text>
   <text x="82" y="208" class="ce3-name">컴팩션</text>
   <text x="36" y="238" class="ce3-desc">대화 기록을 요약으로 압축해</text>
-  <text x="36" y="260" class="ce3-desc">윈도우 공간을 되찾는다</text>
+  <text x="36" y="260" class="ce3-desc">윈도우 공간을 회수</text>
   <!-- strategy 3: structured note-taking -->
   <rect x="20" y="282" width="440" height="104" rx="8" class="ce3-card" />
   <circle cx="50" cy="316" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
   <text x="50" y="323" text-anchor="middle" class="ce3-num" fill="var(--text-success, #16a34a)">3</text>
   <text x="82" y="324" class="ce3-name">구조화된 노트</text>
   <text x="36" y="354" class="ce3-desc">핵심 사실을 윈도우 바깥</text>
-  <text x="36" y="376" class="ce3-desc">파일에 기록해 둔다</text>
+  <text x="36" y="376" class="ce3-desc">파일에 기록</text>
   <!-- strategy 4: subagent isolation -->
   <rect x="20" y="398" width="440" height="104" rx="8" class="ce3-card" />
   <circle cx="50" cy="432" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text, #1c1917)" stroke-width="2" />
   <text x="50" y="439" text-anchor="middle" class="ce3-num" fill="var(--text, #1c1917)">4</text>
   <text x="82" y="440" class="ce3-name">서브에이전트 격리</text>
   <text x="36" y="470" class="ce3-desc">탐색은 서브에이전트가 하고</text>
-  <text x="36" y="492" class="ce3-desc">부모는 요약만 받는다</text>
+  <text x="36" y="492" class="ce3-desc">부모에게는 요약만 전달</text>
 </svg>
 </div>
 
@@ -253,7 +252,7 @@ Claude Code가 대규모 데이터베이스 분석을 할 때의 패턴이 좋�
 가장 안전한 초기 단계는 도구 호출과 결과를 정리하는 것입니다. 대화 깊은 곳에 있는 도구 결과를 에이전트가 다시 볼 필요가 있을까요? 대부분의 경우 그렇지 않습니다. Claude Code의 컴팩션 과정을 예시로 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 282" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸다.">
+<svg viewBox="0 0 480 282" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸습니다.">
   <defs>
     <marker id="ce4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
@@ -312,7 +311,7 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
 구조화된 노트의 핵심은 컴팩션과의 관계입니다. 컴팩션이 실행되기 전에 핵심 사실을 노트로 추출하면, 요약 과정에서 정보가 손실되더라도 노트가 이를 보완합니다. 일종의 이중 안전장치입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 252" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있다.">
+<svg viewBox="0 0 480 252" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있습니다.">
   <defs>
     <marker id="ce5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
@@ -348,7 +347,7 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
   <text x="78" y="204" text-anchor="middle" class="ce5-sub">윈도우 바깥에</text>
   <text x="78" y="228" text-anchor="middle" class="ce5-sub">따로 보존</text>
   <path d="M 147 192 L 400 192 L 400 106" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <text x="160" y="184" class="ce5-sub">컴팩션을 통과해 살아남는다</text>
+  <text x="160" y="184" class="ce5-sub">컴팩션 이후에도 유지</text>
 </svg>
 </div>
 

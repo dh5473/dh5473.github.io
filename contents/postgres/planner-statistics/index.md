@@ -97,7 +97,7 @@ WHERE tablename = 'orders' AND attname = 'status';
 같은 테이블의 `status`와 `amount`를 나란히 놓으면 MCV와 histogram이 각각 어떤 컬럼을 맡는지가 드러납니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 538" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 538" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 status 컬럼의 MCV가 세 값의 빈도를 그대로 담아 조건 값에 따라 Seq Scan과 Bitmap Index Scan이 갈리는 모습, 아래쪽은 amount 컬럼이 히스토그램 버킷 100개로 분포를 근사해 범위 조건의 비율을 보간하는 모습을 보여주는 그림">
@@ -119,7 +119,7 @@ WHERE tablename = 'orders' AND attname = 'status';
 <!-- 위 패널: status, MCV -->
 <rect x="16" y="42" width="448" height="278" rx="8" class="ps1-panel"/>
 <text x="32" y="70" font-size="19" font-weight="600" class="ps1-t">위: status 컬럼 (고유값 3개)</text>
-<text x="32" y="94" font-size="18" class="ps1-m">MCV가 세 값의 빈도를 그대로 담습니다</text>
+<text x="32" y="94" font-size="18" class="ps1-m">MCV: 세 값의 빈도를 그대로 저장</text>
 <rect x="32" y="106" width="353.7" height="32" class="ps1-s1"/>
 <rect x="385.7" y="106" width="54.07" height="32" class="ps1-s2"/>
 <rect x="439.77" y="106" width="8.23" height="32" class="ps1-s3"/>
@@ -130,13 +130,13 @@ WHERE tablename = 'orders' AND attname = 'status';
 <line x1="444" y1="140" x2="444" y2="202" class="ps1-lead"/>
 <text x="438" y="218" text-anchor="end" font-size="17" class="ps1-t">refunded 2.0%</text>
 <line x1="32" y1="238" x2="448" y2="238" class="ps1-div"/>
-<text x="32" y="260" font-size="17" class="ps1-m">WHERE 조건 값에 따라 plan이 갈립니다</text>
+<text x="32" y="260" font-size="17" class="ps1-m">WHERE 조건 값에 따라 갈리는 plan</text>
 <text x="32" y="286" font-size="18" class="ps1-t">'completed' → 85,023행 → Seq Scan</text>
 <text x="32" y="308" font-size="18" class="ps1-t">'refunded' → 1,980행 → Bitmap Index Scan</text>
 <!-- 아래 패널: amount, histogram -->
 <rect x="16" y="336" width="448" height="186" rx="8" class="ps1-panel"/>
 <text x="32" y="364" font-size="19" font-weight="600" class="ps1-t">아래: amount 컬럼 (값이 거의 다 다름)</text>
-<text x="32" y="388" font-size="18" class="ps1-m">histogram 버킷 100개가 분포를 대신합니다</text>
+<text x="32" y="388" font-size="18" class="ps1-m">histogram 버킷 100개로 근사한 분포</text>
 <rect x="32" y="402" width="416" height="32" class="ps1-bk"/>
 <rect x="240" y="402" width="208" height="32" fill="var(--accent, #d97706)" opacity="0.35"/>
 <line x1="73.6" y1="402" x2="73.6" y2="434" class="ps1-tick"/>
@@ -151,7 +151,7 @@ WHERE tablename = 'orders' AND attname = 'status';
 <text x="32" y="458" font-size="17" class="ps1-m">0.02</text>
 <text x="240" y="458" text-anchor="middle" font-size="17" class="ps1-m">498.78</text>
 <text x="448" y="458" text-anchor="end" font-size="17" class="ps1-m">999.99</text>
-<text x="32" y="484" font-size="18" class="ps1-t">버킷마다 행 수가 같아 경계 위치가 곧 비율입니다</text>
+<text x="32" y="484" font-size="18" class="ps1-t">버킷마다 같은 행 수 → 경계 위치 = 비율</text>
 <text x="32" y="508" font-size="18" class="ps1-t">amount &gt; 500 → 49,861행 추정, 실제 49,948행</text>
 </svg>
 </div>
@@ -198,7 +198,7 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 실측 쪽 `rows`에 소수점 두 자리가 붙는 것은 PostgreSQL 18부터입니다. 이 숫자는 원래 `loops`로 나눈 평균이라, 예전처럼 정수로 반올림하면 한 행도 못 찾은 노드와 두 번에 한 번꼴로 한 행씩 찾은 노드가 똑같이 `rows=0`으로 보였습니다. 이제는 `rows=0.00`과 `rows=0.50`으로 갈립니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 586" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 586" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="EXPLAIN 한 노드의 앞 괄호는 cost와 rows와 width로 된 추정치이고 뒤 괄호는 actual time과 rows와 loops로 된 실측치이며, 양쪽의 rows를 비교하는 것이 진단의 출발점임을 보여주는 그림">
@@ -214,7 +214,7 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 .ps2-arrh { fill: var(--primary, #0d9488); }
 </style>
 <!-- 제목 -->
-<text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps2-t">한 노드에 추정과 실측이 함께 있다</text>
+<text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps2-t">한 노드에 붙는 추정과 실측</text>
 <!-- 위: 추정치 -->
 <rect x="16" y="48" width="448" height="204" rx="8" class="ps2-box"/>
 <text x="32" y="76" font-size="19" font-weight="600" class="ps2-t">위: EXPLAIN이 내놓는 추정치</text>
@@ -229,7 +229,7 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 <polygon points="100,254 94,264 106,264" class="ps2-arrh"/>
 <line x1="100" y1="264" x2="100" y2="280" class="ps2-arr"/>
 <polygon points="100,290 94,280 106,280" class="ps2-arrh"/>
-<text x="116" y="278" font-size="18" font-weight="600" class="ps2-t">이 둘을 비교합니다</text>
+<text x="116" y="278" font-size="18" font-weight="600" class="ps2-t">이 둘을 비교</text>
 <!-- 아래: 실측치 -->
 <rect x="16" y="294" width="448" height="204" rx="8" class="ps2-box"/>
 <text x="32" y="322" font-size="19" font-weight="600" class="ps2-t">아래: ANALYZE가 더해주는 실측치</text>
@@ -410,7 +410,7 @@ WHERE country = 'KR' AND city = 'Seoul';
 이 오차가 이 노드에서 끝나지 않는다는 점이 문제입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 510" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 486" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="두 컬럼을 독립으로 가정해 선택도를 곱하면 3813행을 추정하지만 실제로는 10000행이 나오고, 이 노드가 조인의 바깥이면 플래너가 Nested Loop를 골라 실제 반복 횟수가 추정의 2.6배로 늘어나는 연쇄를 보여주는 그림">
@@ -430,7 +430,7 @@ WHERE country = 'KR' AND city = 'Seoul';
 <!-- 1단계 -->
 <rect x="24" y="46" width="432" height="66" rx="8" class="ps3-neutral"/>
 <text x="42" y="74" font-size="20" class="ps3-t">MCV: KR 0.3765, Seoul 0.1266</text>
-<text x="42" y="98" font-size="18" class="ps3-m">두 조건을 서로 독립이라고 가정합니다</text>
+<text x="42" y="98" font-size="18" class="ps3-m">두 조건을 서로 독립으로 가정</text>
 <line x1="240" y1="114" x2="240" y2="128" class="ps3-arr"/>
 <polygon points="240,136 233,128 247,128" class="ps3-arrh"/>
 <!-- 2단계 -->
@@ -441,21 +441,20 @@ WHERE country = 'KR' AND city = 'Seoul';
 <polygon points="240,226 233,218 247,218" class="ps3-arrh"/>
 <!-- 3단계 -->
 <rect x="24" y="226" width="432" height="66" rx="8" class="ps3-bad"/>
-<text x="42" y="254" font-size="20" font-weight="600" class="ps3-badt">실제로는 Seoul이 KR에만 있습니다</text>
+<text x="42" y="254" font-size="20" font-weight="600" class="ps3-badt">실제로는 Seoul이 KR에만 존재</text>
 <text x="42" y="278" font-size="18" class="ps3-t">10,000행이 남아 추정의 2.6배</text>
 <line x1="240" y1="294" x2="240" y2="308" class="ps3-arr"/>
 <polygon points="240,316 233,308 247,308" class="ps3-arrh"/>
 <!-- 4단계 -->
-<rect x="24" y="316" width="432" height="90" rx="8" class="ps3-warn"/>
+<rect x="24" y="316" width="432" height="66" rx="8" class="ps3-warn"/>
 <text x="42" y="344" font-size="20" font-weight="600" class="ps3-warnt">이 노드가 조인의 바깥이면</text>
-<text x="42" y="368" font-size="18" class="ps3-t">플래너는 3,813행만 나올 셈으로</text>
-<text x="42" y="392" font-size="18" class="ps3-t">Nested Loop를 고릅니다</text>
-<line x1="240" y1="408" x2="240" y2="422" class="ps3-arr"/>
-<polygon points="240,430 233,422 247,422" class="ps3-arrh"/>
+<text x="42" y="368" font-size="18" class="ps3-t">3,813행을 기준으로 Nested Loop 선택</text>
+<line x1="240" y1="384" x2="240" y2="398" class="ps3-arr"/>
+<polygon points="240,406 233,398 247,398" class="ps3-arrh"/>
 <!-- 5단계 -->
-<rect x="24" y="430" width="432" height="66" rx="8" class="ps3-bad"/>
-<text x="42" y="458" font-size="20" font-weight="600" class="ps3-badt">실제로는 10,000번 반복합니다</text>
-<text x="42" y="482" font-size="18" class="ps3-t">안쪽 조회가 2.6배로 늘어납니다</text>
+<rect x="24" y="406" width="432" height="66" rx="8" class="ps3-bad"/>
+<text x="42" y="434" font-size="20" font-weight="600" class="ps3-badt">실제로는 10,000번 반복</text>
+<text x="42" y="458" font-size="18" class="ps3-t">안쪽 조회가 2.6배</text>
 </svg>
 </div>
 

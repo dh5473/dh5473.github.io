@@ -16,10 +16,10 @@ thumbnail: './thumbnail.png'
 느린 쿼리를 잡는 일은 **범위를 좁혀가는 과정**입니다. 전체 워크로드에서 병목을 찾고, 그 쿼리의 실행 계획을 확인하고, 지금 이 순간 무엇에 막혀 있는지를 확인합니다. 이 글에서는 그 과정에서 쓰는 도구들을 순서대로 따라갑니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 330" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 330" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="관측 도구의 세 층위. pg_stat_statements는 전체 워크로드에서 어떤 쿼리가 시간을 가장 많이 쓰는지, EXPLAIN ANALYZE는 그 쿼리 한 번이 어디에서 시간을 쓰는지, wait_event는 지금 그 쿼리가 무엇을 기다리는지를 보여준다">
+     role="img" aria-label="관측 도구의 세 층위. pg_stat_statements는 전체 워크로드에서 어떤 쿼리가 시간을 가장 많이 쓰는지, EXPLAIN ANALYZE는 그 쿼리 한 번이 어디에서 시간을 쓰는지, wait_event는 지금 그 쿼리가 무엇을 기다리는지를 보여줍니다">
 <defs>
 <marker id="sqfArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
@@ -41,7 +41,7 @@ thumbnail: './thumbnail.png'
 <text class="sqf-s" x="40" y="88">시간을 가장 많이 쓰는가</text>
 <!-- narrowing 1 -->
 <line class="sqf-ln" x1="240" y1="100" x2="240" y2="122" marker-end="url(#sqfArrow)"/>
-<text class="sqf-n" x="252" y="118">쿼리 하나로 좁힌다</text>
+<text class="sqf-n" x="252" y="118">쿼리 하나로 좁힘</text>
 <!-- layer 2: one query -->
 <rect class="sqf-box" x="60" y="124" width="360" height="84" rx="8"/>
 <text class="sqf-h" x="80" y="152">EXPLAIN ANALYZE</text>
@@ -50,7 +50,7 @@ thumbnail: './thumbnail.png'
 <text class="sqf-s" x="80" y="196">어디에서 시간을 쓰는가</text>
 <!-- narrowing 2 -->
 <line class="sqf-ln" x1="240" y1="208" x2="240" y2="230" marker-end="url(#sqfArrow)"/>
-<text class="sqf-n" x="252" y="226">그 순간의 대기로 좁힌다</text>
+<text class="sqf-n" x="252" y="226">그 순간의 대기로 좁힘</text>
 <!-- layer 3: one moment -->
 <rect class="sqf-box" x="100" y="232" width="280" height="84" rx="8"/>
 <text class="sqf-h" x="120" y="260">wait_event</text>
@@ -156,9 +156,9 @@ LIMIT 10;
 
 `EXPLAIN ANALYZE`는 쿼리를 실제로 실행한 뒤 [플래너가 세운 계획](/postgres/planner-statistics/)과 실제 결과를 나란히 보여줍니다. 하지만 운영 환경에서는 "그 느린 순간"을 재현하기 어렵습니다.
 
-- 파라미터 바인딩 값에 따라 plan이 달라진다
-- 통계가 갱신된 직후와 직전에 plan이 바뀐다
-- 동시 접속이 높을 때만 lock 대기가 걸린다
+- 파라미터 바인딩 값에 따라 plan이 달라집니다
+- 통계가 갱신된 직후와 직전에 plan이 바뀝니다
+- 동시 접속이 높을 때만 lock 대기가 걸립니다
 
 `auto_explain`은 이 문제를 해결합니다. 설정한 threshold보다 오래 걸린 쿼리의 실행 계획을 **자동으로 서버 로그에 기록**합니다. 문제가 발생한 바로 그 순간의 plan을 사후에 확인할 수 있습니다.
 
@@ -332,10 +332,10 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 지금까지 소개한 도구들을 언제 어떤 순서로 쓰는지 정리합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 948" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 948" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="느린 쿼리 진단 판단 트리. DB가 느리다는 신고에서 출발해 pg_stat_statements로 상위 쿼리를 고르고, EXPLAIN ANALYZE로 실행 계획을 읽고, pg_stat_activity로 지금 무엇을 기다리는지 보고, pg_stat_user_tables로 테이블 상태를 점검한다. 각 단계마다 관측된 조건과 그에 대응하는 다음 행동을 짝지어 보여준다">
+     role="img" aria-label="느린 쿼리 진단 판단 트리. DB가 느리다는 신고에서 출발해 pg_stat_statements로 상위 쿼리를 고르고, EXPLAIN ANALYZE로 실행 계획을 읽고, pg_stat_activity로 지금 무엇을 기다리는지 보고, pg_stat_user_tables로 테이블 상태를 점검합니다. 각 단계마다 관측된 조건과 그에 대응하는 다음 행동을 짝지어 보여줍니다">
 <defs>
 <marker id="sqtArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
@@ -363,13 +363,13 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 <text class="sqt-hs" x="452" y="106" text-anchor="end">워크로드 전체</text>
 <line class="sqt-sep" x1="14" y1="120" x2="466" y2="120"/>
 <circle class="sqt-dot" cx="26" cy="134" r="3"/>
-<text class="sqt-c" x="38" y="139">mean_exec_time이 크다</text>
+<text class="sqt-c" x="38" y="139">mean_exec_time이 큼</text>
 <text class="sqt-a" x="52" y="157">→ 그 쿼리를 EXPLAIN ANALYZE</text>
 <circle class="sqt-dot" cx="26" cy="176" r="3"/>
-<text class="sqt-c" x="38" y="181">shared_blks_read가 크다</text>
+<text class="sqt-c" x="38" y="181">shared_blks_read가 큼</text>
 <text class="sqt-a" x="52" y="199">→ EXPLAIN (ANALYZE, BUFFERS)</text>
 <circle class="sqt-dot" cx="26" cy="218" r="3"/>
-<text class="sqt-c" x="38" y="223">calls가 비정상적으로 많다</text>
+<text class="sqt-c" x="38" y="223">calls가 비정상적으로 많음</text>
 <text class="sqt-a" x="52" y="241">→ N+1 등 호출 패턴 점검</text>
 <line class="sqt-ln" x1="240" y1="256" x2="240" y2="274" marker-end="url(#sqtArrow)"/>
 <!-- 2단계: EXPLAIN ANALYZE -->
@@ -378,7 +378,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 <text class="sqt-hs" x="452" y="304" text-anchor="end">쿼리 하나</text>
 <line class="sqt-sep" x1="14" y1="318" x2="466" y2="318"/>
 <circle class="sqt-dot" cx="26" cy="332" r="3"/>
-<text class="sqt-c" x="38" y="337">추정 행 수와 실제 행 수가 다르다</text>
+<text class="sqt-c" x="38" y="337">추정 행 수와 실제 행 수가 다름</text>
 <text class="sqt-a" x="52" y="355">→ ANALYZE로 통계 갱신</text>
 <circle class="sqt-dot" cx="26" cy="374" r="3"/>
 <text class="sqt-c" x="38" y="379">큰 테이블에 Seq Scan</text>
@@ -387,7 +387,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 <text class="sqt-c" x="38" y="421">Nested Loop에서 행이 폭발</text>
 <text class="sqt-a" x="52" y="439">→ 조인 순서와 조인 방식 재검토</text>
 <circle class="sqt-dot" cx="26" cy="458" r="3"/>
-<text class="sqt-c" x="38" y="463">Index Scan인데 읽은 블록이 많다</text>
+<text class="sqt-c" x="38" y="463">Index Scan인데 읽은 블록이 많음</text>
 <text class="sqt-a" x="52" y="481">→ shared_buffers 부족 또는 bloat</text>
 <line class="sqt-ln" x1="240" y1="496" x2="240" y2="514" marker-end="url(#sqtArrow)"/>
 <!-- 3단계: pg_stat_activity -->
@@ -405,7 +405,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 <text class="sqt-c" x="38" y="661">state = idle in transaction</text>
 <text class="sqt-a" x="52" y="679">→ 트랜잭션 타임아웃 설정</text>
 <circle class="sqt-dot" cx="26" cy="698" r="3"/>
-<text class="sqt-c" x="38" y="703">wait_event가 비어 있다 (CPU)</text>
+<text class="sqt-c" x="38" y="703">wait_event가 비어 있음 (CPU)</text>
 <text class="sqt-a" x="52" y="721">→ 쿼리 자체가 무거움, plan 확인</text>
 <line class="sqt-ln" x1="240" y1="736" x2="240" y2="754" marker-end="url(#sqtArrow)"/>
 <!-- 4단계: pg_stat_user_tables -->
@@ -414,10 +414,10 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 <text class="sqt-hs" x="452" y="784" text-anchor="end">테이블 건강</text>
 <line class="sqt-sep" x1="14" y1="798" x2="466" y2="798"/>
 <circle class="sqt-dot" cx="26" cy="812" r="3"/>
-<text class="sqt-c" x="38" y="817">n_dead_tup 비율이 높다</text>
+<text class="sqt-c" x="38" y="817">n_dead_tup 비율이 높음</text>
 <text class="sqt-a" x="52" y="835">→ autovacuum 지연 점검</text>
 <circle class="sqt-dot" cx="26" cy="854" r="3"/>
-<text class="sqt-c" x="38" y="859">seq_scan이 idx_scan보다 많다</text>
+<text class="sqt-c" x="38" y="859">seq_scan이 idx_scan보다 많음</text>
 <text class="sqt-a" x="52" y="877">→ 인덱스 누락 의심</text>
 <circle class="sqt-dot" cx="26" cy="896" r="3"/>
 <text class="sqt-c" x="38" y="901">last_autovacuum이 NULL</text>

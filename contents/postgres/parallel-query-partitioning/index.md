@@ -54,7 +54,7 @@ thumbnail: './thumbnail.png'
 세 개의 실행 흐름이 어떻게 갈라졌다가 다시 모이는지를 그림으로 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 512" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 460" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="leader와 worker 두 개가 각각 테이블의 서로 다른 블록 범위를 스캔해 부분 집계를 만들고, 그 결과를 Gather 노드가 모아 Finalize HashAggregate로 넘기는 구조">
@@ -106,9 +106,6 @@ thumbnail: './thumbnail.png'
 <!-- finalize -->
 <rect class="pq1-box" x="60" y="396" width="396" height="48" rx="8"/>
 <text class="pq1-fin" x="258" y="427" text-anchor="middle">Finalize HashAggregate</text>
-<!-- notes -->
-<text class="pq1-note" x="240" y="472" text-anchor="middle">worker는 요청한 수만큼 못 뜰 수도 있다.</text>
-<text class="pq1-note" x="240" y="494" text-anchor="middle">그래서 Launched &lt; Planned 인 경우가 생긴다.</text>
 </svg>
 </div>
 
@@ -258,7 +255,7 @@ SELECT COUNT(*) FROM logs WHERE created_at >= '2026-04-15';
 3, 4, 5월 세 파티션 중 `logs_2026_03`이 plan에서 제외됐습니다. 플래너가 "3월 파티션은 `< 2026-04-01`이니 `>= 2026-04-15` 조건과 겹치지 않는다"고 판단한 결과입니다. 이게 **plan-time pruning**입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 380" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 352" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="created_at이 2026-04-15 이상이라는 조건에서 3월 파티션은 점선 회색으로 건너뛰고 4월과 5월 파티션만 teal 실선으로 읽는 파티션 프루닝 결과">
@@ -305,8 +302,7 @@ SELECT COUNT(*) FROM logs WHERE created_at >= '2026-04-15';
 <text class="pp1-stat" x="228" y="262">읽음</text>
 <text class="pp1-rng" x="80" y="286">범위 2026-05-01 ~ 2026-06-01</text>
 <!-- notes -->
-<text class="pp1-note" x="240" y="336" text-anchor="middle">조건과 겹치지 않는 파티션은 plan에서 빠진다.</text>
-<text class="pp1-note" x="240" y="360" text-anchor="middle">Append 아래 남는 자식 노드는 2개.</text>
+<text class="pp1-note" x="240" y="332" text-anchor="middle">Append 아래 남는 자식 노드 2개</text>
 </svg>
 </div>
 

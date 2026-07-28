@@ -85,7 +85,7 @@ snapshot은 트랜잭션이 "지금 세상의 상태"를 사진처럼 저장해�
 이 세 필드를 xid 번호선 위에 올려보면 이렇습니다. xmin이 748, xmax가 752이고 xip[]에 748과 750이 들어 있는 snapshot을 예로 들었습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="xid 번호선 위에서 snapshot의 xmin(748)과 xmax(752)가 번호선을 과거 구간, xip 배열이 흩어진 구간, 미래 구간의 셋으로 나누는 그림">
@@ -174,10 +174,10 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 두 단계를 위에서 아래로 이어 붙이면 판정 흐름 전체가 이렇게 됩니다. 초록 체크는 보임, 빨강 X는 안 보임입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 1004" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 1004" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="튜플 가시성 판정 흐름도. Step 1에서 t_xmin을 검사해 현재 트랜잭션인지, committed 과거인지, aborted인지를 따지고, 통과한 튜플만 Step 2로 내려가 t_xmax의 네 가지 상태에 따라 보임 또는 안 보임을 결정한다">
+     role="img" aria-label="튜플 가시성 판정 흐름도. Step 1에서 t_xmin을 검사해 현재 트랜잭션인지, committed 과거인지, aborted인지를 따지고, 통과한 튜플만 Step 2로 내려가 t_xmax의 네 가지 상태에 따라 보임 또는 안 보임을 결정합니다">
 <defs>
 <marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0d9488)"/></marker>
 </defs>
@@ -196,7 +196,7 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 </style>
 <!-- 시작 -->
 <rect x="126" y="16" width="228" height="42" rx="21" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)"/>
-<text x="240" y="44" text-anchor="middle" font-size="19" class="mv2-t">튜플 하나를 집었다</text>
+<text x="240" y="44" text-anchor="middle" font-size="19" class="mv2-t">튜플 하나를 집음</text>
 <line x1="240" y1="60" x2="240" y2="86" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
 <!-- Step 1 헤더 -->
 <text x="18" y="110" font-size="19" class="mv2-h">Step 1. t_xmin 검사</text>
@@ -232,7 +232,7 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 <!-- Step 2 헤더 -->
 <line x1="240" y1="510" x2="240" y2="532" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
 <text x="18" y="558" font-size="19" class="mv2-h">Step 2. t_xmax 검사</text>
-<text x="18" y="580" font-size="17" class="mv2-m">Step 1을 통과한 튜플만 여기로 옵니다</text>
+<text x="18" y="580" font-size="17" class="mv2-m">이 튜플을 죽인 트랜잭션이 유효한가?</text>
 <!-- 분기 2-1 -->
 <rect x="18" y="594" width="444" height="82" rx="8" class="mv2-card"/>
 <rect x="18" y="594" width="5" height="82" rx="2.5" class="mv2-bar"/>

@@ -20,7 +20,7 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
 `vllm serve google/gemma-4-31B-it --tensor-parallel-size 2`를 실행하면 프로세스 4개가 뜹니다. API 서버 1개, EngineCore 1개, GPU 워커 2개(GPU당 1개)입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 460 340" style="width: 100%; height: auto; max-width: 460px;"
+<svg viewBox="0 0 460 340" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="vLLM V1 엔진의 프로세스 구조. HTTP 요청이 API 서버 프로세스로 들어가고, ZMQ로 EngineCore 프로세스에 전달된 뒤, shared memory 브로드캐스트로 GPU마다 하나씩 붙은 워커 프로세스로 내려갑니다.">
@@ -84,7 +84,7 @@ vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니�
 예약한 메모리를 어디에 쓰는지는 시작 순서를 보면 드러납니다. 가중치를 올린 다음, vLLM은 최대 크기 배치로 더미 forward를 한 번 돌려서 활성값이 정점에서 얼마나 먹는지, NCCL 버퍼 같은 PyTorch 밖 메모리가 얼마인지, CUDA graph가 얼마를 쓸지 측정하고 추정합니다. 그리고 예산에서 이것들을 뺀 **나머지 전부를 KV Cache 풀로** 만듭니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 212" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 212" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="80GB GPU에 gpu_memory_utilization 0.92를 적용한 73.6GB 예산을 모델 가중치, 활성값 피크와 CUDA graph, KV Cache 풀 세 몫으로 나눈 가로 막대. KV Cache 풀은 앞의 두 몫을 뺀 나머지 전부를 차지합니다.">

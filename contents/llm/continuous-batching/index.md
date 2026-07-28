@@ -22,10 +22,10 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
 문제는 **어떻게 묶느냐**입니다. 가장 단순한 방식은 요청 여러 개를 모아 배치로 만들고, 그 배치를 통째로 시작해서 통째로 끝내는 것입니다. 이걸 static batching이라고 합니다. 그런데 LLM 요청은 생성하는 토큰 수가 제각각입니다. 어떤 요청은 세 단어로 끝나고, 어떤 요청은 소설 한 편을 씁니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 278" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="static batching 간트 차트. 요청 A는 3스텝, B는 8스텝, D는 4스텝 만에 끝나지만 가장 긴 C가 14스텝을 채울 때까지 그 자리가 빈 슬롯으로 남아 낭비된다">
+     role="img" aria-label="static batching 간트 차트. 요청 A는 3스텝, B는 8스텝, D는 4스텝 만에 끝나지만 가장 긴 C가 14스텝을 채울 때까지 그 자리가 빈 슬롯으로 남아 낭비됩니다">
   <style>
     .cb1-title { fill: var(--text, #1c1917); font-size: 22px; }
     .cb1-name  { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
@@ -68,7 +68,6 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
   <text x="78" y="222" class="cb1-sub">실행 중</text>
   <rect x="152" y="210" width="18" height="14" rx="2" class="cb1-waste"/>
   <text x="178" y="222" class="cb1-sub">빈 슬롯 (낭비)</text>
-  <text x="10" y="258" class="cb1-sub">가장 긴 C가 끝나야 배치 전체가 반납된다</text>
 </svg>
 </div>
 
@@ -83,10 +82,10 @@ A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스�
 핵심은 배치 구성의 단위를 **요청 전체가 아니라 한 스텝(=한 번의 forward pass)**으로 낮춘 것입니다. 매 스텝이 끝나면 스케줄러가 배치를 다시 들여다봅니다. 답을 다 만든 요청은 그 즉시 배치에서 빠지고, 그 빈자리에 대기 중이던 요청이 바로 들어옵니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 410" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 380" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="continuous batching의 스텝별 배치 구성. 네 개의 슬롯이 매 스텝 다시 채워진다. A가 완료되면 E가, D가 완료되면 F가, B가 완료되면 G가 즉시 그 자리에 합류해 빈 슬롯이 생기지 않는다">
+     role="img" aria-label="continuous batching의 스텝별 배치 구성. 네 개의 슬롯이 매 스텝 다시 채워집니다. A가 완료되면 E가, D가 완료되면 F가, B가 완료되면 G가 즉시 그 자리에 합류해 빈 슬롯이 생기지 않습니다">
   <style>
     .cb2-title { fill: var(--text, #1c1917); font-size: 22px; }
     .cb2-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
@@ -135,7 +134,6 @@ A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스�
   <text x="114" y="360" class="cb2-note">진행 중</text>
   <rect x="196" y="348" width="18" height="14" rx="2" class="cb2-new"/>
   <text x="222" y="360" class="cb2-note">새로 합류</text>
-  <text x="8" y="392" class="cb2-note">빈 슬롯이 생기지 않아 매 스텝 배치가 꽉 찬다</text>
 </svg>
 </div>
 
@@ -160,10 +158,10 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
 요청 처리는 두 단계로 나뉩니다. 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill, 그다음 토큰을 하나씩 만드는 decode. prefill은 프롬프트의 모든 토큰을 병렬로 계산하는 compute-bound 단계이고, decode는 토큰 하나를 만드는 memory-bound 단계입니다. 문제는 프롬프트가 길 때입니다. 8,000토큰짜리 프롬프트의 prefill은 연산량이 많아 한 스텝을 통째로 잡아먹습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 280" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 248" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="chunked prefill이 없을 때의 스텝 구성. 스텝 t와 t+2는 A B C의 decode로 채워지지만, 그 사이 스텝 t+1을 8000토큰짜리 긴 prefill이 통째로 차지해 기존 요청의 토큰 생성이 멈춘다">
+     role="img" aria-label="chunked prefill이 없을 때의 스텝 구성. 스텝 t와 t+2는 A B C의 decode로 채워지지만, 그 사이 스텝 t+1을 8000토큰짜리 긴 prefill이 통째로 차지해 기존 요청의 토큰 생성이 멈춥니다">
   <style>
     .cb3-title { fill: var(--text, #1c1917); font-size: 22px; }
     .cb3-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
@@ -171,7 +169,6 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
     .cb3-pre   { fill: var(--accent, #d97706); }
     .cb3-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
     .cb3-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb3-warn  { fill: var(--text-danger, #dc2626); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb3-title">Chunked prefill이 없다면</text>
   <!-- 스텝 t -->
@@ -193,7 +190,6 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
   <text x="114" y="204" class="cb3-note">decode (memory-bound)</text>
   <rect x="88" y="216" width="18" height="14" rx="2" class="cb3-pre"/>
   <text x="114" y="228" class="cb3-note">prefill (compute-bound)</text>
-  <text x="8" y="260" class="cb3-warn">스텝 t+1 동안 A·B·C의 토큰 생성이 멈춘다</text>
 </svg>
 </div>
 
@@ -208,10 +204,10 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
 해법은 단순합니다. 긴 prefill을 한 스텝에 통째로 밀어 넣지 말고, **여러 조각으로 잘라** 여러 스텝에 나눠 처리하는 것입니다. 이것이 chunked prefill입니다(Sarathi-Serve, 2024). 그리고 잘라낸 prefill 청크를, 진행 중인 요청들의 decode와 **같은 스텝에 함께** 태웁니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 336" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 290" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="chunked prefill을 적용한 스텝 구성. 스텝 t부터 t+3까지 매 스텝에 A와 B의 decode와 X의 prefill 청크가 함께 실려, 기존 요청의 토큰 생성이 끊기지 않는다">
+     role="img" aria-label="chunked prefill을 적용한 스텝 구성. 스텝 t부터 t+3까지 매 스텝에 A와 B의 decode와 X의 prefill 청크가 함께 실려, 기존 요청의 토큰 생성이 끊기지 않습니다">
   <style>
     .cb4-title { fill: var(--text, #1c1917); font-size: 22px; }
     .cb4-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
@@ -219,7 +215,6 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
     .cb4-pre   { fill: var(--accent, #d97706); }
     .cb4-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
     .cb4-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb4-ok    { fill: var(--text-success, #16a34a); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb4-title">Chunked prefill</text>
   <!-- 스텝 t -->
@@ -247,8 +242,6 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
   <text x="114" y="246" class="cb4-note">decode (memory-bound)</text>
   <rect x="88" y="258" width="18" height="14" rx="2" class="cb4-pre"/>
   <text x="114" y="270" class="cb4-note">prefill (compute-bound)</text>
-  <text x="8" y="302" class="cb4-ok">A·B의 토큰 생성이 끊기지 않고,</text>
-  <text x="8" y="324" class="cb4-ok">X의 prefill은 네 스텝에 나뉜다</text>
 </svg>
 </div>
 
@@ -277,10 +270,10 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 배분 순서에는 우선순위가 있습니다. 스케줄러는 먼저 진행 중인 요청(running 큐)의 decode부터 예산에 채웁니다. 그리고 남은 예산으로 대기 중인 요청(waiting 큐)의 prefill을 채우는데, 남은 예산에 다 안 들어가면 그만큼만 잘라서 넣습니다. 이 "잘라서 넣기"가 바로 chunked prefill입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 292" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 decode 요청 A B C가 1토큰씩 3토큰을 차지하고, 남은 예산으로 waiting 큐의 X가 2048토큰 prefill 청크를 채운다. 최종 스케줄 결과는 A 1, B 1, C 1, X 2048">
+     role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 decode 요청 A B C가 1토큰씩 3토큰을 차지하고, 남은 예산으로 waiting 큐의 X가 2048토큰 prefill 청크를 채웁니다. 최종 스케줄 결과는 A 1, B 1, C 1, X 2048">
   <style>
     .cb5-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
     .cb5-dec   { fill: var(--primary, #0d9488); }
@@ -288,8 +281,6 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
     .cb5-rest  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .cb5-leg   { fill: var(--text, #1c1917); font-size: 17px; }
     .cb5-muted { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .cb5-s1    { fill: var(--primary, #0d9488); font-size: 18px; }
-    .cb5-s2    { fill: var(--accent, #d97706); font-size: 18px; }
     .cb5-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
   </style>
   <defs>
@@ -309,15 +300,11 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
   <text x="46" y="140" class="cb5-leg">X 청크 = 2,048토큰</text>
   <rect x="20" y="152" width="18" height="14" rx="2" class="cb5-rest"/>
   <text x="46" y="164" class="cb5-leg">남은 예산 = 6,141토큰</text>
-  <!-- 배분 순서 -->
-  <text x="20" y="198" class="cb5-s1">1. running 큐의 decode부터 채운다 (3토큰)</text>
-  <text x="20" y="224" class="cb5-s2">2. 남은 예산으로 waiting 큐의</text>
-  <text x="40" y="246" class="cb5-s2">prefill을 잘라 넣는다</text>
-  <path d="M240,260 L240,280" class="cb5-arrow"/>
+  <path d="M240,180 L240,200" class="cb5-arrow"/>
   <!-- 스케줄 결과 -->
-  <rect x="70" y="288" width="340" height="42" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
-  <text x="240" y="315" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
-  <text x="240" y="356" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
+  <rect x="70" y="208" width="340" height="42" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+  <text x="240" y="235" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
+  <text x="240" y="276" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
 </svg>
 </div>
 

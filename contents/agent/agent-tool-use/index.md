@@ -28,7 +28,7 @@ Claude Code에 "deprecated된 모듈을 import하는 파일을 전부 찾아줘"
 **ACI(Agent-Computer Interface)**는 모델이 도구와 상호작용하는 인터페이스입니다. HCI가 사람을 위한 버튼, 메뉴, 레이아웃을 설계하듯, ACI는 모델을 위한 도구 이름, 설명, 파라미터 스키마, 에러 메시지를 설계합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
+<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
   <defs>
     <marker id="aciArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
@@ -106,7 +106,7 @@ Anthropic의 "Writing Effective Tools for AI Agents"와 "Building Effective Agen
 다섯 원칙은 도구 정의의 서로 다른 부분에 하나씩 대응합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
+<svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
   <defs>
     <marker id="tpArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
@@ -333,7 +333,7 @@ Claude Code의 도구 설계에서 이 구분이 선명하게 드러납니다. `
 같은 호출이 두 번 들어갔을 때 세 도구가 어떻게 갈리는지 보면 차이가 분명해집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
+<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
   <defs>
     <marker id="idemArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>

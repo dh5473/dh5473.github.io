@@ -54,7 +54,7 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 ### Row store (PostgreSQL 방식)
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="행 지향 저장에서는 한 행의 다섯 개 컬럼이 디스크 블록에 나란히 붙어 저장되므로, price 컬럼 하나만 필요한 집계에도 모든 컬럼을 함께 읽어야 한다는 것을 보여주는 그림">
+<svg viewBox="0 0 480 284" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="행 지향 저장에서는 한 행의 다섯 개 컬럼이 디스크 블록에 나란히 붙어 저장되므로, price 컬럼 하나만 필요한 집계에도 모든 컬럼을 함께 읽어야 한다는 것을 보여주는 그림">
 <style>
 .ch1-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch1-lbl { fill: var(--text-muted, #78716c); font-size: 18px; }
@@ -64,7 +64,7 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 .ch1-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .ch1-cell-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
 </style>
-<text class="ch1-title" x="240" y="28" text-anchor="middle">행 지향: 한 행이 통째로 붙어 있다</text>
+<text class="ch1-title" x="240" y="28" text-anchor="middle">행 지향: 한 행이 통째로 붙어 있음</text>
 <!-- block 1 -->
 <text class="ch1-lbl" x="10" y="58">디스크 블록 1</text>
 <rect class="ch1-cell" x="10" y="66" width="92" height="34" rx="4"/>
@@ -101,8 +101,7 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 <text class="ch1-t" x="424" y="194" text-anchor="middle">created</text>
 <text class="ch1-lbl" x="240" y="228" text-anchor="middle">... 1억 행까지 같은 배치</text>
 <!-- caption -->
-<text class="ch1-cap" x="240" y="262" text-anchor="middle">avg(price)에 필요한 건 price 칸뿐인데</text>
-<text class="ch1-cap" x="240" y="286" text-anchor="middle">5개 컬럼을 전부 디스크에서 읽는다</text>
+<text class="ch1-cap" x="240" y="262" text-anchor="middle">avg(price)에 필요한 칸은 price뿐</text>
 </svg>
 </div>
 
@@ -111,7 +110,7 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 ### Column store (ClickHouse 방식)
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 356" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컬럼 지향 저장에서는 컬럼마다 별도의 파일이 만들어져, avg(price) 쿼리가 price.bin 파일 하나만 읽고 나머지 네 개 파일은 열지 않는다는 것을 보여주는 그림">
+<svg viewBox="0 0 480 356" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컬럼 지향 저장에서는 컬럼마다 별도의 파일이 만들어져, avg(price) 쿼리가 price.bin 파일 하나만 읽고 나머지 네 개 파일은 열지 않는다는 것을 보여주는 그림">
 <style>
 .ch2-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch2-name { fill: var(--text-muted, #78716c); font-size: 18px; }
@@ -185,7 +184,7 @@ ClickHouse 공식 블로그에 따르면, nginx 로그 데이터를 ClickHouse�
 ClickHouse는 다릅니다. 한 번에 최대 **65,536개의 값**(기본 `max_block_size`)을 하나의 컬럼 벡터로 묶어서 처리합니다. 같은 연산을 수만 개의 값에 루프로 돌리면 **SIMD(Single Instruction Multiple Data)** 명령어를 활용할 수 있습니다. ClickHouse는 컴파일러의 자동 벡터화뿐 아니라 핵심 연산에 직접 작성된 SIMD 인트린식도 포함하고 있습니다. AVX2 레지스터 하나가 256비트이니, 32비트 정수 8개를 한 번의 CPU 명령으로 처리할 수 있는 것입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Volcano 모델이 행 하나마다 필터와 집계를 호출해 1억 번 반복하는 모습, 아래쪽은 벡터화 모델이 65,536행 블록 단위로 SIMD 필터와 집계를 수행해 약 1,500번만 반복하는 모습을 비교한 그림">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Volcano 모델이 행 하나마다 필터와 집계를 호출해 1억 번 반복하는 모습, 아래쪽은 벡터화 모델이 65,536행 블록 단위로 SIMD 필터와 집계를 수행해 약 1,500번만 반복하는 모습을 비교한 그림">
 <style>
 .ch3-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
@@ -292,7 +291,7 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 > INSERT가 들어오면 데이터를 PRIMARY KEY 순서로 정렬한 뒤 **불변(immutable) Part**로 디스크에 씁니다. 각 Part 안에서 컬럼별로 별도 파일이 만들어지고, 8,192행마다 하나의 **Granule** 경계가 기록됩니다. 이 경계를 가리키는 것이 **희소 인덱스(sparse index)**입니다. 시간이 지나면 백그라운드 프로세스가 작은 Part들을 하나의 큰 Part로 **머지(merge)**합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 360" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="INSERT 세 번이 각각 불변 Part를 하나씩 만들고, 백그라운드 머지가 세 Part를 하나의 큰 Part로 합치는 과정을 보여주는 그림">
+<svg viewBox="0 0 480 312" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="INSERT 세 번이 각각 불변 Part를 하나씩 만들고, 백그라운드 머지가 세 Part를 하나의 큰 Part로 합치는 과정을 보여주는 그림">
 <style>
 .ch4-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch4-in { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
@@ -301,7 +300,6 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 .ch4-tp { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
 .ch4-big { fill: var(--primary, #0d9488); font-size: 20px; font-weight: 700; }
 .ch4-note { fill: var(--text-muted, #78716c); font-size: 17px; }
-.ch4-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
 .ch4-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
 </style>
 <defs>
@@ -309,7 +307,7 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
 </marker>
 </defs>
-<text class="ch4-title" x="240" y="28" text-anchor="middle">INSERT마다 새 Part가 생긴다</text>
+<text class="ch4-title" x="240" y="28" text-anchor="middle">INSERT마다 새 Part 생성</text>
 <!-- row 1 -->
 <rect class="ch4-in" x="14" y="50" width="160" height="40" rx="4"/>
 <text class="ch4-t" x="94" y="76" text-anchor="middle">INSERT 1</text>
@@ -333,8 +331,6 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 <text class="ch4-note" x="326" y="228" text-anchor="end">백그라운드 머지</text>
 <rect class="ch4-part" x="230" y="250" width="220" height="46" rx="4"/>
 <text class="ch4-big" x="340" y="279" text-anchor="middle">Part_1_2_3</text>
-<!-- caption -->
-<text class="ch4-cap" x="240" y="330" text-anchor="middle">제자리 수정 없이 새로 쓰고, 나중에 합친다</text>
 </svg>
 </div>
 

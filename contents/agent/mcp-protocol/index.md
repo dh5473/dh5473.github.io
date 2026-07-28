@@ -22,7 +22,7 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
 에이전트 생태계에서 M개의 에이전트 플랫폼(Claude Code, Cursor, Windsurf, Codex 등)이 N개의 외부 서비스(GitHub, Slack, Jira, DB, 모니터링 도구 등)와 연결되어야 한다고 가정합니다. 표준이 없으면 M×N개의 커스텀 통합이 필요합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 560" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="표준이 없으면 에이전트 3개와 서비스 4개가 12개의 커스텀 통합을 필요로 하지만, MCP 표준 프로토콜을 경유하면 7개 구현으로 줄어드는 비교 다이어그램">
+<svg viewBox="0 0 480 560" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="표준이 없으면 에이전트 3개와 서비스 4개가 12개의 커스텀 통합을 필요로 하지만, MCP 표준 프로토콜을 경유하면 7개 구현으로 줄어드는 비교 다이어그램">
   <style>
     .mn-title { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
     .mn-label { font-size: 19px; fill: var(--text, #1c1917); }
@@ -118,7 +118,7 @@ MCP는 Microsoft의 LSP(Language Server Protocol)에서 영감을 받았습니�
 MCP는 세 가지 역할로 구성됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Host 안의 Client 세 개가 각각 하나의 MCP Server와 1대1로 연결되고, 각 Server는 GitHub API, Slack API, PostgreSQL 같은 실제 서비스에 연결되는 3계층 구조">
+<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Host 안의 Client 세 개가 각각 하나의 MCP Server와 1대1로 연결되고, 각 Server는 GitHub API, Slack API, PostgreSQL 같은 실제 서비스에 연결되는 3계층 구조">
   <style>
     .hcs-h { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .hcs-l { font-size: 19px; fill: var(--text, #1c1917); }
@@ -209,7 +209,7 @@ MCP는 JSON-RPC 2.0 메시지 포맷을 사용하며, 두 가지 전송 방식�
 Client와 Server 사이의 세션은 세 단계를 거칩니다. 초기화(Initialization), 작업(Operation), 종료(Shutdown)입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 490" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="MCP 세션의 세 단계 시퀀스 다이어그램. 초기화 단계에서 initialize와 capabilities와 initialized를 교환하고, 작업 단계에서 tools/list와 tools/call을 주고받은 뒤, 종료 단계에서 전송 계층을 닫는다">
+<svg viewBox="0 0 480 490" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="MCP 세션의 세 단계 시퀀스 다이어그램. 초기화 단계에서 initialize와 capabilities와 initialized를 교환하고, 작업 단계에서 tools/list와 tools/call을 주고받은 뒤, 종료 단계에서 전송 계층을 닫습니다">
   <style>
     .lc-head { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .lc-phase { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
@@ -289,7 +289,7 @@ tools = [
 결과는 명확합니다. 작업 시작 전 컨텍스트 소비가 약 77,000 토큰에서 약 8,700 토큰으로 줄어 **85% 절감**. 단순히 토큰을 아끼는 것이 아니라, 모델이 58개 도구 중에서 올바른 도구를 고르는 정확도도 향상됩니다. Anthropic의 내부 평가에서 Opus 4의 MCP 도구 선택 정확도가 49%에서 74%로 올랐습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 288" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 작업 시작 전에 소비되는 토큰 비교. 기본 방식은 77,000 토큰으로 약 39퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어든다">
+<svg viewBox="0 0 480 288" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="200K 컨텍스트 윈도우에서 작업 시작 전에 소비되는 토큰 비교. 기본 방식은 77,000 토큰으로 약 39퍼센트를 차지하고, Tool Search 적용 시 8,700 토큰으로 줄어듭니다">
   <style>
     .ctx-title { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
     .ctx-row { font-size: 19px; fill: var(--text, #1c1917); }
@@ -371,7 +371,7 @@ Programmatic Tool Calling이 "모델이 코드를 작성하고 도구 호출 결
 | **Code Execution with MCP** | 스키마 + 결과 모두 | 98.7% | MCP 작업 전반 개선 |
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 420" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 최적화 전략이 컨텍스트에서 제외하는 구간 비교. Tool Search는 도구 스키마를, Programmatic Tool Calling은 중간 결과를, Code Execution with MCP는 둘 다 제외하고 최종 출력만 남긴다">
+<svg viewBox="0 0 480 420" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 최적화 전략이 컨텍스트에서 제외하는 구간 비교. Tool Search는 도구 스키마를, Programmatic Tool Calling은 중간 결과를, Code Execution with MCP는 둘 다 제외하고 최종 출력만 남깁니다">
   <style>
     .st-name { font-size: 19px; font-weight: 700; }
     .st-base { fill: var(--text, #1c1917); }

@@ -65,7 +65,7 @@ Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 부모 입장에서 본 Postgres의 구조는 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 724" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 724" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="postmaster를 부모로 하는 PostgreSQL 프로세스 트리. checkpointer, background writer, walwriter, autovacuum launcher, logical replication launcher, io worker 같은 background 프로세스와, 커넥션마다 fork되는 backend 프로세스가 자식으로 매달려 있는 구조">
@@ -227,7 +227,7 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 주요 영역을 간단히 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="PostgreSQL shared memory 한 덩어리 안에 들어 있는 영역들. shared_buffers, wal_buffers, proc array, lock table, CLOG, cumulative stats, 그리고 multixact와 복제 슬롯 등이 차례로 나열된 그림">
@@ -304,7 +304,7 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 `psql`에서 `SELECT * FROM users WHERE email = 'foo@bar.com';`을 엔터로 쳤을 때, 이 한 줄이 서버 내부에서 거쳐가는 경로를 따라가봅시다. 공식 문서의 [Query Path](https://www.postgresql.org/docs/18/query-path.html) 항목은 이 과정을 **connection → parser → rewrite → planner → executor** 5단계로 기술하는데, 여기에 클라이언트↔서버 네트워크 경계와 storage 경계까지 포함하면 아래와 같습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 734" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 710" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="SELECT 한 줄이 지나가는 경로. client에서 libpq 프로토콜로 postmaster에 닿고, postmaster가 fork한 backend 안에서 parser, rewriter, planner, executor 순으로 처리된 뒤 storage 경계에서 shared_buffers hit 또는 read로 갈리는 흐름">
@@ -359,13 +359,12 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 <line class="pao3-arrow" x1="52" y1="542" x2="52" y2="596" marker-end="url(#pao3Arrow)"/>
 <text class="pao3-desc" x="70" y="572">executor가 페이지를 요구</text>
 <!-- storage -->
-<rect class="pao3-box" x="24" y="604" width="432" height="116" rx="8"/>
+<rect class="pao3-box" x="24" y="604" width="432" height="92" rx="8"/>
 <text class="pao3-mono pao3-head" x="44" y="630">storage</text>
 <circle class="pao3-hit" cx="50" cy="650" r="6"/>
 <text class="pao3-desc" x="66" y="656">shared hit · shared_buffers 안에서 반환</text>
 <rect class="pao3-read" x="44" y="670" width="12" height="12" rx="2"/>
 <text class="pao3-desc" x="66" y="681">shared read · OS에 read() 호출</text>
-<text class="pao3-desc" x="44" y="708">read가 곧 디스크 I/O를 뜻하지는 않습니다</text>
 </svg>
 </div>
 

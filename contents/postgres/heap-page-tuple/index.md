@@ -93,10 +93,10 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 페이지 한 장의 레이아웃은 다음과 같습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 476" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 476" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="8KB 힙 페이지의 레이아웃. 오프셋 0부터 24까지는 PageHeaderData, 그 뒤로 앞에서 뒤로 자라는 ItemId 배열이 pd_lower까지, 가운데는 free space, pd_upper부터 페이지 끝 방향으로 뒤에서 앞으로 자라는 튜플 데이터, 마지막 pd_special 뒤의 special space는 힙에서 크기가 0이고 페이지 끝은 8192다.">
+     role="img" aria-label="8KB 힙 페이지의 레이아웃. 오프셋 0부터 24까지는 PageHeaderData, 그 뒤로 앞에서 뒤로 자라는 ItemId 배열이 pd_lower까지, 가운데는 free space, pd_upper부터 페이지 끝 방향으로 뒤에서 앞으로 자라는 튜플 데이터, 마지막 pd_special 뒤의 special space는 힙에서 크기가 0이고 페이지 끝은 8192입니다.">
 <style>
 .hp1-t { fill: var(--text, #1c1917); }
 .hp1-m { fill: var(--text-muted, #78716c); }
@@ -141,7 +141,7 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 <line x1="426" y1="350" x2="426" y2="262" class="hp1-ar" marker-end="url(#hp1Arrow)"/>
 <!-- caption -->
 <text x="240" y="440" text-anchor="middle" font-size="17" class="hp1-m">그림의 세로 비율은 실제 축척이 아닙니다.</text>
-<text x="240" y="462" text-anchor="middle" font-size="17" class="hp1-m">헤더 24바이트는 8192바이트의 0.3%입니다.</text>
+<text x="240" y="462" text-anchor="middle" font-size="17" class="hp1-m">헤더 24바이트 = 8192바이트의 0.3%</text>
 </svg>
 </div>
 
@@ -171,10 +171,10 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 각 line pointer는 `ItemIdData`라는 4바이트 비트필드입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 190" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 190" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="ItemIdData 4바이트를 32비트 막대로 나타낸 그림. 왼쪽부터 lp_off 15비트, lp_flags 2비트, lp_len 15비트가 실제 비트 수에 비례한 폭으로 나뉘어 있다.">
+     role="img" aria-label="ItemIdData 4바이트를 32비트 막대로 나타낸 그림. 왼쪽부터 lp_off 15비트, lp_flags 2비트, lp_len 15비트가 실제 비트 수에 비례한 폭으로 나뉘어 있습니다.">
 <style>
 .hp2-t { fill: var(--text, #1c1917); }
 .hp2-m { fill: var(--text-muted, #78716c); }
@@ -215,10 +215,10 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 이제 line pointer가 가리키는 실제 튜플로 들어가봅시다. 각 튜플은 23바이트짜리 헤더 `HeapTupleHeaderData`로 시작합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 832" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 832" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="HeapTupleHeaderData의 필드 배치. 오프셋 0부터 t_xmin 4바이트, 4부터 t_xmax 4바이트, 8부터 t_cid와 t_xvac의 union 4바이트, 12부터 t_ctid 6바이트, 18부터 t_infomask2 2바이트, 20부터 t_infomask 2바이트, 22부터 t_hoff 1바이트로 구조체 23바이트가 끝나고, 이어서 NULL bitmap과 정렬 패딩, t_hoff 오프셋부터 사용자 데이터가 온다.">
+     role="img" aria-label="HeapTupleHeaderData의 필드 배치. 오프셋 0부터 t_xmin 4바이트, 4부터 t_xmax 4바이트, 8부터 t_cid와 t_xvac의 union 4바이트, 12부터 t_ctid 6바이트, 18부터 t_infomask2 2바이트, 20부터 t_infomask 2바이트, 22부터 t_hoff 1바이트로 구조체 23바이트가 끝나고, 이어서 NULL bitmap과 정렬 패딩, t_hoff 오프셋부터 사용자 데이터가 옵니다.">
 <style>
 .hp3-t { fill: var(--text, #1c1917); }
 .hp3-m { fill: var(--text-muted, #78716c); }
@@ -271,7 +271,7 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 <text x="462" y="336" text-anchor="middle" font-size="17" class="hp3-m" transform="rotate(-90 462 336)">23 bytes</text>
 <!-- caption -->
 <text x="240" y="794" text-anchor="middle" font-size="17" class="hp3-m">세로 길이가 바이트 크기에 비례합니다.</text>
-<text x="240" y="816" text-anchor="middle" font-size="17" class="hp3-m">강조된 세 필드가 MVCC 가시성 판정에 쓰입니다.</text>
+<text x="240" y="816" text-anchor="middle" font-size="17" class="hp3-m">강조 표시: MVCC 가시성 판정에 쓰이는 세 필드</text>
 </svg>
 </div>
 

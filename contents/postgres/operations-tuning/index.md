@@ -57,10 +57,10 @@ PostgreSQL은 [프로세스 기반 아키텍처](/postgres/architecture-overview
 PgBouncer는 클라이언트와 PostgreSQL 사이에서 커넥션을 **재사용**해주는 경량 proxy입니다. 클라이언트가 1,000개의 커넥션을 열어도, PgBouncer가 실제 PostgreSQL에 여는 커넥션은 30~50개로 유지할 수 있습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="PgBouncer가 클라이언트 커넥션 1,000개를 PostgreSQL 커넥션 30~50개로 줄이는 구조. 위아래 두 막대는 같은 축척이며 폭이 커넥션 수에 비례한다">
+     role="img" aria-label="PgBouncer가 클라이언트 커넥션 1,000개를 PostgreSQL 커넥션 30~50개로 줄이는 구조. 위아래 두 막대는 같은 축척이며 폭이 커넥션 수에 비례합니다">
 <style>
 .ot1-t { fill: var(--text, #1c1917); }
 .ot1-m { fill: var(--text-muted, #78716c); }
@@ -140,10 +140,10 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
 튜닝할 때 중요한 것은 이 구분입니다. 공유 메모리는 서버당 한 번만 잡히지만, 프로세스별 메모리는 커넥션 수만큼 곱해집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 518" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="PostgreSQL 메모리 파라미터를 튜닝 관점에서 나눈 그림. 위쪽 공유 메모리는 서버당 한 번만 잡히고, 아래쪽 프로세스별 메모리는 커넥션 수만큼 곱해지며, effective_cache_size는 실제 할당이 없는 플래너 힌트다">
+     role="img" aria-label="PostgreSQL 메모리 파라미터를 튜닝 관점에서 나눈 그림. 위쪽 공유 메모리는 서버당 한 번만 잡히고, 아래쪽 프로세스별 메모리는 커넥션 수만큼 곱해지며, effective_cache_size는 실제 할당이 없는 플래너 힌트입니다">
 <style>
 .ot2-t { fill: var(--text, #1c1917); }
 .ot2-m { fill: var(--text-muted, #78716c); }
@@ -165,24 +165,22 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
 <rect class="ot2-row" x="32" y="166" width="416" height="36" rx="4" />
 <text class="ot2-t" x="46" y="190" font-size="18">CLOG, lock table 등</text>
 <text class="ot2-m" x="434" y="190" text-anchor="end" font-size="17">자동 산정</text>
-<text class="ot2-m" x="240" y="240" text-anchor="middle" font-size="17">서버당 한 번만 잡힙니다. 커넥션 수와 무관합니다.</text>
 <!-- 아래 패널: 프로세스별 메모리 -->
-<rect class="ot2-panel" x="15" y="256" width="450" height="180" rx="8" />
-<text class="ot2-a" x="32" y="282" font-size="19" font-weight="600">프로세스별 메모리: 커넥션마다 따로</text>
-<rect class="ot2-row" x="32" y="294" width="416" height="36" rx="4" />
-<text class="ot2-t" x="46" y="318" font-size="18">work_mem</text>
-<text class="ot2-m" x="434" y="318" text-anchor="end" font-size="17">기본 4MB, 연산 하나당</text>
-<rect class="ot2-row" x="32" y="336" width="416" height="36" rx="4" />
-<text class="ot2-t" x="46" y="360" font-size="18">maintenance_work_mem</text>
-<text class="ot2-m" x="434" y="360" text-anchor="end" font-size="17">기본 64MB, 작업당</text>
-<rect class="ot2-row" x="32" y="378" width="416" height="36" rx="4" />
-<text class="ot2-t" x="46" y="402" font-size="18">temp_buffers</text>
-<text class="ot2-m" x="434" y="402" text-anchor="end" font-size="17">기본 8MB, 세션당</text>
-<text class="ot2-a" x="240" y="458" text-anchor="middle" font-size="17">커넥션 수 × 쿼리당 연산 수만큼 곱해집니다</text>
+<rect class="ot2-panel" x="15" y="238" width="450" height="180" rx="8" />
+<text class="ot2-a" x="32" y="264" font-size="19" font-weight="600">프로세스별 메모리: 커넥션마다 따로</text>
+<rect class="ot2-row" x="32" y="276" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="300" font-size="18">work_mem</text>
+<text class="ot2-m" x="434" y="300" text-anchor="end" font-size="17">기본 4MB, 연산 하나당</text>
+<rect class="ot2-row" x="32" y="318" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="342" font-size="18">maintenance_work_mem</text>
+<text class="ot2-m" x="434" y="342" text-anchor="end" font-size="17">기본 64MB, 작업당</text>
+<rect class="ot2-row" x="32" y="360" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="384" font-size="18">temp_buffers</text>
+<text class="ot2-m" x="434" y="384" text-anchor="end" font-size="17">기본 8MB, 세션당</text>
 <!-- 예외: 할당이 없는 파라미터 -->
-<rect class="ot2-panel" x="15" y="472" width="450" height="66" rx="8" />
-<text class="ot2-p" x="240" y="500" text-anchor="middle" font-size="19" font-weight="600">effective_cache_size</text>
-<text class="ot2-m" x="240" y="524" text-anchor="middle" font-size="17">메모리를 할당하지 않는 플래너 힌트</text>
+<rect class="ot2-panel" x="15" y="438" width="450" height="66" rx="8" />
+<text class="ot2-p" x="240" y="466" text-anchor="middle" font-size="19" font-weight="600">effective_cache_size</text>
+<text class="ot2-m" x="240" y="490" text-anchor="middle" font-size="17">메모리를 할당하지 않는 플래너 힌트</text>
 </svg>
 </div>
 
@@ -195,7 +193,7 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
 그런데 왜 "25%"이고 "전부"가 아닐까요? PostgreSQL은 OS의 page cache 위에서 동작합니다. shared_buffers에서 밀려난 페이지도 OS의 page cache에는 남아있을 가능성이 높습니다. 즉 실제로는 **이중 캐싱**이 일어납니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 458" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 418" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="물리 메모리를 shared_buffers 25퍼센트, OS page cache 50퍼센트 이상, 나머지로 나눈 막대와 shared_buffers, OS page cache, 디스크 순으로 내려가는 조회 순서">
@@ -245,12 +243,10 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
 <rect class="ot3-box" x="15" y="362" width="450" height="42" rx="6" />
 <text class="ot3-t" x="32" y="389" font-size="19">③ 디스크 읽기</text>
 <text class="ot3-d" x="448" y="389" text-anchor="end" font-size="17">가장 느림</text>
-<text class="ot3-m" x="240" y="428" text-anchor="middle" font-size="17">①을 키우면 ②에 남을 메모리가 줄어듭니다</text>
-<text class="ot3-m" x="240" y="448" text-anchor="middle" font-size="17">총량이 아니라 배분이 문제입니다</text>
 </svg>
 </div>
 
-shared_buffers를 너무 크게 잡으면 OS page cache에 남는 메모리가 줄어들어 오히려 전체 캐시 효율이 떨어질 수 있습니다. 공식 문서도 RAM의 40%를 넘겨 할당해봐야 그보다 작게 잡은 것보다 나을 가능성은 낮다고 적고 있습니다.
+shared_buffers를 너무 크게 잡으면 OS page cache에 남는 메모리가 줄어들어 오히려 전체 캐시 효율이 떨어질 수 있습니다. 메모리 총량이 아니라 1차 캐시와 2차 캐시에 얼마씩 나눠주느냐가 결과를 가릅니다. 공식 문서도 RAM의 40%를 넘겨 할당해봐야 그보다 작게 잡은 것보다 나을 가능성은 낮다고 적고 있습니다.
 
 :::info
 
@@ -269,10 +265,10 @@ shared_buffers가 크면 dirty page도 그만큼 많이 쌓일 수 있습니다.
 `work_mem`은 "커넥션당"이 아니라 **"정렬이나 해시 연산 하나당"** 할당됩니다. 하나의 쿼리 안에 `ORDER BY`, `Hash Join`, `GROUP BY`가 모두 있으면, 각 연산마다 독립적으로 `work_mem`만큼 할당될 수 있습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 486" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="work_mem이 두 번 곱해지는 구조. 쿼리 하나의 실행 계획에 있는 연산 세 개가 각각 4MB를 잡아 12MB가 되고, 동시 활성 쿼리 50개를 곱하면 600MB가 된다">
+     role="img" aria-label="work_mem이 두 번 곱해지는 구조. 쿼리 하나의 실행 계획에 있는 연산 세 개가 각각 4MB를 잡아 12MB가 되고, 동시 활성 쿼리 50개를 곱하면 600MB가 됩니다">
 <style>
 .ot4-t { fill: var(--text, #1c1917); }
 .ot4-m { fill: var(--text-muted, #78716c); }
@@ -283,33 +279,32 @@ shared_buffers가 크면 dirty page도 그만큼 많이 쌓일 수 있습니다.
 .ot4-sum { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 2; }
 .ot4-line { stroke: var(--border, #e7e5e4); stroke-width: 2; }
 </style>
-<text class="ot4-t" x="240" y="28" text-anchor="middle" font-size="21" font-weight="600">work_mem은 두 번 곱해집니다</text>
-<text class="ot4-m" x="240" y="52" text-anchor="middle" font-size="17">커넥션당이 아니라 연산 하나당 할당됩니다</text>
+<text class="ot4-t" x="240" y="28" text-anchor="middle" font-size="21" font-weight="600">work_mem이 곱해지는 두 단계</text>
 <!-- 1단계: 쿼리 하나 안의 연산마다 -->
-<rect class="ot4-panel" x="15" y="66" width="450" height="176" rx="8" />
-<text class="ot4-m" x="32" y="92" font-size="18">쿼리 하나의 실행 계획</text>
-<rect class="ot4-row" x="32" y="102" width="416" height="36" rx="4" />
-<text class="ot4-t" x="48" y="126" font-size="19">Hash Join</text>
-<text class="ot4-p" x="432" y="126" text-anchor="end" font-size="19" font-weight="600">4MB</text>
-<rect class="ot4-row" x="32" y="144" width="416" height="36" rx="4" />
-<text class="ot4-t" x="48" y="168" font-size="19">Sort</text>
-<text class="ot4-p" x="432" y="168" text-anchor="end" font-size="19" font-weight="600">4MB</text>
-<rect class="ot4-row" x="32" y="186" width="416" height="36" rx="4" />
-<text class="ot4-t" x="48" y="210" font-size="19">Hash Agg</text>
-<text class="ot4-p" x="432" y="210" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<rect class="ot4-panel" x="15" y="44" width="450" height="176" rx="8" />
+<text class="ot4-m" x="32" y="70" font-size="18">쿼리 하나의 실행 계획</text>
+<rect class="ot4-row" x="32" y="80" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="104" font-size="19">Hash Join</text>
+<text class="ot4-p" x="432" y="104" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<rect class="ot4-row" x="32" y="122" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="146" font-size="19">Sort</text>
+<text class="ot4-p" x="432" y="146" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<rect class="ot4-row" x="32" y="164" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="188" font-size="19">Hash Agg</text>
+<text class="ot4-p" x="432" y="188" text-anchor="end" font-size="19" font-weight="600">4MB</text>
 <!-- 첫 번째 합계 -->
-<line class="ot4-line" x1="250" y1="256" x2="465" y2="256" />
-<text class="ot4-m" x="15" y="282" font-size="18">연산 3개 × work_mem</text>
-<text class="ot4-p" x="465" y="282" text-anchor="end" font-size="21" font-weight="600">= 12MB</text>
+<line class="ot4-line" x1="250" y1="234" x2="465" y2="234" />
+<text class="ot4-m" x="15" y="260" font-size="18">연산 3개 × work_mem</text>
+<text class="ot4-p" x="465" y="260" text-anchor="end" font-size="21" font-weight="600">= 12MB</text>
 <!-- 2단계: 동시 쿼리 수만큼 다시 곱하기 -->
-<text class="ot4-a" x="240" y="316" text-anchor="middle" font-size="21" font-weight="600">× 동시 활성 쿼리 50개</text>
-<rect class="ot4-sum" x="15" y="332" width="450" height="66" rx="8" />
-<text class="ot4-t" x="240" y="361" text-anchor="middle" font-size="22" font-weight="600">12MB × 50 = 600MB</text>
-<text class="ot4-m" x="240" y="384" text-anchor="middle" font-size="17">최악의 경우 backend 프로세스가 쓰는 총량</text>
+<text class="ot4-a" x="240" y="294" text-anchor="middle" font-size="21" font-weight="600">× 동시 활성 쿼리 50개</text>
+<rect class="ot4-sum" x="15" y="310" width="450" height="66" rx="8" />
+<text class="ot4-t" x="240" y="339" text-anchor="middle" font-size="22" font-weight="600">12MB × 50 = 600MB</text>
+<text class="ot4-m" x="240" y="362" text-anchor="middle" font-size="17">최악의 경우 backend 프로세스가 쓰는 총량</text>
 <!-- 해시 연산 보정 -->
-<text class="ot4-p" x="15" y="426" font-size="18" font-weight="600">PG 15+ 기본 hash_mem_multiplier = 2.0</text>
-<text class="ot4-m" x="15" y="450" font-size="17">해시 연산은 work_mem의 2배까지 쓸 수 있어</text>
-<text class="ot4-m" x="15" y="472" font-size="17">쿼리당 20MB, 50개면 1GB입니다 (정렬 제외)</text>
+<text class="ot4-p" x="15" y="404" font-size="18" font-weight="600">PG 15+ 기본 hash_mem_multiplier = 2.0</text>
+<text class="ot4-m" x="15" y="428" font-size="17">해시 연산만 work_mem × 2</text>
+<text class="ot4-m" x="15" y="450" font-size="17">쿼리당 최대 20MB, 50개면 1GB (정렬 제외)</text>
 </svg>
 </div>
 
@@ -499,7 +494,7 @@ FROM pg_stat_bgwriter;
 
 ### 시나리오 1: idle in transaction으로 인한 bloat 폭증
 
-**증상**: 특별히 트래픽이 늘지 않았는데 쿼리가 점점 느려지고, 테이블 크기가 계속 커진다.
+**증상**: 특별히 트래픽이 늘지 않았는데 쿼리가 점점 느려지고, 테이블 크기가 계속 커집니다.
 
 **진단 과정**:
 
@@ -531,7 +526,7 @@ ORDER BY xact_start;
 
 ### 시나리오 2: wraparound 경고
 
-**증상**: PostgreSQL 로그에 다음과 같은 경고가 나타난다.
+**증상**: PostgreSQL 로그에 다음과 같은 경고가 나타납니다.
 
 ```text
 WARNING: database "mydb" must be vacuumed within 10000000 transactions
@@ -571,7 +566,7 @@ LIMIT 10;
 
 ### 시나리오 3: 커넥션 폭증과 OOM
 
-**증상**: 애플리케이션에서 "FATAL: sorry, too many clients already" 에러가 발생하거나, 서버가 OOM killer에 의해 프로세스가 종료된다.
+**증상**: 애플리케이션에서 "FATAL: sorry, too many clients already" 에러가 발생하거나, 서버가 OOM killer에 의해 프로세스가 종료됩니다.
 
 **진단 과정**:
 

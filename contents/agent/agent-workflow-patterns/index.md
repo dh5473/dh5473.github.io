@@ -26,7 +26,7 @@ OpenAI도 같은 입장입니다. "A Practical Guide to Building Agents"에서 "
 다섯 가지 패턴은 복잡도 순서로 나열됩니다. 아래쪽으로 갈수록 강력하지만, 비용과 디버깅 난이도도 함께 올라갑니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 608" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="복잡도 순서로 나열한 워크플로우 패턴 사다리. 단일 LLM 호출에서 시작해 부족할 때만 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers, Evaluator-Optimizer 순으로 내려간다">
+<svg viewBox="0 0 480 608" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="복잡도 순서로 나열한 워크플로우 패턴 사다리. 단일 LLM 호출에서 시작해 부족할 때만 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers, Evaluator-Optimizer 순으로 내려갑니다">
 <style>
 .wp1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .wp1-box-hi { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
@@ -92,7 +92,7 @@ Anthropic의 정의는 명확합니다.
 단순히 LLM 호출을 연결하는 것과 Prompt Chaining의 차이는 **게이트(Gate)**에 있습니다. 게이트는 단계 사이에 끼워 넣는 프로그래밍적 검증입니다. LLM 호출이 아니라, 조건문이나 정규표현식 같은 결정론적 코드로 중간 결과를 확인합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Prompt Chaining 데이터 흐름. 첫 LLM 호출의 출력을 결정론적 게이트가 검증하고, 통과하면 두 번째 LLM 호출로 넘어가며 실패하면 첫 단계로 되돌아가 재생성한다">
+<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Prompt Chaining 데이터 흐름. 첫 LLM 호출의 출력을 결정론적 게이트가 검증하고, 통과하면 두 번째 LLM 호출로 넘어가며 실패하면 첫 단계로 되돌아가 재생성합니다">
 <style>
 .wp2-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp2-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
@@ -198,7 +198,7 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 - **프로그래밍적 분류**: 키워드 매칭, 정규표현식, 임베딩 유사도. 빠르고 저렴하지만 유연성이 떨어짐
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보낸다">
+<svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보냅니다">
 <style>
 .wp3-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -241,10 +241,9 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 <rect class="wp3-idle" x="322" y="192" width="152" height="68" rx="8"/>
 <text class="wp3-t1" x="398" y="221" text-anchor="middle">general</text>
 <text class="wp3-t2" x="398" y="245" text-anchor="middle">단순 질의응답</text>
-<!-- 설명 -->
-<text class="wp3-t2" x="240" y="290" text-anchor="middle">세 핸들러 모두 LLM 호출입니다</text>
-<text class="wp3-t2" x="240" y="312" text-anchor="middle">진한 테두리와 실선은 이번 요청이 지나간 갈래</text>
-<text class="wp3-t2" x="240" y="334" text-anchor="middle">한 번에 하나만 실행됩니다</text>
+<!-- 범례 -->
+<text class="wp3-t2" x="240" y="290" text-anchor="middle">진한 테두리 · 실선 = 이번 요청이 지나간 갈래</text>
+<text class="wp3-t2" x="240" y="312" text-anchor="middle">세 핸들러 모두 LLM 호출 · 한 번에 하나만 실행</text>
 </svg>
 </div>
 
@@ -288,11 +287,11 @@ async def route_request(query: str) -> str:
 
 Anthropic은 Parallelization을 두 가지로 나눕니다.
 
-- **Sectioning**: 독립적인 하위 작업을 동시에 실행하고 결과를 합친다
-- **Voting**: 같은 작업을 여러 번 실행해서 다수결로 신뢰도를 높인다
+- **Sectioning**: 독립적인 하위 작업을 동시에 실행하고 결과를 합칩니다
+- **Voting**: 같은 작업을 여러 번 실행해서 다수결로 신뢰도를 높입니다
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 422" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Parallelization의 두 하위 패턴. 위쪽 Sectioning은 서로 다른 세 하위 작업을 동시에 실행해 결과를 병합하고, 아래쪽 Voting은 같은 프롬프트를 세 번 실행해 다수결로 집계한다">
+<svg viewBox="0 0 480 422" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Parallelization의 두 하위 패턴. 위쪽 Sectioning은 서로 다른 세 하위 작업을 동시에 실행해 결과를 병합하고, 아래쪽 Voting은 같은 프롬프트를 세 번 실행해 다수결로 집계합니다">
 <style>
 .wp4-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp4-merge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
@@ -344,8 +343,8 @@ Anthropic은 Parallelization을 두 가지로 나눕니다.
 <path class="wp4-line" d="M 352 296 H 372" marker-end="url(#wp4Arrow)"/>
 <rect class="wp4-merge" x="376" y="278" width="96" height="36" rx="4"/>
 <text class="wp4-t1" x="424" y="304" text-anchor="middle">다수결</text>
-<text class="wp4-t2" x="240" y="386" text-anchor="middle">세 갈래 모두 실행됩니다</text>
-<text class="wp4-t2" x="240" y="408" text-anchor="middle">소요 시간은 가장 느린 호출 하나에 맞춰집니다</text>
+<text class="wp4-t2" x="240" y="386" text-anchor="middle">세 갈래 모두 실행</text>
+<text class="wp4-t2" x="240" y="408" text-anchor="middle">소요 시간 = 가장 느린 호출 하나</text>
 </svg>
 </div>
 
@@ -390,7 +389,7 @@ Orchestrator-Workers는 겉보기에 Prompt Chaining과 비슷하지만, 결정�
 Prompt Chaining에서는 단계가 **개발자에 의해 미리 정해져** 있습니다. "1단계: 생성, 2단계: 검증, 3단계: 번역"이 코드에 고정되어 있죠. Orchestrator-Workers에서는 **모델이 런타임에 하위 작업을 결정**합니다. "이 프로젝트의 버그를 고쳐줘"라는 요청을 받으면, 어떤 파일을 분석할지, 몇 개의 워커가 필요한지, 어떤 순서로 작업할지를 모델이 판단합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Orchestrator-Workers 데이터 흐름. 중앙 오케스트레이터가 요청을 런타임에 하위 작업으로 분해해 여러 워커에게 위임하고, 돌아온 결과를 다시 종합해 최종 답변을 만든다">
+<svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Orchestrator-Workers 데이터 흐름. 중앙 오케스트레이터가 요청을 런타임에 하위 작업으로 분해해 여러 워커에게 위임하고, 돌아온 결과를 다시 종합해 최종 답변을 만듭니다">
 <style>
 .wp5-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp5-hub { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2.6; }
@@ -506,7 +505,7 @@ async def worker(subtask: str) -> str:
 두 조건을 모두 만족하면 Evaluator-Optimizer가 빛납니다. Anthropic이 드는 예시는 문학 번역입니다. 번역의 뉘앙스, 어조, 문화적 맥락을 평가자가 지적하고, 생성자가 이를 반영해 개선하는 반복. 단순 번역은 한 번이면 충분하지만, 문학 번역은 반복할수록 품질이 올라갑니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 388" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Evaluator-Optimizer 데이터 흐름. 생성자가 만든 응답을 평가자가 점수와 피드백으로 심사하고, 기준을 넘으면 최종 출력으로 나가며 못 넘으면 피드백을 안고 생성자로 되돌아간다">
+<svg viewBox="0 0 480 388" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Evaluator-Optimizer 데이터 흐름. 생성자가 만든 응답을 평가자가 점수와 피드백으로 심사하고, 기준을 넘으면 최종 출력으로 나가며 못 넘으면 피드백을 안고 생성자로 되돌아갑니다">
 <style>
 .wp6-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
 .wp6-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }

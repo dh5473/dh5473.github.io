@@ -94,13 +94,13 @@ VACUUM은 세 단계로 동작합니다.
 
 VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID**(block 번호 + offset)를 메모리에 수집합니다. 여기서 "dead"의 기준은 **현재 활성 중인 모든 snapshot에서 보이지 않는 튜플**입니다. 어떤 트랜잭션이든 하나라도 이 튜플을 볼 가능성이 있으면 아직 dead가 아닙니다.
 
-이 경계선을 정하는 값이 **oldest xmin**입니다. 실행 중인 트랜잭션들이 잡고 있는 xmin 중 가장 오래된 것으로, 그보다 나중에 dead가 된 튜플은 누군가에게 아직 보일 수 있으니 수거 대상에서 빠집니다. 트랜잭션 하나가 오래 열려 있으면 이 경계선이 그 시점에 통째로 못 박힙니다.
+이 경계선을 정하는 값이 **oldest xmin**입니다. 실행 중인 트랜잭션들이 잡고 있는 xmin 중 가장 오래된 것으로, 그보다 나중에 dead가 된 튜플은 누군가에게 아직 보일 수 있으니 수거 대상에서 빠집니다. 트랜잭션 하나가 오래 열려 있으면 이 경계선이 그 시점에 통째로 못 박히고, 그 트랜잭션이 끝날 때까지 이후에 dead가 된 튜플은 계속 남습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 284" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="시간축 위에 oldest xmin 경계선을 세로 점선으로 표시한 그림. 오래 열려 있는 트랜잭션 T1이 시작한 시점이 경계선이 되고, 그 왼쪽에서 dead가 된 튜플은 VACUUM이 수거할 수 있지만 오른쪽에서 dead가 된 튜플은 T1에게 아직 보일 수 있어 수거하지 못한다.">
+     role="img" aria-label="시간축 위에 oldest xmin 경계선을 세로 점선으로 표시한 그림. 오래 열려 있는 트랜잭션 T1이 시작한 시점이 경계선이 되고, 그 왼쪽에서 dead가 된 튜플은 VACUUM이 수거할 수 있지만 오른쪽에서 dead가 된 튜플은 T1에게 아직 보일 수 있어 수거하지 못합니다.">
 <style>
 .vb3-hz { font-size: 17px; fill: var(--text-danger, #dc2626); font-weight: 600; }
 .vb3-ok { font-size: 17px; fill: var(--text-success, #16a34a); font-weight: 600; }
@@ -149,7 +149,6 @@ VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID**(bl
 <!-- 시간축 -->
 <line class="vb3-axis" x1="36" y1="246" x2="452" y2="246" marker-end="url(#vb3Arrow)" />
 <text class="vb3-mut" x="450" y="268" text-anchor="end">시간</text>
-<text class="vb3-cap" x="240" y="298" text-anchor="middle">T1이 끝나야 오른쪽 dead tuple도 수거된다</text>
 </svg>
 </div>
 
@@ -171,10 +170,10 @@ PG 12부터는 dead tuple 수가 적을 때 인덱스 정리를 생략하는 최
 전체 과정을 그림으로 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="VACUUM의 세 단계 흐름도. 힙을 스캔해 dead tuple의 TID를 모으고, 모든 인덱스에서 그 TID를 가리키는 엔트리를 제거한 뒤, 힙의 line pointer를 LP_UNUSED로 바꾸고 FSM과 VM을 갱신한다. 스캔하지 못한 구간이 남아 있으면 1단계로 되돌아간다.">
+     role="img" aria-label="VACUUM의 세 단계 흐름도. 힙을 스캔해 dead tuple의 TID를 모으고, 모든 인덱스에서 그 TID를 가리키는 엔트리를 제거한 뒤, 힙의 line pointer를 LP_UNUSED로 바꾸고 FSM과 VM을 갱신합니다. 스캔하지 못한 구간이 남아 있으면 1단계로 되돌아갑니다.">
 <style>
 .vb1-ttl { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
 .vb1-sub { font-size: 17.5px; fill: var(--text-muted, #78716c); }
@@ -273,10 +272,10 @@ SELECT pg_size_pretty(pg_relation_size('bloat_demo'));
 세 시점의 파일 구성을 나란히 놓으면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 292" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 292" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="테이블 파일 크기의 변화를 세 개의 막대로 비교한 그림. UPDATE 전에는 6904 킬로바이트가 전부 살아있는 튜플이고, 10만 행을 전부 UPDATE한 뒤에는 13메가바이트로 늘어나 절반이 dead tuple이며, VACUUM을 돌린 뒤에는 dead tuple이 사라지지만 파일은 여전히 13메가바이트이고 그 절반이 재사용 대기 중인 빈 공간이다.">
+     role="img" aria-label="테이블 파일 크기의 변화를 세 개의 막대로 비교한 그림. UPDATE 전에는 6904 킬로바이트가 전부 살아있는 튜플이고, 10만 행을 전부 UPDATE한 뒤에는 13메가바이트로 늘어나 절반이 dead tuple이며, VACUUM을 돌린 뒤에는 dead tuple이 사라지지만 파일은 여전히 13메가바이트이고 그 절반이 재사용 대기 중인 빈 공간입니다.">
 <style>
 .vb2-stage { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
 .vb2-size { font-size: 18px; fill: var(--text-muted, #78716c); }
@@ -452,10 +451,10 @@ LIMIT 5;
 
 ## 실전에서는
 
-1. **`n_dead_tup`이 계속 쌓이면 autovacuum이 쫓아가지 못하는 상황이다.** 테이블별 `autovacuum_vacuum_scale_factor`를 낮추거나, `autovacuum_vacuum_cost_limit`을 올려서 autovacuum의 처리량을 높인다
-2. **`VACUUM VERBOSE`로 각 단계의 소요를 확인할 수 있다.** 인덱스 정리가 오래 걸리면 불필요한 인덱스를 정리하는 것이 근본 해법이다
-3. **long-running transaction은 VACUUM의 적이다.** 열려 있는 트랜잭션 하나가 oldest xmin을 붙잡고 있으면 그 시점 이후의 dead tuple은 전부 수거 불가다. `idle in transaction` 상태로 방치된 세션이 대표적이고, `idle_in_transaction_session_timeout`으로 자동 종료를 걸어두는 것이 권장된다
-4. **`VACUUM FULL`은 정말 필요할 때만.** bloat가 50%를 넘고 공간을 OS에 돌려받아야 할 때만 고려한다. 운영 중이면 `pg_repack`이 온라인으로 같은 효과를 준다
+1. **`n_dead_tup`이 계속 쌓이면 autovacuum이 쫓아가지 못하는 상황입니다.** 테이블별 `autovacuum_vacuum_scale_factor`를 낮추거나, `autovacuum_vacuum_cost_limit`을 올려서 autovacuum의 처리량을 높입니다
+2. **`VACUUM VERBOSE`로 각 단계의 소요를 확인할 수 있습니다.** 인덱스 정리가 오래 걸리면 불필요한 인덱스를 정리하는 것이 근본 해법입니다
+3. **long-running transaction은 VACUUM의 적입니다.** 열려 있는 트랜잭션 하나가 oldest xmin을 붙잡고 있으면 그 시점 이후의 dead tuple은 전부 수거 불가입니다. `idle in transaction` 상태로 방치된 세션이 대표적이고, `idle_in_transaction_session_timeout`으로 자동 종료를 걸어두는 것이 권장됩니다
+4. **`VACUUM FULL`은 정말 필요할 때만.** bloat가 50%를 넘고 공간을 OS에 돌려받아야 할 때만 고려합니다. 운영 중이면 `pg_repack`이 온라인으로 같은 효과를 줍니다
 
 ## 흔한 오해
 

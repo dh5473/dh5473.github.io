@@ -35,10 +35,10 @@ B-tree 인덱스도 디스크에 저장됩니다. 테이블과 같은 8KB 페이
 개념적 구조는 다음과 같습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 384" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="B-tree 인덱스 구조도. 루트 페이지 아래에 브랜치 노드가 있고, 그 아래 리프 페이지들이 키 범위를 나눠 갖는다. 리프끼리는 좌우로 이어져 있고, 각 리프는 ctid로 힙 페이지를 가리킨다.">
+     role="img" aria-label="B-tree 인덱스 구조도. 루트 페이지 아래에 브랜치 노드가 있고, 그 아래 리프 페이지들이 키 범위를 나눠 갖습니다. 리프끼리는 좌우로 이어져 있고, 각 리프는 ctid로 힙 페이지를 가리킵니다.">
 <defs>
 <marker id="bta1Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #78716c)" stroke-width="1.6"/></marker>
 <marker id="bta1SibR" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--primary, #0d9488)" stroke-width="1.8"/></marker>
@@ -49,7 +49,6 @@ B-tree 인덱스도 디스크에 저장됩니다. 테이블과 같은 8KB 페이
 .bta1-node { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
 .bta1-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
 .bta1-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-.bta1-c { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
 .bta1-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
 .bta1-sib { stroke: var(--primary, #0d9488); stroke-width: 2; fill: none; }
 </style>
@@ -92,9 +91,6 @@ B-tree 인덱스도 디스크에 저장됩니다. 테이블과 같은 8KB 페이
 <rect class="bta1-box" x="16" y="310" width="448" height="60" rx="8"/>
 <text class="bta1-t" x="240" y="336">힙 페이지</text>
 <text class="bta1-s" x="240" y="358">리프 엔트리의 ctid가 가리키는 튜플 위치</text>
-<!-- caption -->
-<text class="bta1-c" x="240" y="398">리프는 좌우로 이어져 있어 범위 스캔은</text>
-<text class="bta1-c" x="240" y="420">새 탐색 없이 리프 체인을 따라간다</text>
 </svg>
 </div>
 
@@ -174,11 +170,11 @@ LIMIT 5;
 
 `SELECT * FROM t_idx WHERE id = 50000`을 실행하면 PostgreSQL은 이렇게 움직입니다.
 
-1. 루트 페이지 번호를 알아낸다. 매번 메타페이지를 읽는 게 아니라, 인덱스의 relcache 엔트리에 루트 위치가 캐시돼 있다
-2. 루트 페이지에서 50000이 어느 자식 범위에 속하는지 이분 탐색으로 결정한다
-3. 해당 자식(리프) 페이지를 읽고, 그 안에서 다시 이분 탐색으로 id=50000 엔트리를 찾는다
-4. 엔트리의 ctid로 힙 페이지를 읽어 튜플을 가져온다
-5. 그 튜플이 내 snapshot에서 보이는지 [가시성 판정](/postgres/mvcc-visibility/)을 한다
+1. 루트 페이지 번호를 알아냅니다. 매번 메타페이지를 읽는 게 아니라, 인덱스의 relcache 엔트리에 루트 위치가 캐시돼 있습니다
+2. 루트 페이지에서 50000이 어느 자식 범위에 속하는지 이분 탐색으로 결정합니다
+3. 해당 자식(리프) 페이지를 읽고, 그 안에서 다시 이분 탐색으로 id=50000 엔트리를 찾습니다
+4. 엔트리의 ctid로 힙 페이지를 읽어 튜플을 가져옵니다
+5. 그 튜플이 내 snapshot에서 보이는지 [가시성 판정](/postgres/mvcc-visibility/)을 합니다
 
 페이지 수로는 루트(1) + 리프(1) + 힙(1) = 3장. 이 모두가 shared_buffers에 올라와 있으면 디스크 I/O는 0이고, `EXPLAIN (ANALYZE, BUFFERS)`에 `shared hit=3` 같은 숫자로 찍힙니다. 메타페이지 자체는 루트가 분할되는 등으로 캐시가 무효화될 때만 다시 읽히므로, 일반 탐색 비용에 들어가지 않습니다. `bt_metap`에 있는 `fastroot`는 이 캐시를 한 단계 더 최적화한 것으로, 루트 아래가 한 자식만 가지는 트리 상단을 건너뛰고 실제 분기가 시작되는 레벨부터 탐색을 시작하게 해줍니다.
 
@@ -235,10 +231,10 @@ Seq Scan on events
 리프에 엔트리가 실제로 어떤 순서로 놓이는지 그려보면 차이가 분명해집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 510" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 460" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="복합 인덱스 (user_id, created_at)의 리프 정렬 순서. 선두 컬럼 조건이 있는 쿼리는 연속된 한 구간으로 잡히고, 선두 컬럼 조건이 없는 쿼리는 리프 곳곳에 흩어진다.">
+     role="img" aria-label="복합 인덱스 (user_id, created_at)의 리프 정렬 순서. 선두 컬럼 조건이 있는 쿼리는 연속된 한 구간으로 잡히고, 선두 컬럼 조건이 없는 쿼리는 리프 곳곳에 흩어집니다.">
 <style>
 .bta2-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
 .bta2-hit { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
@@ -279,53 +275,51 @@ Seq Scan on events
 <text class="bta2-v" x="88" y="154">1001</text>
 <text class="bta2-v" x="278" y="154">1002</text>
 <text class="bta2-v" x="430" y="154">1003</text>
-<text class="bta2-c" x="240" y="182">같은 user_id끼리 붙어 있다</text>
 <!-- panel B: leading column present -->
-<text class="bta2-sub" x="14" y="222">① user_id = 1002 AND created_at &gt; 12:00</text>
-<rect class="bta2-cell" x="14" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="50" y="260">1001</text>
-<text class="bta2-v" x="50" y="282">09:10</text>
-<rect class="bta2-cell" x="90" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="126" y="260">1001</text>
-<text class="bta2-v" x="126" y="282">23:05</text>
-<rect class="bta2-cell" x="166" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="202" y="260">1002</text>
-<text class="bta2-v" x="202" y="282">02:15</text>
-<rect class="bta2-hit" x="242" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="278" y="260">1002</text>
-<text class="bta2-v" x="278" y="282">14:30</text>
-<rect class="bta2-hit" x="318" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="354" y="260">1002</text>
-<text class="bta2-v" x="354" y="282">21:50</text>
-<rect class="bta2-cell" x="394" y="236" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="430" y="260">1003</text>
-<text class="bta2-v" x="430" y="282">07:20</text>
-<path class="bta2-bar1" d="M 242,302 L 390,302"/>
-<text class="bta2-c" x="240" y="328">리프에서 연속된 한 구간으로 잡힌다</text>
+<text class="bta2-sub" x="14" y="194">① user_id = 1002 AND created_at &gt; 12:00</text>
+<rect class="bta2-cell" x="14" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="50" y="232">1001</text>
+<text class="bta2-v" x="50" y="254">09:10</text>
+<rect class="bta2-cell" x="90" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="126" y="232">1001</text>
+<text class="bta2-v" x="126" y="254">23:05</text>
+<rect class="bta2-cell" x="166" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="202" y="232">1002</text>
+<text class="bta2-v" x="202" y="254">02:15</text>
+<rect class="bta2-hit" x="242" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="278" y="232">1002</text>
+<text class="bta2-v" x="278" y="254">14:30</text>
+<rect class="bta2-hit" x="318" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="354" y="232">1002</text>
+<text class="bta2-v" x="354" y="254">21:50</text>
+<rect class="bta2-cell" x="394" y="208" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="430" y="232">1003</text>
+<text class="bta2-v" x="430" y="254">07:20</text>
+<path class="bta2-bar1" d="M 242,274 L 390,274"/>
+<text class="bta2-c" x="240" y="300">연속된 한 구간</text>
 <!-- panel C: leading column missing -->
-<text class="bta2-sub" x="14" y="368">② created_at &gt; 12:00 (선두 컬럼 조건 없음)</text>
-<rect class="bta2-cell" x="14" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="50" y="406">1001</text>
-<text class="bta2-v" x="50" y="428">09:10</text>
-<rect class="bta2-miss" x="90" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="126" y="406">1001</text>
-<text class="bta2-v" x="126" y="428">23:05</text>
-<rect class="bta2-cell" x="166" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="202" y="406">1002</text>
-<text class="bta2-v" x="202" y="428">02:15</text>
-<rect class="bta2-miss" x="242" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="278" y="406">1002</text>
-<text class="bta2-v" x="278" y="428">14:30</text>
-<rect class="bta2-miss" x="318" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="354" y="406">1002</text>
-<text class="bta2-v" x="354" y="428">21:50</text>
-<rect class="bta2-cell" x="394" y="382" width="72" height="56" rx="6"/>
-<text class="bta2-k" x="430" y="406">1003</text>
-<text class="bta2-v" x="430" y="428">07:20</text>
-<path class="bta2-bar2" d="M 90,448 L 162,448"/>
-<path class="bta2-bar2" d="M 242,448 L 390,448"/>
-<text class="bta2-c" x="240" y="474">맞는 엔트리가 리프 곳곳에 흩어져 있다</text>
-<text class="bta2-c" x="240" y="496">리프 전체를 훑어야 하니 Seq Scan이 낫다</text>
+<text class="bta2-sub" x="14" y="340">② created_at &gt; 12:00 (선두 컬럼 조건 없음)</text>
+<rect class="bta2-cell" x="14" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="50" y="378">1001</text>
+<text class="bta2-v" x="50" y="400">09:10</text>
+<rect class="bta2-miss" x="90" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="126" y="378">1001</text>
+<text class="bta2-v" x="126" y="400">23:05</text>
+<rect class="bta2-cell" x="166" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="202" y="378">1002</text>
+<text class="bta2-v" x="202" y="400">02:15</text>
+<rect class="bta2-miss" x="242" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="278" y="378">1002</text>
+<text class="bta2-v" x="278" y="400">14:30</text>
+<rect class="bta2-miss" x="318" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="354" y="378">1002</text>
+<text class="bta2-v" x="354" y="400">21:50</text>
+<rect class="bta2-cell" x="394" y="354" width="72" height="56" rx="6"/>
+<text class="bta2-k" x="430" y="378">1003</text>
+<text class="bta2-v" x="430" y="400">07:20</text>
+<path class="bta2-bar2" d="M 90,420 L 162,420"/>
+<path class="bta2-bar2" d="M 242,420 L 390,420"/>
+<text class="bta2-c" x="240" y="446">리프 곳곳에 흩어짐</text>
 </svg>
 </div>
 
@@ -333,9 +327,9 @@ PG 18부터는 이 상황을 도와주는 **skip scan** 최적화가 추가됐�
 
 그래서 composite index 설계의 실무 규칙은 간단합니다.
 
-- **쿼리 패턴이 먼저다.** "이 컬럼 조합으로 항상 묻는다"가 있을 때만 composite으로 만든다
-- **순서는 equality → equality → range.** equality 조건이 먼저 와야 뒤 컬럼의 정렬이 살아난다
-- **선두 컬럼에 안 걸리는 쿼리는 인덱스를 못 쓴다.** skip scan은 보너스, 설계 원칙으로 기대하면 안 된다
+- **쿼리 패턴이 먼저입니다.** "이 컬럼 조합으로 항상 묻는다"가 있을 때만 composite으로 만듭니다
+- **순서는 equality → equality → range.** equality 조건이 먼저 와야 뒤 컬럼의 정렬이 살아납니다
+- **선두 컬럼에 안 걸리는 쿼리는 인덱스를 못 씁니다.** skip scan은 보너스, 설계 원칙으로 기대하면 안 됩니다
 
 `(user_id, created_at)`이 있는데 `WHERE user_id = ?`만 쓰는 쿼리가 있다면 그 쿼리도 인덱스를 탈 수 있습니다. prefix만 써도 나머지 컬럼은 "모든 값"으로 해석되기 때문입니다. 반대로 `WHERE created_at = ?` 단독은 prefix를 건너뛰므로 인덱스를 못 씁니다(앞서 본 skip scan 예외 제외).
 
@@ -350,10 +344,10 @@ PostgreSQL이 이 문제를 푸는 방식이 **Visibility Map**(VM)입니다. �
 VM 비트를 세우는 것은 **VACUUM**의 일입니다. autovacuum이 돌면서 한 페이지의 모든 튜플이 충분히 오래전에 커밋되었다는 걸 확인하면 VM에 all-visible 비트를 세웁니다. 반대로 그 페이지에 UPDATE나 DELETE가 한 번이라도 일어나면 비트는 즉시 꺼집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 400" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 368" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Index-Only Scan의 두 갈래. 리프 엔트리가 가리키는 힙 페이지의 Visibility Map 비트가 서 있으면 힙을 읽지 않고 반환하고, 꺼져 있으면 힙 페이지를 읽어 가시성을 확인한다.">
+     role="img" aria-label="Index-Only Scan의 두 갈래. 리프 엔트리가 가리키는 힙 페이지의 Visibility Map 비트가 서 있으면 힙을 읽지 않고 반환하고, 꺼져 있으면 힙 페이지를 읽어 가시성을 확인합니다.">
 <defs>
 <marker id="bta3Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #78716c)" stroke-width="1.6"/></marker>
 </defs>
@@ -363,7 +357,6 @@ VM 비트를 세우는 것은 **VACUUM**의 일입니다. autovacuum이 돌면�
 .bta3-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 2; }
 .bta3-t { fill: var(--text, #1c1917); font-size: 19px; text-anchor: middle; }
 .bta3-s { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-.bta3-c { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
 .bta3-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
 .bta3-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3; fill: none; stroke-linecap: round; }
 .bta3-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3; fill: none; stroke-linecap: round; }
@@ -390,9 +383,7 @@ VM 비트를 세우는 것은 **VACUUM**의 일입니다. autovacuum이 돌면�
 <path class="bta3-nomark" d="M 82,300 L 60,322"/>
 <text class="bta3-t" x="272" y="296">VM 비트가 꺼져 있으면</text>
 <text class="bta3-s" x="272" y="320">힙 페이지를 읽어 가시성을 확인</text>
-<text class="bta3-s" x="272" y="342">Heap Fetches가 그만큼 올라간다</text>
-<!-- caption -->
-<text class="bta3-c" x="240" y="384">VM 비트를 세우는 것은 VACUUM의 일이다</text>
+<text class="bta3-s" x="272" y="342">Heap Fetches: 그만큼 증가</text>
 </svg>
 </div>
 
@@ -476,9 +467,9 @@ PG 13부터는 같은 키를 가진 엔트리들을 **posting list 하나로 묶
 
 composite index 설계 또는 Index-Only Scan이 기대대로 안 걸릴 때 점검할 4가지입니다.
 
-1. **쿼리의 `WHERE` 조건에 인덱스의 선두 컬럼이 있는가.** 없으면 PG 18의 skip scan에 기대지 말고 별도 인덱스를 고려한다
-2. **`SELECT` 컬럼이 인덱스 + `INCLUDE` 안에 전부 있는가.** 한 컬럼이라도 누락되면 Index-Only Scan이 아니라 Index Scan이 된다
-3. **`Heap Fetches`가 0인가.** 0이 아니면 VM이 최신이 아니라는 뜻이다. bulk write 직후면 `VACUUM` 한 번으로 해소되는 경우가 많다
+1. **쿼리의 `WHERE` 조건에 인덱스의 선두 컬럼이 있는가.** 없으면 PG 18의 skip scan에 기대지 말고 별도 인덱스를 고려합니다
+2. **`SELECT` 컬럼이 인덱스 + `INCLUDE` 안에 전부 있는가.** 한 컬럼이라도 누락되면 Index-Only Scan이 아니라 Index Scan이 됩니다
+3. **`Heap Fetches`가 0인가.** 0이 아니면 VM이 최신이 아니라는 뜻입니다. bulk write 직후면 `VACUUM` 한 번으로 해소되는 경우가 많습니다
 4. **locale과 pattern_ops.** `LIKE 'prefix%'`를 인덱스로 쓰고 싶은데 기본 인덱스로 안 걸리면 opclass 확인
 
 ## 마치며

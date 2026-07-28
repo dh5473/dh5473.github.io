@@ -24,7 +24,7 @@ Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고
 두 에이전트는 같은 문제(루프 반복)를 정반대 방식으로 풉니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 448" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Claude Code의 상태 유지 구조로 queryLoop 안에 messages 배열이 계속 살아 있고, 아래쪽은 Codex의 상태 재구성 구조로 매 턴 전체 히스토리를 다시 만들어 Responses API로 보낸다">
+<svg viewBox="0 0 480 398" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="위쪽은 Claude Code의 상태 유지 구조로 queryLoop 안에 messages 배열이 계속 살아 있고, 아래쪽은 Codex의 상태 재구성 구조로 매 턴 전체 히스토리를 다시 만들어 Responses API로 보냅니다">
 <style>
 .al1-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al1-t{fill:var(--text,#1c1917);font-size:20px}
@@ -46,17 +46,15 @@ Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고
 <text x="44" y="166" class="al1-s">루프가 살아 있는 동안 상태도 살아 있음</text>
 <!-- 상태 유지 회귀 화살표 -->
 <path d="M416 76 H448 V160 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
-<text x="24" y="206" class="al1-s">상태가 루프 프로세스 안에 유지된다</text>
 <!-- 아래: Codex -->
-<text x="24" y="254" class="al1-h">Codex · 상태 재구성</text>
-<rect x="24" y="270" width="392" height="140" rx="8" class="al1-box"/>
-<text x="44" y="302" class="al1-a">while True:</text>
-<text x="44" y="334" class="al1-t">history = rebuild(전체 히스토리)</text>
-<text x="44" y="364" class="al1-t">POST /responses → SSE stream 수신</text>
-<text x="44" y="394" class="al1-s">append results · if done: break</text>
+<text x="24" y="226" class="al1-h">Codex · 상태 재구성</text>
+<rect x="24" y="242" width="392" height="140" rx="8" class="al1-box"/>
+<text x="44" y="274" class="al1-a">while True:</text>
+<text x="44" y="306" class="al1-t">history = rebuild(전체 히스토리)</text>
+<text x="44" y="336" class="al1-t">POST /responses → SSE stream 수신</text>
+<text x="44" y="366" class="al1-s">append results · if done: break</text>
 <!-- 매 턴 재구성 화살표 -->
-<path d="M416 304 H448 V388 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
-<text x="24" y="434" class="al1-s">매 턴마다 상태를 처음부터 다시 만든다</text>
+<path d="M416 276 H448 V360 H416" class="al1-ln" marker-end="url(#al1Arrow)"/>
 </svg>
 </div>
 
@@ -83,7 +81,7 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 ### 전체 흐름
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 668" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="한 턴의 6단계 파이프라인. 컨텍스트 조립, 전처리, 모델 호출, 도구 실행, 결과 누적, 판단 순으로 진행되며 도구 호출이 남아 있으면 1단계로 되돌아간다. 모델이 관여하는 단계는 3단계 하나뿐이다">
+<svg viewBox="0 0 480 612" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="한 턴의 6단계 파이프라인. 컨텍스트 조립, 전처리, 모델 호출, 도구 실행, 결과 누적, 판단 순으로 진행되며 도구 호출이 남아 있으면 1단계로 되돌아갑니다. 모델이 관여하는 단계는 3단계 하나뿐입니다">
 <style>
 .al2-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al2-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
@@ -133,8 +131,6 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 <text x="36" y="588" class="al2-d">도구 호출이 있으면 1단계로, 없으면 종료</text>
 <!-- 되돌아가는 화살표 -->
 <path d="M412 562 H448 V76 H412" class="al2-ln" marker-end="url(#al2Arrow)"/>
-<text x="20" y="632" class="al2-s">3단계만 모델이 판단하고, 나머지 다섯 단계는</text>
-<text x="20" y="656" class="al2-s">전부 결정론적 인프라가 처리한다.</text>
 </svg>
 </div>
 
@@ -147,7 +143,7 @@ Stage 1에서는 모델에게 보낼 프롬프트를 조립합니다. 시스템 
 Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인이 적용됩니다. 컨텍스트를 줄이고 다듬는 이 5단계를 arXiv 논문은 **Pre-model Shapers**라는 이름으로 분석합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Pre-model Shapers 5단계. 누적된 messages 배열이 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact를 차례로 거쳐 정제된 shaped_messages 배열이 된다">
+<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Pre-model Shapers 5단계. 누적된 messages 배열이 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact를 차례로 거쳐 정제된 shaped_messages 배열이 됩니다">
 <style>
 .al3-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al3-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
@@ -193,7 +189,6 @@ Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인
 <!-- 출력 -->
 <rect x="112" y="404" width="256" height="44" rx="22" class="al3-pill"/>
 <text x="240" y="433" class="al3-i" text-anchor="middle">shaped_messages[]</text>
-<text x="20" y="482" class="al3-num">매 턴 모델을 호출하기 직전에 전부 실행된다.</text>
 </svg>
 </div>
 
@@ -242,7 +237,7 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 여러 도구 호출을 한꺼번에 흘려보내는 Parallelization 패턴이 실제로 작동하는 위치가 바로 이 Stage 4입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="스트리밍으로 도착한 도구 호출이 두 갈래로 나뉜다. Read와 Grep 같은 concurrent-safe 도구는 동시에 실행되고, Bash 같은 exclusive 도구는 퍼미션 체크를 거쳐 순차적으로 실행된 뒤 결과가 messages 배열에 쌓인다">
+<svg viewBox="0 0 480 492" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="스트리밍으로 도착한 도구 호출이 두 갈래로 나뉩니다. Read와 Grep 같은 concurrent-safe 도구는 동시에 실행되고, Bash 같은 exclusive 도구는 퍼미션 체크를 거쳐 순차적으로 실행된 뒤 결과가 messages 배열에 쌓입니다">
 <style>
 .al4-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
 .al4-t{fill:var(--text,#1c1917);font-size:20px}
@@ -271,7 +266,7 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 <text x="222" y="152" class="al4-t">Grep(pattern)</text>
 <rect x="38" y="174" width="160" height="42" rx="8" class="al4-in"/>
 <text x="52" y="202" class="al4-t">Read(file_b)</text>
-<text x="38" y="244" class="al4-s">읽기 전용이라 서로 충돌하지 않는다</text>
+<text x="38" y="244" class="al4-s">읽기 전용 · 상호 충돌 없음</text>
 <path d="M240 262 V280" class="al4-ln" marker-end="url(#al4Arrow)"/>
 <!-- 갈래 2: exclusive -->
 <rect x="20" y="280" width="440" height="132" rx="10" class="al4-pb"/>
@@ -279,13 +274,11 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 <rect x="38" y="326" width="190" height="42" rx="8" class="al4-in"/>
 <text x="52" y="354" class="al4-t">Bash(npm test)</text>
 <text x="244" y="354" class="al4-s">퍼미션 체크 후 실행</text>
-<text x="38" y="392" class="al4-s">상태를 바꾸므로 한 번에 하나씩</text>
+<text x="38" y="392" class="al4-s">상태 변경 · 한 번에 하나씩</text>
 <path d="M240 412 V430" class="al4-ln" marker-end="url(#al4Arrow)"/>
 <!-- 결과 누적 -->
 <rect x="76" y="430" width="328" height="44" rx="22" class="al4-pill"/>
 <text x="240" y="459" class="al4-h" text-anchor="middle">결과 → messages[]에 추가</text>
-<text x="20" y="510" class="al4-s">거부(deny)된 도구도 루프를 멈추지 않는다.</text>
-<text x="20" y="534" class="al4-s">거부 결과가 라우팅 시그널로 모델에 전달된다.</text>
 </svg>
 </div>
 
@@ -322,7 +315,7 @@ Claude Code의 "상태 유지" 아키텍처를 살펴봤으니, 이제 Codex의 
 Codex의 한 턴은 다음과 같이 처리됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 668" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex의 Turn N 처리 과정. 클라이언트가 developer 메시지부터 이전 턴 도구 결과까지 전체 히스토리를 다시 만들어 Responses API에 POST하고, SSE 스트림으로 응답을 받아 샌드박스에서 도구를 실행한 뒤 다시 히스토리를 재구성한다">
+<svg viewBox="0 0 480 648" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex의 Turn N 처리 과정. 클라이언트가 developer 메시지부터 이전 턴 도구 결과까지 전체 히스토리를 다시 만들어 Responses API에 POST하고, SSE 스트림으로 응답을 받아 샌드박스에서 도구를 실행한 뒤 다시 히스토리를 재구성합니다">
 <style>
 .al5-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al5-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
@@ -369,8 +362,7 @@ Codex의 한 턴은 다음과 같이 처리됩니다.
 <text x="38" y="578" class="al5-t">append results to history</text>
 <!-- 다음 턴으로 되돌아가는 화살표 -->
 <path d="M412 538 H448 V70 H412" class="al5-ln" marker-end="url(#al5Arrow)"/>
-<text x="20" y="628" class="al5-s">tool_calls가 없으면 종료, 있으면 히스토리를</text>
-<text x="20" y="652" class="al5-s">처음부터 다시 만들어 Turn N+1을 보낸다.</text>
+<text x="20" y="628" class="al5-s">tool_calls 없으면 종료 · 있으면 Turn N+1 재구성</text>
 </svg>
 </div>
 
@@ -416,7 +408,7 @@ Claude Code의 6단계 파이프라인과 비교하면 구조가 훨씬 간결�
 핵심 원리는 단순합니다. 이전 요청과 새 요청의 처음 K개 토큰이 동일하면, 서버는 캐시된 결과를 재사용하고 새로운 토큰만 처리하는 구조입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 380" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="턴이 진행될수록 캐시 적중 구간이 길어지는 프롬프트 캐싱. Turn 1은 정적 프리픽스만 재사용하고 user_msg가 새 토큰이며, Turn 2와 Turn 3은 직전 턴의 프롬프트 전체가 캐시 프리픽스가 되고 새로 붙은 도구 결과만 새 토큰이다">
+<svg viewBox="0 0 480 380" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="턴이 진행될수록 캐시 적중 구간이 길어지는 프롬프트 캐싱. Turn 1은 정적 프리픽스만 재사용하고 user_msg가 새 토큰이며, Turn 2와 Turn 3은 직전 턴의 프롬프트 전체가 캐시 프리픽스가 되고 새로 붙은 도구 결과만 새 토큰입니다">
 <style>
 .al6-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
 .al6-turn{fill:var(--text,#1c1917);font-size:20px;font-weight:600}

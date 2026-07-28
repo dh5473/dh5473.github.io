@@ -20,7 +20,7 @@ thumbnail: './thumbnail.png'
 LLM은 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill과, 그 뒤로 토큰을 하나씩 이어 만드는 decode의 두 단계로 응답을 생성합니다. 스트리밍으로 응답하는 서비스에서 요청 하나의 시간을 이 흐름대로 쪼개면 이렇게 나뉩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 265" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="요청 하나의 시간을 쪼갠 타임라인. 요청 전송부터 첫 토큰까지가 TTFT이고, 첫 토큰 이후 토큰과 토큰 사이의 간격 하나하나가 ITL이며, 요청 전송부터 마지막 토큰까지 전체가 E2E 지연시간입니다. 토큰 간격 중 하나는 눈에 띄게 벌어져 있습니다.">
+<svg viewBox="0 0 480 265" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="요청 하나의 시간을 쪼갠 타임라인. 요청 전송부터 첫 토큰까지가 TTFT이고, 첫 토큰 이후 토큰과 토큰 사이의 간격 하나하나가 ITL이며, 요청 전송부터 마지막 토큰까지 전체가 E2E 지연시간입니다. 토큰 간격 중 하나는 눈에 띄게 벌어져 있습니다.">
   <!-- ITL 안내 -->
   <text x="302" y="24" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">토큰 사이 간격 하나하나가 ITL</text>
   <path d="M151 46 H452" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none"/>
@@ -150,7 +150,7 @@ vllm bench serve ... --goodput ttft:250 tpot:100
 동시성을 계속 올리면 곡선은 세 구간을 지납니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 295" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="가로축 동시성, 세로축 전체 처리량 곡선. 왼쪽 선형 구간에서는 동시성만큼 처리량이 오르고 지연은 거의 그대로이며, 가운데 knee 구간에서 지연이 본격적으로 상승하고, 오른쪽 포화 구간에서는 처리량이 정체된 채 큐잉으로 TTFT만 증가합니다.">
+<svg viewBox="0 0 480 295" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="가로축 동시성, 세로축 전체 처리량 곡선. 왼쪽 선형 구간에서는 동시성만큼 처리량이 오르고 지연은 거의 그대로이며, 가운데 knee 구간에서 지연이 본격적으로 상승하고, 오른쪽 포화 구간에서는 처리량이 정체된 채 큐잉으로 TTFT만 증가합니다.">
   <!-- 구간 배경 -->
   <rect x="175" y="45" width="135" height="175" fill="var(--bg-subtle, #f5f4f2)"/>
   <rect x="310" y="45" width="148" height="175" fill="var(--bg-muted, #eeecea)"/>
@@ -172,8 +172,8 @@ vllm bench serve ... --goodput ttft:250 tpot:100
   <!-- knee 강조 -->
   <circle cx="175" cy="140" r="7" fill="var(--primary, #0d9488)"/>
   <path d="M181 146 L212 158" stroke="var(--primary, #0d9488)" stroke-width="1.5" fill="none"/>
-  <text x="252" y="176" text-anchor="middle" font-size="17" fill="var(--primary, #0d9488)">knee: 지연 본격 상승</text>
-  <text x="252" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">SLO 한도는 이 부근</text>
+  <text x="242" y="176" text-anchor="middle" font-size="17" fill="var(--primary, #0d9488)">knee: 지연 상승</text>
+  <text x="242" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">SLO 한도 부근</text>
   <!-- 구간 이름 -->
   <text x="117" y="248" text-anchor="middle" font-size="20" fill="var(--text, #1c1917)">선형 구간</text>
   <text x="242" y="248" text-anchor="middle" font-size="20" fill="var(--text, #1c1917)">knee 구간</text>

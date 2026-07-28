@@ -24,34 +24,30 @@ thumbnail: './thumbnail.png'
 이 구분이 중요한 이유는, 양자화가 건드릴 수 있는 자원이 하나가 아니기 때문입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 294" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 232" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="양자화가 줄일 수 있는 세 가지 자원. 첫째 가중치가 차지하는 메모리를 줄이면 남는 GPU 메모리가 KV Cache 몫이 된다. 둘째 매 스텝 가중치를 읽는 양을 줄이면 memory-bound한 decode가 빨라진다. 셋째 행렬곱의 연산 정밀도를 낮추면 저정밀 텐서코어로 연산 자체가 빨라진다.">
+     role="img" aria-label="양자화가 줄일 수 있는 세 가지 자원. 1번 가중치가 차지하는 메모리, 2번 매 스텝 가중치를 읽는 양, 3번 행렬곱의 연산 정밀도.">
   <style>
     .q1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .q1-badge { fill: var(--primary, #0d9488); }
     .q1-num   { fill: #ffffff; font-size: 19px; text-anchor: middle; }
     .q1-label { fill: var(--text, #1c1917); font-size: 21px; }
-    .q1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
     .q1-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>
   <text x="20" y="20" class="q1-cap">양자화가 줄일 수 있는 세 가지</text>
-  <rect x="20" y="36" width="440" height="74" rx="8" class="q1-box"/>
-  <circle cx="52" cy="73" r="16" class="q1-badge"/>
-  <text x="52" y="80" class="q1-num">1</text>
-  <text x="80" y="66" class="q1-label">가중치가 차지하는 메모리</text>
-  <text x="80" y="92" class="q1-sub">남는 GPU 메모리가 KV Cache 몫이 된다</text>
-  <rect x="20" y="122" width="440" height="74" rx="8" class="q1-box"/>
-  <circle cx="52" cy="159" r="16" class="q1-badge"/>
-  <text x="52" y="166" class="q1-num">2</text>
-  <text x="80" y="152" class="q1-label">매 스텝 가중치를 읽는 양</text>
-  <text x="80" y="178" class="q1-sub">memory-bound한 decode가 빨라진다</text>
-  <rect x="20" y="208" width="440" height="74" rx="8" class="q1-box"/>
-  <circle cx="52" cy="245" r="16" class="q1-badge"/>
-  <text x="52" y="252" class="q1-num">3</text>
-  <text x="80" y="238" class="q1-label">행렬곱의 연산 정밀도</text>
-  <text x="80" y="264" class="q1-sub">저정밀 텐서코어로 연산 자체가 빨라진다</text>
+  <rect x="20" y="36" width="440" height="52" rx="8" class="q1-box"/>
+  <circle cx="52" cy="62" r="16" class="q1-badge"/>
+  <text x="52" y="69" class="q1-num">1</text>
+  <text x="80" y="69" class="q1-label">가중치가 차지하는 메모리</text>
+  <rect x="20" y="100" width="440" height="52" rx="8" class="q1-box"/>
+  <circle cx="52" cy="126" r="16" class="q1-badge"/>
+  <text x="52" y="133" class="q1-num">2</text>
+  <text x="80" y="133" class="q1-label">매 스텝 가중치를 읽는 양</text>
+  <rect x="20" y="164" width="440" height="52" rx="8" class="q1-box"/>
+  <circle cx="52" cy="190" r="16" class="q1-badge"/>
+  <text x="52" y="197" class="q1-num">3</text>
+  <text x="80" y="197" class="q1-label">행렬곱의 연산 정밀도</text>
 </svg>
 </div>
 
@@ -70,10 +66,10 @@ W4A16은 ①과 ②를 얻고 ③은 포기합니다. W8A8은 셋 다 얻는 대
 먼저 숫자로 크기를 보겠습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 254" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 236" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Gemma 3 27B 가중치 크기 비교. bf16은 27B 곱하기 2바이트로 약 54GB, int4는 약 14.1GB. decode 한 스텝은 가중치 전체를 읽으므로 스텝마다 읽는 양이 약 4분의 1로 줄어든다.">
+     role="img" aria-label="Gemma 3 27B 가중치 크기 비교. bf16은 27B 곱하기 2바이트로 약 54GB, int4는 약 14.1GB. decode 한 스텝은 가중치 전체를 읽습니다.">
   <style>
     .q2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
     .q2-name  { fill: var(--text, #1c1917); font-size: 21px; }
@@ -94,7 +90,6 @@ W4A16은 ①과 ②를 얻고 ③은 포기합니다. W8A8은 셋 다 얻는 대
   <text x="98" y="172" class="q2-sub">Google 공식 수치</text>
   <line x1="20" y1="192" x2="460" y2="192" class="q2-line"/>
   <text x="20" y="216" class="q2-sub">decode 한 스텝 = 가중치 전체 읽기</text>
-  <text x="20" y="240" class="q2-sub">스텝마다 읽는 양이 약 1/4로 줄어든다</text>
 </svg>
 </div>
 
@@ -123,7 +118,7 @@ W4A16은 ①과 ②를 얻고 ③은 포기합니다. W8A8은 셋 다 얻는 대
 FP8은 이름 그대로 8비트 부동소수점입니다. 같은 8비트라도 정수(INT8)와는 값을 배치하는 방식이 다릅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="1바이트에 숫자를 담는 세 가지 방법의 비트 배치. INT8은 부호 1비트와 정수 7비트로 값 사이 간격이 균일하고 최대 플러스마이너스 127. E4M3는 부호 1비트, 지수 4비트, 가수 3비트의 부동소수점으로 0 근처가 촘촘하고 최대 플러스마이너스 448. E5M2는 지수를 5비트로 늘려 범위를 넓힌 형식으로 최대 플러스마이너스 57344.">

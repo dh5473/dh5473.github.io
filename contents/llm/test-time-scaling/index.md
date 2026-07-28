@@ -17,8 +17,8 @@ thumbnail: './image-06.png'
 
 해당 연구에서는 다음과 같은 2가지 아이디어를 기반으로 LLM의 reasoning 능력 향상을 시도합니다.
 
-- 산술 추론에서 정답에 도달하기까지의 자연어 기반 추론 과정을 생성하면 모델의 추론 능력이 향상될 수 있다.
-- 몇 개의 입출력 예시(Few-shot)만으로도 LLM이 새로운 태스크를 수행할 수 있다. (in-context learning).
+- 산술 추론에서 정답에 도달하기까지의 자연어 기반 추론 과정을 생성하면 모델의 추론 능력이 향상될 수 있습니다.
+- 몇 개의 입출력 예시(Few-shot)만으로도 LLM이 새로운 태스크를 수행할 수 있습니다. (in-context learning).
 
 ![Chain-of-Thought Prompting 예시](./image-01.png)
 <p align="center" style="color: #666; font-size: 14px;"><em>Chain-of-Thought Prompting 예시 (출처: <a href="https://arxiv.org/pdf/2201.11903" target="_blank">Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</a>)</em></p>
@@ -34,10 +34,10 @@ thumbnail: './image-06.png'
 
 결과적으로 Chain-of-thought prompting은 다음과 같은 특성들을 가지고 있습니다.
 
-- 원칙적으로, CoT는 복잡한 multi-step 문제들을 중간 단계로 분해할 수 있으며, 이는 더 많은 추론 단계를 요구하는 문제에서 추가적인 계산을 할당할 수 있다는 것을 의미한다.
-- CoT는 모델의 동작 방식에 대해 해석 가능한 window를 제공한다. 특정 답에 어떻게 도달하는지 경로를 알 수 있기 때문에 어디서 잘못되었는지 디버깅할 수 있는 기회를 제공한다.
-- CoT reasoning은 math word problems, commonsense reasoning, symbolic manipulation과 같은 task에 사용할 수 있으며, 사람이 언어를 통해 해결할 수 있는 어떤 과제에도 적용 가능하다. (원칙적으로는)
-- 추가적인 파인 튜닝 없이도, few-shot 프롬프팅을 통해 원하는 형태의 답변을 이끌어낼 수 있다.
+- 원칙적으로, CoT는 복잡한 multi-step 문제들을 중간 단계로 분해할 수 있으며, 이는 더 많은 추론 단계를 요구하는 문제에서 추가적인 계산을 할당할 수 있다는 것을 의미합니다.
+- CoT는 모델의 동작 방식에 대해 해석 가능한 window를 제공합니다. 특정 답에 어떻게 도달하는지 경로를 알 수 있기 때문에 어디서 잘못되었는지 디버깅할 수 있는 기회를 제공합니다.
+- CoT reasoning은 math word problems, commonsense reasoning, symbolic manipulation과 같은 task에 사용할 수 있으며, 사람이 언어를 통해 해결할 수 있는 어떤 과제에도 적용 가능합니다. (원칙적으로는)
+- 추가적인 파인 튜닝 없이도, few-shot 프롬프팅을 통해 원하는 형태의 답변을 이끌어낼 수 있습니다.
 
 ## Let's think step by step.
 

@@ -36,10 +36,10 @@ WAL이 없는 대안을 생각해보면 이 설계의 이유가 선명해집니�
 WAL에 기록되는 단위는 **WAL record**입니다. 각 record는 "어떤 리소스의 어떤 동작인지"를 기술하는 헤더와, 실제 변경 데이터를 담은 payload로 구성됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 540" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 540" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="WAL record는 24바이트 고정 헤더와 가변 길이의 block references, payload로 구성된다. 헤더 안의 각 필드는 가로 폭이 실제 바이트 수에 비례하도록 그려져 있다.">
+     role="img" aria-label="WAL record는 24바이트 고정 헤더와 가변 길이의 block references, payload로 구성됩니다. 헤더 안의 각 필드는 가로 폭이 실제 바이트 수에 비례하도록 그려져 있습니다.">
 <style>
 .wal1-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal1-sec { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
@@ -93,7 +93,7 @@ WAL에 기록되는 단위는 **WAL record**입니다. 각 record는 "어떤 리
 <text x="44" y="332" class="wal1-lbl">xl_crc</text>
 <text x="158" y="332" class="wal1-mut">4B</text>
 <text x="205" y="332" class="wal1-lbl">record 무결성 체크섬</text>
-<text x="26" y="362" class="wal1-mut">회색 칸은 정렬용 패딩 2바이트입니다</text>
+<text x="26" y="362" class="wal1-mut">회색 칸 = 정렬용 패딩 2바이트</text>
 <!-- variable-length parts -->
 <rect x="20" y="382" width="440" height="60" rx="5" class="wal1-box" />
 <text x="240" y="409" text-anchor="middle" class="wal1-bld">Block references (가변 길이)</text>
@@ -165,10 +165,10 @@ WAL의 write-ahead 원칙만으로는 한 가지 문제가 해결되지 않습�
 PostgreSQL의 해결책은 **Full Page Write**(FPW)입니다. checkpoint 직후 특정 페이지가 처음으로 변경될 때, 차분만이 아니라 **페이지 전체 8KB 이미지를 WAL에 기록**합니다. 이 이미지를 **Full Page Image**(FPI) 또는 **backup block**이라고 부릅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="checkpoint 직후 페이지 P의 첫 변경은 페이지 전체 이미지를 WAL에 쓰고, 같은 페이지의 두 번째 이후 변경은 수십 바이트짜리 차분만 쓴다. 다음 checkpoint가 지나면 다시 전체 이미지를 쓴다.">
+     role="img" aria-label="checkpoint 직후 페이지 P의 첫 변경은 페이지 전체 이미지를 WAL에 쓰고, 같은 페이지의 두 번째 이후 변경은 수십 바이트짜리 차분만 씁니다. 다음 checkpoint가 지나면 다시 전체 이미지를 씁니다.">
 <style>
 .wal2-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal2-lbl { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
@@ -267,10 +267,10 @@ checkpoint가 dirty page를 한꺼번에 flush하면 I/O spike가 발생합니�
 `checkpoint_completion_target`(기본 0.9)이 분산 비율을 결정합니다. 0.9라면 다음 checkpoint까지 예상 시간의 90% 구간에 걸쳐 dirty page를 나눠서 씁니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 200" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 200" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="checkpoint_timeout 5분과 completion_target 0.9 설정에서, 앞쪽 4.5분 구간에 dirty page flush를 나눠서 수행하고 남은 0.5분은 다음 checkpoint 전 여유 구간으로 남는다.">
+     role="img" aria-label="checkpoint_timeout 5분과 completion_target 0.9 설정에서, 앞쪽 4.5분 구간에 dirty page flush를 나눠서 수행하고 남은 0.5분은 다음 checkpoint 전 여유 구간으로 남습니다.">
 <style>
 .wal3-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal3-lbl { font-size: 18px; fill: var(--text, #1c1917); }
@@ -333,10 +333,10 @@ checkpoint가 자주 돌수록 REDO point가 최근으로 당겨져서 recovery 
 디스크에 실제로 쓰는 일은 세 개의 [백그라운드 프로세스](/postgres/architecture-overview/)가 나눠 맡습니다. 셋 다 "버퍼의 내용을 디스크로 내린다"는 점은 같지만, 대상과 시점이 다릅니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 700" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 700" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="한 번의 row 변경은 두 갈래로 흐른다. WAL buffer에 쌓인 WAL record는 walwriter가 주기적으로 내리거나 COMMIT 시 backend가 직접 내려 pg_wal 세그먼트 파일이 되고, shared_buffers의 dirty page는 bgwriter가 조금씩 또는 checkpointer가 한꺼번에 내려 data file이 된다.">
+     role="img" aria-label="한 번의 row 변경은 두 갈래로 흐릅니다. WAL buffer에 쌓인 WAL record는 walwriter가 주기적으로 내리거나 COMMIT 시 backend가 직접 내려 pg_wal 세그먼트 파일이 되고, shared_buffers의 dirty page는 bgwriter가 조금씩 또는 checkpointer가 한꺼번에 내려 data file이 됩니다.">
 <defs>
 <marker id="wal4ArrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M0 0 L10 5 L0 10 z" fill="var(--primary, #0d9488)"/>

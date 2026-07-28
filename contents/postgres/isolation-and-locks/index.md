@@ -120,10 +120,10 @@ AS = `ACCESS SHARE`(SELECT), RS = `ROW SHARE`(SELECT ... FOR UPDATE 계열), RE 
 더 위험한 상황은 **ALTER 자체가 대기하는 경우**입니다. 긴 트랜잭션이 `SELECT`로 `AccessShareLock`을 잡고 있으면 ALTER는 그 트랜잭션이 끝날 때까지 기다립니다. 그런데 ALTER가 대기하는 동안 **그 뒤에 들어오는 새 SELECT도 줄줄이 대기**합니다. PostgreSQL의 lock queue는 FIFO이고, 대기 중인 `AccessExclusiveLock` 뒤에 서는 `AccessShareLock`은 앞의 exclusive 요청이 해소될 때까지 진행할 수 없기 때문입니다. 한 건의 ALTER가 전체 서비스를 멈추는 사고가 이 패턴으로 발생합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 330" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="테이블 users의 락 큐. 맨 위에서 긴 SELECT가 AccessShare를 잡고 실행 중이고, 그 뒤에 ALTER TABLE이 AccessExclusive를 기다리며, 다시 그 뒤에 새 SELECT 두 개가 대기한다. 새 SELECT는 실행 중인 SELECT와 호환되지만 FIFO 큐 때문에 앞의 AccessExclusive를 넘어설 수 없다는 것을 보여준다">
+     role="img" aria-label="테이블 users의 락 큐. 맨 위에서 긴 SELECT가 AccessShare를 잡고 실행 중이고, 그 뒤에 ALTER TABLE이 AccessExclusive를 기다리며, 다시 그 뒤에 새 SELECT 두 개가 대기합니다. 새 SELECT는 실행 중인 SELECT와 호환되지만 FIFO 큐 때문에 앞의 AccessExclusive를 넘어설 수 없다는 것을 보여줍니다">
 <style>
 .isl1-t { fill: var(--text, #1c1917); }
 .isl1-m { fill: var(--text-muted, #78716c); }
@@ -134,7 +134,7 @@ AS = `ACCESS SHARE`(SELECT), RS = `ROW SHARE`(SELECT ... FOR UPDATE 계열), RE 
 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
 </marker>
 </defs>
-<text x="240" y="26" class="isl1-t" font-size="20" font-weight="700" text-anchor="middle">ALTER 하나가 뒤의 SELECT까지 멈춘다</text>
+<text x="240" y="26" class="isl1-t" font-size="20" font-weight="700" text-anchor="middle">ALTER 하나가 만드는 연쇄 대기</text>
 <text x="240" y="50" class="isl1-m" font-size="17" text-anchor="middle">테이블 users의 락 큐. 위쪽이 큐의 머리</text>
 <!-- row 1: holder -->
 <rect x="24" y="70" width="432" height="46" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
@@ -157,9 +157,6 @@ AS = `ACCESS SHARE`(SELECT), RS = `ROW SHARE`(SELECT ... FOR UPDATE 계열), RE 
 <rect x="24" y="270" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
 <text x="40" y="299" class="isl1-t" font-size="19">대기 · 그 뒤에 온 SELECT</text>
 <text x="440" y="299" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
-<!-- caption -->
-<text x="240" y="348" class="isl1-m" font-size="17" text-anchor="middle">아래 두 SELECT는 맨 위 SELECT와 호환된다.</text>
-<text x="240" y="372" class="isl1-d" font-size="17" text-anchor="middle">그래도 앞의 AccessExclusive를 넘어설 수 없다.</text>
 </svg>
 </div>
 
@@ -299,10 +296,10 @@ SELECT * FROM doctors;
 시간 순서로 늘어놓으면 어느 지점에서 규칙이 새는지가 보입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 544" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="write skew가 발생하는 시간 순서. Alice 세션과 Bob 세션이 각각 REPEATABLE READ로 시작해 둘 다 당직 인원을 2로 읽고, 각각 서로 다른 행을 false로 바꾼 뒤 둘 다 커밋에 성공한다. 서로 다른 행이라 row-level lock이 충돌하지 않아 최소 1명 당직 규칙이 깨지고 당직 인원이 0이 된다">
+     role="img" aria-label="write skew가 발생하는 시간 순서. Alice 세션과 Bob 세션이 각각 REPEATABLE READ로 시작해 둘 다 당직 인원을 2로 읽고, 각각 서로 다른 행을 false로 바꾼 뒤 둘 다 커밋에 성공합니다. 서로 다른 행이라 row-level lock이 충돌하지 않아 최소 1명 당직 규칙이 깨지고 당직 인원이 0이 됩니다">
 <style>
 .isl2-t { fill: var(--text, #1c1917); }
 .isl2-m { fill: var(--text-muted, #78716c); }
@@ -332,32 +329,30 @@ SELECT * FROM doctors;
 <circle cx="194" cy="228" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
 <text x="194" y="234" class="isl2-b" font-size="17" text-anchor="middle">B</text>
 <text x="216" y="234" class="isl2-t" font-size="18">SELECT count(*) → 2</text>
-<text x="240" y="270" class="isl2-m" font-size="17" text-anchor="middle">두 snapshot 모두 '당직 2명'으로 보인다</text>
 <!-- t5: A updates row 1 -->
-<rect x="20" y="286" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="306" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<text x="42" y="312" class="isl2-b" font-size="17" text-anchor="middle">A</text>
-<text x="64" y="312" class="isl2-t" font-size="18">UPDATE id=1 → false</text>
+<rect x="20" y="256" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="276" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="282" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="282" class="isl2-t" font-size="18">UPDATE id=1 → false</text>
 <!-- t6: B updates row 2 -->
-<rect x="172" y="334" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="354" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<text x="194" y="360" class="isl2-b" font-size="17" text-anchor="middle">B</text>
-<text x="216" y="360" class="isl2-t" font-size="18">UPDATE id=2 → false</text>
-<text x="240" y="396" class="isl2-m" font-size="17" text-anchor="middle">서로 다른 행이라 락이 충돌하지 않는다</text>
+<rect x="172" y="304" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="324" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="330" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="330" class="isl2-t" font-size="18">UPDATE id=2 → false</text>
+<text x="240" y="366" class="isl2-m" font-size="17" text-anchor="middle">서로 다른 행 → 락 충돌 없음</text>
 <!-- t7: A commits -->
-<rect x="20" y="412" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="432" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<text x="42" y="438" class="isl2-b" font-size="17" text-anchor="middle">A</text>
-<text x="64" y="438" class="isl2-ok" font-size="18">COMMIT 성공</text>
+<rect x="20" y="382" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="402" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="408" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="408" class="isl2-ok" font-size="18">COMMIT 성공</text>
 <!-- t8: B commits -->
-<rect x="172" y="460" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="480" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<text x="194" y="486" class="isl2-b" font-size="17" text-anchor="middle">B</text>
-<text x="216" y="486" class="isl2-ok" font-size="18">COMMIT 성공</text>
+<rect x="172" y="430" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="450" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="456" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="456" class="isl2-ok" font-size="18">COMMIT 성공</text>
 <!-- result -->
-<rect x="16" y="516" width="448" height="62" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<text x="240" y="543" class="isl2-bad" font-size="20" font-weight="700" text-anchor="middle">결과: on_call = true 인 행 0개</text>
-<text x="240" y="568" class="isl2-bad" font-size="17" text-anchor="middle">둘 다 커밋했지만 '최소 1명' 규칙이 깨졌다</text>
+<rect x="16" y="486" width="448" height="44" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<text x="240" y="513" class="isl2-bad" font-size="20" font-weight="700" text-anchor="middle">결과: on_call = true 인 행 0개</text>
 </svg>
 </div>
 
@@ -448,10 +443,10 @@ UPDATE accounts SET balance = balance + 100 WHERE id = 1;
 둘 다 서로를 기다리고 있습니다. 대기 관계를 그려 보면 화살표가 한 바퀴 돌아 제자리로 돌아옵니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="deadlock의 대기 순환. Session A는 id=1 행의 락을 쥐고 id=2를 기다리고, Session B는 id=2 행의 락을 쥐고 id=1을 기다린다. 두 대기 화살표가 서로를 향해 순환을 이루므로 둘 다 영원히 대기하며, deadlock_timeout 기본 1초 후 한쪽이 abort된다">
+     role="img" aria-label="deadlock의 대기 순환. Session A는 id=1 행의 락을 쥐고 id=2를 기다리고, Session B는 id=2 행의 락을 쥐고 id=1을 기다립니다. 두 대기 화살표가 서로를 향해 순환을 이루므로 둘 다 영원히 대기하며, deadlock_timeout 기본 1초 후 한쪽이 abort됩니다">
 <style>
 .isl3-t { fill: var(--text, #1c1917); }
 .isl3-hold { fill: var(--text-success, #16a34a); }
@@ -463,7 +458,7 @@ UPDATE accounts SET balance = balance + 100 WHERE id = 1;
 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-warn, #d97706)"/>
 </marker>
 </defs>
-<text x="240" y="26" class="isl3-t" font-size="20" font-weight="700" text-anchor="middle">Deadlock: 서로가 쥔 행을 기다린다</text>
+<text x="240" y="26" class="isl3-t" font-size="20" font-weight="700" text-anchor="middle">Deadlock: 서로가 쥔 행을 대기</text>
 <!-- session A box -->
 <rect x="130" y="52" width="220" height="84" rx="10" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2"/>
 <text x="240" y="80" class="isl3-t" font-size="19" font-weight="700" text-anchor="middle">Session A</text>
@@ -519,10 +514,10 @@ WHERE pg_blocking_pids(pid) != '{}';
 
 ## 실전에서는
 
-1. **`idle in transaction` 세션이 락을 오래 잡고 있으면 뒤의 DML/DDL이 줄줄이 대기한다.** `idle_in_transaction_session_timeout`을 설정해서 자동 종료시키는 것이 권장된다
-2. **DDL 실행 전에 `lock_timeout`을 짧게 설정한다.** ALTER TABLE이 `AccessExclusiveLock`을 기다리며 대기하면 그 뒤의 모든 쿼리가 줄줄이 멈춘다. 3\~5초 안에 락을 못 잡으면 빠져나와서 나중에 재시도하는 것이 안전하다
-3. **Serializable을 쓰면 재시도 로직이 필수다.** SSI가 false positive로 abort할 수 있으므로, 에러 코드 `40001`을 잡아서 자동 재시도하는 wrapper가 애플리케이션에 있어야 한다. 대부분의 OLTP에서는 Read Committed로 충분하고, write skew가 비즈니스 규칙을 깨뜨리는 특정 시나리오에서만 Serializable을 쓰는 것이 현실적이다
-4. **deadlock은 감지 + 재시도로 대응한다.** 완전히 방지하려면 모든 트랜잭션이 같은 순서로 행을 잠그면 되지만, 복잡한 비즈니스 로직에서는 현실적으로 어렵다. deadlock이 간헐적으로 발생하는 것은 정상이고, 빈번하면 트랜잭션 설계를 점검한다
+1. **`idle in transaction` 세션이 락을 오래 잡고 있으면 뒤의 DML/DDL이 줄줄이 대기합니다.** `idle_in_transaction_session_timeout`을 설정해서 자동 종료시키는 것이 권장됩니다
+2. **DDL 실행 전에 `lock_timeout`을 짧게 설정합니다.** ALTER TABLE이 `AccessExclusiveLock`을 기다리며 대기하면 그 뒤의 모든 쿼리가 줄줄이 멈춥니다. 3\~5초 안에 락을 못 잡으면 빠져나와서 나중에 재시도하는 것이 안전합니다
+3. **Serializable을 쓰면 재시도 로직이 필수입니다.** SSI가 false positive로 abort할 수 있으므로, 에러 코드 `40001`을 잡아서 자동 재시도하는 wrapper가 애플리케이션에 있어야 합니다. 대부분의 OLTP에서는 Read Committed로 충분하고, write skew가 비즈니스 규칙을 깨뜨리는 특정 시나리오에서만 Serializable을 쓰는 것이 현실적입니다
+4. **deadlock은 감지 + 재시도로 대응합니다.** 완전히 방지하려면 모든 트랜잭션이 같은 순서로 행을 잠그면 되지만, 복잡한 비즈니스 로직에서는 현실적으로 어렵습니다. deadlock이 간헐적으로 발생하는 것은 정상이고, 빈번하면 트랜잭션 설계를 점검합니다
 
 ## 흔한 오해
 

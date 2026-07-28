@@ -22,10 +22,10 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
 먼저 생성 과정 자체를 봅시다. LLM은 문장을 통째로 만들지 않습니다. **자기회귀(Autoregressive)** 방식, 즉 지금까지의 토큰 전체를 입력으로 받아 "다음 토큰 하나"를 예측하는 일을 반복합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 344" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 344" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="자기회귀 생성 과정. 입력 한국의 수도는에서 시작해 스텝마다 토큰을 하나씩 예측하고, 그 토큰을 시퀀스 끝에 붙여 다시 입력으로 넣는 과정을 3스텝에 걸쳐 보여준다. 최종 출력은 서울입니다.">
+     role="img" aria-label="자기회귀 생성 과정. 입력 한국의 수도는에서 시작해 스텝마다 토큰을 하나씩 예측하고, 그 토큰을 시퀀스 끝에 붙여 다시 입력으로 넣는 과정을 3스텝에 걸쳐 보여줍니다. 최종 출력은 서울입니다.">
   <style>
     .sv1-chip { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .sv1-new  { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.5; }
@@ -98,10 +98,10 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
 그래서 모든 추론 엔진은 각 토큰의 attention 중간 결과물인 **Key와 Value 벡터를 저장해두고 재사용**합니다. 이것이 **KV Cache**입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 410" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 410" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="KV Cache 유무 비교. 캐시가 없으면 스텝마다 재계산량을 나타내는 막대가 계속 길어지고, 캐시를 쓰면 새로 계산하는 막대 길이가 스텝마다 동일하게 유지되며 이전 토큰의 K와 V는 KV Cache에서 읽어온다.">
+     role="img" aria-label="KV Cache 유무 비교. 캐시가 없으면 스텝마다 재계산량을 나타내는 막대가 계속 길어지고, 캐시를 쓰면 새로 계산하는 막대 길이가 스텝마다 동일하게 유지되며 이전 토큰의 K와 V는 KV Cache에서 읽어옵니다.">
   <style>
     .kv1-barA  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
     .kv1-barB  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
@@ -211,10 +211,10 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
 정리하면 요청 하나는 이렇게 흘러갑니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="요청 하나의 처리 흐름. 요청이 도착하면 요청당 한 번 실행되는 Prefill 단계가 프롬프트 전체를 병렬 처리해 KV Cache와 첫 토큰을 만들며 compute-bound라 TTFT를 결정한다. 이어서 출력 토큰 수만큼 반복되는 Decode 단계가 스텝당 토큰 하나씩 생성하며 memory-bound라 TPOT를 결정한다. 마지막에 응답이 완료된다.">
+     role="img" aria-label="요청 하나의 처리 흐름. 요청이 도착하면 요청당 한 번 실행되는 Prefill 단계가 프롬프트 전체를 병렬 처리해 KV Cache와 첫 토큰을 만들며 compute-bound라 TTFT를 결정합니다. 이어서 출력 토큰 수만큼 반복되는 Decode 단계가 스텝당 토큰 하나씩 생성하며 memory-bound라 TPOT를 결정합니다. 마지막에 응답이 완료됩니다.">
   <style>
     .pd1-pill  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pd1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }

@@ -24,7 +24,7 @@ Claude Code의 Pre-model Shapers는 이 문제를 **"덜 파괴적인 필터부�
 이 구조는 Python의 세대별 가비지 컬렉션과 닮았습니다. Gen 0(짧은 수명 객체)은 자주 수집하고, Gen 2(오래 살아남은 객체)는 드물게 수집합니다. 매번 전체 힙을 스캔하지 않는 것처럼, 매 턴 전체 대화를 LLM으로 요약하지 않습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 524" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 5단계를 실행 순서대로 나열한 가로 막대그래프. 위에서부터 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact 순이며, Microcompact와 Auto-Compact만 LLM 호출을 동반합니다.">
+<svg viewBox="0 0 480 524" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 5단계를 실행 순서대로 나열한 가로 막대그래프. 위에서부터 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact 순이며, Microcompact와 Auto-Compact만 LLM 호출을 동반합니다.">
   <defs>
     <marker id="cp1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
@@ -66,10 +66,6 @@ Claude Code의 Pre-model Shapers는 이 문제를 **"덜 파괴적인 필터부�
   <text x="20" y="504" font-size="17" fill="var(--text-muted, #78716c)">막대 길이 = 실행 순서 (측정값이 아닌 도식)</text>
 </svg>
 </div>
-
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>앞 세 단계는 매 턴 실행되고, 뒤 두 단계는 임계값을 넘을 때만 발동합니다.</em>
-</p>
 
 5단계의 전체 구조를 먼저 정리합니다.
 
@@ -302,7 +298,7 @@ Auto-Compact를 "임계값 초과 → LLM 요약"이라는 2단계 구조로 이
 5단계는 항상 순서대로 실행되지만, Stage 4-5는 앞선 단계의 결과에 따라 실제 작업을 건너뛸 수 있습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 460 624" style="width: 100%; height: auto; max-width: 460px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 파이프라인 실행 흐름도. Stage 1부터 3까지는 매 턴 실행되고, 토큰이 임계값을 넘으면 Stage 4 Context Collapse, 그래도 넘으면 Stage 5 Auto-Compact로 이어집니다.">
+<svg viewBox="0 0 460 624" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 파이프라인 실행 흐름도. Stage 1부터 3까지는 매 턴 실행되고, 토큰이 임계값을 넘으면 Stage 4 Context Collapse, 그래도 넘으면 Stage 5 Auto-Compact로 이어집니다.">
   <defs>
     <marker id="cp2Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
@@ -352,10 +348,6 @@ Auto-Compact를 "임계값 초과 → LLM 요약"이라는 2단계 구조로 이
 </svg>
 </div>
 
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>Stage 1-3은 매 턴 실행. Stage 4-5는 토큰이 임계값을 초과할 때만 실행됩니다.</em>
-</p>
-
 실제 임계값은 모델의 윈도우 크기(200K 또는 1M)에 따라 달라지며, 구체적인 수치는 Claude Code 내부 설정에 의해 결정됩니다.
 
 ---
@@ -381,7 +373,7 @@ OpenAI 블로그([Unrolling the Codex Agent Loop](https://openai.com/index/unrol
 "모델의 잠재적 이해(latent understanding)"라는 표현이 핵심입니다. Claude Code의 Auto-Compact가 사람이 읽을 수 있는 텍스트 요약을 생성하는 반면, Codex의 blob은 모델의 내부 표현에 가까운 정보를 암호화된 형태로 보존합니다. 클라이언트는 이 blob의 내용을 열람하거나 수정할 수 없습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 664" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex 클라이언트와 Responses API 사이의 컴팩션 시퀀스를 세로로 쌓은 그림. 실선 화살표는 클라이언트에서 서버로 가는 요청, 점선 화살표는 서버에서 돌아오는 응답입니다. 클라이언트가 히스토리를 보내면 서버가 압축해 암호화된 blob을 돌려주고, 이후 요청에서 그 blob이 캐시 프리픽스가 됩니다.">
+<svg viewBox="0 0 480 664" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex 클라이언트와 Responses API 사이의 컴팩션 시퀀스를 세로로 쌓은 그림. 실선 화살표는 클라이언트에서 서버로 가는 요청, 점선 화살표는 서버에서 돌아오는 응답입니다. 클라이언트가 히스토리를 보내면 서버가 압축해 암호화된 blob을 돌려주고, 이후 요청에서 그 blob이 캐시 프리픽스가 됩니다.">
   <defs>
     <marker id="cp3Fwd" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
       <path d="M0,0 L9,3.5 L0,7 Z" fill="var(--text-muted, #78716c)"/>
@@ -431,10 +423,6 @@ OpenAI 블로그([Unrolling the Codex Agent Loop](https://openai.com/index/unrol
   <line x1="440" y1="628" x2="36" y2="628" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
 </svg>
 </div>
-
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>Codex CLI의 컴팩션 흐름. 클라이언트는 blob 내부를 열람할 수 없습니다.</em>
-</p>
 
 ### blob 이후의 복구
 

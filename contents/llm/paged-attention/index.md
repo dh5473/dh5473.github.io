@@ -30,7 +30,7 @@ KV Cache는 진행 중인 모든 요청이 GPU에 들고 있어야 하는 상태
 특히 외부 단편화가 문제입니다. 남은 메모리를 총량으로 따지면 새 요청을 받을 공간이 충분한데, **연속된 자리로는 없어서** 요청을 거절해야 하는 상황이 벌어집니다. 조각조각 흩어진 빈틈은 있지만, 정작 필요한 큰 한 덩어리가 나오지 않는 것입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 456" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 456" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="연속 할당 방식의 KV 메모리 낭비. 위쪽은 요청 A, B, C가 각각 16칸, 12칸, 20칸을 예약해두고 실제로는 2칸, 5칸, 3칸만 사용하는 모습. 아래쪽은 물리 메모리에 빈 공간 9칸이 3칸, 2칸, 4칸으로 흩어져 있어 연속 6칸이 필요한 요청 D가 거절되는 외부 단편화 상황.">
@@ -69,7 +69,7 @@ KV Cache는 진행 중인 모든 요청이 GPU에 들고 있어야 하는 상태
   <text x="8" y="254" class="fr1-t">실제 사용은 20~40%, 나머지 60~80%가 예약된 채 낭비</text>
   <line x1="8" y1="274" x2="472" y2="274" class="fr1-div"/>
   <!-- 외부 단편화 -->
-  <text x="8" y="300" class="fr1-h">외부 단편화: 총량은 남아도 연속된 자리가 없다</text>
+  <text x="8" y="300" class="fr1-h">외부 단편화: 총량은 남아도 연속된 자리가 없음</text>
   <text x="8" y="324" class="fr1-sub">회색 = 다른 요청이 쓰는 중 · 초록 = 빈 공간</text>
   <rect x="8" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="22" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="36" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="50" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="64" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="78" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="92" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="106" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="120" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="134" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="148" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="162" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="176" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="190" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="204" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="218" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="232" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="246" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="260" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="274" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="288" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="302" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="316" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="330" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="344" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="358" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="372" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="386" y="334" width="13" height="26" rx="2" class="fr1-free"/><rect x="400" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="414" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="428" y="334" width="13" height="26" rx="2" class="fr1-occ"/><rect x="442" y="334" width="13" height="26" rx="2" class="fr1-occ"/>
   <text x="113" y="380" class="fr1-ok">3칸</text>
@@ -98,10 +98,10 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
 프로그램은 자기가 0번지부터 쭉 이어진 연속 메모리를 쓰고 있다고 믿습니다. 하지만 실제 물리 메모리(RAM)에서는 그렇지 않습니다. 메모리는 **고정 크기 페이지(page)**로 잘게 나뉘어 있고, 프로그램이 쓰는 논리적으로 연속된 주소는 물리적으로는 여기저기 흩어진 페이지에 담깁니다. 이 논리 주소와 물리 페이지의 대응을 **페이지 테이블(page table)**이 관리합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 305" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 294" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="운영체제 페이징의 논리 주소와 물리 메모리 매핑. 왼쪽에 논리 페이지 0, 1, 2가 연속으로 붙어 있고, 오른쪽 물리 메모리 풀에는 페이지 12, 47, 91이 다른 프로세스의 페이지들 사이에 흩어져 있다. 페이지 테이블이 논리 페이지 0을 물리 47로, 1을 12로, 2를 91로 잇는 화살표가 서로 교차한다.">
+     role="img" aria-label="운영체제 페이징의 논리 주소와 물리 메모리 매핑. 왼쪽에 논리 페이지 0, 1, 2가 연속으로 붙어 있고, 오른쪽 물리 메모리 풀에는 페이지 12, 47, 91이 다른 프로세스의 페이지들 사이에 흩어져 있습니다. 페이지 테이블이 논리 페이지 0을 물리 47로, 1을 12로, 2를 91로 잇는 화살표가 서로 교차합니다.">
   <style>
     .pg1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
     .pg1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -113,7 +113,6 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
     .pg1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pg1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
     .pg1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
-    .pg1-cap2 { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pg1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#pg1Head); }
   </style>
   <defs>
@@ -154,7 +153,6 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
   <path d="M162,114 C205,114 210,55 246,55" class="pg1-arr"/>
   <path d="M162,166 C205,166 210,203 246,203" class="pg1-arr"/>
   <text x="240" y="274" class="pg1-cap">페이지 테이블이 논리 → 물리 매핑을 관리</text>
-  <text x="240" y="296" class="pg1-cap2">물리 페이지가 흩어져 있어도 프로그램은 연속으로 본다</text>
 </svg>
 </div>
 
@@ -169,10 +167,10 @@ PagedAttention은 페이징을 KV Cache에 그대로 옮겨옵니다. 이름의 
 KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(block)**으로 잘게 나눕니다. 블록 하나는 기본적으로 **16개 토큰**의 Key와 Value를 담습니다(`--block-size`로 조정 가능). 그리고 각 시퀀스는 자신의 **블록 테이블(block table)**을 갖습니다. 페이지 테이블과 정확히 같은 역할로, 시퀀스의 논리 블록이 물리 메모리의 어느 블록에 담겨 있는지를 매핑합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 305" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 294" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="PagedAttention 블록 테이블의 논리 블록과 물리 블록 매핑. 왼쪽에 논리 블록 0(토큰 0~15), 1(토큰 16~31), 2(토큰 32~47)가 연속으로 붙어 있고, 오른쪽 물리 블록 풀에는 블록 3, 7, 9가 다른 시퀀스가 쓰는 블록들 사이에 흩어져 있다. 블록 테이블이 논리 블록 0을 물리 블록 7로, 1을 3으로, 2를 9로 잇는 화살표가 서로 교차한다.">
+     role="img" aria-label="PagedAttention 블록 테이블의 논리 블록과 물리 블록 매핑. 왼쪽에 논리 블록 0(토큰 0~15), 1(토큰 16~31), 2(토큰 32~47)가 연속으로 붙어 있고, 오른쪽 물리 블록 풀에는 블록 3, 7, 9가 다른 시퀀스가 쓰는 블록들 사이에 흩어져 있습니다. 블록 테이블이 논리 블록 0을 물리 블록 7로, 1을 3으로, 2를 9로 잇는 화살표가 서로 교차합니다.">
   <style>
     .bt1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
     .bt1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -184,7 +182,6 @@ KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(
     .bt1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .bt1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
     .bt1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
-    .bt1-cap2 { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .bt1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#bt1Head); }
   </style>
   <defs>
@@ -225,7 +222,6 @@ KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(
   <path d="M162,114 C205,114 210,55 246,55" class="bt1-arr"/>
   <path d="M162,166 C205,166 210,203 246,203" class="bt1-arr"/>
   <text x="240" y="274" class="bt1-cap">블록 테이블이 논리 → 물리 매핑을 관리</text>
-  <text x="240" y="296" class="bt1-cap2">논리 순서 0, 1, 2가 물리 7, 3, 9로 흩어져도 문제없다</text>
 </svg>
 </div>
 

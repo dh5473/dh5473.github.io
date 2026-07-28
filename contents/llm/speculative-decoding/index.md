@@ -22,7 +22,7 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
 한 iteration은 이렇게 돌아갑니다. 먼저 **draft** 역할의 작은 모델이 토큰을 γ개 생성합니다. γ는 미리 그려놓을 draft 토큰 수로 보통 한 자릿수이고, 작은 모델이라 γ번을 돌아도 큰 모델 한 번보다 쌉니다. 그다음 **target**인 큰 모델이 forward 한 번으로 γ개 위치의 확률분포를 전부 계산합니다. 프롬프트를 병렬로 처리하던 prefill과 같은 병렬성입니다. 이제 각 위치에서 draft가 내놓은 토큰을 target의 분포와 비교해 수락하거나 거절합니다. 처음 거절이 난 위치에서는 target의 분포로 토큰을 다시 뽑고, 그 뒤에 남은 draft는 버립니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 350" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 350" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="draft 모델이 그린 다섯 개의 토큰을 target 모델이 forward 한 번으로 병렬 검증해 앞의 세 개를 수락하고 네 번째를 거절한 뒤 나머지 하나를 버리고, target이 다시 뽑은 토큰 한 개를 더해 이번 iteration에 네 토큰을 확정하는 과정">
@@ -49,7 +49,7 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
     </marker>
   </defs>
   <!-- 1단: draft 제안 -->
-  <text x="240" y="20" class="sd1-cap">draft 모델이 토큰 5개를 미리 그린다</text>
+  <text x="240" y="20" class="sd1-cap">draft 모델이 토큰 5개를 미리 생성</text>
   <rect x="20"  y="32" width="80" height="48" rx="8" class="sd1-box"/>
   <rect x="110" y="32" width="80" height="48" rx="8" class="sd1-box"/>
   <rect x="200" y="32" width="80" height="48" rx="8" class="sd1-box"/>

@@ -28,7 +28,7 @@ Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청�
 모델이 도구를 선택한 뒤, 그 특정 호출이 허용되는지를 7단계 파이프라인이 평가합니다. 이 글의 본론입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 858" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="퍼미션 판단의 2단계 구조. 위 패널은 모델 호출 전 사전 필터가 도구 목록을 축소하는 과정, 아래 패널은 모델이 도구를 선택한 뒤 실행 여부를 판단하는 과정을 보여줍니다.">
+<svg viewBox="0 0 480 858" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="퍼미션 판단의 2단계 구조. 위 패널은 모델 호출 전 사전 필터가 도구 목록을 축소하는 과정, 아래 패널은 모델이 도구를 선택한 뒤 실행 여부를 판단하는 과정을 보여줍니다.">
   <style>
     .pp2p-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pp2p-step { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -91,9 +91,6 @@ Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청�
   <text x="240" y="818" class="pp2p-t">실행 또는 거부 라우팅</text>
 </svg>
 </div>
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>퍼미션은 모델 호출 전후 두 지점에서 작동합니다. 위는 도구 목록 자체를 줄이는 사전 필터, 아래는 개별 호출을 평가하는 사후 판단입니다.</em>
-</p>
 
 이 2-phase 구조가 중요한 이유는 **정보 이론적 차이** 때문입니다. Phase 1에서 도구를 제거하면, 모델은 그 도구의 존재 자체를 모릅니다. 호출을 시도할 수도 없습니다. Phase 2에서 거부하면, 모델은 도구의 존재를 알고 호출을 시도했지만 차단된 것입니다. 전자가 구조적으로 더 강력한 제약입니다.
 
@@ -171,7 +168,7 @@ def should_prompt(mode: PermissionMode, tool_name: str,
 도구 호출이 도착하면 다음 7단계를 순서대로 거칩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 624" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
+<svg viewBox="0 0 480 520" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
   <style>
     .pps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pps-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
@@ -235,16 +232,8 @@ def should_prompt(mode: PermissionMode, tool_name: str,
   <text x="170" y="489" class="pps-t" style="font-weight:600">7. Execute or Route</text>
   <!-- safe / approve 합류 레일: Stage 7 박스로 직접 진입 -->
   <path d="M400 244 V482 H326" class="pps-arr-a"/>
-  <!-- Note -->
-  <rect x="10" y="524" width="460" height="88" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1" stroke-dasharray="4"/>
-  <text x="240" y="552" class="pps-note">핵심: Stage 2(deny)가 Stage 3(allow)보다</text>
-  <text x="240" y="576" class="pps-note">먼저 실행됩니다. deny에 매칭되면</text>
-  <text x="240" y="600" class="pps-note">allow를 검사하지 않고 즉시 거부합니다</text>
 </svg>
 </div>
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>Deny-first 퍼미션 파이프라인의 7단계. Deny Rules가 Allow Rules보다 먼저 평가됩니다.</em>
-</p>
 
 각 단계를 살펴보겠습니다.
 

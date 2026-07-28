@@ -26,7 +26,7 @@ INSERT가 실행되면 ClickHouse는 데이터를 `ORDER BY` 순서로 정렬한
 Part 이름에는 이력이 담겨 있습니다. 1,000만 행을 한 번에 INSERT하면 `all_1_1_0`이라는 Part 하나가 만들어집니다. 이 이름을 분해해봅시다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Part 이름 all_1_1_0을 partition_id, min_block, max_block, level 네 부분으로 분해한 그림">
@@ -128,8 +128,8 @@ Granule은 디스크에 별도 파일로 존재하지 않습니다. 컬럼 데�
 
 Granule 크기는 인덱스 크기와 읽기 정밀도 사이의 트레이드오프입니다.
 
-- **Granule이 작으면**: 인덱스 엔트리가 많아져서 메모리를 더 쓰지만, 불필요한 행을 덜 읽는다
-- **Granule이 크면**: 인덱스가 작아서 메모리 효율이 좋지만, 필요 없는 행까지 더 많이 읽는다
+- **Granule이 작으면**: 인덱스 엔트리가 많아져서 메모리를 더 쓰지만, 불필요한 행을 덜 읽습니다
+- **Granule이 크면**: 인덱스가 작아서 메모리 효율이 좋지만, 필요 없는 행까지 더 많이 읽습니다
 
 8,192행은 이 트레이드오프의 균형점입니다. 10억 행 테이블이라도 인덱스 엔트리가 약 122,000개밖에 되지 않아 수 MB 수준으로 메모리에 전부 올립니다. 같은 10억 행에 대해 PostgreSQL의 B-tree는 10억 개의 엔트리를 수 GB 규모로 유지해야 합니다.
 
@@ -146,7 +146,7 @@ Granule 크기는 인덱스 크기와 읽기 정밀도 사이의 트레이드오
 Granule 경계는 **모든 컬럼에 동일하게 적용**됩니다. Granule 0은 모든 컬럼 파일에서 행 0\~8,191을 의미합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 268" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 268" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="네 개의 컬럼 bin 파일에 granule 경계가 동일하게 적용되어 같은 granule 번호가 모든 컬럼에서 같은 행 범위를 가리키는 그림">
@@ -218,7 +218,7 @@ Granule 경계는 **모든 컬럼에 동일하게 적용**됩니다. Granule 0�
 하나의 압축 블록 안에 여러 granule이 들어갈 수 있습니다. UInt32 컬럼의 경우 한 granule이 8,192 × 4바이트 = 약 32KB이므로, 두 granule 정도가 하나의 64KB 블록에 패킹됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="price.bin 파일 안의 압축 블록 두 개가 각각 granule 두 개씩을 담고 있는 구조를 보여주는 그림">
@@ -291,7 +291,7 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 세 파일의 연결을 한눈에 보면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 646" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 646" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="primary.idx가 granule 번호를 내놓고, price.mrk2가 그 번호를 바이트 오프셋으로 바꾸고, price.bin의 압축 블록을 읽는 3단계 읽기 경로를 위에서 아래로 보여주는 그림">
@@ -424,15 +424,15 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 
 `WHERE category = '전자제품'`이 들어오면 ClickHouse는 다음 순서로 동작합니다.
 
-1. WHERE 조건에서 PRIMARY KEY 컬럼(`category`)에 대한 조건을 추출한다
-2. `primary.idx`를 이진 탐색하여 `category = '전자제품'`에 해당하는 granule 범위를 찾는다
-3. 해당 범위 밖의 granule은 전부 **skip**(pruning)한다
-4. 선택된 granule만 Mark → Column 파일 경로로 읽는다
+1. WHERE 조건에서 PRIMARY KEY 컬럼(`category`)에 대한 조건을 추출합니다
+2. `primary.idx`를 이진 탐색하여 `category = '전자제품'`에 해당하는 granule 범위를 찾습니다
+3. 해당 범위 밖의 granule은 전부 **skip**(pruning)합니다
+4. 선택된 granule만 Mark → Column 파일 경로로 읽습니다
 
 데이터가 `ORDER BY (category, created_at)` 순으로 정렬되어 있으므로, 같은 category의 행들은 연속된 granule에 모여 있습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="전체 1221개 granule 중 전자제품에 해당하는 916번부터 1068번까지 153개만 선택되고 나머지 1068개는 건너뛰는 것을 막대로 보여주는 그림">
@@ -476,7 +476,7 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 `SELECT avg(price) FROM orders WHERE category = '전자제품'`이 실행되는 전체 경로를 따라가 봅시다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="쿼리가 primary.idx 이진 탐색, mark 오프셋 조회, 압축 블록 해제, WHERE 필터와 집계, 결과 반환의 다섯 단계를 거치는 흐름과 열지 않는 파일 목록을 보여주는 그림">

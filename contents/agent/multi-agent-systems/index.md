@@ -79,7 +79,7 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 피어 토폴로지는 고객 지원처럼 요청 유형에 따라 전문가가 달라지는 도메인에 적합합니다. 하지만 제어 흐름을 추적하기 어렵고, 에이전트 간 상태 일관성을 보장하기 힘듭니다.
 
 <div style="text-align: center; margin: 24px 0;">
-<svg viewBox="0 0 480 686" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 가지 조정 토폴로지를 위에서 아래로 나란히 보여주는 그림. 스타는 오케스트레이터 하나가 워커 세 개에 작업을 위임하고, 파이프라인은 Planner에서 Generator, Evaluator로 이어지며 Evaluator가 Generator로 피드백을 돌려보내고 파일로 상태를 공유하며, 피어는 Triage가 전문가 A와 B로 요청을 넘기고 두 전문가끼리도 핸드오프합니다.">
+<svg viewBox="0 0 480 686" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="세 가지 조정 토폴로지를 위에서 아래로 나란히 보여주는 그림. 스타는 오케스트레이터 하나가 워커 세 개에 작업을 위임하고, 파이프라인은 Planner에서 Generator, Evaluator로 이어지며 Evaluator가 Generator로 피드백을 돌려보내고 파일로 상태를 공유하며, 피어는 Triage가 전문가 A와 B로 요청을 넘기고 두 전문가끼리도 핸드오프합니다.">
 <style>
 .tp8-title { font-size: 22px; font-weight: 700; text-anchor: middle; }
 .tp8-text { font-size: 20px; text-anchor: middle; }
@@ -139,9 +139,6 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 <text x="240" y="670" class="tp8-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
 </svg>
 </div>
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>세 가지 조정 토폴로지. 스타는 중앙 오케스트레이터가 모든 조정을 담당하고, 파이프라인은 역할별 에이전트가 순차적으로 연결되되 피드백 루프를 포함하며, 피어는 에이전트 간 수평 핸드오프로 제어권이 이동합니다.</em>
-</p>
 
 세 토폴로지는 서로 배타적이지 않습니다. Anthropic의 harness 아키텍처는 전체적으로 파이프라인(Planner → Generator → Evaluator)이지만, Generator가 서브에이전트를 생성하면 그 내부는 스타 토폴로지가 됩니다. 프로덕션 시스템은 보통 여러 토폴로지를 합성합니다.
 
@@ -319,7 +316,7 @@ Claude Code의 퍼미션 모드 중에는 `bubble`이 있습니다. 판단을 �
 서브에이전트가 `bubble` 모드로 실행 중일 때, 퍼미션이 필요한 도구 호출을 만나면 자체적으로 판단하지 않습니다. 대신 `EscalateToParent` 예외를 발생시켜 부모 에이전트로 올립니다. 부모 에이전트는 자신의 퍼미션 모드(default, auto, dontAsk 등)에 따라, 거부 규칙을 먼저 훑고 허용 규칙과 분류기를 차례로 거쳐 마지막에 사용자에게 묻는 deny-first 파이프라인으로 평가합니다. 평가 결과(허용 또는 거부)는 서브에이전트에게 돌아가고, 서브에이전트는 그 결과에 따라 실행을 계속하거나 대안을 찾습니다.
 
 <div style="text-align: center; margin: 24px 0;">
-<svg viewBox="0 0 480 456" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="bubble 모드 에스컬레이션 흐름도. 서브에이전트가 EscalateToParent로 부모 에이전트에게 판단을 올리고, 부모가 Deny-First 파이프라인으로 7단계 평가를 거친 뒤, 허용이면 도구를 실행하고 거부면 대안을 탐색하거나 중단합니다.">
+<svg viewBox="0 0 480 456" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="bubble 모드 에스컬레이션 흐름도. 서브에이전트가 EscalateToParent로 부모 에이전트에게 판단을 올리고, 부모가 Deny-First 파이프라인으로 7단계 평가를 거친 뒤, 허용이면 도구를 실행하고 거부면 대안을 탐색하거나 중단합니다.">
 <style>
 .es8-text { font-size: 20px; text-anchor: middle; }
 .es8-sub { font-size: 17px; text-anchor: middle; }
@@ -372,9 +369,6 @@ Claude Code의 퍼미션 모드 중에는 `bubble`이 있습니다. 판단을 �
 <text x="372" y="421" class="es8-text" fill="var(--text, #1c1917)">대안 탐색</text>
 </svg>
 </div>
-<p align="center" style="color: var(--text-muted, #78716c); font-size: 14px;">
-  <em>bubble 모드 에스컬레이션 흐름. 서브에이전트가 퍼미션 판단을 부모에게 위임하고, 부모의 파이프라인이 평가한 결과에 따라 실행이 결정됩니다.</em>
-</p>
 
 이 구조의 핵심 보안 속성은 **최소 권한 원칙**입니다. 서브에이전트는 부모의 퍼미션을 상속하되, 부모보다 더 많은 권한을 가질 수 없습니다. 부모가 `default` 모드(모든 쓰기에 사용자 승인 필요)라면, 서브에이전트가 에스컬레이션한 쓰기 작업도 사용자의 승인을 거칩니다.
 

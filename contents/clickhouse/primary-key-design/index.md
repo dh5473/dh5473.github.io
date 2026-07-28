@@ -60,7 +60,7 @@ PRIMARY KEY (event_date, user_id);
 이 경우 데이터는 `(event_date, user_id, event_type)` 순서로 물리 정렬되지만, `primary.idx`에는 `(event_date, user_id)`만 기록됩니다. `event_type`은 인덱스에 들어가지 않지만 정렬에는 참여하므로, 같은 `(event_date, user_id)` 안에서 `event_type`으로 데이터가 정렬됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 270" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 270" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="ORDER BY에 지정한 세 컬럼 중 앞의 두 컬럼만 PRIMARY KEY로 지정했을 때, 희소 인덱스에는 앞 두 컬럼만 기록되고 물리 정렬은 세 컬럼 전체를 따른다는 것을 보여주는 그림">
@@ -126,7 +126,7 @@ ORDER BY 설계에서 가장 중요한 규칙은 컬럼의 카디널리티(cardi
 앞 컬럼의 카디널리티가 **높으면**, 같은 값의 구간이 매우 좁습니다. 극단적으로 1 Granule 이하면, 두 번째 컬럼은 아무리 좋은 조건을 걸어도 추가로 건너뛸 Granule이 없습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="정렬 키 순서에 따른 데이터 물리 배치 차이. 위는 카디널리티가 낮은 status를 앞에 둬서 같은 값의 구간이 세 Granule에 걸치는 경우, 아래는 카디널리티가 높은 user_id를 앞에 둬서 구간이 한 Granule보다 좁아지는 경우">
@@ -270,10 +270,10 @@ ORDER BY 설계에서 컬럼 순서가 중요한 근본적인 이유입니다.
 `ORDER BY (a, b, c)`로 정의된 테이블에서 희소 인덱스는 `(a, b, c)` 순서의 정렬에 기반합니다. 따라서 인덱스가 효과를 발휘하려면 **접두사(prefix)** 순서로 필터링해야 합니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 388" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="ORDER BY (a, b, c) 테이블에서 WHERE 조건별로 a, b, c 중 어떤 컬럼이 희소 인덱스에 쓰이는지 정리한 표. 접두사 조건만 인덱스를 타고, b나 c 단독 조건은 전체 스캔이 된다">
+     role="img" aria-label="ORDER BY (a, b, c) 테이블에서 WHERE 조건별로 a, b, c 중 어떤 컬럼이 희소 인덱스에 쓰이는지 정리한 표. 접두사 조건만 인덱스를 타고, b나 c 단독 조건은 전체 스캔이 됩니다">
 <style>
 .pf5-t { fill: var(--text, #1c1917); }
 .pf5-m { fill: var(--text-muted, #78716c); }
@@ -337,9 +337,6 @@ ORDER BY 설계에서 컬럼 순서가 중요한 근본적인 이유입니다.
 <text class="pf5-w" x="321" y="363" text-anchor="middle" font-size="18">✓</text>
 <text class="pf5-d" x="367" y="363" text-anchor="middle" font-size="18">✗</text>
 <text class="pf5-d" x="413" y="363" text-anchor="middle" font-size="18">✗</text>
-<!-- 보충 설명 -->
-<text class="pf5-m" x="240" y="402" text-anchor="middle" font-size="17">b나 c 단독 조건은 값이 흩어져 있어</text>
-<text class="pf5-m" x="240" y="424" text-anchor="middle" font-size="17">바이너리 서치를 쓸 수 없습니다</text>
 </svg>
 </div>
 
@@ -642,10 +639,10 @@ SELECT count() FROM prefix_test WHERE a = 5 AND b = 500;
 세 쿼리가 읽는 Granule 수를 실제 비율대로 그리면 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 325" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 325" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="전체 62개 Granule 중 세 쿼리가 각각 읽는 Granule 수를 비율대로 그린 막대. a는 7개, b 단독은 62개 전부, a와 b를 함께 걸면 1개만 읽는다">
+     role="img" aria-label="전체 62개 Granule 중 세 쿼리가 각각 읽는 Granule 수를 비율대로 그린 막대. a는 7개, b 단독은 62개 전부, a와 b를 함께 걸면 1개만 읽습니다">
 <defs>
 <pattern id="gr5Tick" width="7.2258" height="34" patternUnits="userSpaceOnUse">
 <line x1="7.2258" y1="0" x2="7.2258" y2="34" stroke="var(--bg, #fafaf8)" stroke-width="1" />
