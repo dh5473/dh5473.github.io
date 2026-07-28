@@ -486,3 +486,15 @@ composite index 설계 또는 Index-Only Scan이 기대대로 안 걸릴 때 점
 인덱스가 디스크에 어떻게 올라가 있고, 한 쿼리가 루트부터 리프까지 어떻게 걸어가는지가 이제 보입니다. 선두 컬럼 규칙, Index-Only Scan이 VM에 의존하는 이유, LIKE의 궁합까지, 겉보기에 서로 달라 보이던 현상들이 모두 "B-tree는 정렬된 자료구조"라는 한 문장으로 설명됩니다.
 
 다음 글에서는 B-tree가 못 하는 문제들을 봅니다. JSONB 포함 관계 조회, 전문 검색, 시계열 대용량 테이블, 지리 공간. 이 영역에서 GIN, GiST, BRIN, Hash가 각각 어떤 자료구조로 다른 접근 방식을 제공하는지 따라갑니다.
+
+---
+
+## 참고자료
+
+- PostgreSQL 18 공식 문서: [Chapter 11. Indexes](https://www.postgresql.org/docs/18/indexes.html)
+- [B-Tree Indexes](https://www.postgresql.org/docs/18/btree.html): 페이지 구조, deduplication, PG 18의 skip scan
+- [Multicolumn Indexes](https://www.postgresql.org/docs/18/indexes-multicolumn.html): 복합 인덱스의 선두 컬럼 규칙과 skip scan이 걸리는 조건
+- [Index-Only Scans and Covering Indexes](https://www.postgresql.org/docs/18/indexes-index-only-scans.html): visibility map 의존과 `INCLUDE` covering index
+- [pageinspect](https://www.postgresql.org/docs/18/pageinspect.html): `bt_metap`, `bt_page_items`로 인덱스 페이지를 덤프하는 확장
+- Hironobu Suzuki, *The Internals of PostgreSQL*, [Chapter 7: HOT and Index-Only Scans](https://www.interdb.jp/pg/pgsql07.html)
+- `src/backend/access/nbtree/README`: B-tree 구현의 설계 노트 (소스 레벨 참고)

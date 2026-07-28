@@ -443,3 +443,15 @@ PostgreSQL은 MySQL의 `STRAIGHT_JOIN`이나 Oracle의 `/*+ USE_NL */` 같은 **
 세 조인 알고리즘은 각각 다른 cost 공식을 갖고 있고, 플래너는 양쪽 입력 크기·인덱스·메모리 상황을 통계로 추정해 그중 가장 싼 것을 고릅니다. 같은 쿼리가 상황마다 다른 plan으로 풀리는 이유는 이 비교의 결과가 달라지기 때문이고, bad plan 대부분은 알고리즘 자체가 아니라 **추정치가 틀어져서** 발생합니다.
 
 다음 글에서는 한 쿼리를 여러 worker가 나눠 처리하는 **병렬 쿼리**와 테이블을 작게 쪼개 필요한 조각만 스캔하는 **파티셔닝**을 다룹니다. 대용량 데이터를 다루는 두 가지 서로 다른 축을 비교하며 언제 어느 것이 유효한지 살펴봅니다.
+
+---
+
+## 참고자료
+
+- PostgreSQL 18 공식 문서: [Chapter 14. Performance Tips](https://www.postgresql.org/docs/18/performance-tips.html)
+- [Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html): Hash Join의 `Buckets`, `Batches` 등 실행 계획 출력 읽는 법
+- [Controlling the Planner with Explicit JOIN Clauses](https://www.postgresql.org/docs/18/explicit-joins.html): `join_collapse_limit`, `from_collapse_limit`이 조인 순서 탐색 범위를 정하는 방식
+- [Chapter 61. Genetic Query Optimizer](https://www.postgresql.org/docs/18/geqo.html): 테이블 수가 많을 때 쓰이는 유전자 알고리즘 기반 조인 순서 탐색
+- [Query Planning](https://www.postgresql.org/docs/18/runtime-config-query.html): `enable_nestloop`, `enable_hashjoin`, `geqo_threshold` 등 플래너 파라미터
+- [Resource Consumption](https://www.postgresql.org/docs/18/runtime-config-resource.html): `work_mem`과 `hash_mem_multiplier`의 할당 규칙
+- Hironobu Suzuki, *The Internals of PostgreSQL*, [Chapter 3: Query Processing](https://www.interdb.jp/pg/pgsql03.html)

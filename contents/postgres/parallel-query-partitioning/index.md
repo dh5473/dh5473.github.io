@@ -391,3 +391,14 @@ WHERE created_at >= '2026-04-15'::date;
 병렬 쿼리와 파티셔닝은 둘 다 "데이터를 쪼개 처리한다"는 공통 목적을 갖지만, 하나는 실행 시점에 CPU를 나눠 쓰는 전략이고 다른 하나는 저장 시점부터 테이블 자체를 나누는 전략입니다. 같은 큰 테이블이라도 집계가 주라면 병렬이, 조건이 파티션 키로 자주 좁혀진다면 파티셔닝이 자연스러운 선택입니다. 두 기능은 배타적이지 않아서 Parallel Append 같은 조합도 가능합니다.
 
 인덱스에서 시작해 통계, 조인, 쪼개기까지 단일 쿼리가 빨라지는(혹은 느려지는) 축들을 훑어왔습니다. 다음 글부터는 동시성과 내구성 쪽으로 방향을 틉니다. 첫 주제는 **VACUUM과 bloat**입니다. MVCC가 남긴 dead tuple을 누가, 언제, 어떻게 치우는지, 왜 운영 환경에서 VACUUM이 쉽게 말썽의 중심이 되는지 다룹니다.
+
+---
+
+## 참고자료
+
+- PostgreSQL 18 공식 문서: [Chapter 15. Parallel Query](https://www.postgresql.org/docs/18/parallel-query.html)
+- [When Can Parallel Query Be Used?](https://www.postgresql.org/docs/18/when-can-parallel-query-be-used.html): 병렬 plan이 아예 만들어지지 않는 조건들
+- [Parallel Plans](https://www.postgresql.org/docs/18/parallel-plans.html): `Gather`, `Gather Merge`, Parallel Append, Parallel Hash Join
+- [Table Partitioning](https://www.postgresql.org/docs/18/ddl-partitioning.html): RANGE/LIST/HASH 전략, partition pruning, 선언적 파티셔닝의 제약
+- [Resource Consumption](https://www.postgresql.org/docs/18/runtime-config-resource.html): `max_worker_processes`, `max_parallel_workers`, `max_parallel_workers_per_gather`, `parallel_leader_participation`
+- [Query Planning](https://www.postgresql.org/docs/18/runtime-config-query.html): `min_parallel_table_scan_size`, `parallel_setup_cost`, `enable_partitionwise_join`, `plan_cache_mode`

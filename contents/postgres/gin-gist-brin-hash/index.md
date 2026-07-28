@@ -497,3 +497,15 @@ Hash는 실무 빈도가 낮습니다. B-tree도 equality를 잘 풀어내는 �
 ## 마치며
 
 이 글에서 B-tree가 커버하지 못하는 영역을 네 가지 인덱스로 메웠습니다. 하지만 인덱스가 있다고 플래너가 꼭 쓰는 것도 아니고, 같은 SQL이 테이블 크기나 통계에 따라 다른 plan으로 가기도 합니다. "인덱스가 있는데 왜 안 타지?"의 답은 이제 인덱스 구조가 아니라 **플래너가 cost를 어떻게 계산하느냐**에 달려 있고, 그 계산의 재료가 `pg_statistic`에 쌓이는 통계입니다. 다음 글에서는 그 통계가 어떻게 모이고, `EXPLAIN` 출력의 숫자들이 어디서 나오는지 따라가겠습니다.
+
+---
+
+## 참고자료
+
+- PostgreSQL 18 공식 문서: [Chapter 65. Built-in Index Access Methods](https://www.postgresql.org/docs/18/indextypes.html)
+- [GIN Indexes](https://www.postgresql.org/docs/18/gin.html): entry tree와 posting list 구조, `fastupdate`와 pending list
+- [GiST Indexes](https://www.postgresql.org/docs/18/gist.html): 경계 상자 기반 트리와 opclass가 채워야 할 인터페이스
+- [BRIN Indexes](https://www.postgresql.org/docs/18/brin.html): block range 요약 방식과 `pages_per_range`
+- [Hash Indexes](https://www.postgresql.org/docs/18/hash-index.html): 버킷 구조와 equality 전용이라는 제약
+- [jsonb Indexing](https://www.postgresql.org/docs/18/datatype-json.html#JSON-INDEXING): `jsonb_ops`와 `jsonb_path_ops`가 지원하는 연산자 차이
+- [pg_trgm](https://www.postgresql.org/docs/18/pgtrgm.html): trigram 분해, `gin_trgm_ops` / `gist_trgm_ops`, 거리 연산자 `<->`
