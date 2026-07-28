@@ -15,6 +15,51 @@ thumbnail: './thumbnail.png'
 
 느린 쿼리를 잡는 일은 **범위를 좁혀가는 과정**입니다. 전체 워크로드에서 병목을 찾고, 그 쿼리의 실행 계획을 확인하고, 지금 이 순간 무엇에 막혀 있는지를 확인합니다. 이 글에서는 그 과정에서 쓰는 도구들을 순서대로 따라갑니다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 330" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="관측 도구의 세 층위. pg_stat_statements는 전체 워크로드에서 어떤 쿼리가 시간을 가장 많이 쓰는지, EXPLAIN ANALYZE는 그 쿼리 한 번이 어디에서 시간을 쓰는지, wait_event는 지금 그 쿼리가 무엇을 기다리는지를 보여준다">
+<defs>
+<marker id="sqfArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<style>
+.sqf-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.sqf-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0d9488); }
+.sqf-s { font-size: 17px; fill: var(--text, #1c1917); }
+.sqf-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
+.sqf-n { font-size: 17px; fill: var(--text-muted, #78716c); }
+.sqf-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+</style>
+<!-- layer 1: whole workload -->
+<rect class="sqf-box" x="20" y="16" width="440" height="84" rx="8"/>
+<text class="sqf-h" x="40" y="44">pg_stat_statements</text>
+<text class="sqf-tag" x="440" y="44" text-anchor="end">워크로드 전체</text>
+<text class="sqf-s" x="40" y="68">전체 워크로드 중 어떤 쿼리가</text>
+<text class="sqf-s" x="40" y="88">시간을 가장 많이 쓰는가</text>
+<!-- narrowing 1 -->
+<line class="sqf-ln" x1="240" y1="100" x2="240" y2="122" marker-end="url(#sqfArrow)"/>
+<text class="sqf-n" x="252" y="118">쿼리 하나로 좁힌다</text>
+<!-- layer 2: one query -->
+<rect class="sqf-box" x="60" y="124" width="360" height="84" rx="8"/>
+<text class="sqf-h" x="80" y="152">EXPLAIN ANALYZE</text>
+<text class="sqf-tag" x="400" y="152" text-anchor="end">쿼리 하나</text>
+<text class="sqf-s" x="80" y="176">그 쿼리 한 번의 실행이</text>
+<text class="sqf-s" x="80" y="196">어디에서 시간을 쓰는가</text>
+<!-- narrowing 2 -->
+<line class="sqf-ln" x1="240" y1="208" x2="240" y2="230" marker-end="url(#sqfArrow)"/>
+<text class="sqf-n" x="252" y="226">그 순간의 대기로 좁힌다</text>
+<!-- layer 3: one moment -->
+<rect class="sqf-box" x="100" y="232" width="280" height="84" rx="8"/>
+<text class="sqf-h" x="120" y="260">wait_event</text>
+<text class="sqf-tag" x="360" y="260" text-anchor="end">한 순간</text>
+<text class="sqf-s" x="120" y="284">지금 그 쿼리가</text>
+<text class="sqf-s" x="120" y="304">무엇을 기다리는가</text>
+</svg>
+</div>
+
 ## "느리다"의 네 가지 유형
 
 추적 방법을 고르기 전에, "느리다"가 어떤 상황인지를 먼저 분류해야 합니다.
@@ -61,8 +106,8 @@ ORDER BY total_exec_time DESC
 LIMIT 10;
 ```
 
-```
- queryid  |                          query_preview                          | calls  | total_ms  | mean_ms | rows
+```text
+ queryid  |                         query_preview                          | calls  | total_ms  | mean_ms | rows
 ----------+----------------------------------------------------------------+--------+-----------+---------+--------
  38291048 | SELECT u.*, p.* FROM users u JOIN posts p ON p.user_id = u.id  |  84200 |  192847.3 |    2.3  | 421000
  72910384 | UPDATE user_sessions SET last_active_at = $1 WHERE id = $2     | 520100 |  156220.1 |    0.3  | 520100
@@ -71,15 +116,21 @@ LIMIT 10;
 
 이 결과를 읽는 핵심은 `total_exec_time`입니다. 한 번에 2.3ms밖에 안 걸리는 쿼리라도 84,000번 호출되면 전체 시간의 상당 부분을 차지합니다. mean이 낮다고 무시하면 안 됩니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  <code>pg_stat_statements_reset()</code>을 호출하면 통계가 초기화됩니다. 배포 직후나 점검 직후에 리셋해두면 "이번 기간에 무엇이 문제였는가"를 더 명확하게 볼 수 있습니다.
-</div>
+:::info
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  기본 설정(<code>pg_stat_statements.track = 'top'</code>)에서는 최상위 문장만 추적됩니다. PL/pgSQL 함수나 프로시저 안에서 실행되는 SQL은 보이지 않습니다. 내부 쿼리까지 추적하려면 <code>pg_stat_statements.track = 'all'</code>로 설정합니다.
-</div>
+**통계 리셋**
+
+`pg_stat_statements_reset()`을 호출하면 통계가 초기화됩니다. 배포 직후나 점검 직후에 리셋해두면 "이번 기간에 무엇이 문제였는가"를 더 명확하게 볼 수 있습니다.
+
+:::
+
+:::info
+
+**추적 범위**
+
+기본 설정(`pg_stat_statements.track = 'top'`)에서는 최상위 문장만 추적됩니다. PL/pgSQL 함수나 프로시저 안에서 실행되는 SQL은 보이지 않습니다. 내부 쿼리까지 추적하려면 `pg_stat_statements.track = 'all'`로 설정합니다.
+
+:::
 
 ### 어떤 컬럼을 봐야 하나
 
@@ -103,7 +154,7 @@ LIMIT 10;
 
 ### EXPLAIN만으로는 왜 부족한가
 
-[플래너 통계 글](/postgres/planner-statistics/)에서 `EXPLAIN ANALYZE`로 실행 계획을 읽는 법을 다뤘습니다. 하지만 운영 환경에서는 "그 느린 순간"을 재현하기 어렵습니다.
+`EXPLAIN ANALYZE`는 쿼리를 실제로 실행한 뒤 [플래너가 세운 계획](/postgres/planner-statistics/)과 실제 결과를 나란히 보여줍니다. 하지만 운영 환경에서는 "그 느린 순간"을 재현하기 어렵습니다.
 
 - 파라미터 바인딩 값에 따라 plan이 달라진다
 - 통계가 갱신된 직후와 직전에 plan이 바뀐다
@@ -132,10 +183,13 @@ SELECT pg_reload_conf();
 | `log_buffers` | on | shared_blks_hit/read 포함 |
 | `log_format` | json 또는 text | json이면 파싱 쉬움 |
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  <code>log_analyze = on</code>은 실행 중인 쿼리에 노드별 계측(instrumentation)을 추가해서 actual rows와 actual time을 기록합니다. 쿼리를 다시 실행하는 것은 아니지만, 각 노드에서 시간을 측정하는 소량의 오버헤드가 발생합니다. 오버헤드가 걱정된다면 <code>auto_explain.log_timing = off</code>로 시간 측정만 끄고 actual rows만 수집할 수 있습니다. threshold를 너무 낮게 잡으면 로그 볼륨이 급격히 늘어나므로, 운영에서는 1초부터 시작해서 점진적으로 낮추는 게 안전합니다.
-</div>
+:::warning
+
+**주의**
+
+`log_analyze = on`은 실행 중인 쿼리에 노드별 계측(instrumentation)을 추가해서 actual rows와 actual time을 기록합니다. 쿼리를 다시 실행하는 것은 아니지만, 각 노드에서 시간을 측정하는 소량의 오버헤드가 발생합니다. 오버헤드가 걱정된다면 `auto_explain.log_timing = off`로 시간 측정만 끄고 actual rows만 수집할 수 있습니다. threshold를 너무 낮게 잡으면 로그 볼륨이 급격히 늘어나므로, 운영에서는 1초부터 시작해서 점진적으로 낮추는 게 안전합니다.
+
+:::
 
 ### 세션 단위로 켜기
 
@@ -172,12 +226,12 @@ WHERE state != 'idle'
 ORDER BY query_start;
 ```
 
-```
-  pid  |        state        | wait_event_type | wait_event |   duration   |                         query
--------+---------------------+-----------------+------------+--------------+-----------------------------------------------
- 12847 | active              | IO              | DataFileRead |  00:00:03.2 | SELECT * FROM orders WHERE created_at > $1..
+```text
+  pid  |        state        | wait_event_type |  wait_event   |  duration   |                    query
+-------+---------------------+-----------------+---------------+-------------+----------------------------------------------
+ 12847 | active              | IO              | DataFileRead  |  00:00:03.2 | SELECT * FROM orders WHERE created_at > $1..
  12891 | active              | Lock            | transactionid |  00:00:07.8 | UPDATE accounts SET balance = $1 WHERE id..
- 12903 | idle in transaction |                 |            |  00:02:14.0 | UPDATE orders SET status = $1 WHERE id = $2
+ 12903 | idle in transaction |                 |               |  00:02:14.0 | UPDATE orders SET status = $1 WHERE id = $2
 ```
 
 이 출력에서 핵심은 `wait_event_type`과 `wait_event`입니다.
@@ -192,7 +246,7 @@ ORDER BY query_start;
 | **BufferPin** | 버퍼 핀 대기 | [hot standby 충돌](/postgres/replication/)에서 자주 발생 |
 | (NULL) | 대기 없이 CPU에서 실행 중 | 반복 관찰되면 쿼리 자체가 무거움 (plan 확인) |
 
-`Lock` 대기가 보이면 [격리/락 글](/postgres/isolation-and-locks/)에서 다룬 `pg_blocking_pids`로 누가 잡고 있는지 찾습니다.
+`Lock` 대기가 보이면 [`pg_blocking_pids`](/postgres/isolation-and-locks/)로 누가 그 락을 잡고 있는지 찾습니다. 인자로 넘긴 pid를 막고 있는 세션의 pid 배열을 돌려주는 함수입니다.
 
 ```sql
 -- Lock 대기 중인 세션의 블로커 찾기
@@ -223,10 +277,13 @@ WHERE state = 'idle in transaction'
   AND now() - xact_start > interval '5 minutes';
 ```
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 팁</strong><br>
-  <code>idle_in_transaction_session_timeout</code>을 설정하면 일정 시간 이상 idle in transaction 상태가 지속된 세션을 자동으로 종료합니다. 운영 환경에서는 이 값을 설정해두는 것을 권장합니다.
-</div>
+:::tip
+
+**팁**
+
+`idle_in_transaction_session_timeout`을 설정하면 일정 시간 이상 idle in transaction 상태가 지속된 세션을 자동으로 종료합니다. 운영 환경에서는 이 값을 설정해두는 것을 권장합니다.
+
+:::
 
 ## pg_stat_user_tables: 테이블 건강 체크
 
@@ -274,37 +331,99 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 지금까지 소개한 도구들을 언제 어떤 순서로 쓰는지 정리합니다.
 
-```
-"DB가 느려요"
-     │
-     ▼
-pg_stat_statements: 전체 워크로드에서 TOP-N 쿼리 식별
-     │
-     ├─ mean_exec_time 높은 쿼리 → EXPLAIN ANALYZE
-     │       │
-     │       ├─ estimate vs actual 큰 괴리? → ANALYZE 실행 (통계 갱신)
-     │       ├─ Seq Scan on large table? → 인덱스 후보 검토
-     │       └─ Nested Loop rows 폭발? → 조인 순서/조인 방식 검토
-     │
-     ├─ shared_blks_read 높은 쿼리 → EXPLAIN (BUFFERS)로 원인 확인
-     │       ├─ Seq Scan? → 인덱스 누락 or 테이블 bloat (pgstattuple)
-     │       └─ Index Scan인데도 높음? → shared_buffers 부족 or working set 초과
-     │
-     └─ calls 비정상적으로 높은 쿼리 → N+1 문제, 어플리케이션 로직 점검
-     
-pg_stat_activity: 지금 느린 세션 확인
-     │
-     ├─ wait_event = Lock → pg_blocking_pids로 블로커 식별
-     ├─ wait_event = IO → shared_buffers 부족 or checkpoint 중
-     ├─ idle in transaction → 어플리케이션 버그, timeout 설정 필요
-     └─ wait_event = NULL (CPU) → 쿼리 자체가 무거움
-
-pg_stat_user_tables: 테이블 레벨 건강 체크
-     │
-     ├─ n_dead_tup 높음 → autovacuum 지연, 수동 VACUUM 고려
-     ├─ seq_scan >> idx_scan → 인덱스 누락
-     └─ last_autovacuum = NULL → autovacuum 설정 확인
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 948" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="느린 쿼리 진단 판단 트리. DB가 느리다는 신고에서 출발해 pg_stat_statements로 상위 쿼리를 고르고, EXPLAIN ANALYZE로 실행 계획을 읽고, pg_stat_activity로 지금 무엇을 기다리는지 보고, pg_stat_user_tables로 테이블 상태를 점검한다. 각 단계마다 관측된 조건과 그에 대응하는 다음 행동을 짝지어 보여준다">
+<defs>
+<marker id="sqtArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<style>
+.sqt-start { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.sqt-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.sqt-t { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
+.sqt-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0d9488); }
+.sqt-hs { font-size: 17px; fill: var(--text-muted, #78716c); }
+.sqt-c { font-size: 17px; fill: var(--text, #1c1917); }
+.sqt-a { font-size: 17px; fill: var(--primary, #0d9488); }
+.sqt-sep { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.sqt-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.sqt-dot { fill: var(--accent, #d97706); }
+</style>
+<!-- 출발점 -->
+<rect class="sqt-start" x="120" y="14" width="240" height="44" rx="8"/>
+<text class="sqt-t" x="240" y="43" text-anchor="middle">"DB가 느려요"</text>
+<line class="sqt-ln" x1="240" y1="58" x2="240" y2="76" marker-end="url(#sqtArrow)"/>
+<!-- 1단계: pg_stat_statements -->
+<rect class="sqt-box" x="14" y="80" width="452" height="176" rx="8"/>
+<text class="sqt-h" x="28" y="106">pg_stat_statements</text>
+<text class="sqt-hs" x="452" y="106" text-anchor="end">워크로드 전체</text>
+<line class="sqt-sep" x1="14" y1="120" x2="466" y2="120"/>
+<circle class="sqt-dot" cx="26" cy="134" r="3"/>
+<text class="sqt-c" x="38" y="139">mean_exec_time이 크다</text>
+<text class="sqt-a" x="52" y="157">→ 그 쿼리를 EXPLAIN ANALYZE</text>
+<circle class="sqt-dot" cx="26" cy="176" r="3"/>
+<text class="sqt-c" x="38" y="181">shared_blks_read가 크다</text>
+<text class="sqt-a" x="52" y="199">→ EXPLAIN (ANALYZE, BUFFERS)</text>
+<circle class="sqt-dot" cx="26" cy="218" r="3"/>
+<text class="sqt-c" x="38" y="223">calls가 비정상적으로 많다</text>
+<text class="sqt-a" x="52" y="241">→ N+1 등 호출 패턴 점검</text>
+<line class="sqt-ln" x1="240" y1="256" x2="240" y2="274" marker-end="url(#sqtArrow)"/>
+<!-- 2단계: EXPLAIN ANALYZE -->
+<rect class="sqt-box" x="14" y="278" width="452" height="218" rx="8"/>
+<text class="sqt-h" x="28" y="304">EXPLAIN ANALYZE</text>
+<text class="sqt-hs" x="452" y="304" text-anchor="end">쿼리 하나</text>
+<line class="sqt-sep" x1="14" y1="318" x2="466" y2="318"/>
+<circle class="sqt-dot" cx="26" cy="332" r="3"/>
+<text class="sqt-c" x="38" y="337">추정 행 수와 실제 행 수가 다르다</text>
+<text class="sqt-a" x="52" y="355">→ ANALYZE로 통계 갱신</text>
+<circle class="sqt-dot" cx="26" cy="374" r="3"/>
+<text class="sqt-c" x="38" y="379">큰 테이블에 Seq Scan</text>
+<text class="sqt-a" x="52" y="397">→ WHERE 컬럼 인덱스 후보 검토</text>
+<circle class="sqt-dot" cx="26" cy="416" r="3"/>
+<text class="sqt-c" x="38" y="421">Nested Loop에서 행이 폭발</text>
+<text class="sqt-a" x="52" y="439">→ 조인 순서와 조인 방식 재검토</text>
+<circle class="sqt-dot" cx="26" cy="458" r="3"/>
+<text class="sqt-c" x="38" y="463">Index Scan인데 읽은 블록이 많다</text>
+<text class="sqt-a" x="52" y="481">→ shared_buffers 부족 또는 bloat</text>
+<line class="sqt-ln" x1="240" y1="496" x2="240" y2="514" marker-end="url(#sqtArrow)"/>
+<!-- 3단계: pg_stat_activity -->
+<rect class="sqt-box" x="14" y="518" width="452" height="218" rx="8"/>
+<text class="sqt-h" x="28" y="544">pg_stat_activity</text>
+<text class="sqt-hs" x="452" y="544" text-anchor="end">지금 이 순간</text>
+<line class="sqt-sep" x1="14" y1="558" x2="466" y2="558"/>
+<circle class="sqt-dot" cx="26" cy="572" r="3"/>
+<text class="sqt-c" x="38" y="577">wait_event_type = Lock</text>
+<text class="sqt-a" x="52" y="595">→ pg_blocking_pids로 블로커 식별</text>
+<circle class="sqt-dot" cx="26" cy="614" r="3"/>
+<text class="sqt-c" x="38" y="619">wait_event_type = IO</text>
+<text class="sqt-a" x="52" y="637">→ shared_buffers 부족, checkpoint</text>
+<circle class="sqt-dot" cx="26" cy="656" r="3"/>
+<text class="sqt-c" x="38" y="661">state = idle in transaction</text>
+<text class="sqt-a" x="52" y="679">→ 트랜잭션 타임아웃 설정</text>
+<circle class="sqt-dot" cx="26" cy="698" r="3"/>
+<text class="sqt-c" x="38" y="703">wait_event가 비어 있다 (CPU)</text>
+<text class="sqt-a" x="52" y="721">→ 쿼리 자체가 무거움, plan 확인</text>
+<line class="sqt-ln" x1="240" y1="736" x2="240" y2="754" marker-end="url(#sqtArrow)"/>
+<!-- 4단계: pg_stat_user_tables -->
+<rect class="sqt-box" x="14" y="758" width="452" height="176" rx="8"/>
+<text class="sqt-h" x="28" y="784">pg_stat_user_tables</text>
+<text class="sqt-hs" x="452" y="784" text-anchor="end">테이블 건강</text>
+<line class="sqt-sep" x1="14" y1="798" x2="466" y2="798"/>
+<circle class="sqt-dot" cx="26" cy="812" r="3"/>
+<text class="sqt-c" x="38" y="817">n_dead_tup 비율이 높다</text>
+<text class="sqt-a" x="52" y="835">→ autovacuum 지연 점검</text>
+<circle class="sqt-dot" cx="26" cy="854" r="3"/>
+<text class="sqt-c" x="38" y="859">seq_scan이 idx_scan보다 많다</text>
+<text class="sqt-a" x="52" y="877">→ 인덱스 누락 의심</text>
+<circle class="sqt-dot" cx="26" cy="896" r="3"/>
+<text class="sqt-c" x="38" y="901">last_autovacuum이 NULL</text>
+<text class="sqt-a" x="52" y="919">→ autovacuum 설정 확인</text>
+</svg>
+</div>
 
 핵심은 **넓은 것에서 좁은 것으로** 접근하는 것입니다. 전체 워크로드(pg_stat_statements) → 특정 쿼리(EXPLAIN) → 현재 상태(pg_stat_activity) → 테이블 건강(pg_stat_user_tables) 순서로 범위를 좁혀가면 대부분의 "느려요"에 답을 찾을 수 있습니다.
 
@@ -312,7 +431,7 @@ pg_stat_user_tables: 테이블 레벨 건강 체크
 
 ### 1. pg_stat_statements 스냅샷을 주기적으로 저장한다
 
-누적 카운터는 "지난 며칠간의 합계"만 알려줍니다. 5~15분 간격으로 스냅샷을 찍어두면 "오늘 오후 3시부터 이 쿼리가 느려졌다"는 시계열 분석이 가능합니다. 간단한 크론 + INSERT INTO snapshot_table SELECT ... 으로 시작할 수 있습니다.
+누적 카운터는 "지난 며칠간의 합계"만 알려줍니다. 5~15분 간격으로 스냅샷을 찍어두면 "오늘 오후 3시부터 이 쿼리가 느려졌다"는 시계열 분석이 가능합니다. 크론으로 `INSERT INTO snapshot_table SELECT ... FROM pg_stat_statements`를 돌리는 정도로 시작할 수 있습니다.
 
 ### 2. auto_explain threshold는 보수적으로 시작한다
 
@@ -351,7 +470,7 @@ PostgreSQL은 [프로세스 기반 아키텍처](/postgres/architecture-overview
 
 ## 마치며
 
-"DB가 느려요"에 대한 답은 하나의 쿼리가 아니라 도구를 조합하는 **체계**에 있습니다. pg_stat_statements로 범인 후보를 좁히고, auto_explain으로 그 순간의 plan을 잡아내고, pg_stat_activity로 지금 무엇이 막혀 있는지를 확인합니다. 이 시리즈에서 다뤄온 인덱스, 플래너, VACUUM, 락, WAL 지식이 "왜 느린가"에 대한 답을 만드는 재료가 됩니다.
+"DB가 느려요"에 대한 답은 하나의 쿼리가 아니라 도구를 조합하는 **체계**에 있습니다. pg_stat_statements로 범인 후보를 좁히고, auto_explain으로 그 순간의 plan을 잡아내고, pg_stat_activity로 지금 무엇이 막혀 있는지를 확인합니다. 여기서 나온 단서를 인덱스, 플래너, VACUUM, 락, WAL에 대한 이해와 붙이면 "왜 느린가"에 대한 답이 나옵니다.
 
 다음 글에서는 connection pool, 메모리 파라미터, autovacuum 튜닝 등 운영 환경에서 가장 자주 손대는 설정들을 정리합니다.
 
@@ -360,7 +479,8 @@ PostgreSQL은 [프로세스 기반 아키텍처](/postgres/architecture-overview
 ## 참고자료
 
 - [PostgreSQL 18 공식 문서: Chapter 27. Monitoring Database Activity](https://www.postgresql.org/docs/18/monitoring.html)
-- [F.32. pg_stat_statements — execution statistics tracking](https://www.postgresql.org/docs/18/pgstatstatements.html)
-- [F.3. auto_explain — log execution plans of slow queries](https://www.postgresql.org/docs/18/auto-explain.html)
+- [F.32. pg_stat_statements: track statistics of SQL planning and execution](https://www.postgresql.org/docs/18/pgstatstatements.html)
+- [F.3. auto_explain: log execution plans of slow queries](https://www.postgresql.org/docs/18/auto-explain.html)
 - [pg_stat_activity view](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY-VIEW)
-- [Crunchy Data: Getting Started with pg_stat_statements](https://www.crunchydata.com/blog)
+- [Table 27.4. Wait Event Types](https://www.postgresql.org/docs/18/monitoring-stats.html#WAIT-EVENT-TABLE)
+- [PostgreSQL Wiki: Slow Query Questions](https://wiki.postgresql.org/wiki/Slow_Query_Questions)

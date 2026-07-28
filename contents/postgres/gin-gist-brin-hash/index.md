@@ -9,9 +9,9 @@ summary: '전문 검색, JSONB 포함 관계, 시계열 거대 테이블처럼 B
 thumbnail: './thumbnail.png'
 ---
 
-`articles(content)`에 B-tree 인덱스를 걸어뒀는데 `WHERE content LIKE '%postgres%'`를 던지면 여전히 Seq Scan입니다. `events(tags jsonb)`에 B-tree를 만들어도 `WHERE tags @> '["urgent"]'`는 인덱스를 안 탑니다. 1억 건짜리 로그 테이블 `logs(ts)`에 B-tree를 만들었더니 인덱스 자체가 수십 GB로 부풀어 테이블만큼 커집니다.
+`articles(content)`에 B-tree 인덱스를 걸어뒀는데 `WHERE content LIKE '%postgres%'`를 던지면 여전히 Seq Scan입니다. `events(tags jsonb)`에 B-tree를 만들어도 `WHERE tags @> '["urgent"]'`는 인덱스를 안 탑니다. 1억 건짜리 로그 테이블 `logs(ts)`에 B-tree를 만들었더니 인덱스 하나가 2GB를 넘어갑니다.
 
-세 현상은 모두 "인덱스 = B-tree"라는 암묵적 디폴트가 깨지는 지점입니다. [지난 글](/postgres/btree-anatomy/)에서 봤듯이 B-tree는 **값을 한 줄로 쭉 세울 수 있는 타입**에 최적화된 자료구조입니다. 숫자처럼 크고 작음이 분명하거나, 문자열처럼 사전순으로 나열할 수 있으면 B-tree의 영역입니다. 그런데 문서 안에 들어 있는 단어 하나하나를 찾거나, JSON 안에 특정 키가 들어 있는지 묻거나, 도형 두 개가 겹치는지 물을 때는 "한 줄로 세우기"라는 전제가 성립하지 않습니다.
+세 현상은 모두 "인덱스 = B-tree"라는 암묵적 디폴트가 깨지는 지점입니다. [B-tree](/postgres/btree-anatomy/)는 **값을 한 줄로 쭉 세울 수 있는 타입**에 최적화된 자료구조입니다. 숫자처럼 크고 작음이 분명하거나, 문자열처럼 사전순으로 나열할 수 있으면 B-tree의 영역입니다. 그런데 문서 안에 들어 있는 단어 하나하나를 찾거나, JSON 안에 특정 키가 들어 있는지 묻거나, 도형 두 개가 겹치는지 물을 때는 "한 줄로 세우기"라는 전제가 성립하지 않습니다.
 
 이 글에서는 PostgreSQL이 기본 제공하는 네 가지 대안, GIN·GiST·BRIN·Hash의 내부 구조와 각각이 커버하는 쿼리 패턴을 짚습니다. 각 인덱스가 어떤 자료구조 위에 올라가 있는지 알면 "왜 이 쿼리엔 이게 맞는지", 그리고 더 중요하게 "왜 이걸 쓰면 안 되는지"가 보입니다.
 
@@ -24,7 +24,7 @@ B-tree의 전제는 하나의 값에 하나의 자리가 있다는 것입니다.
 - `geom` 컬럼의 **두 도형이 겹치는가**(`&&`). 도형의 한 차원 값만으로 순서를 매길 방법이 없다.
 - `created_at`이 시간순으로 append-only로 쌓이는 로그 테이블에서 범위 스캔을 빠르게 하고 싶은데, 인덱스 크기는 최소로 두고 싶다.
 
-앞의 세 질문은 "한 row가 여러 개의 인덱스 키로 쪼개지거나(문서, 태그 배열)" "값끼리 크고 작음으로 줄 세울 수 없는(도형 겹침)" 경우입니다. 네 번째는 B-tree로 풀 수는 있지만 **인덱스가 너무 커서 배보다 배꼽이 더 큰** 경우입니다. 각각에 대응하는 해법이 GIN·GiST·BRIN입니다. Hash는 결이 조금 다릅니다. equality만 쓴다면 B-tree보다 공간을 더 줄일 수 있는지에 대한 답입니다.
+앞의 세 질문은 "한 row가 여러 개의 인덱스 키로 쪼개지거나(문서, 태그 배열)" "값끼리 크고 작음으로 줄 세울 수 없는(도형 겹침)" 경우입니다. 네 번째는 B-tree로 풀 수는 있지만 **인덱스가 너무 커서 배보다 배꼽이 더 큰** 경우입니다. 각각에 대응하는 해법이 GIN·GiST·BRIN입니다. Hash는 결이 조금 다릅니다. `=` 하나만 쓰는 조회에서 인덱스를 B-tree보다 작게 만들 수 있느냐에 대한 답입니다.
 
 ## GIN: 역색인의 세계
 
@@ -32,24 +32,68 @@ GIN(Generalized Inverted Index)은 이름 그대로 **역색인**입니다. 책 
 
 ### 구조: posting list와 posting tree
 
-리프 레벨에서 GIN이 하는 일은 단순합니다. 각 키(단어)에 대해 "이 단어가 들어 있는 row들의 주소(`ctid`)" 묶음을 저장합니다. 묶음 크기가 작으면 **posting list**라는 이름으로 키 바로 옆에 짧게 붙여두고, 묶음이 커지면 **posting tree**라는 별도의 B-tree로 분리해 담아둡니다.
+GIN 내부에는 키를 정렬해 담은 B-tree가 하나 있고, 이것을 **entry tree**라고 부릅니다. 여기서 키는 인덱싱 대상 값을 쪼갠 조각입니다. `tsvector`라면 단어 하나, 배열이라면 원소 하나, trigram이라면 3글자 조각 하나입니다. entry tree의 리프에는 각 키에 대해 "이 키가 들어 있는 row들의 주소(`ctid`)" 묶음이 달립니다. 묶음이 작으면 키 값과 같은 인덱스 튜플 안에 **posting list**로 짧게 붙여두고, 한 튜플에 담기지 못할 만큼 커지면 **posting tree**라는 별도의 B-tree로 분리해 담습니다.
 
-```
-                  GIN entry tree (키 B-tree)
-                   /              |            \
-             'postgres'      'index'       'vacuum'
-                /                |              \
-    posting list              posting tree     posting list
-    [ctid1, ctid2]          (많은 ctid들을         [ctid9]
-                           별도 B-tree로 보관)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 545" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="위쪽은 B-tree가 한 행의 문자열 전체를 키 하나로 저장해 문자열 안의 단어를 찾지 못하는 구조. 아래쪽은 GIN이 한 행을 여러 토큰으로 쪼개 엔트리 트리에 키를 한 번만 두고, 각 키 아래에 그 키를 가진 행 ID 목록인 posting list를 붙여 두는 역색인 구조.">
+<style>.gg1-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg1-l{font-size:17px;fill:var(--text, #1c1917)}.gg1-k{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg1-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg1-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.gg1-key{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:1.8}.gg1-pl{fill:var(--bg, #fafaf8);stroke:var(--primary, #0d9488);stroke-width:1.5}.gg1-ln{stroke:var(--text-muted, #78716c);stroke-width:1.5;fill:none}</style>
+<defs>
+<marker id="gg1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- 위 패널: B-tree -->
+<text x="240" y="26" text-anchor="middle" class="gg1-t">위: B-tree, 한 행에 키 하나</text>
+<rect x="20" y="44" width="210" height="38" rx="6" class="gg1-box"/>
+<text x="125" y="69" text-anchor="middle" class="gg1-l">#1 postgres vacuum</text>
+<line x1="236" y1="63" x2="266" y2="63" class="gg1-ln" marker-end="url(#gg1Arrow)"/>
+<rect x="272" y="44" width="188" height="38" rx="6" class="gg1-key"/>
+<text x="366" y="70" text-anchor="middle" class="gg1-k">'postgres vacuum'</text>
+<text x="240" y="108" text-anchor="middle" class="gg1-m">문자열 전체가 키 하나다. 그 안의 단어는</text>
+<text x="240" y="130" text-anchor="middle" class="gg1-m">인덱스로 찾을 수 없다.</text>
+<line x1="20" y1="150" x2="460" y2="150" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 아래 패널: GIN -->
+<text x="240" y="182" text-anchor="middle" class="gg1-t">아래: GIN, 한 행을 키 여럿으로 쪼갠다</text>
+<rect x="90" y="198" width="300" height="32" rx="6" class="gg1-box"/>
+<text x="106" y="220" class="gg1-l">#1  postgres vacuum</text>
+<rect x="90" y="236" width="300" height="32" rx="6" class="gg1-box"/>
+<text x="106" y="258" class="gg1-l">#2  index tuning</text>
+<rect x="90" y="274" width="300" height="32" rx="6" class="gg1-box"/>
+<text x="106" y="296" class="gg1-l">#3  postgres index</text>
+<line x1="240" y1="312" x2="240" y2="338" class="gg1-ln" marker-end="url(#gg1Arrow)"/>
+<text x="252" y="332" class="gg1-m">토큰으로 분해</text>
+<text x="240" y="358" text-anchor="middle" class="gg1-m">엔트리 트리: 키 하나에 한 줄</text>
+<rect x="12" y="368" width="142" height="38" rx="6" class="gg1-key"/>
+<text x="83" y="393" text-anchor="middle" class="gg1-k">'postgres'</text>
+<rect x="169" y="368" width="142" height="38" rx="6" class="gg1-key"/>
+<text x="240" y="393" text-anchor="middle" class="gg1-k">'index'</text>
+<rect x="326" y="368" width="142" height="38" rx="6" class="gg1-key"/>
+<text x="397" y="393" text-anchor="middle" class="gg1-k">'vacuum'</text>
+<line x1="83" y1="406" x2="83" y2="432" class="gg1-ln" marker-end="url(#gg1Arrow)"/>
+<line x1="240" y1="406" x2="240" y2="432" class="gg1-ln" marker-end="url(#gg1Arrow)"/>
+<line x1="397" y1="406" x2="397" y2="432" class="gg1-ln" marker-end="url(#gg1Arrow)"/>
+<rect x="12" y="438" width="142" height="36" rx="6" class="gg1-pl"/>
+<text x="83" y="462" text-anchor="middle" class="gg1-l">#1, #3</text>
+<rect x="169" y="438" width="142" height="36" rx="6" class="gg1-pl"/>
+<text x="240" y="462" text-anchor="middle" class="gg1-l">#2, #3</text>
+<rect x="326" y="438" width="142" height="36" rx="6" class="gg1-pl"/>
+<text x="397" y="462" text-anchor="middle" class="gg1-l">#1</text>
+<text x="240" y="498" text-anchor="middle" class="gg1-m">posting list: 그 키를 가진 행 ID 목록</text>
+<text x="240" y="524" text-anchor="middle" class="gg1-m">목록이 커지면 별도 B-tree(posting tree)로 옮긴다</text>
+</svg>
+</div>
 
-이 구조가 주는 결과는 뚜렷합니다. 같은 단어 `'postgres'`가 1만 개 문서에 나오면, B-tree라면 같은 키가 1만 번 반복 저장되지만 GIN은 `'postgres'` 하나에 ctid 1만 개를 모아 둡니다. 인덱스가 작아지고, 조회 경로도 단축됩니다.
+핵심 차이는 **한 행이 인덱스 엔트리 몇 개가 되느냐**입니다. B-tree는 행 하나가 키 하나이므로 `'postgres vacuum'`이라는 문자열은 통째로 한 자리를 차지하고, 그 안의 `postgres`만 따로 찾을 방법이 없습니다. GIN은 같은 행을 `postgres`, `vacuum` 두 키로 쪼개 넣고, 각 키 아래에 그 키를 가진 행들의 `ctid`를 모읍니다. `'postgres'`가 1만 개 문서에 나와도 엔트리 트리에는 `'postgres'` 한 줄만 있고, 그 아래 ctid 1만 개가 붙습니다.
+
+(PG 13부터는 B-tree도 중복 키를 posting list로 묶어 저장합니다. 다만 그건 같은 키가 여러 번 나올 때 압축하는 것이고, 하나의 값을 여러 키로 쪼개서 넣는 일은 GIN만 합니다.)
 
 ### 대표 용도
 
 - **전문 검색**(`tsvector`): 문서 전체 텍스트를 단어 단위로 쪼개 저장하는 타입이 `tsvector`입니다. 여기에 GIN을 걸어두면 `WHERE doc @@ to_tsquery('postgres & index')` 같은 **"이 단어들을 포함하는 문서 찾기"** 쿼리가 인덱스를 탑니다.
-- **JSONB 포함 관계**(containment): "내 JSON이 이 JSON을 포함하는가"를 묻는 `@>` 연산자 전용입니다. 예: `tags @> '["urgent"]'`는 태그 배열에 `"urgent"`가 들어 있는 row를 찾습니다. 여기서 **opclass**(operator class, 인덱스가 이 타입에서 어떤 연산자를 어떻게 처리할지 정의한 묶음)가 두 가지인데, 기본 `jsonb_ops`는 `?`(키 존재), `?|`(키 중 하나 존재), `?&`(모두 존재) 같은 키-유무 연산자까지 지원하고, 경량 `jsonb_path_ops`는 포함 관계(`@>`) 전용이지만 인덱스 크기가 훨씬 작습니다. 포함 관계만 본다면 `jsonb_path_ops`가 기본 선택입니다.
+- **JSONB 포함 관계**(containment): "내 JSON이 이 JSON을 포함하는가"를 묻는 `@>` 연산자가 대표입니다. 예: `tags @> '["urgent"]'`는 태그 배열에 `"urgent"`가 들어 있는 row를 찾습니다. 여기서 **opclass**(operator class, 인덱스가 이 타입에서 어떤 연산자를 어떻게 처리할지 정의한 묶음)가 두 가지입니다. 기본 `jsonb_ops`는 포함 관계 `@>`와 jsonpath 매칭 `@?`, `@@`에 더해 `?`(키 존재), `?|`(키 중 하나 존재), `?&`(모두 존재) 같은 키-유무 연산자까지 지원합니다. 경량 `jsonb_path_ops`는 키-유무 연산자를 빼고 `@>`, `@?`, `@@`만 지원하는 대신 인덱스가 훨씬 작고, 흔한 키가 섞인 조건에서 후보를 더 좁게 잡습니다. 키 존재 여부를 묻지 않는다면 `jsonb_path_ops`가 기본 선택입니다.
 - **배열 포함 관계**: `int[]`, `text[]` 등의 배열에서 `@>`(포함), `<@`(반대 포함), `&&`(교집합 존재) 연산자.
 - **Trigram 유사도**(`pg_trgm` + `gin_trgm_ops`): 문자열을 3글자 단위 조각으로 쪼개 인덱싱합니다. 예를 들어 `"postgres"`는 padding을 포함해 `{"  p"," po","pos","ost","stg","tgr","gre","res","es "}` 같은 trigram으로 분해됩니다(공식 함수 `show_trgm('postgres')`로 확인 가능). 이 구조 위에서 `LIKE '%foo%'`, `ILIKE`가 인덱스를 탑니다. 부분 문자열 검색을 인덱스로 푸는 거의 유일한 공식 경로입니다.
 
@@ -87,7 +131,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT count(*) FROM events WHERE tags @> '["urgent"]
 
 GIN의 plan을 보면 항상 **Bitmap Index Scan → Bitmap Heap Scan** 두 단계가 나옵니다. B-tree처럼 "정렬된 인덱스를 순서대로 훑으며 하나씩 힙을 읽는" 방식이 불가능하기 때문입니다. GIN 리프에는 "키 하나에 달린 ctid 묶음"만 들어 있어서, 일단 해당하는 ctid들을 모두 모아 비트맵을 만든 뒤 그 비트맵이 가리키는 힙 페이지들을 한꺼번에 스캔합니다.
 
-출력 맨 위의 `Recheck Cond`도 이 과정의 일부입니다. 비트맵이 "이 페이지들에 후보가 있다"까지만 알려주기 때문에, 힙을 실제로 읽어서 조건을 최종 확인하는 단계가 필요합니다.
+`Recheck Cond` 줄도 이 과정의 일부입니다. 비트맵이 "이 페이지들에 후보가 있다"까지만 알려주기 때문에, 힙을 실제로 읽어서 조건을 최종 확인하는 단계가 필요합니다.
 
 ### 실험: `LIKE '%...%'`를 인덱스에 태우기
 
@@ -119,9 +163,9 @@ B-tree + `text_pattern_ops`로는 `LIKE 'abc%'`만 걸 수 있었는데, trigram
 
 GIN의 약점은 **쓰기 비용**입니다. row 하나를 INSERT/UPDATE할 때마다 `tsvector`에 들어 있는 단어 수백 개 각각의 posting list를 건드려야 하니까, 키 하나만 건드리면 되는 B-tree와 비교가 안 됩니다. 쓰기 한 번에 인덱스를 수십\~수백 번 건드리는 셈입니다.
 
-이 때문에 GIN은 기본적으로 **fastupdate**를 켜고 출발합니다. 새 엔트리를 곧바로 메인 구조에 반영하지 않고 **pending list**라는 선형 영역에 먼저 모아둡니다. 나중에 이 리스트가 `gin_pending_list_limit`(기본 4MB)을 넘거나 VACUUM이 돌 때 한꺼번에 메인 구조로 병합합니다.
+이 때문에 GIN은 `fastupdate` 저장 파라미터가 기본 `on`인 상태로 출발합니다. 새 엔트리를 곧바로 메인 구조에 반영하지 않고 **pending list**라는 정렬되지 않은 선형 영역에 먼저 모아둡니다. 이 리스트는 세 가지 계기에 한꺼번에 메인 구조로 병합됩니다. 테이블이 VACUUM 또는 autoanalyze될 때, `gin_clean_pending_list()`를 직접 호출할 때, 그리고 리스트가 `gin_pending_list_limit`(기본 4MB)을 넘을 때입니다.
 
-트레이드오프: 쓰기는 빠르지만, pending list가 커진 상태에서 검색을 하면 pending list를 **선형으로 훑어야** 하므로 검색이 느려집니다. 쓰기 폭주가 심한 테이블에서는 `pending list`를 주기적으로 비워주는 `gin_clean_pending_list()` 호출이나, 극단적인 경우 `fastupdate = off`를 고려합니다.
+트레이드오프: 쓰기는 빠르지만, pending list가 커진 상태에서 검색을 하면 pending list를 **선형으로 훑어야** 하므로 검색이 느려집니다. 쓰기 폭주가 심한 테이블에서는 pending list를 주기적으로 비워주는 `gin_clean_pending_list()` 호출이나, 극단적인 경우 `fastupdate = off`를 고려합니다.
 
 이게 "GIN을 걸었는데 가끔 검색이 튄다"의 전형적인 원인입니다. `pageinspect` 확장의 `gin_metapage_info(get_raw_page('idx_name', 0))`로 `n_pending_pages`, `n_pending_tuples`를 확인할 수 있습니다.
 
@@ -201,10 +245,72 @@ BRIN(Block Range Index)은 앞의 셋과 완전히 다른 방식입니다. 개�
 
 ### 구조: 요약만 저장한다
 
-```
- heap pages:    [p0..p127]  [p128..p255]  [p256..p383]  ...
- BRIN entry:    {min, max}   {min, max}    {min, max}
-```
+인덱스에 들어가는 것은 "몇 번 페이지부터 몇 번 페이지까지의 최솟값과 최댓값"이 전부입니다. 조건이 그 구간에 걸리지 않는 묶음은 힙을 열어 보지도 않고 통째로 버립니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 345" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="BRIN이 연속된 힙 페이지 128개를 한 묶음으로 보고 그 묶음의 최솟값과 최댓값만 저장하는 구조. 조건과 겹치는 묶음 하나만 힙을 읽고 나머지 세 묶음은 통째로 건너뛴다.">
+<style>.gg2-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg2-l{font-size:17px;fill:var(--text, #1c1917)}.gg2-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg2-c{font-size:18px;fill:var(--text-muted, #78716c)}.gg2-sum{fill:var(--bg-subtle, #f5f4f2);stroke:var(--primary, #0d9488);stroke-width:1.6}.gg2-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:1.2;stroke-dasharray:3 2}.gg2-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #d97706);stroke-width:1.4}.gg2-vs{font-size:17px;font-weight:600;fill:var(--text-success, #16a34a)}.gg2-vr{font-size:17px;font-weight:600;fill:var(--accent, #d97706)}.gg2-ln{stroke:var(--accent, #d97706);stroke-width:1.6;fill:none}</style>
+<defs>
+<marker id="gg2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #d97706)"/>
+</marker>
+</defs>
+<text x="240" y="26" text-anchor="middle" class="gg2-t">BRIN: 128 페이지마다 요약 한 줄</text>
+<text x="240" y="58" text-anchor="middle" class="gg2-m">WHERE ts BETWEEN '09:00' AND '09:59'</text>
+<!-- 묶음 1 -->
+<rect x="14" y="78" width="100" height="64" rx="6" class="gg2-sum"/>
+<text x="64" y="104" text-anchor="middle" class="gg2-l">min 07:00</text>
+<text x="64" y="128" text-anchor="middle" class="gg2-l">max 07:59</text>
+<rect x="15" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="35" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="55" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="75" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="95" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<text x="64" y="206" text-anchor="middle" class="gg2-m">p0..p127</text>
+<text x="64" y="236" text-anchor="middle" class="gg2-vs">건너뜀</text>
+<!-- 묶음 2 -->
+<rect x="132" y="78" width="100" height="64" rx="6" class="gg2-sum"/>
+<text x="182" y="104" text-anchor="middle" class="gg2-l">min 08:00</text>
+<text x="182" y="128" text-anchor="middle" class="gg2-l">max 08:59</text>
+<rect x="133" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="153" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="173" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="193" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="213" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<text x="182" y="206" text-anchor="middle" class="gg2-m">p128..p255</text>
+<text x="182" y="236" text-anchor="middle" class="gg2-vs">건너뜀</text>
+<!-- 묶음 3: 조건과 겹침 -->
+<rect x="250" y="78" width="100" height="64" rx="6" class="gg2-sum"/>
+<text x="300" y="104" text-anchor="middle" class="gg2-l">min 09:00</text>
+<text x="300" y="128" text-anchor="middle" class="gg2-l">max 09:59</text>
+<line x1="300" y1="144" x2="300" y2="156" class="gg2-ln" marker-end="url(#gg2Arrow)"/>
+<rect x="251" y="158" width="17" height="28" rx="2" class="gg2-read"/>
+<rect x="271" y="158" width="17" height="28" rx="2" class="gg2-read"/>
+<rect x="291" y="158" width="17" height="28" rx="2" class="gg2-read"/>
+<rect x="311" y="158" width="17" height="28" rx="2" class="gg2-read"/>
+<rect x="331" y="158" width="17" height="28" rx="2" class="gg2-read"/>
+<text x="300" y="206" text-anchor="middle" class="gg2-m">p256..p383</text>
+<text x="300" y="236" text-anchor="middle" class="gg2-vr">힙 읽음</text>
+<!-- 묶음 4 -->
+<rect x="368" y="78" width="100" height="64" rx="6" class="gg2-sum"/>
+<text x="418" y="104" text-anchor="middle" class="gg2-l">min 10:00</text>
+<text x="418" y="128" text-anchor="middle" class="gg2-l">max 10:59</text>
+<rect x="369" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="389" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="409" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="429" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<rect x="449" y="158" width="17" height="28" rx="2" class="gg2-skip"/>
+<text x="418" y="206" text-anchor="middle" class="gg2-m">p384..p511</text>
+<text x="418" y="236" text-anchor="middle" class="gg2-vs">건너뜀</text>
+<!-- 캡션 -->
+<text x="240" y="276" text-anchor="middle" class="gg2-c">조건과 겹치지 않는 묶음은 힙을 한 페이지도</text>
+<text x="240" y="298" text-anchor="middle" class="gg2-c">읽지 않는다.</text>
+<text x="240" y="328" text-anchor="middle" class="gg2-m">1천만 행 로그: B-tree 214MB vs BRIN 56kB</text>
+</svg>
+</div>
 
 1억 행 테이블에서 페이지가 1천만 개라면 BRIN 엔트리는 약 7.8만 개(1천만 / 128)밖에 안 됩니다. 엔트리 수가 이 정도면 실제 인덱스 크기는 수 MB 수준에 불과합니다. 같은 테이블에 B-tree를 걸면 리프가 수백 MB\~수 GB로 부푸는 것과 대조적입니다.
 
@@ -218,7 +324,7 @@ BRIN이 위력을 발휘하는 전제는 **인덱싱 컬럼이 테이블의 물�
 - 주문/이벤트 테이블도 시간순으로 append
 - 시계열 파티션 내부
 
-이 경우 "최근 1시간 데이터 스캔" 같은 쿼리가 전체 페이지의 극히 일부만 건드려도 되므로 BRIN의 요약 정보가 대단히 효과적입니다.
+이 경우 "최근 1시간 데이터 스캔" 같은 쿼리는 요약 정보만 보고도 나머지 페이지 묶음을 전부 배제할 수 있습니다.
 
 ### 실험: B-tree vs BRIN 크기 비교
 
@@ -248,11 +354,63 @@ WHERE relname = 'logs';
 --  logs_ts_brin   |  56 kB
 ```
 
-10M 행 테이블에서 B-tree가 200MB 이상, BRIN은 수십 KB로 약 **4000배** 차이가 납니다. 물론 BRIN으로 단일 행을 pinpoint 조회하면 B-tree보다 훨씬 느리지만, 대량 범위 스캔에서는 비슷한 시간에 풀면서 인덱스 크기만 극단적으로 작아집니다.
+1천만 행 테이블에서 B-tree가 200MB 이상, BRIN은 수십 KB로 약 **4000배** 차이가 납니다. 물론 BRIN으로 단일 행을 콕 집어 조회하면 B-tree보다 훨씬 느리지만, 대량 범위 스캔에서는 비슷한 시간에 풀면서 인덱스 크기만 극단적으로 작아집니다.
 
 ### 치명적 함정: 값이 섞여 있으면 무용지물
 
 BRIN의 힘은 "디스크 저장 순서와 값의 크기 순서가 거의 일치한다"는 데서 나옵니다. 이게 깨지면 BRIN은 거의 전체 스캔과 다를 바 없어집니다. 예를 들어 `ts` 값이 페이지마다 `2024, 2026, 2025, 2024` 식으로 뒤죽박죽이면, 각 묶음의 {min, max}는 전부 "2024\~2026"이 되어버려서 어떤 쿼리를 던져도 "이 묶음은 건너뛸 수 있겠다"고 판단할 수가 없습니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 450" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="위쪽은 상관관계가 0.998일 때 각 블록 범위의 최솟값과 최댓값 구간이 서로 겹치지 않아 조건에 걸린 범위 하나만 읽고 나머지는 건너뛰는 모습. 아래쪽은 상관관계가 0.01일 때 모든 범위의 구간이 전체를 덮어 어느 범위도 건너뛰지 못하는 모습.">
+<style>.gg3-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg3-s{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg3-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg3-c{font-size:18px;fill:var(--text-muted, #78716c)}.gg3-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:1.6;stroke-dasharray:5 3}.gg3-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #d97706);stroke-width:1.6}.gg3-vs{font-size:17px;font-weight:600;fill:var(--text-success, #16a34a)}.gg3-vr{font-size:17px;font-weight:600;fill:var(--accent, #d97706)}.gg3-qf{fill:var(--bg-muted, #eeecea)}.gg3-qs{fill:none;stroke:var(--text-muted, #78716c);stroke-width:1.4;stroke-dasharray:4 3}.gg3-ax{stroke:var(--text-muted, #78716c);stroke-width:1.4}</style>
+<text x="240" y="26" text-anchor="middle" class="gg3-t">BRIN의 성패는 correlation이 가른다</text>
+<!-- 위 패널: correlation 높음 -->
+<text x="8" y="54" class="gg3-s">위: correlation 0.998, 시간순 적재</text>
+<rect x="274" y="66" width="95" height="118" class="gg3-qf"/>
+<text x="8" y="85" class="gg3-m">범위 1</text>
+<rect x="84" y="70" width="95" height="20" rx="3" class="gg3-skip"/>
+<text x="131" y="86" text-anchor="middle" class="gg3-vs">건너뜀</text>
+<text x="8" y="113" class="gg3-m">범위 2</text>
+<rect x="179" y="98" width="95" height="20" rx="3" class="gg3-skip"/>
+<text x="226" y="114" text-anchor="middle" class="gg3-vs">건너뜀</text>
+<text x="8" y="141" class="gg3-m">범위 3</text>
+<rect x="274" y="126" width="95" height="20" rx="3" class="gg3-read"/>
+<text x="321" y="142" text-anchor="middle" class="gg3-vr">읽음</text>
+<text x="8" y="169" class="gg3-m">범위 4</text>
+<rect x="369" y="154" width="95" height="20" rx="3" class="gg3-skip"/>
+<text x="416" y="170" text-anchor="middle" class="gg3-vs">건너뜀</text>
+<rect x="274" y="66" width="95" height="118" class="gg3-qs"/>
+<line x1="84" y1="188" x2="464" y2="188" class="gg3-ax"/>
+<text x="84" y="208" class="gg3-m">과거</text>
+<text x="321" y="208" text-anchor="middle" class="gg3-m">쿼리 조건 범위</text>
+<text x="464" y="208" text-anchor="end" class="gg3-m">현재</text>
+<line x1="8" y1="230" x2="472" y2="230" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 아래 패널: correlation 낮음 -->
+<text x="8" y="258" class="gg3-s">아래: correlation 0.01, 값이 뒤섞여 적재</text>
+<rect x="274" y="268" width="95" height="118" class="gg3-qf"/>
+<text x="8" y="287" class="gg3-m">범위 1</text>
+<rect x="84" y="272" width="372" height="20" rx="3" class="gg3-read"/>
+<text x="170" y="288" text-anchor="middle" class="gg3-vr">전부 읽음</text>
+<text x="8" y="315" class="gg3-m">범위 2</text>
+<rect x="88" y="300" width="368" height="20" rx="3" class="gg3-read"/>
+<text x="170" y="316" text-anchor="middle" class="gg3-vr">전부 읽음</text>
+<text x="8" y="343" class="gg3-m">범위 3</text>
+<rect x="84" y="328" width="376" height="20" rx="3" class="gg3-read"/>
+<text x="170" y="344" text-anchor="middle" class="gg3-vr">전부 읽음</text>
+<text x="8" y="371" class="gg3-m">범위 4</text>
+<rect x="90" y="356" width="366" height="20" rx="3" class="gg3-read"/>
+<text x="170" y="372" text-anchor="middle" class="gg3-vr">전부 읽음</text>
+<rect x="274" y="268" width="95" height="118" class="gg3-qs"/>
+<line x1="84" y1="390" x2="464" y2="390" class="gg3-ax"/>
+<text x="240" y="418" text-anchor="middle" class="gg3-c">모든 범위의 min/max가 전 구간을 덮어</text>
+<text x="240" y="440" text-anchor="middle" class="gg3-c">건너뛸 수 있는 범위가 없다.</text>
+</svg>
+</div>
+
+각 막대는 블록 범위 하나가 요약하고 있는 값의 구간(min부터 max까지)입니다. 물리 순서와 값 순서가 맞아 있으면 구간들이 서로 겹치지 않아 조건에 걸린 하나만 읽으면 되지만, 값이 뒤섞이면 네 범위의 구간이 모두 전체를 덮어 어느 것도 배제할 수 없습니다.
 
 이 "얼마나 정렬된 상태인가"를 확인하는 지표가 `pg_stats.correlation`입니다.
 
@@ -271,7 +429,7 @@ WHERE tablename = 'logs';
 
 ### 조정 옵션: `pages_per_range`
 
-BRIN의 기본 `pages_per_range`는 128입니다. 범위를 좁히면(예: 32) 정밀도가 올라가는 대신 인덱스가 커집니다. 넓히면 인덱스는 더 작아지지만 스캔해야 할 힙 페이지가 많아집니다. 수십억 행 규모 테이블에서 범위 쿼리가 후보 페이지를 너무 많이 잡는다면 `pages_per_range`를 줄여 정밀도를 올립니다. 보통 크기는 기본값이 균형이 좋아 손댈 일이 적습니다.
+BRIN의 기본 `pages_per_range`는 128입니다. 범위를 좁히면(예: 32) 정밀도가 올라가는 대신 인덱스가 커집니다. 넓히면 인덱스는 더 작아지지만 스캔해야 할 힙 페이지가 많아집니다. 수십억 행 규모 테이블에서 범위 쿼리가 후보 페이지를 너무 많이 잡는다면 `pages_per_range`를 줄여 정밀도를 올립니다. 기본값 128이 대체로 무난해서 손댈 일은 많지 않습니다.
 
 ## Hash: 다시 쓸 만해진 인덱스
 
@@ -279,16 +437,16 @@ Hash는 `=` equality 하나만 지원하는 인덱스입니다. 내부 구조는
 
 ### 왜 자주 안 쓰나
 
-솔직히 말해 Hash는 실무 빈도가 낮습니다. B-tree도 equality를 잘 풀어내고, composite 인덱스를 지원하고, uniqueness 제약도 B-tree로 만들어지기 때문입니다. Hash가 B-tree를 능가하는 경우가 매우 좁습니다.
+Hash는 실무 빈도가 낮습니다. B-tree도 equality를 잘 풀어내는 데다, Hash에는 없는 것이 많기 때문입니다. Hash는 단일 컬럼 인덱스만 지원해서 여러 컬럼을 묶을 수 없고, 유일성 검사를 못 해서 `UNIQUE` 제약이나 PK의 뒷단이 될 수 없습니다. 실제 컬럼 값을 저장하지 않으므로 인덱스 스캔이 항상 lossy이고, 힙에서 조건을 다시 확인하는 recheck가 따라붙습니다.
 
-게다가 PG 10 이전의 Hash는 **WAL-logged가 아니라서** crash 이후 복구되지 않고 replica에도 전달되지 않는 반쪽짜리 인덱스였습니다. 공식 문서가 "use B-tree instead"라고 안내할 정도였습니다. PG 10에서 WAL-logged로 개선되면서 실사용 가능한 옵션이 됐지만, 이미 "Hash는 쓰지 말 것"이라는 인상이 오래 박혀 있습니다.
+게다가 PG 10 이전의 Hash는 **WAL에 기록되지 않아서** crash 이후 복구되지 않고 replica에도 전달되지 않는 반쪽짜리 인덱스였습니다. 공식 문서가 "use B-tree instead"라고 안내할 정도였습니다. PG 10에서 WAL 로깅이 들어가면서 crash-safe한 인덱스가 됐지만, 이미 "Hash는 쓰지 말 것"이라는 인상이 오래 박혀 있습니다.
 
 ### 언제 고려하나
 
 - **인덱스 컬럼이 매우 크고 equality만 조회**: 예를 들어 긴 URL 문자열이나 긴 해시값을 PK처럼 찾는 경우. B-tree는 키 전체를 저장하지만 Hash는 4바이트 해시값만 저장합니다. 수백 MB 단위로 공간을 아낄 수 있습니다.
 - **정렬이나 범위가 절대 필요 없는 lookup 테이블**: 세션 토큰, API key, 캐시 키 같이 "주고 받기만 하는" 컬럼.
 
-실무 기준은 "대부분은 B-tree, 키가 크고 equality만 쓰는 특수한 경우에만 Hash"입니다. 그 외에는 B-tree의 기능적 우위가 공간 절약분을 누릅니다.
+실무 기준은 "대부분은 B-tree, 키가 크고 equality만 쓰는 특수한 경우에만 Hash"입니다. 그 외에는 공간을 조금 아끼는 것보다 B-tree가 주는 기능이 더 값집니다. 행 수가 빠르게 늘어나는 테이블도 Hash와 잘 맞지 않습니다. 버킷을 늘리는 작업이 사용자 INSERT와 같은 흐름에서 일어나 쓰기 지연을 키우고, 한번 커진 Hash 인덱스는 `REINDEX` 말고는 줄일 방법이 없습니다.
 
 ## 선택 매트릭스
 
@@ -298,7 +456,7 @@ Hash는 `=` equality 하나만 지원하는 인덱스입니다. 내부 구조는
 |-----------|--------|------|
 | `WHERE id = N`, `BETWEEN`, `LIKE 'abc%'`, `ORDER BY` | B-tree | 줄 세울 수 있는 값의 거의 모든 연산 |
 | 전문 검색 (`@@ to_tsquery(...)`) | GIN(`tsvector`) | 한 문서 여러 단어 구조 |
-| JSONB 포함 관계 (`tags @> '[...]'`) | GIN(`jsonb_path_ops`) | 경량 `@>` 전용 |
+| JSONB 포함 관계 (`tags @> '[...]'`) | GIN(`jsonb_path_ops`) | 키 존재 연산자를 뺀 경량 opclass |
 | 배열 포함 관계 (`arr @> ARRAY[...]`) | GIN | 같은 구조 |
 | 부분 문자열 검색 (`title LIKE '%x%'`) | GIN + `gin_trgm_ops` | trigram 역색인 |
 | 비슷한 순 정렬 (`name <-> 'x'` + `LIMIT`) | GiST + `gist_trgm_ops` | 거리 기반 정렬 |
@@ -307,6 +465,16 @@ Hash는 `=` equality 하나만 지원하는 인덱스입니다. 내부 구조는
 | 배타 제약 `EXCLUDE` | GiST | `=`를 넘어선 제약 |
 | 시계열 거대 테이블 범위 스캔 | BRIN | 페이지 범위 요약 |
 | equality 전용 + 키가 매우 큼 | Hash | 공간 절약 |
+
+타입별 특성으로 정리하면 이렇게 갈립니다.
+
+| 인덱스 | 주 자료형 | 대표 연산자 | 인덱스 크기 | 쓰기 비용 | 정렬·범위 |
+|---|---|---|---|---|---|
+| B-tree | 순서를 매길 수 있는 스칼라 전반 | `=` `<` `>` `BETWEEN` `LIKE 'x%'` | 중간 | 낮음 | 지원 |
+| GIN | `tsvector`, `jsonb`, 배열, trigram | `@@` `@>` `?` `%` | 키 중복이 제거돼 작음 | 높음 (`fastupdate`로 완충) | 미지원 (비트맵 전용) |
+| GiST | geometry, range, trigram | `&&` `@>` `<->` `EXCLUDE` | 중간 | 중간 | 거리순 정렬(KNN) 지원 |
+| BRIN | 물리 순서와 상관관계가 큰 스칼라 | `=` `<` `>` `BETWEEN` | 극단적으로 작음 | 매우 낮음 | 미지원 (비트맵 전용) |
+| Hash | 값이 큰 단일 스칼라 컬럼 | `=` | 작음 (4바이트 해시만 저장) | 낮음 (버킷 확장 시 튐) | 미지원 |
 
 이 표에 없는 것 중 한 줄만 언급하자면, **SP-GiST**는 비균형 트리가 자연스러운 데이터(IP 주소 prefix, 전화번호 trie 등)에 쓰이지만 실무 빈도가 낮아 이 시리즈에서는 다루지 않습니다. 필요해지는 순간이 오면 그때 공식 문서를 열면 됩니다.
 

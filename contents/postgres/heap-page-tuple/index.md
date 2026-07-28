@@ -36,7 +36,7 @@ SELECT ctid, id, email FROM users WHERE id = 2;
 
 같은 row인데 좌표가 `(0,2)`에서 `(0,4)`로 옮겨갔습니다. 그리고 한 번도 INSERT한 적이 없는데 4번 슬롯이 어디선가 나타났습니다. UPDATE가 row의 값만 바꾸는 단순한 동작이라면 이런 일이 일어날 이유가 없습니다. 그런데 PostgreSQL에서는 거의 항상 일어납니다. 그것도 의도된 결과로요.
 
-이 두 가지 질문, "왜 자리가 바뀌었는가"와 "새 자리는 어디서 나왔는가"에 답하려면 PostgreSQL의 8KB 페이지가 안쪽에서 어떻게 생겼는지를 알아야 합니다. [지난 글](/postgres/architecture-overview/)에서 "shared_buffers에 캐싱되는 8KB 페이지"라고만 짚고 지나갔던 그 페이지의 내부를 이번 글에서 들여다봅니다. 페이지 안의 슬롯 디렉터리, 튜플 헤더 23바이트, UPDATE가 사실은 INSERT라는 사실, 그리고 8KB에 안 들어가는 큰 값을 어떻게 옆 동네로 떼어내는지(TOAST)까지. 운영 중에 마주치는 `bloat`, `FILLFACTOR` 튜닝 권장, "텍스트 컬럼이 갑자기 느려졌다" 같은 수많은 현상의 근원이 전부 이 8KB 안쪽 구조에서 출발합니다.
+이 두 가지 질문, "왜 자리가 바뀌었는가"와 "새 자리는 어디서 나왔는가"에 답하려면 PostgreSQL의 8KB 페이지가 안쪽에서 어떻게 생겼는지를 알아야 합니다. [shared_buffers](/postgres/architecture-overview/)가 디스크와 주고받는 단위가 바로 이 8KB 페이지인데, 이번 글에서는 그 안쪽을 들여다봅니다. 페이지 안의 슬롯 디렉터리, 튜플 헤더 23바이트, UPDATE가 사실은 INSERT라는 사실, 그리고 8KB에 안 들어가는 큰 값을 어떻게 옆 동네로 떼어내는지(TOAST)까지. 운영 중에 마주치는 `bloat`, `FILLFACTOR` 튜닝 권장, "텍스트 컬럼이 갑자기 느려졌다" 같은 수많은 현상의 근원이 전부 이 8KB 안쪽 구조에서 출발합니다.
 
 ## ctid가 가리키는 곳
 
@@ -92,28 +92,58 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 
 페이지 한 장의 레이아웃은 다음과 같습니다.
 
-```
-┌──────────────────────────────────────┐  ← 0
-│  PageHeaderData (24 bytes)           │
-├──────────────────────────────────────┤  ← 24
-│  ItemId 1 (4 bytes)                  │
-│  ItemId 2 (4 bytes)                  │   line pointer 배열
-│  ItemId 3 (4 bytes)                  │   (앞에서 뒤로 자람)
-│  ...                                 │
-│  ItemId N (4 bytes)                  │
-├──────────────────────────────────────┤  ← pd_lower
-│                                      │
-│           free space                 │
-│                                      │
-├──────────────────────────────────────┤  ← pd_upper
-│  Tuple N data                        │
-│  ...                                 │   tuple data
-│  Tuple 2 data                        │   (뒤에서 앞으로 자람)
-│  Tuple 1 data                        │
-├──────────────────────────────────────┤  ← pd_special
-│  Special space                       │   힙은 비어 있음
-└──────────────────────────────────────┘  ← 8192
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 476" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="8KB 힙 페이지의 레이아웃. 오프셋 0부터 24까지는 PageHeaderData, 그 뒤로 앞에서 뒤로 자라는 ItemId 배열이 pd_lower까지, 가운데는 free space, pd_upper부터 페이지 끝 방향으로 뒤에서 앞으로 자라는 튜플 데이터, 마지막 pd_special 뒤의 special space는 힙에서 크기가 0이고 페이지 끝은 8192다.">
+<style>
+.hp1-t { fill: var(--text, #1c1917); }
+.hp1-m { fill: var(--text-muted, #78716c); }
+.hp1-meta { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.hp1-empty { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.hp1-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+.hp1-ar { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
+</style>
+<defs>
+<marker id="hp1Arrow" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<text x="240" y="28" text-anchor="middle" font-size="20" class="hp1-t">8KB 힙 페이지 레이아웃</text>
+<!-- page header -->
+<rect x="112" y="46" width="292" height="44" class="hp1-meta"/>
+<text x="258" y="74" text-anchor="middle" font-size="18" class="hp1-t">PageHeaderData (24 bytes)</text>
+<!-- line pointer array -->
+<rect x="112" y="90" width="292" height="64" class="hp1-meta"/>
+<text x="258" y="114" text-anchor="middle" font-size="18" class="hp1-t">ItemId 배열 (각 4 bytes)</text>
+<text x="258" y="136" text-anchor="middle" font-size="17" class="hp1-m">앞에서 뒤로 자람</text>
+<!-- free space -->
+<rect x="112" y="154" width="292" height="100" class="hp1-empty"/>
+<text x="258" y="210" text-anchor="middle" font-size="18" class="hp1-m">free space</text>
+<!-- tuple data -->
+<rect x="112" y="254" width="292" height="104" class="hp1-data"/>
+<text x="258" y="298" text-anchor="middle" font-size="18" class="hp1-t">튜플 데이터</text>
+<text x="258" y="320" text-anchor="middle" font-size="17" class="hp1-m">뒤에서 앞으로 자람</text>
+<!-- special space -->
+<rect x="112" y="358" width="292" height="50" class="hp1-empty"/>
+<text x="258" y="378" text-anchor="middle" font-size="18" class="hp1-m">special space</text>
+<text x="258" y="398" text-anchor="middle" font-size="17" class="hp1-m">힙에서는 크기 0</text>
+<!-- offsets -->
+<text x="104" y="52" text-anchor="end" font-size="17" class="hp1-m">0</text>
+<text x="104" y="96" text-anchor="end" font-size="17" class="hp1-m">24</text>
+<text x="104" y="160" text-anchor="end" font-size="17" class="hp1-m">pd_lower</text>
+<text x="104" y="260" text-anchor="end" font-size="17" class="hp1-m">pd_upper</text>
+<text x="104" y="364" text-anchor="end" font-size="17" class="hp1-m">pd_special</text>
+<text x="104" y="414" text-anchor="end" font-size="17" class="hp1-m">8192</text>
+<!-- growth direction -->
+<line x1="426" y1="98" x2="426" y2="146" class="hp1-ar" marker-end="url(#hp1Arrow)"/>
+<line x1="426" y1="350" x2="426" y2="262" class="hp1-ar" marker-end="url(#hp1Arrow)"/>
+<!-- caption -->
+<text x="240" y="440" text-anchor="middle" font-size="17" class="hp1-m">그림의 세로 비율은 실제 축척이 아닙니다.</text>
+<text x="240" y="462" text-anchor="middle" font-size="17" class="hp1-m">헤더 24바이트는 8192바이트의 0.3%입니다.</text>
+</svg>
+</div>
 
 핵심은 **양쪽에서 채워들어온다**는 것입니다. line pointer(`ItemIdData`)는 페이지 헤더 바로 뒤부터 앞에서 뒤로 쌓이고, 실제 튜플 데이터는 페이지 끝(`pd_special` 직전)에서부터 거꾸로 앞으로 쌓입니다. 두 방향이 만나는 가운데가 free space이고, `pd_lower`(line pointer 끝)와 `pd_upper`(tuple 시작)가 같아지는 순간 페이지가 가득 찬 것입니다.
 
@@ -132,7 +162,7 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 | `pd_upper` | 2B | tuple 영역 시작 오프셋 |
 | `pd_special` | 2B | special space 시작 오프셋 (힙은 페이지 끝 = 8192) |
 | `pd_pagesize_version` | 2B | 페이지 크기와 레이아웃 버전 |
-| `pd_prune_xid` | 4B | HOT pruning 힌트. 이 페이지에서 가장 오래된 죽은 튜플의 xid |
+| `pd_prune_xid` | 4B | HOT pruning 힌트. 이 페이지에서 정리 대상이 될 수 있는 가장 오래된 xid (없으면 0) |
 
 운영에서 중요한 건 `pd_lsn`(WAL과 쌍을 이루는 페이지의 버전 표시)과 `pd_prune_xid`(HOT pruning이 트리거될 시점을 기록) 두 개입니다. 나머지는 페이지 내부 자료구조의 boundary 정보일 뿐입니다.
 
@@ -140,11 +170,34 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 
 각 line pointer는 `ItemIdData`라는 4바이트 비트필드입니다.
 
-```
-┌─────────────────────────────────────┐
-│ lp_off (15 bits) │ flags (2) │ lp_len (15) │
-└─────────────────────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 190" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ItemIdData 4바이트를 32비트 막대로 나타낸 그림. 왼쪽부터 lp_off 15비트, lp_flags 2비트, lp_len 15비트가 실제 비트 수에 비례한 폭으로 나뉘어 있다.">
+<style>
+.hp2-t { fill: var(--text, #1c1917); }
+.hp2-m { fill: var(--text-muted, #78716c); }
+.hp2-pos { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.hp2-flag { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.hp2-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+</style>
+<text x="240" y="28" text-anchor="middle" font-size="20" class="hp2-t">ItemIdData (4 bytes = 32 bits)</text>
+<!-- lp_off: 15 bits -->
+<rect x="40" y="64" width="195" height="60" class="hp2-pos"/>
+<text x="137" y="92" text-anchor="middle" font-size="19" class="hp2-t">lp_off</text>
+<text x="137" y="114" text-anchor="middle" font-size="17" class="hp2-m">15 bits</text>
+<!-- lp_flags: 2 bits -->
+<rect x="235" y="64" width="26" height="60" class="hp2-flag"/>
+<!-- lp_len: 15 bits -->
+<rect x="261" y="64" width="195" height="60" class="hp2-pos"/>
+<text x="358" y="92" text-anchor="middle" font-size="19" class="hp2-t">lp_len</text>
+<text x="358" y="114" text-anchor="middle" font-size="17" class="hp2-m">15 bits</text>
+<!-- leader to the 2-bit field -->
+<line x1="248" y1="124" x2="248" y2="146" class="hp2-lead"/>
+<text x="248" y="170" text-anchor="middle" font-size="18" class="hp2-t">lp_flags (2 bits)</text>
+</svg>
+</div>
 
 `lp_off`는 페이지 안에서 실제 튜플이 시작되는 오프셋, `lp_len`은 튜플 길이, `lp_flags`는 슬롯의 상태입니다. 상태는 네 가지가 있습니다.
 
@@ -161,30 +214,76 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 
 이제 line pointer가 가리키는 실제 튜플로 들어가봅시다. 각 튜플은 23바이트짜리 헤더 `HeapTupleHeaderData`로 시작합니다.
 
-```
-┌─────────────────────────────────────────┐  ← 0
-│  t_xmin             4 bytes             │  이 튜플을 만든 트랜잭션 ID
-├─────────────────────────────────────────┤  ← 4
-│  t_xmax             4 bytes             │  이 튜플을 죽인 트랜잭션 ID (없으면 0)
-├─────────────────────────────────────────┤  ← 8
-│  t_cid / t_xvac     4 bytes (union)     │  CommandId 또는 VACUUM xid
-├─────────────────────────────────────────┤  ← 12
-│  t_ctid             6 bytes             │  자신 또는 HOT chain의 다음 버전 위치
-├─────────────────────────────────────────┤  ← 18
-│  t_infomask2        2 bytes             │  속성 개수 + HOT 관련 비트
-├─────────────────────────────────────────┤  ← 20
-│  t_infomask         2 bytes             │  null 여부, lock 비트, frozen 비트 등
-├─────────────────────────────────────────┤  ← 22
-│  t_hoff             1 byte              │  사용자 데이터 시작 오프셋
-├─────────────────────────────────────────┤  ← 23
-│  NULL bitmap (있을 경우)                │
-│  alignment padding                      │
-├─────────────────────────────────────────┤  ← t_hoff
-│  user data (column values)              │
-└─────────────────────────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 832" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="HeapTupleHeaderData의 필드 배치. 오프셋 0부터 t_xmin 4바이트, 4부터 t_xmax 4바이트, 8부터 t_cid와 t_xvac의 union 4바이트, 12부터 t_ctid 6바이트, 18부터 t_infomask2 2바이트, 20부터 t_infomask 2바이트, 22부터 t_hoff 1바이트로 구조체 23바이트가 끝나고, 이어서 NULL bitmap과 정렬 패딩, t_hoff 오프셋부터 사용자 데이터가 온다.">
+<style>
+.hp3-t { fill: var(--text, #1c1917); }
+.hp3-m { fill: var(--text-muted, #78716c); }
+.hp3-mvcc { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.hp3-plain { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.hp3-var { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.hp3-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+.hp3-br { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+</style>
+<text x="240" y="30" text-anchor="middle" font-size="20" class="hp3-t">HeapTupleHeaderData</text>
+<!-- t_xmin, 4 bytes -->
+<rect x="70" y="60" width="350" height="96" class="hp3-mvcc"/>
+<text x="245" y="114" text-anchor="middle" font-size="19" class="hp3-t">t_xmin (4 bytes)</text>
+<!-- t_xmax, 4 bytes -->
+<rect x="70" y="156" width="350" height="96" class="hp3-mvcc"/>
+<text x="245" y="210" text-anchor="middle" font-size="19" class="hp3-t">t_xmax (4 bytes)</text>
+<!-- t_cid / t_xvac union, 4 bytes -->
+<rect x="70" y="252" width="350" height="96" class="hp3-plain"/>
+<text x="245" y="306" text-anchor="middle" font-size="18" class="hp3-t">t_cid / t_xvac (4 bytes, union)</text>
+<!-- t_ctid, 6 bytes -->
+<rect x="70" y="348" width="350" height="144" class="hp3-mvcc"/>
+<text x="245" y="426" text-anchor="middle" font-size="19" class="hp3-t">t_ctid (6 bytes)</text>
+<!-- t_infomask2, 2 bytes -->
+<rect x="70" y="492" width="350" height="48" class="hp3-plain"/>
+<text x="245" y="522" text-anchor="middle" font-size="18" class="hp3-t">t_infomask2 (2 bytes)</text>
+<!-- t_infomask, 2 bytes -->
+<rect x="70" y="540" width="350" height="48" class="hp3-plain"/>
+<text x="245" y="570" text-anchor="middle" font-size="18" class="hp3-t">t_infomask (2 bytes)</text>
+<!-- t_hoff, 1 byte -->
+<rect x="70" y="588" width="350" height="24" class="hp3-plain"/>
+<text x="245" y="606" text-anchor="middle" font-size="17" class="hp3-t">t_hoff (1 byte)</text>
+<!-- NULL bitmap and padding, variable -->
+<rect x="70" y="612" width="350" height="60" class="hp3-var"/>
+<text x="245" y="648" text-anchor="middle" font-size="18" class="hp3-m">NULL bitmap + 정렬 패딩</text>
+<!-- user data -->
+<rect x="70" y="672" width="350" height="96" class="hp3-data"/>
+<text x="245" y="726" text-anchor="middle" font-size="18" class="hp3-t">user data (컬럼 값)</text>
+<!-- byte offsets -->
+<text x="62" y="66" text-anchor="end" font-size="17" class="hp3-m">0</text>
+<text x="62" y="162" text-anchor="end" font-size="17" class="hp3-m">4</text>
+<text x="62" y="258" text-anchor="end" font-size="17" class="hp3-m">8</text>
+<text x="62" y="354" text-anchor="end" font-size="17" class="hp3-m">12</text>
+<text x="62" y="498" text-anchor="end" font-size="17" class="hp3-m">18</text>
+<text x="62" y="546" text-anchor="end" font-size="17" class="hp3-m">20</text>
+<text x="62" y="594" text-anchor="end" font-size="17" class="hp3-m">22</text>
+<text x="62" y="618" text-anchor="end" font-size="17" class="hp3-m">23</text>
+<text x="62" y="678" text-anchor="end" font-size="17" class="hp3-m">t_hoff</text>
+<!-- 23-byte bracket -->
+<path d="M434 60 L442 60 L442 612 L434 612" class="hp3-br"/>
+<text x="462" y="336" text-anchor="middle" font-size="17" class="hp3-m" transform="rotate(-90 462 336)">23 bytes</text>
+<!-- caption -->
+<text x="240" y="794" text-anchor="middle" font-size="17" class="hp3-m">세로 길이가 바이트 크기에 비례합니다.</text>
+<text x="240" y="816" text-anchor="middle" font-size="17" class="hp3-m">강조된 세 필드가 MVCC 가시성 판정에 쓰입니다.</text>
+</svg>
+</div>
 
-여기서 잠깐 짚어둘 게 있습니다. struct 자체의 크기는 정확히 **23바이트**(`offsetof(HeapTupleHeaderData, t_bits)`)이지만, `t_hoff`는 MAXALIGN의 배수여야 하므로 x86-64(MAXALIGN=8) 환경에서는 NULL이 없는 일반 튜플의 사용자 데이터가 **24바이트 지점**부터 시작합니다. "23바이트 헤더"라는 표현은 struct 크기를, "튜플마다 24바이트 오버헤드"는 정렬까지 포함한 실제 오프셋을 가리킵니다.
+세 번째 자리는 union이라 상황에 따라 `t_cid`(이 튜플을 넣거나 지운 커맨드 ID)로도, `t_xvac`(옛 방식 `VACUUM FULL`이 쓰던 xid)으로도 쓰입니다. 마지막 `t_hoff`는 사용자 데이터가 시작되는 오프셋인데, NULL이 하나라도 있으면 그 앞에 NULL bitmap이 끼어들기 때문에 튜플마다 값이 달라집니다.
+
+:::note
+
+**23바이트인가 24바이트인가**
+
+struct 자체의 크기는 정확히 23바이트(`offsetof(HeapTupleHeaderData, t_bits)`)이지만, `t_hoff`는 MAXALIGN의 배수여야 하므로 x86-64(MAXALIGN=8) 환경에서는 NULL이 없는 일반 튜플의 사용자 데이터가 24바이트 지점부터 시작합니다. "23바이트 헤더"라는 표현은 struct 크기를, "튜플마다 24바이트 오버헤드"는 정렬까지 포함한 실제 오프셋을 가리킵니다.
+
+:::
 
 이 헤더의 핵심은 **`t_xmin`, `t_xmax`, `t_ctid`, 그리고 두 개의 infomask** 필드입니다.
 
@@ -363,7 +462,7 @@ ORDER BY id;
 
 - **id=1**: 5바이트짜리 작은 값. `column_size`는 varlena 1바이트 헤더 + 5 = 6. TOAST 임계값 근처에도 못 미치니 TOAST는 동작하지 않습니다.
 - **id=2**: 100KB짜리 `'aaaaa...'` 반복 텍스트. `pglz`로 압축되어 약 1.1KB로 줄었고, 임계값 아래로 내려갔으니 본 테이블에 그대로 in-line으로 들어갑니다. `compression` 컬럼이 `pglz`로 표시됩니다.
-- **id=3**: 160KB짜리 랜덤 md5 해시. 압축이 거의 안 되니 외부 저장으로 빠집니다. `compression`이 비어 있는 게 그 증거입니다(외부 저장된 비압축 값). `column_size`가 160000 그대로 나오는 건 `pg_column_size`가 외부 저장된 값도 detoasted 후의 크기를 반환하기 때문이고, 본 테이블에 실제로 남는 건 18바이트짜리 포인터뿐입니다.
+- **id=3**: 160KB짜리 랜덤 md5 해시. 압축이 거의 안 되니 외부 저장으로 빠집니다. `compression`이 비어 있는 게 그 증거입니다(외부 저장된 비압축 값). `column_size`가 160000 그대로 나오는 건 `pg_column_size`가 외부 저장된 값에 대해 TOAST 테이블에 실제로 들어간 크기를 돌려주기 때문입니다. 압축이 걸리지 않아 그 크기가 원본과 같을 뿐이고, 본 테이블에 남는 건 18바이트짜리 포인터뿐입니다.
 
 본 테이블과 TOAST 테이블의 실제 디스크 사용량을 비교하면 외부 저장이 일어났음을 더 확실히 볼 수 있습니다.
 

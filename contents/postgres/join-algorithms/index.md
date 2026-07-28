@@ -13,7 +13,7 @@ thumbnail: './thumbnail.png'
 
 세 상황 모두 플래너가 **조인을 실행하는 방법 세 가지**와 **조인 순서**를 저마다 다르게 고른 결과입니다. PostgreSQL은 JOIN 한 번을 Nested Loop, Hash Join, Merge Join 중 하나로 실행하는데, 각 알고리즘의 cost 공식이 양쪽 입력 크기·인덱스 유무·메모리 한계에서 서로 다르게 반응하기 때문에 같은 SQL이라도 상황에 따라 전혀 다른 plan으로 풀립니다.
 
-이 글에서는 세 알고리즘의 내부 동작, 각각이 언제 이기고 언제 지는지, 그리고 [지난 글에서 다룬 통계](/postgres/planner-statistics/)가 플래너의 선택에 어떻게 연결되는지를 차례로 봅니다.
+이 글에서는 세 알고리즘의 내부 동작, 각각이 언제 이기고 언제 지는지, 그리고 [플래너 통계](/postgres/planner-statistics/)가 그 선택에 어떻게 연결되는지를 차례로 봅니다.
 
 ## 조인은 결국 "두 집합을 어떻게 짝짓는가"
 
@@ -33,7 +33,7 @@ PostgreSQL이 쓰는 전략은 세 가지입니다.
 
 가장 단순한 전략부터 봅니다. 바깥 집합을 한 번 순회하고, 각 행마다 안쪽 집합에서 매칭되는 행을 찾습니다. 의사코드로 쓰면 이렇습니다.
 
-```
+```text
 for each row r in outer:
     for each row s in inner:
         if match(r, s):
@@ -41,6 +41,82 @@ for each row r in outer:
 ```
 
 순진하게 구현하면 `|outer| × |inner|` 비용입니다. 실전에서 유용한 이유는 **안쪽에 인덱스가 있으면** 안쪽 루프가 인덱스 조회 한 번으로 끝나기 때문입니다. 이 경우 cost는 대략 `outer_rows × inner_index_lookup_cost` 로 줄어듭니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Nested Loop 조인의 동작. outer 관계의 각 행마다 inner 관계를 한 번씩 조회하는데, inner에 인덱스가 없으면 매번 전체 스캔이 되고 인덱스가 있으면 인덱스 조회 한 번으로 끝난다. 비용이 outer 행 수에 곱해진다는 점을 함께 보여준다.">
+<defs>
+<marker id="nlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<style>
+.nl-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
+.nl-sub   { font-size: 18px; fill: var(--text-muted, #78716c); }
+.nl-ol    { font-size: 19px; fill: var(--primary, #0d9488); font-weight: 600; }
+.nl-il    { font-size: 19px; fill: var(--accent, #d97706); font-weight: 600; }
+.nl-cellt { font-size: 18px; fill: var(--text, #1c1917); }
+.nl-lab   { font-size: 19px; fill: var(--text, #1c1917); }
+.nl-small { font-size: 17px; fill: var(--text-muted, #78716c); }
+.nl-cost  { font-size: 18px; fill: var(--text, #1c1917); }
+.nl-note  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
+.nl-eg    { font-size: 18px; fill: var(--text-muted, #78716c); }
+.nl-dg    { font-size: 18px; fill: var(--text-danger, #dc2626); }
+.nl-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.nl-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.nl-cell  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.nl-plain { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.nl-arw   { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; marker-end: url(#nlArrow); }
+.nl-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text class="nl-title" x="240" y="28" text-anchor="middle">Nested Loop: 이중 루프</text>
+<!-- 위: 인덱스 없음 -->
+<text class="nl-sub" x="240" y="58" text-anchor="middle">위: inner에 인덱스 없음</text>
+<text class="nl-ol" x="100" y="84" text-anchor="middle">outer</text>
+<text class="nl-il" x="376" y="84" text-anchor="middle">inner</text>
+<rect class="nl-obox" x="20" y="92" width="160" height="132" rx="6"/>
+<rect class="nl-cell" x="32" y="102" width="136" height="34" rx="4"/>
+<rect class="nl-cell" x="32" y="140" width="136" height="34" rx="4"/>
+<rect class="nl-cell" x="32" y="178" width="136" height="34" rx="4"/>
+<text class="nl-cellt" x="100" y="125" text-anchor="middle">r1</text>
+<text class="nl-cellt" x="100" y="163" text-anchor="middle">r2</text>
+<text class="nl-cellt" x="100" y="201" text-anchor="middle">r3</text>
+<rect class="nl-ibox" x="292" y="92" width="168" height="132" rx="6"/>
+<text class="nl-lab" x="376" y="146" text-anchor="middle">전체 스캔</text>
+<text class="nl-small" x="376" y="172" text-anchor="middle">M행 전부 비교</text>
+<path class="nl-arw" d="M186 119 L286 119"/>
+<path class="nl-arw" d="M186 157 L286 157"/>
+<path class="nl-arw" d="M186 195 L286 195"/>
+<text class="nl-cost" x="240" y="252" text-anchor="middle">비용 ≈ outer 행 수 × inner 전체 스캔</text>
+<path class="nl-div" d="M20 272 L460 272"/>
+<!-- 아래: 인덱스 있음 -->
+<text class="nl-sub" x="240" y="298" text-anchor="middle">아래: inner에 인덱스 있음</text>
+<text class="nl-ol" x="100" y="324" text-anchor="middle">outer</text>
+<text class="nl-il" x="376" y="324" text-anchor="middle">inner</text>
+<rect class="nl-obox" x="20" y="332" width="160" height="132" rx="6"/>
+<rect class="nl-cell" x="32" y="342" width="136" height="34" rx="4"/>
+<rect class="nl-cell" x="32" y="380" width="136" height="34" rx="4"/>
+<rect class="nl-cell" x="32" y="418" width="136" height="34" rx="4"/>
+<text class="nl-cellt" x="100" y="365" text-anchor="middle">r1</text>
+<text class="nl-cellt" x="100" y="403" text-anchor="middle">r2</text>
+<text class="nl-cellt" x="100" y="441" text-anchor="middle">r3</text>
+<rect class="nl-ibox" x="292" y="332" width="168" height="60" rx="6"/>
+<text class="nl-lab" x="376" y="358" text-anchor="middle">인덱스</text>
+<text class="nl-small" x="376" y="381" text-anchor="middle">조회 1회</text>
+<rect class="nl-plain" x="292" y="412" width="168" height="52" rx="6"/>
+<text class="nl-small" x="376" y="444" text-anchor="middle">필요한 행만 읽기</text>
+<path class="nl-arw" d="M376 392 L376 406"/>
+<path class="nl-arw" d="M186 359 L286 350"/>
+<path class="nl-arw" d="M186 397 L286 362"/>
+<path class="nl-arw" d="M186 435 L286 374"/>
+<text class="nl-cost" x="240" y="492" text-anchor="middle">비용 ≈ outer 행 수 × 인덱스 조회 1회</text>
+<path class="nl-div" d="M20 512 L460 512"/>
+<!-- 곱셈 강조 -->
+<text class="nl-note" x="240" y="540" text-anchor="middle">곱셈이라 outer가 커지면 그대로 불어난다</text>
+<text class="nl-eg" x="240" y="568" text-anchor="middle">outer 1행 → inner 조회 1번</text>
+<text class="nl-dg" x="240" y="594" text-anchor="middle">outer 10만 행 → inner 조회 10만 번</text>
+</svg>
+</div>
 
 실제로 찍어봅니다.
 
@@ -61,7 +137,7 @@ FROM users u JOIN orders o ON o.user_id = u.id
 WHERE u.id = 42;
 ```
 
-```
+```text
  Nested Loop  (cost=0.42..45.23 rows=10 width=36)
               (actual time=0.021..0.089 rows=9 loops=1)
    ->  Index Scan using users_pkey on users u
@@ -83,7 +159,7 @@ FROM users u JOIN orders o ON o.user_id = u.id
 WHERE u.id < 10000;
 ```
 
-```
+```text
  Hash Join  (cost=271.00..2437.00 rows=99900 width=36)
    Hash Cond: (o.user_id = u.id)
    ->  Seq Scan on orders o  (cost=0.00..1834.00 rows=100000 width=12)
@@ -96,14 +172,99 @@ WHERE u.id < 10000;
 
 ### Nested Loop가 위험해지는 지점
 
-Nested Loop의 함정은 **플래너가 outer 크기를 작게 잘못 추정할 때** 나타납니다. 추정 1행이 실제 10만 행이 되면 inner 인덱스를 10만 번 타게 되는데, 그동안 Hash Join이었다면 한 번만 훑고 끝났을 것이기 때문입니다. [통계 갱신 지연이나 상관 컬럼 문제](/postgres/planner-statistics/)로 estimate가 틀어졌을 때 가장 극적으로 느려지는 조인이 바로 Nested Loop입니다.
+Nested Loop의 함정은 **플래너가 outer 크기를 작게 잘못 추정할 때** 나타납니다. 추정 1행이 실제 10만 행이 되면 inner 인덱스를 10만 번 타게 되는데, 그동안 Hash Join이었다면 한 번만 훑고 끝났을 것이기 때문입니다. [통계 갱신 지연이나 상관 컬럼 문제](/postgres/planner-statistics/)로 estimate가 틀어졌을 때 가장 크게 느려지는 조인이 Nested Loop입니다.
 
 ## Hash Join: 해시 테이블을 짓고 probe한다
 
 Hash Join은 두 단계로 동작합니다.
 
-1. **Build phase** — 더 작은 쪽(build side)을 통째로 훑으면서 조인 키를 해시해 메모리에 해시 테이블을 만듭니다.
-2. **Probe phase** — 더 큰 쪽(probe side)을 훑으면서 각 행의 조인 키를 해시해 테이블에서 매칭을 찾습니다.
+1. **Build phase**: 더 작은 쪽(build side)을 통째로 훑으면서 조인 키를 해시해 메모리에 해시 테이블을 만듭니다.
+2. **Probe phase**: 더 큰 쪽(probe side)을 훑으면서 각 행의 조인 키를 해시해 테이블에서 매칭을 찾습니다.
+
+두 단계는 동시에 돌지 않습니다. build가 완전히 끝나야 probe가 시작됩니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Hash Join의 두 단계. 1단계 build에서 작은 쪽 관계를 해시해 메모리에 해시 테이블을 만들고, 2단계 probe에서 큰 쪽 관계를 훑으며 해시 테이블을 조회해 매칭된 결과 행을 만든다. 해시 테이블이 work_mem을 넘으면 여러 batch로 쪼개져 디스크를 오간다.">
+<defs>
+<marker id="hjArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<style>
+.hj-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
+.hj-step  { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
+.hj-ol    { font-size: 19px; fill: var(--primary, #0d9488); font-weight: 600; }
+.hj-il    { font-size: 19px; fill: var(--accent, #d97706); font-weight: 600; }
+.hj-lab   { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
+.hj-body  { font-size: 17px; fill: var(--text, #1c1917); }
+.hj-small { font-size: 17px; fill: var(--text-muted, #78716c); }
+.hj-okt   { font-size: 19px; fill: var(--text-success, #16a34a); font-weight: 600; }
+.hj-note  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
+.hj-eg    { font-size: 18px; fill: var(--text-muted, #78716c); }
+.hj-dg    { font-size: 18px; fill: var(--text-danger, #dc2626); }
+.hj-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.hj-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.hj-hash  { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.hj-bk    { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.hj-ok    { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
+.hj-ph    { fill: var(--bg-muted, #eeecea); }
+.hj-batch { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+.hj-arw   { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; marker-end: url(#hjArrow); }
+.hj-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text class="hj-title" x="240" y="28" text-anchor="middle">Hash Join: build 다음 probe</text>
+<!-- 1단계 build -->
+<rect class="hj-ph" x="20" y="48" width="150" height="32" rx="16"/>
+<text class="hj-step" x="95" y="71" text-anchor="middle">1단계 build</text>
+<rect class="hj-obox" x="20" y="92" width="160" height="88" rx="6"/>
+<text class="hj-ol" x="100" y="122" text-anchor="middle">작은 쪽</text>
+<text class="hj-body" x="100" y="147" text-anchor="middle">users</text>
+<text class="hj-small" x="100" y="169" text-anchor="middle">1만 행</text>
+<path class="hj-arw" d="M186 136 L286 136"/>
+<text class="hj-small" x="236" y="126" text-anchor="middle">키 해시</text>
+<rect class="hj-hash" x="292" y="92" width="168" height="88" rx="6"/>
+<text class="hj-lab" x="376" y="120" text-anchor="middle">해시 테이블</text>
+<rect class="hj-bk" x="302" y="132" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="342" y="132" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="382" y="132" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="422" y="132" width="34" height="18" rx="3"/>
+<text class="hj-small" x="376" y="170" text-anchor="middle">work_mem 안에</text>
+<path class="hj-div" d="M20 198 L460 198"/>
+<!-- 2단계 probe -->
+<rect class="hj-ph" x="20" y="212" width="150" height="32" rx="16"/>
+<text class="hj-step" x="95" y="235" text-anchor="middle">2단계 probe</text>
+<rect class="hj-ibox" x="20" y="256" width="160" height="88" rx="6"/>
+<text class="hj-il" x="100" y="286" text-anchor="middle">큰 쪽</text>
+<text class="hj-body" x="100" y="311" text-anchor="middle">orders</text>
+<text class="hj-small" x="100" y="333" text-anchor="middle">10만 행</text>
+<path class="hj-arw" d="M186 300 L286 300"/>
+<text class="hj-small" x="236" y="290" text-anchor="middle">키 해시</text>
+<rect class="hj-hash" x="292" y="256" width="168" height="88" rx="6"/>
+<text class="hj-lab" x="376" y="284" text-anchor="middle">해시 테이블</text>
+<rect class="hj-bk" x="302" y="296" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="342" y="296" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="382" y="296" width="34" height="18" rx="3"/>
+<rect class="hj-bk" x="422" y="296" width="34" height="18" rx="3"/>
+<text class="hj-small" x="376" y="334" text-anchor="middle">버킷에서 매칭</text>
+<path class="hj-arw" d="M376 352 L376 372"/>
+<rect class="hj-ok" x="256" y="378" width="204" height="46" rx="6"/>
+<text class="hj-okt" x="358" y="408" text-anchor="middle">매칭된 결과 행</text>
+<path class="hj-div" d="M20 442 L460 442"/>
+<!-- work_mem 초과 -->
+<text class="hj-note" x="240" y="472" text-anchor="middle">해시 테이블이 work_mem을 넘으면</text>
+<rect class="hj-batch" x="20" y="490" width="100" height="50" rx="6"/>
+<rect class="hj-batch" x="132" y="490" width="100" height="50" rx="6"/>
+<rect class="hj-batch" x="244" y="490" width="100" height="50" rx="6"/>
+<rect class="hj-batch" x="356" y="490" width="100" height="50" rx="6"/>
+<text class="hj-body" x="70" y="521" text-anchor="middle">batch 1</text>
+<text class="hj-body" x="182" y="521" text-anchor="middle">batch 2</text>
+<text class="hj-body" x="294" y="521" text-anchor="middle">batch 3</text>
+<text class="hj-body" x="406" y="521" text-anchor="middle">...</text>
+<text class="hj-eg" x="240" y="566" text-anchor="middle">한 batch씩 디스크에 내렸다 다시 올린다</text>
+<text class="hj-dg" x="240" y="594" text-anchor="middle">Batches: 16 이면 디스크 왕복이 16번</text>
+</svg>
+</div>
 
 cost는 `build_rows + probe_rows`로, 양쪽 크기에 선형입니다. Nested Loop와 달리 **곱셈이 아닌 덧셈**이라는 게 핵심입니다. 대신 `=` 조건에만 쓸 수 있습니다. `<`, `LIKE` 같은 조건은 해시로 매칭할 수 없기 때문입니다.
 
@@ -121,7 +282,7 @@ SELECT u.email, o.amount
 FROM users u JOIN orders o ON o.user_id = u.id;
 ```
 
-```
+```text
  Hash Join  (...)
    ->  Hash  (cost=196.00..196.00 rows=10000 width=32)
          Buckets: 2048  Batches: 16  Memory Usage: 49kB
@@ -138,7 +299,7 @@ SELECT u.email, o.amount
 FROM users u JOIN orders o ON o.user_id = u.id;
 ```
 
-```
+```text
  Hash Join  (...)
    ->  Hash  (...)
          Buckets: 16384  Batches: 1  Memory Usage: 705kB
@@ -151,15 +312,97 @@ FROM users u JOIN orders o ON o.user_id = u.id;
 
 ## Merge Join: 정렬된 두 스트림 맞물리기
 
-Merge Join은 두 입력이 모두 **조인 키로 정렬**돼 있다는 전제 하에 동작합니다. 정렬된 두 리스트를 동시에 앞에서부터 훑으면서 같은 값이 나오면 매칭 쌍을 만들고, 한쪽이 크면 그쪽을 넘기는 방식입니다.
+Merge Join은 두 입력이 모두 **조인 키로 정렬**돼 있다는 전제 하에 동작합니다. 양쪽에 포인터를 하나씩 두고 앞에서부터 동시에 훑으면서, 값이 같으면 매칭 쌍을 만들고 값이 다르면 작은 쪽 포인터만 한 칸 전진시킵니다.
 
-```
-outer: [1, 3, 5, 7, 9]
-inner: [2, 3, 5, 8, 9]
-        → (3,3), (5,5), (9,9)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 610" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Merge Join의 동작. 조인 키로 정렬된 두 스트림을 앞에서부터 동시에 훑으며 값이 같은 칸끼리 매칭하고, 값이 다르면 작은 쪽 포인터만 전진시킨다. 인덱스가 정렬을 공급하면 Sort 비용이 사라진다는 점을 함께 보여준다.">
+<style>
+.mj-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
+.mj-sub   { font-size: 18px; fill: var(--text-muted, #78716c); }
+.mj-ol    { font-size: 18px; fill: var(--primary, #0d9488); font-weight: 600; }
+.mj-il    { font-size: 18px; fill: var(--accent, #d97706); font-weight: 600; }
+.mj-val   { font-size: 19px; fill: var(--text, #1c1917); }
+.mj-okv   { font-size: 19px; fill: var(--text-success, #16a34a); font-weight: 600; }
+.mj-okt   { font-size: 18px; fill: var(--text-success, #16a34a); }
+.mj-head  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
+.mj-row   { font-size: 18px; fill: var(--text, #1c1917); }
+.mj-small { font-size: 17px; fill: var(--text-muted, #78716c); }
+.mj-ocell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.mj-icell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.mj-okc   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2.5; }
+.mj-link  { stroke: var(--text-success, #16a34a); stroke-width: 2.5; fill: none; }
+.mj-band  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.mj-bandok{ fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+.mj-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.mj-boxok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
+.mj-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text class="mj-title" x="240" y="28" text-anchor="middle">Merge Join: 두 포인터 전진</text>
+<!-- 정렬된 두 스트림 -->
+<text class="mj-sub" x="240" y="58" text-anchor="middle">정렬된 두 스트림을 앞에서부터 비교</text>
+<text class="mj-ol" x="24" y="105">outer</text>
+<rect class="mj-ocell" x="88" y="82" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="164" y="82" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="240" y="82" width="68" height="34" rx="4"/>
+<rect class="mj-ocell" x="316" y="82" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="392" y="82" width="68" height="34" rx="4"/>
+<text class="mj-val" x="122" y="105" text-anchor="middle">1</text>
+<text class="mj-okv" x="198" y="105" text-anchor="middle">3</text>
+<text class="mj-okv" x="274" y="105" text-anchor="middle">5</text>
+<text class="mj-val" x="350" y="105" text-anchor="middle">7</text>
+<text class="mj-okv" x="426" y="105" text-anchor="middle">9</text>
+<path class="mj-link" d="M198 116 L198 134"/>
+<path class="mj-link" d="M274 116 L274 134"/>
+<path class="mj-link" d="M426 116 L426 134"/>
+<text class="mj-il" x="24" y="157">inner</text>
+<rect class="mj-icell" x="88" y="134" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="164" y="134" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="240" y="134" width="68" height="34" rx="4"/>
+<rect class="mj-icell" x="316" y="134" width="68" height="34" rx="4"/>
+<rect class="mj-okc" x="392" y="134" width="68" height="34" rx="4"/>
+<text class="mj-val" x="122" y="157" text-anchor="middle">2</text>
+<text class="mj-okv" x="198" y="157" text-anchor="middle">3</text>
+<text class="mj-okv" x="274" y="157" text-anchor="middle">5</text>
+<text class="mj-val" x="350" y="157" text-anchor="middle">8</text>
+<text class="mj-okv" x="426" y="157" text-anchor="middle">9</text>
+<text class="mj-okt" x="240" y="196" text-anchor="middle">결과: (3, 3) (5, 5) (9, 9)</text>
+<path class="mj-div" d="M20 214 L460 214"/>
+<!-- 전진 규칙 -->
+<text class="mj-head" x="240" y="242" text-anchor="middle">포인터 전진 규칙</text>
+<rect class="mj-band" x="20" y="258" width="440" height="38" rx="6"/>
+<text class="mj-row" x="38" y="283">outer 값이 작으면 outer만 전진</text>
+<rect class="mj-band" x="20" y="304" width="440" height="38" rx="6"/>
+<text class="mj-row" x="38" y="329">inner 값이 작으면 inner만 전진</text>
+<rect class="mj-bandok" x="20" y="350" width="440" height="38" rx="6"/>
+<text class="mj-okt" x="38" y="375">값이 같으면 결과 행을 만들고 둘 다 전진</text>
+<path class="mj-div" d="M20 406 L460 406"/>
+<!-- 정렬 비용 -->
+<text class="mj-head" x="240" y="434" text-anchor="middle">정렬 비용이 붙는지가 관건</text>
+<rect class="mj-box" x="20" y="450" width="440" height="66" rx="6"/>
+<text class="mj-head" x="38" y="478">정렬돼 있지 않으면</text>
+<text class="mj-small" x="38" y="504">Sort 노드 두 개가 붙어 Hash Join에 밀린다</text>
+<rect class="mj-boxok" x="20" y="528" width="440" height="66" rx="6"/>
+<text class="mj-okt" x="38" y="556">인덱스가 정렬 순서를 공급하면</text>
+<text class="mj-small" x="38" y="582">Sort 비용이 사라져 Merge Join이 이긴다</text>
+</svg>
+</div>
 
-cost는 `sort_cost_outer + sort_cost_inner + merge_cost`입니다. 양쪽이 이미 B-tree 인덱스로 정렬돼 있거나 `ORDER BY`가 따라붙으면 Sort 비용이 0에 가까워지면서 경쟁력이 생기지만, 그런 상황이 아니면 Sort 비용 때문에 Hash Join에 밀리는 경우가 많습니다. 실전에서는 세 알고리즘 중 가장 적게 보이고, 양쪽 인덱스가 이미 정렬을 제공하거나 non-equality 조인(`a.val BETWEEN b.lo AND b.hi`) 같은 특수 상황에서 쓰입니다. 일반적인 equality JOIN 튜닝에서는 Merge Join 자체를 크게 신경 쓸 일이 많지 않습니다.
+cost는 `sort_cost_outer + sort_cost_inner + merge_cost`입니다. 양쪽이 이미 B-tree 인덱스로 정렬돼 있거나 `ORDER BY`가 따라붙으면 Sort 비용이 0에 가까워지면서 경쟁력이 생기지만, 그런 상황이 아니면 Sort 비용 때문에 Hash Join에 밀리는 경우가 많습니다.
+
+Merge Join도 조인 조건은 등가(`=`)여야 합니다. 정확히는 B-tree 연산자 패밀리에 등록된 등가 연산자, 즉 mergejoinable clause여야 merge 조건으로 쓰입니다. `a.val BETWEEN b.lo AND b.hi` 같은 범위 조인은 Merge Join도 Hash Join도 쓸 수 없어서 Nested Loop로 떨어집니다. 실전에서 Merge Join은 세 알고리즘 중 가장 적게 보이고, 양쪽 인덱스가 정렬 순서를 그대로 공급하는 큰 테이블끼리의 조인에서 주로 나타납니다.
+
+세 알고리즘을 조건별로 놓고 비교하면 이렇습니다.
+
+| 알고리즘 | cost 형태 | 유리한 행 수 | 인덱스·정렬 전제 | 조인 조건 |
+|---|---|---|---|---|
+| Nested Loop | `outer × inner` (곱셈) | outer가 작을수록 유리 | inner 조인 키에 인덱스가 있어야 실전에서 쓸 만함 | 등가·범위·비등가 모두 |
+| Hash Join | `build + probe` (덧셈) | 양쪽 다 커도 무방 | 전제 없음. 해시 테이블이 `work_mem`에 들어가면 유리 | `=` 만 |
+| Merge Join | `sort + sort + merge` | 양쪽 다 커도 무방 | 양쪽이 조인 키로 정렬돼 있어야 이득. 보통 B-tree 인덱스가 공급 | `=` 만 |
+
+`work_mem` 의존도도 다릅니다. Hash Join은 해시 테이블이 `work_mem`을 넘으면 batch로 쪼개지고, Merge Join은 Sort가 `work_mem`을 넘으면 외부 정렬로 디스크를 씁니다. Nested Loop만 `work_mem`과 무관합니다.
 
 ## 플래너는 어떻게 고르는가
 
@@ -167,8 +410,8 @@ cost는 `sort_cost_outer + sort_cost_inner + merge_cost`입니다. 양쪽이 이
 
 PostgreSQL은 두 전략을 씁니다.
 
-- **동적 프로그래밍** — 테이블 수가 `geqo_threshold`(기본 12) 미만이면 가능한 조인 순서 조합을 전부 cost로 비교해 최적을 고릅니다. 이때 명시적 `JOIN` 트리를 얼마나 펼쳐서 탐색 대상에 포함할지는 `join_collapse_limit`(기본 8)이, 서브쿼리를 상위 FROM 리스트로 펼치는 범위는 `from_collapse_limit`(기본 8)이 각각 제어합니다.
-- **GEQO**(Genetic Query Optimizer) — 테이블 수가 `geqo_threshold`(기본 12)를 넘으면 조합이 폭발하니 유전자 알고리즘으로 근사해를 찾습니다. 빠르지만 최적해를 놓칠 수 있습니다.
+- **동적 프로그래밍**: 테이블 수가 `geqo_threshold`(기본 12) 미만이면 가능한 조인 순서 조합을 전부 cost로 비교해 최적을 고릅니다. 이때 명시적 `JOIN` 트리를 얼마나 펼쳐서 탐색 대상에 포함할지는 `join_collapse_limit`(기본 8)이, 서브쿼리를 상위 FROM 리스트로 펼치는 범위는 `from_collapse_limit`(기본 8)이 각각 제어합니다.
+- **GEQO**(Genetic Query Optimizer): 테이블 수가 `geqo_threshold`(기본 12)를 넘으면 조합이 폭발하니 유전자 알고리즘으로 근사해를 찾습니다. 빠르지만 최적해를 놓칠 수 있습니다.
 
 테이블 10개 넘는 JOIN에서 plan이 이상하면 `geqo_threshold`를 올려보거나 `join_collapse_limit`을 키워 탐색 범위를 넓히는 방법, 또는 쿼리를 CTE로 쪼개 조인 블록을 분리하는 방법이 자주 먹힙니다.
 
@@ -190,10 +433,10 @@ PostgreSQL은 MySQL의 `STRAIGHT_JOIN`이나 Oracle의 `/*+ USE_NL */` 같은 **
 
 ## 흔한 오해
 
-- **"Nested Loop는 항상 나쁘다"** — outer가 1행이고 inner에 인덱스가 있으면 세 알고리즘 중 가장 쌉니다. 문제는 outer estimate가 틀어졌을 때입니다.
-- **"Hash Join이 Merge Join보다 항상 빠르다"** — 양쪽이 이미 정렬돼 있고 ORDER BY가 따라붙는 쿼리는 Merge Join이 이깁니다. 빈도가 낮을 뿐 "항상"은 아닙니다.
-- **"work_mem을 크게 주면 무조건 이득"** — 쿼리 하나 × 노드 여러 개 × 커넥션 다수로 곱해지는 메모리라 서버가 OOM 나기 쉽습니다. 전역보다 세션·쿼리 단위로 조정하는 편이 안전합니다.
-- **"PostgreSQL도 조인 힌트를 준다"** — 공식 문법은 없습니다. GUC나 `pg_hint_plan` 확장이 대안입니다.
+- **"Nested Loop는 항상 나쁘다"**: outer가 1행이고 inner에 인덱스가 있으면 세 알고리즘 중 가장 쌉니다. 문제는 outer estimate가 틀어졌을 때입니다.
+- **"Hash Join이 Merge Join보다 항상 빠르다"**: 양쪽이 이미 정렬돼 있고 ORDER BY가 따라붙는 쿼리는 Merge Join이 이깁니다. 빈도가 낮을 뿐 "항상"은 아닙니다.
+- **"work_mem을 크게 주면 무조건 이득"**: 쿼리 하나 × 노드 여러 개 × 커넥션 다수로 곱해지는 메모리라 서버가 OOM 나기 쉽습니다. 전역보다 세션·쿼리 단위로 조정하는 편이 안전합니다.
+- **"PostgreSQL도 조인 힌트를 준다"**: 공식 문법은 없습니다. GUC나 `pg_hint_plan` 확장이 대안입니다.
 
 ## 마치며
 

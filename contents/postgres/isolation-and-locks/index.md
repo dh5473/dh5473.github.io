@@ -9,9 +9,9 @@ summary: '두 트랜잭션이 같은 row를 동시에 UPDATE하면 어떤 일이
 thumbnail: './thumbnail.png'
 ---
 
-[지난 글](/postgres/vacuum-and-bloat/)까지 dead tuple이 어떻게 쌓이고 VACUUM이 어떻게 치우는지를 다뤘습니다. 하지만 VACUUM이 개입할 수 없는 영역이 있습니다. 두 트랜잭션이 동시에 같은 row를 수정하려는 순간입니다.
+UPDATE가 남긴 [dead tuple](/postgres/vacuum-and-bloat/)은 VACUUM이 뒤늦게 치웁니다. 하지만 VACUUM이 개입할 수 없는 영역이 있습니다. 두 트랜잭션이 동시에 같은 row를 수정하려는 순간입니다.
 
-[MVCC 글](/postgres/mvcc-visibility/)에서 snapshot이 "읽기 충돌"을 해결하는 방식을 봤습니다. 같은 row를 두 트랜잭션이 동시에 읽어도, 각자의 snapshot이 서로 다른 버전을 보여주면 되니까 락 없이도 동작합니다. 하지만 **쓰기는 다릅니다.** 두 트랜잭션이 같은 row를 동시에 UPDATE하면 "둘 다 성공" 이 될 수 없습니다. 최소한 하나는 기다려야 합니다.
+[snapshot](/postgres/mvcc-visibility/)은 "읽기 충돌"을 락 없이 해결합니다. 같은 row를 두 트랜잭션이 동시에 읽어도, 각자의 snapshot이 서로 다른 버전을 보여주면 그만입니다. 하지만 **쓰기는 다릅니다.** 두 트랜잭션이 같은 row를 동시에 UPDATE하면 "둘 다 성공"이 될 수 없습니다. 최소한 하나는 기다려야 합니다.
 
 터미널 두 개를 열고 확인해봅시다.
 
@@ -39,7 +39,7 @@ Session B는 멈춰 있습니다. Session A가 COMMIT하거나 ROLLBACK해야 �
 
 ## row-level lock
 
-PostgreSQL의 row-level lock은 일반적인 RDBMS와 구현 방식이 다릅니다. **별도의 lock table에 행마다 엔트리를 만들지 않습니다.** 대신 [힙 페이지 글에서 본 튜플 헤더](/postgres/heap-page-tuple/)의 `t_xmax`와 `t_infomask` 비트를 이용합니다. UPDATE나 DELETE가 튜플의 xmax에 자기 xid를 기록하는 것 자체가 "이 행에 락을 잡았다"는 표시가 됩니다. 다른 트랜잭션이 같은 행을 수정하려 할 때 xmax를 확인하고, 아직 활성 중인 트랜잭션이 잡고 있으면 대기합니다.
+PostgreSQL의 row-level lock은 일반적인 RDBMS와 구현 방식이 다릅니다. **별도의 lock table에 행마다 엔트리를 만들지 않습니다.** 대신 [튜플 헤더](/postgres/heap-page-tuple/)의 `t_xmax`와 `t_infomask` 비트를 이용합니다. UPDATE나 DELETE가 튜플의 xmax에 자기 xid를 기록하는 것 자체가 "이 행에 락을 잡았다"는 표시가 됩니다. 다른 트랜잭션이 같은 행을 수정하려 할 때 xmax를 확인하고, 아직 활성 중인 트랜잭션이 잡고 있으면 대기합니다.
 
 이 방식의 장점은 **행 수에 비례하는 별도 메모리가 필요 없다**는 점입니다. 100만 행을 한 번에 UPDATE해도 lock table이 터지지 않습니다. 락 상태를 확인하려면 힙 페이지를 읽어야 하지만, UPDATE/DELETE 자체가 이미 힙 페이지를 읽는 작업이라 추가 비용은 거의 없습니다.
 
@@ -96,11 +96,72 @@ PostgreSQL은 8단계의 테이블 레벨 lock mode를 정의합니다. 전부 �
 
 나머지 4단계(`RowShareLock`, `ShareUpdateExclusiveLock`, `ShareRowExclusiveLock`, `ExclusiveLock`)는 `SELECT ... FOR UPDATE`, `VACUUM`, `CREATE INDEX CONCURRENTLY` 등에서 쓰이며, 위 4개의 사이를 세분화한 것입니다.
 
+8단계가 서로 공존하는지(O) 충돌하는지(X)는 행렬 하나로 정리됩니다. 세로가 요청하는 모드, 가로가 이미 잡혀 있는 모드입니다.
+
+| | AS | RS | RE | SUE | S | SRE | E | AE |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| **AS** | O | O | O | O | O | O | O | X |
+| **RS** | O | O | O | O | O | O | X | X |
+| **RE** | O | O | O | O | X | X | X | X |
+| **SUE** | O | O | O | X | X | X | X | X |
+| **S** | O | O | X | X | O | X | X | X |
+| **SRE** | O | O | X | X | X | X | X | X |
+| **E** | O | X | X | X | X | X | X | X |
+| **AE** | X | X | X | X | X | X | X | X |
+
+AS = `ACCESS SHARE`(SELECT), RS = `ROW SHARE`(SELECT ... FOR UPDATE 계열), RE = `ROW EXCLUSIVE`(INSERT/UPDATE/DELETE/MERGE), SUE = `SHARE UPDATE EXCLUSIVE`(VACUUM, ANALYZE, CREATE INDEX CONCURRENTLY), S = `SHARE`(CREATE INDEX), SRE = `SHARE ROW EXCLUSIVE`(CREATE TRIGGER), E = `EXCLUSIVE`(REFRESH MATERIALIZED VIEW CONCURRENTLY), AE = `ACCESS EXCLUSIVE`(대부분의 ALTER TABLE, DROP, TRUNCATE, VACUUM FULL).
+
+읽을 곳은 맨 위와 맨 아래 두 줄입니다. AS 줄에는 X가 AE 자리 하나뿐이라 `SELECT`는 DDL 앞에서만 멈춥니다. AE 줄은 전부 X라 `ALTER TABLE`은 실행 중인 무엇과도 함께 갈 수 없습니다. 행렬이 대각선을 기준으로 대칭이라는 점도 봐 두면 좋습니다. 누가 먼저 왔는지는 충돌 여부를 바꾸지 못하고 대기 순서만 정합니다.
+
 ### "ALTER TABLE은 왜 서비스를 멈추는가"
 
 `ALTER TABLE`이 `AccessExclusiveLock`을 잡는다는 사실에서 바로 따라나옵니다. 이 락은 `SELECT`의 `AccessShareLock`과도 충돌하므로, ALTER가 실행되는 동안 해당 테이블에 대한 모든 쿼리가 대기합니다.
 
 더 위험한 상황은 **ALTER 자체가 대기하는 경우**입니다. 긴 트랜잭션이 `SELECT`로 `AccessShareLock`을 잡고 있으면 ALTER는 그 트랜잭션이 끝날 때까지 기다립니다. 그런데 ALTER가 대기하는 동안 **그 뒤에 들어오는 새 SELECT도 줄줄이 대기**합니다. PostgreSQL의 lock queue는 FIFO이고, 대기 중인 `AccessExclusiveLock` 뒤에 서는 `AccessShareLock`은 앞의 exclusive 요청이 해소될 때까지 진행할 수 없기 때문입니다. 한 건의 ALTER가 전체 서비스를 멈추는 사고가 이 패턴으로 발생합니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="테이블 users의 락 큐. 맨 위에서 긴 SELECT가 AccessShare를 잡고 실행 중이고, 그 뒤에 ALTER TABLE이 AccessExclusive를 기다리며, 다시 그 뒤에 새 SELECT 두 개가 대기한다. 새 SELECT는 실행 중인 SELECT와 호환되지만 FIFO 큐 때문에 앞의 AccessExclusive를 넘어설 수 없다는 것을 보여준다">
+<style>
+.isl1-t { fill: var(--text, #1c1917); }
+.isl1-m { fill: var(--text-muted, #78716c); }
+.isl1-d { fill: var(--text-danger, #dc2626); }
+</style>
+<defs>
+<marker id="isl1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<text x="240" y="26" class="isl1-t" font-size="20" font-weight="700" text-anchor="middle">ALTER 하나가 뒤의 SELECT까지 멈춘다</text>
+<text x="240" y="50" class="isl1-m" font-size="17" text-anchor="middle">테이블 users의 락 큐. 위쪽이 큐의 머리</text>
+<!-- row 1: holder -->
+<rect x="24" y="70" width="432" height="46" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="40" y="99" class="isl1-t" font-size="19">실행 중 · 긴 SELECT</text>
+<text x="440" y="99" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
+<!-- wait arrow 1 -->
+<line x1="240" y1="116" x2="240" y2="142" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
+<text x="256" y="135" class="isl1-m" font-size="17">대기</text>
+<!-- row 2: ALTER -->
+<rect x="24" y="144" width="432" height="46" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<text x="40" y="173" class="isl1-d" font-size="19">대기 · ALTER TABLE</text>
+<text x="440" y="173" class="isl1-d" font-size="17" text-anchor="end">AccessExclusive</text>
+<!-- wait arrow 2 -->
+<line x1="240" y1="190" x2="240" y2="216" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
+<text x="256" y="209" class="isl1-m" font-size="17">대기</text>
+<!-- row 3, 4: blocked newcomers -->
+<rect x="24" y="218" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
+<text x="40" y="247" class="isl1-t" font-size="19">대기 · 그 뒤에 온 SELECT</text>
+<text x="440" y="247" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
+<rect x="24" y="270" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
+<text x="40" y="299" class="isl1-t" font-size="19">대기 · 그 뒤에 온 SELECT</text>
+<text x="440" y="299" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
+<!-- caption -->
+<text x="240" y="348" class="isl1-m" font-size="17" text-anchor="middle">아래 두 SELECT는 맨 위 SELECT와 호환된다.</text>
+<text x="240" y="372" class="isl1-d" font-size="17" text-anchor="middle">그래도 앞의 AccessExclusive를 넘어설 수 없다.</text>
+</svg>
+</div>
 
 실무에서는 ALTER 실행 전에 `lock_timeout`을 짧게 설정합니다.
 
@@ -112,7 +173,26 @@ ALTER TABLE users ADD COLUMN last_login timestamptz;
 
 ## 격리 수준별 쓰기 충돌 처리
 
-[MVCC 글](/postgres/mvcc-visibility/)에서 격리 수준별로 snapshot 획득 시점이 다르다는 점을 다뤘습니다. 여기서는 **같은 row에 쓰기 충돌이 생겼을 때** 각 격리 수준이 어떻게 반응하는지를 봅니다.
+[격리 수준](/postgres/mvcc-visibility/)이 정하는 것은 우선 snapshot을 언제 뜨느냐입니다. Read Committed는 문장마다 새로 뜨고, Repeatable Read와 Serializable은 트랜잭션의 첫 문장에서 한 번 떠서 끝까지 유지합니다. 여기서는 그 위에서 **같은 row에 쓰기 충돌이 생겼을 때** 각 격리 수준이 어떻게 반응하는지를 봅니다.
+
+읽기 쪽에서 각 수준이 무엇을 막는지 먼저 정리해 두면 이후 설명이 따라오기 쉽습니다.
+
+| 격리 수준 | Dirty Read | Non-repeatable Read | Phantom Read | Serialization Anomaly |
+|---|:--:|:--:|:--:|:--:|
+| Read Uncommitted | 불가 | 가능 | 가능 | 가능 |
+| Read Committed | 불가 | 가능 | 가능 | 가능 |
+| Repeatable Read | 불가 | 불가 | 불가 | 가능 |
+| Serializable | 불가 | 불가 | 불가 | 불가 |
+
+:::note
+
+**표준 SQL의 표와 두 칸이 다릅니다**
+
+PostgreSQL은 표준의 네 수준을 모두 받아주지만 내부적으로 구현된 것은 세 개입니다. `READ UNCOMMITTED`를 요청해도 Read Committed로 동작하므로 dirty read는 애초에 발생하지 않습니다. Repeatable Read도 표준은 phantom read를 허용하지만, PostgreSQL의 구현은 트랜잭션 시작 시점의 snapshot을 끝까지 유지하기 때문에 phantom read까지 막습니다. 표준은 "이 수준에서 이 이상 현상이 일어나면 안 된다"는 하한만 정하므로, 더 강하게 막는 것은 규격 위반이 아닙니다.
+
+남는 한 칸이 Repeatable Read의 serialization anomaly이고, 뒤에서 다룰 write skew가 바로 그것입니다.
+
+:::
 
 ### Read Committed: 최신 버전을 다시 읽고 진행
 
@@ -157,7 +237,7 @@ UPDATE accounts SET balance = balance + 500 WHERE id = 1;
 COMMIT;
 ```
 
-```
+```text
 -- Session B
 ERROR:  could not serialize access due to concurrent update
 ```
@@ -190,15 +270,17 @@ SELECT count(*) FROM doctors WHERE on_call = true;
 -- 결과: 2 (Alice, Bob 둘 다 당직)
 -- "2명이니까 나 하나 빠져도 되겠다"
 UPDATE doctors SET on_call = false WHERE id = 1;  -- Alice 당직 해제
+COMMIT;
 ```
 
 ```sql
--- Session B (Bob) — 동시에
+-- Session B (Bob), 동시에
 BEGIN ISOLATION LEVEL REPEATABLE READ;
 SELECT count(*) FROM doctors WHERE on_call = true;
 -- 결과: 2 (같은 snapshot, 둘 다 당직으로 보임)
 -- "2명이니까 나 하나 빠져도 되겠다"
 UPDATE doctors SET on_call = false WHERE id = 2;  -- Bob 당직 해제
+COMMIT;
 ```
 
 두 세션이 수정하는 행이 서로 다릅니다(id=1 vs id=2). row-level lock이 충돌하지 않으므로 둘 다 COMMIT에 성공합니다.
@@ -214,6 +296,71 @@ SELECT * FROM doctors;
 
 당직이 0명이 됐습니다. 각 트랜잭션은 "2명 중 1명 빠져도 1명 남는다"고 판단했지만, 동시에 실행되면서 둘 다 빠져버린 겁니다. 이게 **write skew**이고, RR(snapshot isolation)에서는 원리적으로 막을 수 없습니다. 각 트랜잭션이 **서로 다른 행을 수정**하므로 row-level lock이 충돌하지 않고, snapshot도 서로의 미커밋 변경을 보지 못하기 때문입니다.
 
+시간 순서로 늘어놓으면 어느 지점에서 규칙이 새는지가 보입니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="write skew가 발생하는 시간 순서. Alice 세션과 Bob 세션이 각각 REPEATABLE READ로 시작해 둘 다 당직 인원을 2로 읽고, 각각 서로 다른 행을 false로 바꾼 뒤 둘 다 커밋에 성공한다. 서로 다른 행이라 row-level lock이 충돌하지 않아 최소 1명 당직 규칙이 깨지고 당직 인원이 0이 된다">
+<style>
+.isl2-t { fill: var(--text, #1c1917); }
+.isl2-m { fill: var(--text-muted, #78716c); }
+.isl2-ok { fill: var(--text-success, #16a34a); }
+.isl2-bad { fill: var(--text-danger, #dc2626); }
+.isl2-b { fill: var(--text, #1c1917); font-weight: 700; }
+</style>
+<text x="240" y="26" class="isl2-t" font-size="20" font-weight="700" text-anchor="middle">Write Skew가 만들어지는 순서</text>
+<text x="240" y="50" class="isl2-m" font-size="17" text-anchor="middle">위에서 아래로 시간 순 · A = Alice, B = Bob</text>
+<!-- t1: A BEGIN -->
+<rect x="20" y="64" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="84" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="90" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="90" class="isl2-t" font-size="18">BEGIN REPEATABLE READ</text>
+<!-- t2: B BEGIN -->
+<rect x="172" y="112" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="132" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="138" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="138" class="isl2-t" font-size="18">BEGIN REPEATABLE READ</text>
+<!-- t3: A reads -->
+<rect x="20" y="160" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="180" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="186" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="186" class="isl2-t" font-size="18">SELECT count(*) → 2</text>
+<!-- t4: B reads -->
+<rect x="172" y="208" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="228" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="234" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="234" class="isl2-t" font-size="18">SELECT count(*) → 2</text>
+<text x="240" y="270" class="isl2-m" font-size="17" text-anchor="middle">두 snapshot 모두 '당직 2명'으로 보인다</text>
+<!-- t5: A updates row 1 -->
+<rect x="20" y="286" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="306" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="312" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="312" class="isl2-t" font-size="18">UPDATE id=1 → false</text>
+<!-- t6: B updates row 2 -->
+<rect x="172" y="334" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="354" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="360" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="360" class="isl2-t" font-size="18">UPDATE id=2 → false</text>
+<text x="240" y="396" class="isl2-m" font-size="17" text-anchor="middle">서로 다른 행이라 락이 충돌하지 않는다</text>
+<!-- t7: A commits -->
+<rect x="20" y="412" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<circle cx="42" cy="432" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<text x="42" y="438" class="isl2-b" font-size="17" text-anchor="middle">A</text>
+<text x="64" y="438" class="isl2-ok" font-size="18">COMMIT 성공</text>
+<!-- t8: B commits -->
+<rect x="172" y="460" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<circle cx="194" cy="480" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<text x="194" y="486" class="isl2-b" font-size="17" text-anchor="middle">B</text>
+<text x="216" y="486" class="isl2-ok" font-size="18">COMMIT 성공</text>
+<!-- result -->
+<rect x="16" y="516" width="448" height="62" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<text x="240" y="543" class="isl2-bad" font-size="20" font-weight="700" text-anchor="middle">결과: on_call = true 인 행 0개</text>
+<text x="240" y="568" class="isl2-bad" font-size="17" text-anchor="middle">둘 다 커밋했지만 '최소 1명' 규칙이 깨졌다</text>
+</svg>
+</div>
+
 ## Serializable과 SSI
 
 Write skew를 막으려면 **Serializable** 격리 수준이 필요합니다. PostgreSQL의 Serializable은 RR의 snapshot에 **SSI**(Serializable Snapshot Isolation)라는 메커니즘을 추가한 것입니다.
@@ -226,7 +373,7 @@ SSI는 트랜잭션들 사이의 **rw-conflict**(읽기-쓰기 의존성)을 추
 - Session A가 `doctors` 테이블을 읽었고(on_call = true인 행 전부), Session B가 id=2를 수정 → **Session A → Session B 방향의 rw-conflict**
 - Session B가 `doctors` 테이블을 읽었고, Session A가 id=1을 수정 → **Session B → Session A 방향의 rw-conflict**
 
-SSI는 이 rw-conflict 엣지들 중에서 **"dangerous structure"**를 감지합니다. dangerous structure란 **연속 두 개의 rw-conflict가 하나의 트랜잭션을 거쳐 이어지는 패턴**(pivot)(T_in → T_pivot → T_out)입니다. 위 예제에서는 두 트랜잭션이 서로를 향한 rw-conflict를 가지므로 각각이 상대방의 pivot이 되어 dangerous structure가 즉시 성립합니다. SSI는 이 구조를 감지하면 한쪽을 abort합니다.
+SSI는 이 rw-conflict 엣지들 중에서 **dangerous structure**를 찾습니다. 하나의 트랜잭션(pivot)으로 rw-conflict가 들어왔다가 다시 나가는 `T_in → T_pivot → T_out` 모양입니다. 직렬화 이상이 성립하려면 이 모양이 반드시 있어야 한다는 것이 SSI의 이론적 근거이고, PostgreSQL은 여기에 "T_out이 셋 중 가장 먼저 커밋된다"는 조건을 더해 판정합니다. 위 예제에서는 두 트랜잭션이 서로를 향한 rw-conflict를 하나씩 가지므로 각자가 상대의 pivot 자리에 들어가고, 구조가 곧바로 성립합니다. SSI는 이 구조를 발견하면 한쪽을 abort합니다.
 
 Serializable로 같은 실험을 돌려봅시다.
 
@@ -246,7 +393,7 @@ UPDATE doctors SET on_call = false WHERE id = 2;
 COMMIT;
 ```
 
-```
+```text
 ERROR:  could not serialize access due to read/write dependencies among transactions
 DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
 HINT:  The transaction might succeed if retried.
@@ -264,7 +411,7 @@ SIRead lock은 행 단위, 페이지 단위, 테이블 단위로 잡힐 수 있�
 
 ### SSI의 보수성
 
-SSI는 **안전한 쪽으로 판단**합니다. 실제로는 직렬화 이상이 아닌 조합에서도 dangerous structure가 감지되면 abort합니다. 그래서 SSI가 abort하는 트랜잭션 중 일부는 통과시켜도 무방한 것일 수 있습니다(false positive). 하지만 놓치는 것(false negative)은 없으므로, 커밋에 성공한 트랜잭션은 반드시 직렬화 가능한 결과입니다.
+SSI는 **안전한 쪽으로 판단**합니다. 실제로는 직렬화 이상이 아닌 조합에서도 dangerous structure가 감지되면 abort합니다. 그래서 SSI가 abort하는 트랜잭션 중 일부는 통과시켜도 무방한 것일 수 있습니다(false positive). 하지만 놓치는 것(false negative)은 없습니다. 커밋에 성공한 트랜잭션들만 놓고 보면 그 결과는 반드시 어떤 직렬 실행 순서로 설명됩니다.
 
 이 보수성 때문에 Serializable을 쓸 때는 **재시도 로직이 필수**입니다. 에러 코드 `40001`(serialization_failure)을 잡아서 트랜잭션을 처음부터 다시 실행하는 wrapper를 애플리케이션에 넣어야 합니다.
 
@@ -298,9 +445,53 @@ UPDATE accounts SET balance = balance + 100 WHERE id = 1;
 -- 대기 (Session A가 id=1을 잡고 있음)
 ```
 
-둘 다 서로를 기다리고 있습니다. PostgreSQL은 `deadlock_timeout`(기본 1초) 후에 deadlock detection을 실행하고, 한쪽을 abort합니다.
+둘 다 서로를 기다리고 있습니다. 대기 관계를 그려 보면 화살표가 한 바퀴 돌아 제자리로 돌아옵니다.
 
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 396" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="deadlock의 대기 순환. Session A는 id=1 행의 락을 쥐고 id=2를 기다리고, Session B는 id=2 행의 락을 쥐고 id=1을 기다린다. 두 대기 화살표가 서로를 향해 순환을 이루므로 둘 다 영원히 대기하며, deadlock_timeout 기본 1초 후 한쪽이 abort된다">
+<style>
+.isl3-t { fill: var(--text, #1c1917); }
+.isl3-hold { fill: var(--text-success, #16a34a); }
+.isl3-wait { fill: var(--text-warn, #d97706); }
+.isl3-bad { fill: var(--text-danger, #dc2626); }
+</style>
+<defs>
+<marker id="isl3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-warn, #d97706)"/>
+</marker>
+</defs>
+<text x="240" y="26" class="isl3-t" font-size="20" font-weight="700" text-anchor="middle">Deadlock: 서로가 쥔 행을 기다린다</text>
+<!-- session A box -->
+<rect x="130" y="52" width="220" height="84" rx="10" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2"/>
+<text x="240" y="80" class="isl3-t" font-size="19" font-weight="700" text-anchor="middle">Session A</text>
+<text x="240" y="105" class="isl3-hold" font-size="17" text-anchor="middle">쥔 락: id=1</text>
+<text x="240" y="127" class="isl3-wait" font-size="17" text-anchor="middle">대기: id=2</text>
+<!-- session B box -->
+<rect x="130" y="196" width="220" height="84" rx="10" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2"/>
+<text x="240" y="224" class="isl3-t" font-size="19" font-weight="700" text-anchor="middle">Session B</text>
+<text x="240" y="249" class="isl3-hold" font-size="17" text-anchor="middle">쥔 락: id=2</text>
+<text x="240" y="271" class="isl3-wait" font-size="17" text-anchor="middle">대기: id=1</text>
+<!-- A waits on B, down the left side -->
+<path d="M 130 112 L 100 112 L 100 240 L 126 240" fill="none" stroke="var(--text-warn, #d97706)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
+<text x="52" y="166" class="isl3-wait" font-size="17" text-anchor="middle">A가 기다림</text>
+<text x="52" y="188" class="isl3-wait" font-size="17" text-anchor="middle">(id=2)</text>
+<!-- B waits on A, up the right side -->
+<path d="M 350 240 L 380 240 L 380 112 L 354 112" fill="none" stroke="var(--text-warn, #d97706)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
+<text x="430" y="166" class="isl3-wait" font-size="17" text-anchor="middle">B가 기다림</text>
+<text x="430" y="188" class="isl3-wait" font-size="17" text-anchor="middle">(id=1)</text>
+<!-- outcome -->
+<rect x="24" y="306" width="432" height="68" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<text x="240" y="334" class="isl3-bad" font-size="19" font-weight="700" text-anchor="middle">순환이 닫혀 둘 다 영원히 대기</text>
+<text x="240" y="360" class="isl3-bad" font-size="17" text-anchor="middle">deadlock_timeout(기본 1초) 후 한쪽을 abort</text>
+</svg>
+</div>
+
+PostgreSQL은 `deadlock_timeout`(기본 1초)이 지나도 락을 못 잡으면 대기 그래프에서 순환을 찾고, 순환이 있으면 한쪽을 abort합니다.
+
+```text
 ERROR:  deadlock detected
 DETAIL:  Process 12345 waits for ShareLock on transaction 789; blocked by process 12346.
          Process 12346 waits for ShareLock on transaction 788; blocked by process 12345.
@@ -324,20 +515,20 @@ WHERE pg_blocking_pids(pid) != '{}';
 |-----|------------|-------|-------|-----------------|------------|
 | 12346 | {12345} | UPDATE accounts SET ... | active | Lock | transactionid |
 
-`blocked_by`에 찍힌 pid가 범인입니다. 해당 pid의 `state`가 `idle in transaction`이면 트랜잭션이 열린 채로 방치되어 있다는 뜻이고, [지난 글에서 다뤘듯이](/postgres/vacuum-and-bloat/) VACUUM을 막을 뿐 아니라 락을 오래 잡고 있으면 다른 세션의 DML까지 막을 수 있습니다.
+`blocked_by`에 찍힌 pid가 범인입니다. 해당 pid의 `state`가 `idle in transaction`이면 트랜잭션이 열린 채로 방치되어 있다는 뜻입니다. 이런 세션은 [VACUUM의 정리 대상 판정을 막고](/postgres/vacuum-and-bloat/), 락을 오래 잡고 있으면 다른 세션의 DML까지 막습니다.
 
 ## 실전에서는
 
 1. **`idle in transaction` 세션이 락을 오래 잡고 있으면 뒤의 DML/DDL이 줄줄이 대기한다.** `idle_in_transaction_session_timeout`을 설정해서 자동 종료시키는 것이 권장된다
 2. **DDL 실행 전에 `lock_timeout`을 짧게 설정한다.** ALTER TABLE이 `AccessExclusiveLock`을 기다리며 대기하면 그 뒤의 모든 쿼리가 줄줄이 멈춘다. 3\~5초 안에 락을 못 잡으면 빠져나와서 나중에 재시도하는 것이 안전하다
-3. **Serializable을 쓰면 재시도 로직이 필수다.** SSI가 false positive으로 abort할 수 있으므로, 에러 코드 `40001`을 잡아서 자동 재시도하는 wrapper가 애플리케이션에 있어야 한다. 대부분의 OLTP에서는 Read Committed로 충분하고, write skew가 비즈니스 규칙을 깨뜨리는 특정 시나리오에서만 Serializable을 쓰는 것이 현실적이다
+3. **Serializable을 쓰면 재시도 로직이 필수다.** SSI가 false positive로 abort할 수 있으므로, 에러 코드 `40001`을 잡아서 자동 재시도하는 wrapper가 애플리케이션에 있어야 한다. 대부분의 OLTP에서는 Read Committed로 충분하고, write skew가 비즈니스 규칙을 깨뜨리는 특정 시나리오에서만 Serializable을 쓰는 것이 현실적이다
 4. **deadlock은 감지 + 재시도로 대응한다.** 완전히 방지하려면 모든 트랜잭션이 같은 순서로 행을 잠그면 되지만, 복잡한 비즈니스 로직에서는 현실적으로 어렵다. deadlock이 간헐적으로 발생하는 것은 정상이고, 빈번하면 트랜잭션 설계를 점검한다
 
 ## 흔한 오해
 
 **"FOR UPDATE를 걸면 다른 세션이 SELECT도 못 한다."** row-level lock은 읽기를 막지 않습니다. MVCC 덕분에 다른 세션의 `SELECT`는 snapshot에서 보이는 버전을 그대로 읽습니다. `FOR UPDATE`가 막는 것은 다른 세션의 `UPDATE`, `DELETE`, `SELECT ... FOR UPDATE`뿐입니다.
 
-**"Serializable이 가장 안전하니까 항상 쓰면 된다."** Serializable은 abort + 재시도 비용이 있습니다. SSI의 SIRead lock 추적도 메모리와 CPU를 씁니다. 대부분의 OLTP 워크로드에서 Read Committed는 lost update를 EvalPlanQual로 막고, 애플리케이션 레벨의 명시적 `FOR UPDATE`로 나머지를 커버합니다. Serializable이 진짜 필요한 상황은 write skew처럼 "서로 다른 행을 읽고 쓰는데 결합하면 일관성이 깨지는" 특정 패턴뿐입니다.
+**"Serializable이 가장 안전하니까 항상 쓰면 된다."** Serializable은 abort + 재시도 비용이 있습니다. SSI의 SIRead lock 추적도 메모리와 CPU를 씁니다. 대부분의 OLTP 워크로드에서는 한 문장 안에서 벌어지는 lost update를 Read Committed의 EvalPlanQual이 막고, 읽은 값을 애플리케이션에서 계산해 다시 쓰는 나머지 경우는 명시적 `FOR UPDATE`로 덮습니다. Serializable이 진짜 필요한 상황은 write skew처럼 "서로 다른 행을 읽고 쓰는데 결합하면 일관성이 깨지는" 특정 패턴뿐입니다.
 
 **"deadlock은 버그다."** 동시성이 있으면 deadlock은 항상 가능합니다. PostgreSQL의 deadlock detection은 정상적인 운영 메커니즘이지 장애가 아닙니다. 한쪽이 abort되면 애플리케이션이 재시도하면 됩니다. 다만 deadlock이 초당 수십 건씩 발생한다면 트랜잭션 설계(락 순서, 트랜잭션 범위)를 점검해야 합니다.
 

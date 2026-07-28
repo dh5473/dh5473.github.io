@@ -9,7 +9,7 @@ summary: 'WAL 바이트를 그대로 보내는 Streaming Replication과 row 단�
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/postgres/wal-and-checkpoint/)에서 WAL의 원칙을 봤습니다. 데이터를 바꾸기 전에 로그를 먼저 쓰고, crash가 나면 그 로그를 replay해서 복원한다. 이 메커니즘 덕분에 한 서버 안에서는 데이터가 안전합니다.
+[WAL](/postgres/wal-and-checkpoint/)의 원칙은 단순합니다. 데이터를 바꾸기 전에 로그를 먼저 쓰고, crash가 나면 그 로그를 replay해서 복원합니다. 이 메커니즘 덕분에 한 서버 안에서는 데이터가 안전합니다.
 
 그런데 서버 자체가 죽으면 어떻게 될까요? 디스크가 물리적으로 고장 나거나 서버가 통째로 날아가면, WAL이 아무리 완벽해도 소용이 없습니다. 서비스 DB가 한 대뿐이라면 복구할 때까지의 시간이 곧 장애 시간입니다.
 
@@ -39,23 +39,66 @@ WAL을 다른 서버로 보내는 방법은 두 가지입니다.
 
 Streaming Replication의 핵심은 두 프로세스입니다.
 
-```
-Primary                              Standby
-┌──────────────────┐                ┌──────────────────┐
-│  backend         │                │  startup process │
-│  backend         │                │  (WAL redo 적용)  │
-│  backend         │                │       ▲          │
-│                  │                │       │          │
-│  walsender ──────┼── TCP ────────▶│  walreceiver     │
-│       ▲          │  WAL 바이트     │       │          │
-│       │          │                │       ▼          │
-│   pg_wal/        │                │   pg_wal/        │
-└──────────────────┘                └──────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 618" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Streaming Replication 구조. 위쪽 Primary에서 backend들이 pg_wal에 WAL을 기록하고 walsender가 이를 읽어 TCP로 전송하면, 아래쪽 Standby의 walreceiver가 받아 pg_wal에 저장하고 startup process가 redo를 적용한다">
+<style>
+.rep1-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.rep1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.rep1-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.rep1-t { fill: var(--text, #1c1917); }
+.rep1-m { fill: var(--text-muted, #78716c); }
+.rep1-p { fill: var(--primary, #0d9488); font-weight: 700; }
+</style>
+<defs>
+<marker id="rep1Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="rep1ArrowP" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--primary, #0d9488)"/></marker>
+</defs>
+<!-- Primary panel -->
+<rect class="rep1-panel" x="20" y="16" width="440" height="252" rx="10"/>
+<text class="rep1-p" x="36" y="45" font-size="21">위: Primary</text>
+<rect class="rep1-box" x="78" y="62" width="100" height="40" rx="6"/>
+<rect class="rep1-box" x="190" y="62" width="100" height="40" rx="6"/>
+<rect class="rep1-box" x="302" y="62" width="100" height="40" rx="6"/>
+<text class="rep1-t" x="128" y="88" font-size="18" text-anchor="middle">backend</text>
+<text class="rep1-t" x="240" y="88" font-size="18" text-anchor="middle">backend</text>
+<text class="rep1-t" x="352" y="88" font-size="18" text-anchor="middle">backend</text>
+<path d="M240,102 L240,126" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<text class="rep1-m" x="252" y="122" font-size="17">WAL 기록</text>
+<rect class="rep1-box" x="140" y="130" width="200" height="42" rx="6"/>
+<text class="rep1-t" x="240" y="157" font-size="19" text-anchor="middle">pg_wal/</text>
+<path d="M240,172 L240,196" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<text class="rep1-m" x="252" y="192" font-size="17">읽기</text>
+<rect class="rep1-key" x="120" y="200" width="240" height="52" rx="6"/>
+<text class="rep1-t" x="240" y="224" font-size="20" text-anchor="middle">walsender</text>
+<text class="rep1-m" x="240" y="245" font-size="17" text-anchor="middle">WAL을 읽어 전송</text>
+<!-- TCP link -->
+<path d="M240,268 L240,334" stroke="var(--primary, #0d9488)" stroke-width="2.5" fill="none" marker-end="url(#rep1ArrowP)"/>
+<text class="rep1-p" x="252" y="294" font-size="18">TCP 전송</text>
+<text class="rep1-m" x="252" y="318" font-size="17">WAL 바이트 그대로</text>
+<!-- Standby panel -->
+<rect class="rep1-panel" x="20" y="336" width="440" height="266" rx="10"/>
+<text class="rep1-p" x="36" y="365" font-size="21">아래: Standby (읽기 전용)</text>
+<rect class="rep1-key" x="120" y="382" width="240" height="52" rx="6"/>
+<text class="rep1-t" x="240" y="406" font-size="20" text-anchor="middle">walreceiver</text>
+<text class="rep1-m" x="240" y="427" font-size="17" text-anchor="middle">WAL 수신</text>
+<path d="M240,434 L240,458" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<text class="rep1-m" x="252" y="454" font-size="17">저장</text>
+<rect class="rep1-box" x="140" y="462" width="200" height="42" rx="6"/>
+<text class="rep1-t" x="240" y="489" font-size="19" text-anchor="middle">pg_wal/</text>
+<path d="M240,504 L240,528" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<text class="rep1-m" x="252" y="524" font-size="17">읽기</text>
+<rect class="rep1-key" x="90" y="532" width="300" height="54" rx="6"/>
+<text class="rep1-t" x="240" y="556" font-size="20" text-anchor="middle">startup process</text>
+<text class="rep1-m" x="240" y="577" font-size="17" text-anchor="middle">WAL redo 적용 (계속 대기)</text>
+</svg>
+</div>
 
 primary 측에서는 standby가 접속할 때마다 postmaster가 **walsender** 프로세스를 fork합니다. 일반 backend처럼 connection당 하나씩 생성되지만, 클라이언트 쿼리가 아니라 WAL 전송만 담당하는 특수한 backend입니다. walsender는 WAL buffer 또는 `pg_wal/` 세그먼트 파일에서 WAL을 읽어 TCP로 전송합니다.
 
-standby 측에서는 **walreceiver**가 primary에 연결을 맺고 WAL을 수신합니다. 받은 WAL은 standby의 `pg_wal/`에 저장되고, **startup process**가 이를 읽어서 redo를 적용합니다. [이전 글](/postgres/wal-and-checkpoint/)에서 봤던 crash recovery와 본질적으로 같은 동작입니다. 차이는 crash recovery가 "WAL 끝까지 replay하고 끝"인 반면, startup process는 **새 WAL이 올 때까지 계속 대기하면서 실시간으로 replay**한다는 것입니다.
+standby 측에서는 **walreceiver**가 primary에 연결을 맺고 WAL을 수신합니다. 받은 WAL은 standby의 `pg_wal/`에 저장되고, **startup process**가 이를 읽어서 redo를 적용합니다. [crash recovery](/postgres/wal-and-checkpoint/)와 본질적으로 같은 동작입니다. 차이는 crash recovery가 "WAL 끝까지 replay하고 끝"인 반면, startup process는 **새 WAL이 올 때까지 계속 대기하면서 실시간으로 replay**한다는 것입니다.
 
 ### 동기 vs 비동기 복제
 
@@ -71,7 +114,7 @@ standby 측에서는 **walreceiver**가 primary에 연결을 맺고 WAL을 수�
 | `on`(기본) | 동기 standby의 디스크 flush |
 | `remote_apply` | 동기 standby가 redo까지 적용 |
 
-`synchronous_standby_names`가 비어 있으면(동기 standby 미지정) `on`은 로컬 flush만 기다립니다. 동기 standby가 설정돼 있을 때 `on`은 `remote_flush`와 같은 의미가 됩니다. [이전 글](/postgres/wal-and-checkpoint/)에서 `synchronous_commit=off`가 로컬 flush도 건너뛰는 설정이었던 것과 연결됩니다. replication에서는 이 스펙트럼이 네트워크 너머까지 확장되는 것입니다.
+`synchronous_standby_names`가 비어 있으면(동기 standby 미지정) `on`은 로컬 flush만 기다립니다. 동기 standby가 설정돼 있을 때 `on`은 `remote_flush`와 같은 의미가 됩니다. 단일 서버에서 `synchronous_commit=off`는 [로컬 WAL flush](/postgres/wal-and-checkpoint/)조차 기다리지 않는 설정이고, replication에서는 같은 스펙트럼이 네트워크 너머까지 확장됩니다.
 
 트레이드오프는 명확합니다. 동기 복제는 COMMIT latency에 네트워크 RTT가 추가됩니다. 같은 데이터센터 안이면 수백 마이크로초 수준이지만, 다른 리전이면 수십 밀리초가 붙습니다. `remote_apply`까지 켜면 standby의 redo 속도까지 latency에 영향을 줍니다.
 
@@ -79,7 +122,7 @@ standby 측에서는 **walreceiver**가 primary에 연결을 맺고 WAL을 수�
 
 ### slot이 해결하는 문제
 
-[이전 글](/postgres/wal-and-checkpoint/)에서 checkpoint 이후 오래된 WAL 세그먼트가 재활용되거나 삭제된다고 했습니다. 그런데 standby가 네트워크 문제로 잠시 끊겼다가 돌아왔는데, 그 사이 필요한 WAL이 이미 primary에서 삭제됐다면? 복제가 끊어집니다. `pg_basebackup`으로 처음부터 다시 세팅해야 합니다.
+[checkpoint](/postgres/wal-and-checkpoint/) 이후 오래된 WAL 세그먼트는 재활용되거나 삭제됩니다. 그런데 standby가 네트워크 문제로 잠시 끊겼다가 돌아왔는데, 그 사이 필요한 WAL이 이미 primary에서 삭제됐다면? 복제가 끊어집니다. `pg_basebackup`으로 처음부터 다시 세팅해야 합니다.
 
 WAL을 보존하는 방법은 여러 가지입니다. `wal_keep_size`로 최소 보존량을 지정하거나 `archive_command`로 WAL을 별도 저장소에 보관할 수 있지만, 이 방법들은 "standby가 어디까지 소비했는지"를 추적하지 못합니다.
 
@@ -106,7 +149,7 @@ SELECT slot_name, slot_type, active,
 FROM pg_replication_slots;
 ```
 
-```
+```text
  slot_name | slot_type | active | restart_lsn | retained_bytes
 -----------+-----------+--------+-------------+---------------
  standby1  | physical  | t      | 0/5000000   |       16777216
@@ -115,12 +158,15 @@ FROM pg_replication_slots;
 
 여기서 `sub1`이 `active = f`(비활성)인데 `retained_bytes`가 32MB나 됩니다. 이것이 slot의 가장 큰 위험입니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  비활성 slot은 WAL을 무한히 보존합니다. standby가 죽었는데 slot을 안 지우면 primary의 <code>pg_wal/</code> 디스크가 가득 찹니다. PG 13+에서는 <code>max_slot_wal_keep_size</code>로 slot이 보존할 수 있는 WAL 크기에 상한을 걸 수 있습니다. 이 한도를 넘으면 slot이 무효화(invalidate)됩니다.
-</div>
+:::warning
 
-논리 슬롯의 `catalog_xmin`은 [VACUUM 글](/postgres/vacuum-and-bloat/)에서 다뤘던 "VACUUM의 적"과도 연결됩니다. 논리 슬롯이 catalog_xmin을 잡고 있으면 해당 xid 이후의 시스템 카탈로그 변경을 VACUUM이 정리하지 못합니다. long-running transaction이 VACUUM을 막는 것과 같은 원리입니다.
+**주의**
+
+비활성 slot은 WAL을 무한히 보존합니다. standby가 죽었는데 slot을 안 지우면 primary의 `pg_wal/` 디스크가 가득 찹니다. PG 13+에서는 `max_slot_wal_keep_size`로 slot이 보존할 수 있는 WAL 크기에 상한을 걸 수 있습니다. 이 한도를 넘으면 slot이 무효화(invalidate)됩니다.
+
+:::
+
+논리 슬롯이 `catalog_xmin`을 잡고 있으면 해당 xid 이후의 시스템 카탈로그 변경을 [VACUUM](/postgres/vacuum-and-bloat/)이 정리하지 못합니다. long-running transaction이 VACUUM을 막는 것과 같은 원리입니다.
 
 ## Hot Standby와 쿼리 충돌
 
@@ -143,10 +189,12 @@ FROM pg_replication_slots;
 
 `max_standby_streaming_delay`(기본 30초)가 이 판단을 결정합니다. startup process가 이 시간만큼 기다려도 충돌이 해소되지 않으면 쿼리를 cancel합니다.
 
-```
+```text
 ERROR: canceling statement due to conflict with recovery
 DETAIL: User was holding shared buffer pin for too long.
 ```
+
+이 값은 "쿼리 하나가 버틸 수 있는 시간"이 아니라 **primary에서 받은 WAL을 적용하는 데 허용된 누적 지연**입니다. 앞선 쿼리 때문에 이미 redo가 밀려 있으면, 뒤따르는 충돌 쿼리에는 남은 여유가 그만큼 줄어든 상태로 적용됩니다.
 
 `-1`로 설정하면 redo가 무한 대기합니다. 분석 쿼리가 중요한 read replica에서 쓸 수 있지만, lag이 끝없이 쌓일 수 있습니다. `0`이면 즉시 cancel입니다.
 
@@ -166,7 +214,7 @@ FROM pg_stat_database_conflicts;
 
 `hot_standby_feedback = on`을 설정하면 standby가 자기 쿼리의 xmin을 primary에 주기적으로 알려줍니다. primary의 VACUUM은 이 xmin 이후에 삭제 처리된 dead tuple을 정리하지 않으므로, standby에서의 충돌이 줄어듭니다.
 
-단, 이는 [VACUUM 글](/postgres/vacuum-and-bloat/)에서 봤던 "long-running transaction이 VACUUM을 막는" 상황을 primary에 만드는 것과 같습니다. standby에서 오래 도는 분석 쿼리가 있으면 primary의 bloat가 늘어날 수 있습니다. 충돌 감소와 primary bloat 사이의 트레이드오프입니다.
+단, 이는 [long-running transaction이 VACUUM을 막는](/postgres/vacuum-and-bloat/) 상황을 primary에 만드는 것과 같습니다. standby에서 오래 도는 분석 쿼리가 있으면 primary의 bloat가 늘어날 수 있습니다. 충돌 감소와 primary bloat 사이의 트레이드오프입니다.
 
 ## Logical Replication
 
@@ -194,7 +242,7 @@ COMMIT;
 SELECT lsn, xid, data FROM pg_logical_slot_get_changes('test_slot', NULL, NULL);
 ```
 
-```
+```text
     lsn     | xid |                          data
 ------------+-----+--------------------------------------------------------
  0/1A02000  | 741 | BEGIN 741
@@ -224,7 +272,61 @@ subscriber가 연결되면 두 단계로 동작합니다.
 1. **초기 동기화**: 발행 테이블의 기존 데이터를 복사(table copy)
 2. **실시간 수신**: 이후 변경분은 logical decoding으로 실시간 전송
 
-subscriber 측에서는 **apply worker** 프로세스가 수신한 변경을 적용합니다. [아키텍처 글](/postgres/architecture-overview/)에서 봤던 logical replication launcher가 이 worker를 관리합니다.
+subscriber 측에서는 **apply worker** 프로세스가 수신한 변경을 적용합니다. postmaster가 띄우는 [logical replication launcher](/postgres/architecture-overview/)가 이 worker를 관리합니다.
+
+전체 경로를 놓고 보면 Streaming Replication과 어디서 갈라지는지가 드러납니다. walsender까지는 같지만, WAL을 바이트로 내보내는 대신 output plugin을 한 번 통과시켜 행 단위 변경으로 바꾼다는 점이 다릅니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 606" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Logical Replication 구조. 위쪽 Publisher에서 walsender가 pg_wal의 WAL을 읽어 output plugin pgoutput으로 디코딩해 논리 변경 스트림을 만들고, TCP로 보내면 아래쪽 Subscriber의 apply worker가 구독 테이블에 적용한다">
+<style>
+.rep2-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.rep2-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.rep2-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 2; }
+.rep2-t { fill: var(--text, #1c1917); }
+.rep2-m { fill: var(--text-muted, #78716c); }
+.rep2-p { fill: var(--accent, #d97706); font-weight: 700; }
+</style>
+<defs>
+<marker id="rep2Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="rep2ArrowA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--accent, #d97706)"/></marker>
+</defs>
+<!-- Publisher panel -->
+<rect class="rep2-panel" x="20" y="16" width="440" height="294" rx="10"/>
+<text class="rep2-p" x="36" y="45" font-size="21">위: Publisher</text>
+<rect class="rep2-box" x="110" y="62" width="260" height="42" rx="6"/>
+<text class="rep2-t" x="240" y="89" font-size="19" text-anchor="middle">pg_wal/ (WAL record)</text>
+<path d="M240,104 L240,128" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<text class="rep2-m" x="252" y="124" font-size="17">읽기</text>
+<rect class="rep2-key" x="70" y="132" width="340" height="58" rx="6"/>
+<text class="rep2-t" x="240" y="156" font-size="18" text-anchor="middle">walsender + logical decoding</text>
+<text class="rep2-m" x="240" y="178" font-size="17" text-anchor="middle">output plugin: pgoutput</text>
+<path d="M240,190 L240,214" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<text class="rep2-m" x="252" y="210" font-size="17">디코딩</text>
+<rect class="rep2-box" x="70" y="218" width="340" height="76" rx="6"/>
+<text class="rep2-t" x="240" y="241" font-size="19" text-anchor="middle">논리 변경 스트림</text>
+<text class="rep2-m" x="240" y="264" font-size="17" text-anchor="middle">INSERT public.orders: id=3</text>
+<text class="rep2-m" x="240" y="286" font-size="17" text-anchor="middle">UPDATE public.orders: id=3</text>
+<!-- TCP link -->
+<path d="M240,310 L240,376" stroke="var(--accent, #d97706)" stroke-width="2.5" fill="none" marker-end="url(#rep2ArrowA)"/>
+<text class="rep2-p" x="252" y="336" font-size="18">TCP 전송</text>
+<text class="rep2-m" x="252" y="360" font-size="17">행 단위 논리 변경</text>
+<!-- Subscriber panel -->
+<rect class="rep2-panel" x="20" y="378" width="440" height="212" rx="10"/>
+<text class="rep2-p" x="36" y="407" font-size="21">아래: Subscriber</text>
+<rect class="rep2-key" x="110" y="424" width="260" height="54" rx="6"/>
+<text class="rep2-t" x="240" y="448" font-size="20" text-anchor="middle">apply worker</text>
+<text class="rep2-m" x="240" y="469" font-size="17" text-anchor="middle">수신한 변경을 적용</text>
+<path d="M240,478 L240,502" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<text class="rep2-m" x="252" y="498" font-size="17">적용</text>
+<rect class="rep2-box" x="70" y="506" width="340" height="70" rx="6"/>
+<text class="rep2-t" x="240" y="530" font-size="19" text-anchor="middle">구독 테이블</text>
+<text class="rep2-m" x="240" y="551" font-size="17" text-anchor="middle">독립 DB이므로</text>
+<text class="rep2-m" x="240" y="572" font-size="17" text-anchor="middle">자체 인덱스·추가 컬럼 가능</text>
+</svg>
+</div>
 
 Streaming Replication과의 핵심 차이는 subscriber가 **독립된 데이터베이스**라는 점입니다. 자체 인덱스, 추가 테이블, 추가 컬럼을 가질 수 있고, publisher와 다른 PostgreSQL major version에서도 동작합니다. 이것이 **major version 업그레이드에 logical replication을 활용하는 이유**입니다. 새 버전 서버를 subscriber로 세팅하고 데이터를 동기화한 뒤 애플리케이션을 전환하면 다운타임을 크게 줄일 수 있습니다.
 
@@ -291,11 +393,45 @@ FROM pg_stat_replication;
 
 LSN이 4단계로 나뉘어 있어서 병목 위치를 진단할 수 있습니다.
 
-```
-sent_lsn → write_lsn → flush_lsn → replay_lsn
-
-  전송         OS write      디스크 flush     redo 적용
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="pg_stat_replication의 LSN 4단계. 위에서부터 sent_lsn(primary 전송), write_lsn(standby OS write), flush_lsn(standby 디스크 flush), replay_lsn(standby redo 적용) 순이며 각 구간의 차이가 크면 네트워크, 디스크 I/O, redo 속도 병목을 의심한다">
+<style>
+.rep3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.rep3-t { fill: var(--text, #1c1917); }
+.rep3-m { fill: var(--text-muted, #78716c); }
+.rep3-w { fill: var(--text-warn, #d97706); }
+</style>
+<defs>
+<marker id="rep3Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<!-- stage 1 -->
+<rect class="rep3-box" x="70" y="20" width="280" height="48" rx="6"/>
+<text class="rep3-t" x="210" y="42" font-size="19" text-anchor="middle">sent_lsn</text>
+<text class="rep3-m" x="210" y="61" font-size="17" text-anchor="middle">primary가 전송</text>
+<path d="M210,68 L210,92" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<text class="rep3-w" x="360" y="85" font-size="17">네트워크</text>
+<!-- stage 2 -->
+<rect class="rep3-box" x="70" y="96" width="280" height="48" rx="6"/>
+<text class="rep3-t" x="210" y="118" font-size="19" text-anchor="middle">write_lsn</text>
+<text class="rep3-m" x="210" y="137" font-size="17" text-anchor="middle">standby의 OS write</text>
+<path d="M210,144 L210,168" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<text class="rep3-w" x="360" y="161" font-size="17">디스크 I/O</text>
+<!-- stage 3 -->
+<rect class="rep3-box" x="70" y="172" width="280" height="48" rx="6"/>
+<text class="rep3-t" x="210" y="194" font-size="19" text-anchor="middle">flush_lsn</text>
+<text class="rep3-m" x="210" y="213" font-size="17" text-anchor="middle">standby의 디스크 flush</text>
+<path d="M210,220 L210,244" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<text class="rep3-w" x="360" y="237" font-size="17">redo 속도</text>
+<!-- stage 4 -->
+<rect class="rep3-box" x="70" y="248" width="280" height="48" rx="6"/>
+<text class="rep3-t" x="210" y="270" font-size="19" text-anchor="middle">replay_lsn</text>
+<text class="rep3-m" x="210" y="289" font-size="17" text-anchor="middle">standby의 redo 적용</text>
+<text class="rep3-m" x="240" y="330" font-size="17" text-anchor="middle">구간 차이가 크면 옆의 병목을 의심합니다</text>
+</svg>
+</div>
 
 - **sent와 write 사이 차이가 크면**: 네트워크 병목
 - **write와 flush 사이 차이가 크면**: standby 디스크 I/O 병목

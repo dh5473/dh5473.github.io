@@ -9,11 +9,11 @@ summary: '같은 쿼리가 어제는 Index Scan, 오늘은 Seq Scan이 되는 �
 thumbnail: './thumbnail.png'
 ---
 
-`users(email)`에 인덱스를 걸어뒀는데 어떤 날은 Index Scan을 타고 어떤 날은 Seq Scan이 됩니다. `EXPLAIN ANALYZE`를 찍어보니 `rows=1`이라 예상한 자리에서 실제로는 84만 행이 나옵니다. `EXPLAIN`만 보면 0.01ms로 찍히는데 실제 쿼리는 2초가 걸립니다.
+`users(email)`에 인덱스를 걸어뒀는데 어떤 날은 Index Scan을 타고 어떤 날은 Seq Scan이 됩니다. `EXPLAIN ANALYZE`를 찍어보니 `rows=1`이라 예상한 자리에서 실제로는 84만 행이 나옵니다. `EXPLAIN`의 cost는 더없이 낮게 찍히는데 정작 쿼리는 2초가 걸립니다.
 
 세 현상은 모두 플래너가 쿼리를 실제로 돌려보지 않고 **`pg_statistic`에 담긴 숫자 몇 개로 비용을 추정**한다는 사실에서 출발합니다. 플래너는 "이 조건을 걸면 몇 행이 남는가"를 통계 기반으로 계산하고, 그 추정치 위에 cost를 얹어 plan을 고릅니다. 통계가 현실과 어긋나는 순간 조인 순서, 인덱스 선택, 병렬 여부가 줄줄이 잘못 결정됩니다.
 
-이 글에서는 플래너가 cost를 만드는 과정, `EXPLAIN` 출력의 각 숫자가 무엇을 뜻하는지, 그리고 추정치가 크게 틀어졌을 때 원인을 좁혀가는 법을 순서대로 살펴봅니다. [지난 글에서 다룬 B-tree의 동작 원리](/postgres/btree-anatomy/)가 여기서도 이어지는데, 플래너는 결국 "인덱스를 탈 때의 cost"와 "테이블을 훑을 때의 cost"를 비교해 고르기 때문입니다.
+이 글에서는 플래너가 cost를 만드는 과정, `EXPLAIN` 출력의 각 숫자가 무엇을 뜻하는지, 그리고 추정치가 크게 틀어졌을 때 원인을 좁혀가는 법을 순서대로 살펴봅니다. 플래너가 저울에 올리는 후보 중 하나는 [B-tree 인덱스](/postgres/btree-anatomy/)를 타고 내려가는 경로이고, 다른 하나는 테이블을 처음부터 끝까지 훑는 경로입니다. 둘 중 어느 쪽이 싼지는 "조건에 걸리는 행이 몇 개냐"에 달려 있고, 그 숫자를 통계가 정합니다.
 
 ## 플래너가 하는 일
 
@@ -25,7 +25,7 @@ thumbnail: './thumbnail.png'
 
 플래너는 각 후보에 **cost**라는 숫자를 매겨 가장 낮은 것을 고릅니다. 여기서 cost는 밀리초 단위의 실행 시간이 아니라 "`seq_page_cost`를 1.0으로 놓았을 때의 상대적인 비용"입니다. 절대값으로 해석하면 안 되고, **같은 쿼리 안에서 plan끼리 비교할 때만** 의미가 있다고 기억해두면 좋습니다.
 
-cost를 만드는 데 쓰이는 주요 파라미터는 네 개뿐입니다.
+cost를 만드는 데 쓰이는 주요 파라미터는 다섯 개뿐입니다.
 
 | 파라미터 | 기본값 | 의미 |
 |----------|--------|------|
@@ -33,8 +33,11 @@ cost를 만드는 데 쓰이는 주요 파라미터는 네 개뿐입니다.
 | `random_page_cost` | 4.0 | 랜덤 위치 페이지를 읽는 비용 |
 | `cpu_tuple_cost` | 0.01 | 한 행을 처리하는 CPU 비용 |
 | `cpu_index_tuple_cost` | 0.005 | 인덱스 엔트리 하나를 처리하는 비용 |
+| `cpu_operator_cost` | 0.0025 | 연산자나 함수를 한 번 실행하는 비용 |
 
-`random_page_cost`가 `seq_page_cost`보다 4배 비싸다는 설정은 HDD 시절의 유산입니다. SSD 환경에서는 이 차이가 거의 없어서 4.0을 그대로 두면 플래너가 인덱스를 지나치게 기피합니다. 요즘 운영 환경은 대부분 `random_page_cost`를 1.1\~1.5 정도로 내려서 씁니다.
+Seq Scan의 total cost는 이 값들의 단순 합입니다. 페이지 수 × `seq_page_cost` + 행 수 × `cpu_tuple_cost` + 행 수 × 조건 개수 × `cpu_operator_cost`. 뒤에서 볼 `cost=0.00..1972.00`도 이 덧셈의 결과입니다.
+
+`random_page_cost`가 `seq_page_cost`보다 4배 비싸다는 설정은 HDD 시절의 유산입니다. SSD 환경에서는 이 차이가 거의 없어서 4.0을 그대로 두면 플래너가 인덱스를 지나치게 기피합니다. SSD를 쓰는 서버라면 `random_page_cost`를 1.1\~1.5 정도로 내려 잡는 편이 실측에 가깝습니다.
 
 그런데 이 cost 공식 자체는 단순해 보여도, 여기서 `rows` 자리에 들어갈 숫자를 어떻게 구하는지가 진짜 핵심입니다. 플래너가 "몇 행이 남을 것"이라고 추정하는 근거가 다음 절의 주제입니다.
 
@@ -46,9 +49,11 @@ cost를 계산하려면 "조건을 걸었을 때 몇 행이 남는가"를 먼저
 
 - `n_distinct`: 고유값 개수. 양수면 절대값, 음수면 행 수 대비 비율입니다(-1이면 전부 다름).
 - **MCV**(most_common_vals): 가장 자주 나오는 값 상위 100개(기본)와 각 값의 빈도.
-- **histogram**: MCV에 뽑히지 않은 나머지 값을 같은 개수 구간으로 나눈 경계선들.
+- **histogram**: MCV에 뽑히지 않은 나머지 값을 대략 같은 개수씩 담도록 나눈 구간 경계선들.
 
-등치 조건(`=`)이 MCV 안에 들어 있으면 그 값의 빈도를 바로 씁니다. MCV 밖이면 "MCV에 포함되지 않은 나머지 비율"을 전체 고유값 수로 나눠 추정합니다. 범위 조건(`>`, `<`, `BETWEEN`)은 histogram 경계선을 따라 어느 위치까지 포함되는지를 보간해 비율을 계산합니다. MCV는 주로 카디널리티 낮은 범주형에서 위력을 발휘하고, histogram은 연속형 숫자·날짜 범위 조건을 받쳐주는 역할입니다.
+등치 조건(`=`)이 MCV 안에 들어 있으면 그 값의 빈도를 바로 씁니다. MCV 밖이면 "MCV가 덮지 못한 나머지 비율"을 MCV에 없는 고유값 개수로 나눠 추정합니다. 범위 조건(`>`, `<`, `BETWEEN`)은 histogram 경계선을 따라 어느 위치까지 포함되는지를 보간해 비율을 계산합니다. MCV는 주로 카디널리티 낮은 범주형에서 위력을 발휘하고, histogram은 연속형 숫자·날짜 범위 조건을 받쳐주는 역할입니다.
+
+둘은 서로의 빈자리를 메웁니다. histogram은 MCV에 뽑힌 값을 빼고 계산되기 때문에, MCV가 컬럼 전체를 덮어버리면 histogram은 아예 만들어지지 않습니다. 반대로 값이 거의 다 다른 컬럼은 MCV에 걸리는 값이 없다시피 해서 histogram이 분포를 통째로 떠맡습니다.
 
 말로만 보면 잘 와닿지 않으니 직접 뜯어봅니다.
 
@@ -63,13 +68,12 @@ CREATE TABLE orders (
 INSERT INTO orders (status, amount)
 SELECT
     CASE
-        WHEN r < 0.85 THEN 'completed'
-        WHEN r < 0.98 THEN 'pending'
+        WHEN s.r < 0.85 THEN 'completed'
+        WHEN s.r < 0.98 THEN 'pending'
         ELSE 'refunded'
     END,
     (random() * 1000)::numeric(10, 2)
-FROM generate_series(1, 100000),
-     LATERAL (SELECT random() AS r) sub;
+FROM (SELECT random() AS r FROM generate_series(1, 100000)) s;
 
 ANALYZE orders;
 
@@ -78,15 +82,81 @@ FROM pg_stats
 WHERE tablename = 'orders' AND attname = 'status';
 ```
 
-```
- attname | n_distinct |        most_common_vals         |    most_common_freqs
----------+------------+---------------------------------+--------------------------
- status  |          3 | {completed,pending,refunded}    | {0.8504,0.1296,0.02}
+```text
+ attname | n_distinct |       most_common_vals       |   most_common_freqs
+---------+------------+------------------------------+------------------------
+ status  |          3 | {completed,pending,refunded} | {0.8467,0.1327,0.0206}
 ```
 
-고유값은 3개, 그중 `completed`가 약 85%를 차지한다는 사실이 숫자로 박혀 있습니다. 이 테이블에 `WHERE status = 'completed'`를 걸면 플래너는 "10만 행 중 8만 5천 행쯤 남겠다"고 추정합니다. 설령 `status`에 인덱스를 만들어둬도 이 쿼리는 Seq Scan이 이깁니다. 전체의 85%를 읽어야 하는 상황에서 인덱스 트리를 타고 다시 힙으로 가는 건 오히려 느립니다.
+고유값은 3개, 그중 `completed`가 84.67%를 차지한다는 사실이 숫자로 박혀 있습니다. `most_common_freqs`는 표본에서 센 비율이라 데이터를 다시 만들면 소수점 아래가 조금씩 달라집니다. 세 값이 전부 MCV에 담겼기 때문에 이 컬럼의 `histogram_bounds`는 비어 있습니다.
 
-반면 `WHERE status = 'refunded'`는 2%만 남으니 Index Scan이 훨씬 낫습니다. **같은 컬럼이어도 조건 값에 따라 plan이 달라지는 이유**가 이 통계에 있습니다.
+이 테이블에 `WHERE status = 'completed'`를 걸면 플래너는 그 빈도를 그대로 곱해 `rows=84670`을 내놓습니다. 설령 `status`에 인덱스를 만들어둬도 이 쿼리는 Seq Scan이 이깁니다. 전체의 85%를 읽어야 하는 상황에서 인덱스 트리를 타고 다시 힙으로 가는 건 오히려 느립니다.
+
+반면 `WHERE status = 'refunded'`는 `rows=2060`이라 인덱스 쪽이 훨씬 쌉니다. 실제로 인덱스를 만들어두고 찍어보면 이 조건만 Bitmap Index Scan으로 넘어갑니다. **같은 컬럼이어도 조건 값에 따라 plan이 달라지는 이유**가 이 통계에 있습니다.
+
+같은 테이블의 `status`와 `amount`를 나란히 놓으면 MCV와 histogram이 각각 어떤 컬럼을 맡는지가 드러납니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 538" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="위쪽은 status 컬럼의 MCV가 세 값의 빈도를 그대로 담아 조건 값에 따라 Seq Scan과 Bitmap Index Scan이 갈리는 모습, 아래쪽은 amount 컬럼이 히스토그램 버킷 100개로 분포를 근사해 범위 조건의 비율을 보간하는 모습을 보여주는 그림">
+<style>
+.ps1-t { fill: var(--text, #1c1917); }
+.ps1-m { fill: var(--text-muted, #78716c); }
+.ps1-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps1-s1 { fill: var(--primary, #0d9488); }
+.ps1-s2 { fill: var(--text-muted, #78716c); }
+.ps1-s3 { fill: var(--text, #1c1917); }
+.ps1-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.ps1-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps1-bk { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps1-tick { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps1-cut { stroke: var(--accent, #d97706); stroke-width: 2; stroke-dasharray: 5 4; }
+</style>
+<!-- 제목 -->
+<text x="240" y="26" text-anchor="middle" font-size="21" font-weight="600" class="ps1-t">ANALYZE가 남기는 두 종류의 분포</text>
+<!-- 위 패널: status, MCV -->
+<rect x="16" y="42" width="448" height="278" rx="8" class="ps1-panel"/>
+<text x="32" y="70" font-size="19" font-weight="600" class="ps1-t">위: status 컬럼 (고유값 3개)</text>
+<text x="32" y="94" font-size="18" class="ps1-m">MCV가 세 값의 빈도를 그대로 담습니다</text>
+<rect x="32" y="106" width="352.2" height="32" class="ps1-s1"/>
+<rect x="384.2" y="106" width="55.2" height="32" class="ps1-s2"/>
+<rect x="439.4" y="106" width="8.6" height="32" class="ps1-s3"/>
+<line x1="208" y1="140" x2="208" y2="158" class="ps1-lead"/>
+<text x="208" y="174" text-anchor="middle" font-size="17" class="ps1-t">completed 84.7%</text>
+<line x1="412" y1="140" x2="412" y2="180" class="ps1-lead"/>
+<text x="406" y="196" text-anchor="end" font-size="17" class="ps1-t">pending 13.3%</text>
+<line x1="444" y1="140" x2="444" y2="202" class="ps1-lead"/>
+<text x="438" y="218" text-anchor="end" font-size="17" class="ps1-t">refunded 2.1%</text>
+<line x1="32" y1="238" x2="448" y2="238" class="ps1-div"/>
+<text x="32" y="260" font-size="17" class="ps1-m">WHERE 조건 값에 따라 plan이 갈립니다</text>
+<text x="32" y="286" font-size="18" class="ps1-t">'completed' → 84,670행 → Seq Scan</text>
+<text x="32" y="308" font-size="18" class="ps1-t">'refunded' → 2,060행 → Bitmap Index Scan</text>
+<!-- 아래 패널: amount, histogram -->
+<rect x="16" y="336" width="448" height="186" rx="8" class="ps1-panel"/>
+<text x="32" y="364" font-size="19" font-weight="600" class="ps1-t">아래: amount 컬럼 (값이 거의 다 다름)</text>
+<text x="32" y="388" font-size="18" class="ps1-m">histogram 버킷 100개가 분포를 대신합니다</text>
+<rect x="32" y="402" width="416" height="32" class="ps1-bk"/>
+<rect x="240" y="402" width="208" height="32" fill="var(--accent, #d97706)" opacity="0.35"/>
+<line x1="73.6" y1="402" x2="73.6" y2="434" class="ps1-tick"/>
+<line x1="115.2" y1="402" x2="115.2" y2="434" class="ps1-tick"/>
+<line x1="156.8" y1="402" x2="156.8" y2="434" class="ps1-tick"/>
+<line x1="198.4" y1="402" x2="198.4" y2="434" class="ps1-tick"/>
+<line x1="281.6" y1="402" x2="281.6" y2="434" class="ps1-tick"/>
+<line x1="323.2" y1="402" x2="323.2" y2="434" class="ps1-tick"/>
+<line x1="364.8" y1="402" x2="364.8" y2="434" class="ps1-tick"/>
+<line x1="406.4" y1="402" x2="406.4" y2="434" class="ps1-tick"/>
+<line x1="240" y1="394" x2="240" y2="442" class="ps1-cut"/>
+<text x="32" y="458" font-size="17" class="ps1-m">0.01</text>
+<text x="240" y="458" text-anchor="middle" font-size="17" class="ps1-m">499.91</text>
+<text x="448" y="458" text-anchor="end" font-size="17" class="ps1-m">999.99</text>
+<text x="32" y="484" font-size="18" class="ps1-t">버킷마다 행 수가 같아 경계 위치가 곧 비율입니다</text>
+<text x="32" y="508" font-size="18" class="ps1-t">amount &gt; 500 → 49,999행 추정, 실제 50,087행</text>
+</svg>
+</div>
+
+`status`는 세 값이 MCV를 다 채워 histogram이 필요 없고, `amount`는 반대로 MCV에 걸리는 값이 거의 없어 경계선 101개가 만든 버킷 100개가 분포를 통째로 표현합니다. 버킷마다 담긴 행 수가 같으므로 `amount > 500`은 "경계선 배열에서 500이 어디쯤인가"를 보간하는 문제로 바뀝니다.
 
 ## EXPLAIN 출력 한 줄 해석하기
 
@@ -96,16 +166,16 @@ WHERE tablename = 'orders' AND attname = 'status';
 EXPLAIN SELECT * FROM orders WHERE amount > 500;
 ```
 
-```
- Seq Scan on orders  (cost=0.00..1943.00 rows=50123 width=22)
+```text
+ Seq Scan on orders  (cost=0.00..1972.00 rows=49999 width=23)
    Filter: (amount > '500'::numeric)
 ```
 
 각 숫자의 의미는 이렇습니다.
 
-- `cost=0.00..1943.00` — **startup cost**(첫 행 반환까지)와 **total cost**(전체 완료까지). Seq Scan은 바로 읽기 시작하니 startup이 0입니다.
-- `rows=50123` — 플래너가 통계로 추정한 반환 행 수.
-- `width=22` — 행 하나의 평균 크기(bytes).
+- `cost=0.00..1972.00`: **startup cost**(첫 행 반환까지)와 **total cost**(전체 완료까지). Seq Scan은 바로 읽기 시작하니 startup이 0입니다. 앞 절의 덧셈을 그대로 대입하면 722페이지 + 100000 × 0.01 + 100000 × 0.0025 = 1972가 나옵니다.
+- `rows=49999`: 플래너가 통계로 추정한 반환 행 수.
+- `width=23`: 행 하나의 평균 크기(bytes).
 
 여기까지는 전부 추정치입니다. `EXPLAIN ANALYZE`를 붙이면 실제 실행 결과가 함께 나옵니다.
 
@@ -113,18 +183,70 @@ EXPLAIN SELECT * FROM orders WHERE amount > 500;
 EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 ```
 
-```
- Seq Scan on orders  (cost=0.00..1943.00 rows=50123 width=22)
-                     (actual time=0.013..8.421 rows=49872 loops=1)
+```text
+ Seq Scan on orders  (cost=0.00..1972.00 rows=49999 width=23)
+                     (actual time=0.003..6.430 rows=50087 loops=1)
    Filter: (amount > '500'::numeric)
-   Rows Removed by Filter: 50128
- Planning Time: 0.082 ms
- Execution Time: 10.334 ms
+   Rows Removed by Filter: 49913
+ Planning Time: 0.117 ms
+ Execution Time: 7.281 ms
 ```
 
-`actual time=0.013..8.421`의 앞 숫자는 첫 행이 나오기까지 걸린 시간, 뒷 숫자는 마지막 행까지 걸린 시간(ms)입니다. `rows=49872`는 실제로 반환된 행 수, `loops=1`은 이 노드가 한 번만 실행됐다는 뜻입니다.
+같은 노드에 괄호가 두 개 붙었습니다. 앞 괄호는 플래너가 실행 전에 계산한 값이고, 뒤 괄호는 실제로 돌려본 결과입니다. 실제 `psql`은 이 둘을 한 줄에 붙여서 출력하는데, 여기서는 폭에 맞추려고 뒤 괄호를 아랫줄로 내렸습니다. 헷갈리는 지점은 `rows=`가 양쪽에 한 번씩 나온다는 것입니다.
 
-추정치 50123 vs 실제 49872. 오차는 0.5% 수준입니다. 이 정도면 추정이 잘 맞은 편입니다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 586" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="EXPLAIN 한 노드의 앞 괄호는 cost와 rows와 width로 된 추정치이고 뒤 괄호는 actual time과 rows와 loops로 된 실측치이며, 양쪽의 rows를 비교하는 것이 진단의 출발점임을 보여주는 그림">
+<style>
+.ps2-t { fill: var(--text, #1c1917); }
+.ps2-m { fill: var(--text-muted, #78716c); }
+.ps2-c { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: var(--text, #1c1917); }
+.ps2-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: var(--primary, #0d9488); font-weight: 600; }
+.ps2-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps2-hl { fill: var(--bg-muted, #eeecea); }
+.ps2-band { fill: var(--bg-muted, #eeecea); }
+.ps2-arr { stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ps2-arrh { fill: var(--primary, #0d9488); }
+</style>
+<!-- 제목 -->
+<text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps2-t">한 노드에 추정과 실측이 함께 있다</text>
+<!-- 위: 추정치 -->
+<rect x="16" y="48" width="448" height="204" rx="8" class="ps2-box"/>
+<text x="32" y="76" font-size="19" font-weight="600" class="ps2-t">위: EXPLAIN이 내놓는 추정치</text>
+<text x="32" y="104" font-size="19" class="ps2-c">cost=0.00..1972.00</text>
+<text x="44" y="126" font-size="17" class="ps2-m">첫 행까지 0.00, 전체 완료까지 1972.00</text>
+<text x="32" y="154" font-size="19" class="ps2-c">width=23</text>
+<text x="44" y="176" font-size="17" class="ps2-m">행 하나의 평균 크기, 바이트 단위</text>
+<rect x="26" y="188" width="134" height="27" rx="4" class="ps2-hl"/>
+<text x="32" y="207" font-size="19" class="ps2-key">rows=49999</text>
+<text x="44" y="234" font-size="17" class="ps2-m">플래너가 통계로 추정한 행 수</text>
+<!-- 연결 -->
+<polygon points="100,254 94,264 106,264" class="ps2-arrh"/>
+<line x1="100" y1="264" x2="100" y2="280" class="ps2-arr"/>
+<polygon points="100,290 94,280 106,280" class="ps2-arrh"/>
+<text x="116" y="278" font-size="18" font-weight="600" class="ps2-t">이 둘을 비교합니다</text>
+<!-- 아래: 실측치 -->
+<rect x="16" y="294" width="448" height="204" rx="8" class="ps2-box"/>
+<text x="32" y="322" font-size="19" font-weight="600" class="ps2-t">아래: ANALYZE가 더해주는 실측치</text>
+<rect x="26" y="334" width="134" height="27" rx="4" class="ps2-hl"/>
+<text x="32" y="353" font-size="19" class="ps2-key">rows=50087</text>
+<text x="44" y="380" font-size="17" class="ps2-m">실제로 반환된 행 수</text>
+<text x="32" y="408" font-size="19" class="ps2-c">actual time=0.003..6.430</text>
+<text x="44" y="430" font-size="17" class="ps2-m">첫 행 0.003ms, 마지막 행 6.430ms</text>
+<text x="32" y="458" font-size="19" class="ps2-c">loops=1</text>
+<text x="44" y="480" font-size="17" class="ps2-m">이 노드가 실행된 횟수</text>
+<!-- 결론 -->
+<rect x="16" y="514" width="448" height="62" rx="8" class="ps2-band"/>
+<text x="240" y="542" text-anchor="middle" font-size="20" font-weight="600" class="ps2-t">같은 rows=인데 앞은 추정, 뒤는 실측</text>
+<text x="240" y="566" text-anchor="middle" font-size="17" class="ps2-m">49,999 대 50,087이면 오차 0.2%</text>
+</svg>
+</div>
+
+`actual time=0.003..6.430`의 앞 숫자는 첫 행이 나오기까지 걸린 시간, 뒷 숫자는 마지막 행까지 걸린 시간(ms)입니다. `loops=1`은 이 노드가 한 번만 실행됐다는 뜻입니다.
+
+추정 49999, 실제 50087. 오차는 0.2% 수준이고, 이 정도면 통계가 현실을 잘 따라가고 있다고 봐도 됩니다.
 
 버퍼 캐시 상황까지 보려면 `BUFFERS`를 추가합니다.
 
@@ -132,15 +254,33 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
 EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE amount > 500;
 ```
 
-```
- Seq Scan on orders  (...)
-   Buffers: shared hit=636 read=7
+서버를 막 재시작해 캐시가 빈 상태에서 찍으면 이렇게 나옵니다.
+
+```text
+ Seq Scan on orders  (cost=0.00..1972.00 rows=49999 width=23)
+                     (actual time=0.006..7.248 rows=50087 loops=1)
+   Filter: (amount > '500'::numeric)
+   Rows Removed by Filter: 49913
+   Buffers: shared read=722
+ Planning:
+   Buffers: shared hit=47 read=18
+ Planning Time: 1.034 ms
+ Execution Time: 8.224 ms
 ```
 
-- `shared hit=636` — `shared_buffers`(메모리)에서 바로 가져온 8KB 페이지 수
-- `read=7` — 디스크에서 읽어야 했던 페이지 수
+- `shared hit`: `shared_buffers`(메모리)에서 바로 가져온 8KB 페이지 수
+- `shared read`: 메모리에 없어서 디스크(또는 OS 캐시)까지 갔던 페이지 수
+- `Planning:` 아래의 `Buffers`: 실행이 아니라 **계획을 세우는 동안** 읽은 페이지입니다. 통계와 카탈로그를 읽느라 발생합니다.
 
-`read` 값이 크면 워밍업이 안 된 상태거나 `shared_buffers`가 작은 것입니다. "EXPLAIN만 봤을 땐 빨라 보였는데 실제로는 느리다"는 상황은 거의 이 `read` 값 때문입니다.
+같은 쿼리를 한 번 더 돌리면 같은 자리가 이렇게 바뀝니다.
+
+```text
+   Buffers: shared hit=722
+ Planning Time: 0.133 ms
+ Execution Time: 7.309 ms
+```
+
+722페이지가 통째로 `read`에서 `hit`으로 넘어갔고, `Planning Time`은 1.034ms에서 0.133ms로 줄었습니다. plan은 한 글자도 바뀌지 않았는데 실행 시간만 달라진 것입니다. "EXPLAIN만 봤을 땐 빨라 보였는데 실제로는 느리다"는 상황은 대개 이 `read` 값 때문이지 plan 탓이 아닙니다.
 
 ## JOIN이 섞인 plan 읽는 법
 
@@ -168,17 +308,24 @@ JOIN orders o ON o.user_id = u.id
 WHERE u.id = 42;
 ```
 
-```
- Nested Loop  (cost=0.42..45.23 rows=10 width=36)
-              (actual time=0.021..0.089 rows=9 loops=1)
+```text
+ Nested Loop  (cost=4.66..50.48 rows=10 width=26)
+              (actual time=0.022..0.040 rows=10 loops=1)
    ->  Index Scan using users_pkey on users u
-           (cost=0.29..8.31 rows=1 width=32)
-           (actual time=0.010..0.011 rows=1 loops=1)
+           (cost=0.29..8.30 rows=1 width=28)
+           (actual time=0.009..0.009 rows=1 loops=1)
          Index Cond: (id = 42)
-   ->  Index Scan using orders_user_id_idx on orders o
-           (cost=0.13..36.82 rows=10 width=12)
-           (actual time=0.008..0.073 rows=9 loops=1)
-         Index Cond: (user_id = 42)
+   ->  Bitmap Heap Scan on orders o
+           (cost=4.37..42.08 rows=10 width=14)
+           (actual time=0.011..0.028 rows=10 loops=1)
+         Recheck Cond: (user_id = 42)
+         Heap Blocks: exact=10
+         ->  Bitmap Index Scan on orders_user_id_idx
+                 (cost=0.00..4.37 rows=10 width=0)
+                 (actual time=0.008..0.008 rows=10 loops=1)
+               Index Cond: (user_id = 42)
+ Planning Time: 0.288 ms
+ Execution Time: 0.064 ms
 ```
 
 plan 트리를 읽는 규칙은 두 가지입니다.
@@ -186,7 +333,7 @@ plan 트리를 읽는 규칙은 두 가지입니다.
 - **안쪽이 먼저 실행됩니다.**(들여쓰기 깊은 노드) 바깥 노드는 안쪽의 출력을 입력으로 받습니다.
 - **`loops`는 바깥 노드가 이 노드를 몇 번 호출했는지**입니다. Nested Loop에서 안쪽 노드의 실제 비용은 `actual time × loops`로 대략 계산합니다.
 
-여기서는 `users`에서 1행(id=42)을 뽑고, 그 1행마다 `orders` 인덱스를 한 번 타서 9행을 가져온 것입니다. 추정 10행 vs 실제 9행, 이쪽도 추정이 잘 맞았습니다.
+가장 안쪽의 `Bitmap Index Scan`이 먼저 돌아 `user_id = 42`인 위치를 모으고, `Bitmap Heap Scan`이 그 위치로 힙 블록 10개를 읽고, 마지막으로 `Nested Loop`가 `users`의 1행과 붙입니다. 결국 `users`에서 1행(id=42)을 뽑고 그 1행에 대해 `orders` 쪽을 한 번 조회해 10행을 가져온 것입니다. 추정 10행에 실제 10행이니 이쪽도 추정이 정확했습니다.
 
 플래너가 Nested Loop를 고른 이유는 바깥이 1행으로 줄어들 것임을 `users_pkey` 통계로 알았기 때문입니다. 바깥이 만 행 규모였다면 Nested Loop의 cost가 선형으로 불어나면서 Hash Join이나 Merge Join이 유리한 지점으로 넘어갑니다. 이 선택 과정은 다음 글에서 다룹니다.
 
@@ -237,13 +384,68 @@ SELECT * FROM addresses
 WHERE country = 'KR' AND city = 'Seoul';
 ```
 
-```
- Seq Scan on addresses  (cost=0.00..1387.00 rows=3333 width=18)
-                        (actual time=0.020..5.912 rows=10000 loops=1)
+```text
+ Seq Scan on addresses  (cost=0.00..1700.00 rows=3733 width=17)
+                        (actual time=0.004..4.573 rows=10000 loops=1)
    Filter: ((country = 'KR'::text) AND (city = 'Seoul'::text))
+   Rows Removed by Filter: 70000
 ```
 
-플래너는 "country=KR이 전체의 37.5%, city=Seoul이 전체의 12.5%, 둘 다 걸리면 37.5% × 12.5% = 4.7%"로 계산해 3333행을 예상했습니다. 실제로는 `Seoul`은 오직 `KR`에만 있으니 `KR` 전체인 10000행이 나옵니다. 3배 오차입니다.
+`pg_stats`를 열어 보면 MCV에 `country`의 `KR`이 0.3763, `city`의 `Seoul`이 0.124로 잡혀 있습니다. 플래너는 두 조건이 무관하다고 보고 그냥 곱합니다. 0.3763 × 0.124 = 0.0467, 여기에 8만 행을 곱해 3733행을 예상했습니다. 실제로는 `Seoul`이 `KR`에만 있어서 두 번째 조건이 첫 번째 조건을 하나도 걸러내지 못하고, `city = 'Seoul'`인 10000행이 그대로 남습니다. 2.7배 어긋난 것입니다.
+
+이 오차가 이 노드에서 끝나지 않는다는 점이 문제입니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 510" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="두 컬럼을 독립으로 가정해 선택도를 곱하면 3733행을 추정하지만 실제로는 10000행이 나오고, 이 노드가 조인의 바깥이면 플래너가 Nested Loop를 골라 실제 반복 횟수가 추정의 2.7배로 늘어나는 연쇄를 보여주는 그림">
+<style>
+.ps3-t { fill: var(--text, #1c1917); }
+.ps3-m { fill: var(--text-muted, #78716c); }
+.ps3-neutral { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.ps3-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+.ps3-warn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+.ps3-badt { fill: var(--text-danger, #dc2626); }
+.ps3-warnt { fill: var(--text-warn, #d97706); }
+.ps3-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+.ps3-arrh { fill: var(--text-muted, #78716c); }
+</style>
+<!-- 제목 -->
+<text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps3-t">3,733 대 10,000이 남기는 것</text>
+<!-- 1단계 -->
+<rect x="24" y="46" width="432" height="66" rx="8" class="ps3-neutral"/>
+<text x="42" y="74" font-size="20" class="ps3-t">MCV: KR 0.3763, Seoul 0.124</text>
+<text x="42" y="98" font-size="18" class="ps3-m">두 조건을 서로 독립이라고 가정합니다</text>
+<line x1="240" y1="114" x2="240" y2="128" class="ps3-arr"/>
+<polygon points="240,136 233,128 247,128" class="ps3-arrh"/>
+<!-- 2단계 -->
+<rect x="24" y="136" width="432" height="66" rx="8" class="ps3-neutral"/>
+<text x="42" y="164" font-size="20" class="ps3-t">0.3763 × 0.124 = 0.0467</text>
+<text x="42" y="188" font-size="18" class="ps3-m">80,000행 × 0.0467 ≈ 3,733행 추정</text>
+<line x1="240" y1="204" x2="240" y2="218" class="ps3-arr"/>
+<polygon points="240,226 233,218 247,218" class="ps3-arrh"/>
+<!-- 3단계 -->
+<rect x="24" y="226" width="432" height="66" rx="8" class="ps3-bad"/>
+<text x="42" y="254" font-size="20" font-weight="600" class="ps3-badt">실제로는 Seoul이 KR에만 있습니다</text>
+<text x="42" y="278" font-size="18" class="ps3-t">10,000행이 남아 추정의 2.7배</text>
+<line x1="240" y1="294" x2="240" y2="308" class="ps3-arr"/>
+<polygon points="240,316 233,308 247,308" class="ps3-arrh"/>
+<!-- 4단계 -->
+<rect x="24" y="316" width="432" height="90" rx="8" class="ps3-warn"/>
+<text x="42" y="344" font-size="20" font-weight="600" class="ps3-warnt">이 노드가 조인의 바깥이면</text>
+<text x="42" y="368" font-size="18" class="ps3-t">플래너는 3,733행만 나올 셈으로</text>
+<text x="42" y="392" font-size="18" class="ps3-t">Nested Loop를 고릅니다</text>
+<line x1="240" y1="408" x2="240" y2="422" class="ps3-arr"/>
+<polygon points="240,430 233,422 247,422" class="ps3-arrh"/>
+<!-- 5단계 -->
+<rect x="24" y="430" width="432" height="66" rx="8" class="ps3-bad"/>
+<text x="42" y="458" font-size="20" font-weight="600" class="ps3-badt">실제로는 10,000번 반복합니다</text>
+<text x="42" y="482" font-size="18" class="ps3-t">안쪽 조회가 2.7배로 늘어납니다</text>
+</svg>
+</div>
+
+행 수 추정은 그 노드 하나의 문제로 끝나지 않고 위쪽 노드의 입력이 됩니다. 바깥이 3,733행일 줄 알고 Nested Loop를 골랐는데 실제로 10,000행이 들어오면, 안쪽 인덱스 조회가 그만큼 더 돌아갑니다. 조인이 두세 단 겹치면 이 배수가 곱해집니다.
 
 PostgreSQL 10부터 이걸 교정할 수 있습니다.
 
@@ -257,12 +459,14 @@ SELECT * FROM addresses
 WHERE country = 'KR' AND city = 'Seoul';
 ```
 
-```
- Seq Scan on addresses  (cost=0.00..1387.00 rows=10000 width=18)
-                        (actual time=0.012..5.203 rows=10000 loops=1)
+```text
+ Seq Scan on addresses  (cost=0.00..1700.00 rows=9973 width=17)
+                        (actual time=0.004..4.553 rows=10000 loops=1)
+   Filter: ((country = 'KR'::text) AND (city = 'Seoul'::text))
+   Rows Removed by Filter: 70000
 ```
 
-추정 10000, 실제 10000. 두 컬럼이 강하게 연관된 경우 `CREATE STATISTICS`는 거의 항상 효과가 있습니다.
+추정 9973에 실제 10000, 오차 0.3%입니다. `dependencies`가 "city 값을 알면 country가 정해진다"는 함수 종속을 표본에서 찾아내 두 조건을 곱하지 않도록 막아준 결과입니다. 두 컬럼이 강하게 연관된 경우 `CREATE STATISTICS`는 거의 항상 효과가 있습니다.
 
 ### 3. 극단적인 스큐
 
@@ -275,7 +479,9 @@ ALTER TABLE orders ALTER COLUMN status SET STATISTICS 1000;
 ANALYZE orders;
 ```
 
-기본값은 100이고, 1000까지 올리면 `ANALYZE`가 더 많은 행을 표본으로 삼고 MCV 슬롯도 1000개까지 늘어납니다. 테이블 전체의 기본값은 `default_statistics_target`으로 조절합니다. 수백 개 컬럼에 일괄 적용할 거라면 이쪽을 건드리는 편이 낫습니다.
+이 값은 `most_common_vals`와 `histogram_bounds`에 들어갈 수 있는 최대 항목 수인 동시에 표본 크기를 정합니다. `ANALYZE`는 목표값 × 300행을 표본으로 뽑으므로, 기본값 100이면 3만 행을 읽고 1000이면 30만 행을 읽습니다. 실제로 `ANALYZE VERBOSE`를 찍어보면 기본 설정에서 `30000 rows in sample`이라고 나옵니다.
+
+목표값의 상한은 10000입니다. 다만 올린 만큼 `ANALYZE` 시간과 플래너의 통계 조회 비용이 함께 늘어나므로, 문제가 확인된 컬럼에만 올리는 편이 낫습니다. 테이블 전체의 기본값은 `default_statistics_target`으로 조절합니다.
 
 ### 4. 표현식에 감싼 컬럼
 
@@ -283,7 +489,12 @@ ANALYZE orders;
 SELECT * FROM users WHERE lower(email) = 'admin@example.com';
 ```
 
-플래너는 `lower(email)`이라는 표현식 값의 분포를 모릅니다. `pg_statistic`에는 `email` 컬럼의 원본 분포만 있기 때문입니다. 결과적으로 "모르는 값은 기본 비율"을 적용해 selectivity가 부정확해집니다.
+플래너는 `lower(email)`이라는 표현식 값의 분포를 모릅니다. `pg_statistic`에는 `email` 컬럼의 원본 분포만 있기 때문입니다. 결과적으로 등치 조건에 붙는 기본 선택도 0.5%가 그대로 적용됩니다. `email`이 UNIQUE라 1행만 나올 것이 뻔한데도 1만 행짜리 `users`에서 `rows=50`이라는 추정이 나옵니다.
+
+```text
+ Seq Scan on users  (cost=0.00..224.00 rows=50 width=28)
+   Filter: (lower(email) = 'admin@example.com'::text)
+```
 
 해법은 **표현식 인덱스 + 그 인덱스에 대한 통계 생성**입니다.
 
@@ -292,7 +503,14 @@ CREATE INDEX users_email_lower ON users (lower(email));
 ANALYZE users;
 ```
 
-표현식 인덱스를 만들면 `ANALYZE`가 `lower(email)` 값 자체의 통계를 수집합니다. 그때부터 플래너가 제대로 된 selectivity를 씁니다.
+표현식 인덱스를 만들면 `ANALYZE`가 `lower(email)` 값 자체의 통계를 따로 수집합니다. 그때부터 추정이 제자리를 찾습니다.
+
+```text
+ Index Scan using users_email_lower on users  (cost=0.29..8.30 rows=1 width=28)
+   Index Cond: (lower(email) = 'admin@example.com'::text)
+```
+
+`rows=50`이 `rows=1`이 되면서 plan도 Seq Scan에서 Index Scan으로 바뀌었습니다.
 
 ## 실전에서는
 
@@ -312,7 +530,7 @@ WHERE relname = '문제_테이블';
 
 **3. 한 번만 느린 쿼리는 `auto_explain`으로 잡습니다.** 재현이 어려운 slow query는 항상 로그에 남겨둡니다.
 
-```
+```ini
 # postgresql.conf
 shared_preload_libraries = 'auto_explain'
 auto_explain.log_min_duration = '500ms'
@@ -322,14 +540,14 @@ auto_explain.log_buffers = on
 
 500ms 넘는 쿼리는 전부 plan과 함께 로그에 찍힙니다. 이벤트 순간의 plan을 나중에 볼 수 있다는 것만으로도 원인 파악이 쉬워집니다.
 
-**4. "EXPLAIN만 빠르고 실제 느림"은 대체로 버퍼 미스입니다.** `Buffers: read=` 값이 크면 `shared_buffers` 크기나 워밍업 상태를 먼저 의심합니다. plan이 문제가 아닐 수 있습니다.
+**4. "cost는 낮은데 실제로 느림"은 대체로 버퍼 미스입니다.** `Buffers: read=` 값이 크면 `shared_buffers` 크기나 워밍업 상태를 먼저 의심합니다. plan이 문제가 아닐 수 있습니다.
 
 ## 흔한 오해
 
-- **"cost 숫자가 작으면 빠른 쿼리다"** — cost는 상대 비용입니다. 같은 쿼리의 plan끼리 비교할 때만 의미가 있고, 서로 다른 쿼리의 cost를 두고 "이게 더 빠르다"고 말할 수는 없습니다.
-- **"ANALYZE는 인덱스를 갱신한다"** — `ANALYZE`는 통계만 갱신합니다. 인덱스 재구축과는 무관합니다.
-- **"`VACUUM`을 돌리면 통계도 갱신된다"** — 기본 `VACUUM`은 통계를 건드리지 않습니다. `VACUUM ANALYZE`이거나 autovacuum에 딸린 autoanalyze가 돌아야 합니다.
-- **"추정치 오차는 테이블이 작을수록 덜 나온다"** — 오히려 반대에 가깝습니다. 작은 테이블은 Seq Scan이 어차피 이겨서 오차가 드러나지 않을 뿐이고, 테이블이 커지는 순간 같은 오차가 plan을 뒤집습니다.
+- **"cost 숫자가 작으면 빠른 쿼리다"**: cost는 상대 비용입니다. 같은 쿼리의 plan끼리 비교할 때만 의미가 있고, 서로 다른 쿼리의 cost를 두고 "이게 더 빠르다"고 말할 수는 없습니다.
+- **"ANALYZE는 인덱스를 갱신한다"**: `ANALYZE`는 통계만 갱신합니다. 인덱스 재구축과는 무관합니다.
+- **"`VACUUM`을 돌리면 통계도 갱신된다"**: 기본 `VACUUM`은 통계를 건드리지 않습니다. `VACUUM ANALYZE`이거나 autovacuum에 딸린 autoanalyze가 돌아야 합니다.
+- **"추정치 오차는 테이블이 작을수록 덜 나온다"**: 오히려 반대에 가깝습니다. 작은 테이블은 Seq Scan이 어차피 이겨서 오차가 드러나지 않을 뿐이고, 테이블이 커지는 순간 같은 오차가 plan을 뒤집습니다.
 
 ## 마치며
 

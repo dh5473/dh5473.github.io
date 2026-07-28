@@ -47,7 +47,7 @@ SELECT balance FROM accounts WHERE id = 1;
 
 Session B가 balance를 2000으로 바꾸고 커밋까지 마쳤는데, Session A에는 여전히 1000이 보입니다. 이걸 Repeatable Read 격리 수준의 동작이라고 부르긴 하지만, 실제로 이 동작이 **어떻게 구현되는지**를 알려면 한 단계 더 들어가야 합니다.
 
-지난 글에서 튜플 헤더의 `t_xmin`과 `t_xmax` 필드를 다뤘습니다. 트랜잭션 ID가 적혀 있고, "이 튜플을 만든 놈"과 "이 튜플을 죽인 놈"을 기록한다고 했습니다. 이 글에서는 그 xmin/xmax를 가지고 **"이 튜플이 지금 보이느냐 안 보이느냐"를 결정하는 규칙** 전체를 따라갑니다. 그 규칙의 중심에는 **snapshot**이라는 자료구조가 있고, 이 snapshot이 격리 수준에 따라 재획득되거나 고정되는 차이가 위 시나리오의 차이를 만듭니다. 마지막으로 xid가 32비트 한계에 부딪힐 때 일어나는 일(wraparound)과 그걸 막기 위한 freeze까지 다룹니다.
+힙에 저장되는 모든 튜플은 [튜플 헤더](/postgres/heap-page-tuple/)에 `t_xmin`과 `t_xmax`라는 두 개의 필드를 달고 다닙니다. 각각 "이 튜플을 만든 트랜잭션"과 "이 튜플을 죽인 트랜잭션"의 ID입니다. 이 글에서는 그 xmin/xmax를 가지고 **"이 튜플이 지금 보이느냐 안 보이느냐"를 결정하는 규칙** 전체를 따라갑니다. 그 규칙의 중심에는 **snapshot**이라는 자료구조가 있고, 이 snapshot이 격리 수준에 따라 재획득되거나 고정되는 차이가 위 시나리오의 차이를 만듭니다. 마지막으로 xid가 32비트 한계에 부딪힐 때 일어나는 일(wraparound)과 그걸 막기 위한 freeze까지 다룹니다.
 
 ## 트랜잭션 ID(xid)
 
@@ -70,7 +70,7 @@ COMMIT;
 
 다른 세션에서 같은 함수를 부르면 749, 750... 순서대로 올라갑니다. 32비트이므로 전체 공간은 약 42.9억(2^32)이지만, xid의 순서 비교는 단순한 대소 비교가 아니라 **modular arithmetic**(원형 비교)으로 동작합니다. 그래서 전체 공간의 절반인 약 21억(2^31)만 "과거"로, 나머지 절반이 "미래"로 해석됩니다. 이 한계가 뒤에서 다룰 wraparound 문제의 원인입니다.
 
-지난 글에서 본 튜플 헤더의 `t_xmin`과 `t_xmax`에 적혀 있는 숫자가 바로 이 xid입니다. `t_xmin = 748`이면 "xid 748 트랜잭션이 이 튜플을 INSERT했다"는 뜻이고, `t_xmax = 750`이면 "xid 750이 이 튜플을 UPDATE 또는 DELETE했다"는 뜻입니다.
+튜플 헤더의 `t_xmin`과 `t_xmax`에 적혀 있는 숫자가 바로 이 xid입니다. `t_xmin = 748`이면 "xid 748 트랜잭션이 이 튜플을 INSERT했다"는 뜻이고, `t_xmax = 750`이면 "xid 750이 이 튜플을 UPDATE 또는 DELETE했다"는 뜻입니다.
 
 ## Snapshot: "지금 세상이 어떤 모습인가"의 사진
 
@@ -82,17 +82,56 @@ snapshot은 트랜잭션이 "지금 세상의 상태"를 사진처럼 저장해�
 - **xmax**: 가장 최근에 할당된 xid + 1. 이 값 이상의 xid는 snapshot 생성 시점에 아직 시작조차 하지 않은 미래
 - **xip[]**: xmin과 xmax 사이에서 snapshot 생성 시점에 아직 진행 중이었던 xid들의 목록
 
-이 세 필드를 xid 번호선 위에 그려보면 이렇습니다.
+이 세 필드를 xid 번호선 위에 올려보면 이렇습니다. xmin이 748, xmax가 752이고 xip[]에 748과 750이 들어 있는 snapshot을 예로 들었습니다.
 
-```
-xid 번호선:
-... 742  743  744  745  746  747  748  749  750  751  752 ...
-         ↑                                        ↑
-       xmin                                     xmax
-
-    ←── 모두 종료됨 ──→  ←── 이 구간에 xip[]가 흩어져 있음 ──→  ←── 미래 ──→
-    (committed/aborted)   (대부분 종료, xip에 있는 것만 진행 중)  (아직 시작 안 함)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 320" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="xid 번호선 위에서 snapshot의 xmin(748)과 xmax(752)가 번호선을 과거 구간, xip 배열이 흩어진 구간, 미래 구간의 셋으로 나누는 그림">
+<defs>
+<marker id="mv1Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0d9488)"/></marker>
+</defs>
+<style>
+.mv1-t { fill: var(--text, #1c1917); }
+.mv1-m { fill: var(--text-muted, #78716c); }
+.mv1-k { fill: var(--primary, #0d9488); font-weight: 600; }
+.mv1-a { fill: var(--accent, #d97706); font-weight: 600; }
+</style>
+<!-- 제목 -->
+<text x="240" y="30" text-anchor="middle" font-size="20" font-weight="600" class="mv1-t">xid 번호선 위의 snapshot</text>
+<!-- xmin / xmax 포인터 -->
+<text x="140" y="64" text-anchor="middle" font-size="18" class="mv1-k">xmin = 748</text>
+<text x="400" y="64" text-anchor="middle" font-size="18" class="mv1-k">xmax = 752</text>
+<line x1="140" y1="72" x2="140" y2="92" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
+<line x1="400" y1="72" x2="400" y2="92" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
+<!-- 세 구간 -->
+<rect x="18" y="96" width="89" height="50" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)"/>
+<rect x="107" y="96" width="260" height="50" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)"/>
+<rect x="367" y="96" width="95" height="50" rx="4" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-dasharray="4 3"/>
+<!-- 번호선 눈금 -->
+<text x="30" y="122" text-anchor="middle" font-size="17" class="mv1-m">…</text>
+<text x="75" y="122" text-anchor="middle" font-size="17" class="mv1-t">747</text>
+<text x="140" y="122" text-anchor="middle" font-size="17" class="mv1-a">748</text>
+<text x="205" y="122" text-anchor="middle" font-size="17" class="mv1-t">749</text>
+<text x="270" y="122" text-anchor="middle" font-size="17" class="mv1-a">750</text>
+<text x="335" y="122" text-anchor="middle" font-size="17" class="mv1-t">751</text>
+<text x="400" y="122" text-anchor="middle" font-size="17" class="mv1-m">752</text>
+<text x="447" y="122" text-anchor="middle" font-size="17" class="mv1-m">…</text>
+<!-- xip[] 표시 점 -->
+<circle cx="140" cy="136" r="4" fill="var(--accent, #d97706)"/>
+<circle cx="270" cy="136" r="4" fill="var(--accent, #d97706)"/>
+<!-- 구간 설명 -->
+<rect x="20" y="180" width="22" height="22" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)"/>
+<text x="52" y="186" font-size="18" class="mv1-t">xmin(748) 미만: 모두 종료됨</text>
+<text x="52" y="209" font-size="18" class="mv1-m">committed / aborted는 CLOG로 확인</text>
+<rect x="20" y="236" width="22" height="22" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)"/>
+<text x="52" y="242" font-size="18" class="mv1-t">748 ~ 751: 주황 점이 찍힌 748·750만</text>
+<text x="52" y="265" font-size="18" class="mv1-m">아직 진행 중, 나머지는 이미 종료됨</text>
+<rect x="20" y="281" width="22" height="22" rx="4" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-dasharray="4 3"/>
+<text x="52" y="298" font-size="18" class="mv1-t">xmax(752) 이상: 아직 시작하지 않은 미래</text>
+</svg>
+</div>
 
 `pg_current_snapshot()` 함수로 현재 트랜잭션의 snapshot을 직접 볼 수 있습니다.
 
@@ -118,7 +157,8 @@ SELECT pg_current_snapshot();
 
 - **xmin이 현재 자기 트랜잭션이면**: 보입니다. 자기가 INSERT한 건 자기 눈에 보여야 합니다. (단, 같은 트랜잭션 안에서도 현재 명령 이전에 INSERT된 것만 보입니다. 이 세부 판정에는 command id가 쓰입니다.)
 - **xmin이 committed이고 snapshot 시점에서 과거이면**: 보입니다. 해당 INSERT가 확정되었고, snapshot을 찍기 전에 일어난 일이니까요.
-- **xmin이 진행 중이거나 aborted이면**(xip[]에 포함): 안 보입니다. INSERT가 아직 커밋되지 않았거나 롤백된 것이니까요.
+- **xmin이 snapshot 기준으로 아직 진행 중이면**(xip[]에 들어 있거나 snapshot의 xmax 이상): 안 보입니다. INSERT가 아직 확정되지 않았으니까요.
+- **xmin이 aborted이면**: 안 보입니다. 롤백된 INSERT이므로 처음부터 없었던 것으로 취급합니다. aborted 여부는 xip[]가 아니라 CLOG에서 확인합니다.
 
 여기서 "committed인가 aborted인가"는 **CLOG**(`pg_xact`)에 기록되어 있습니다. 트랜잭션당 2비트로 in_progress / committed / aborted / sub_committed 네 가지 상태를 저장합니다. 하지만 매번 CLOG를 읽는 건 비쌉니다. 그래서 한 번 조회한 결과를 튜플 헤더의 `t_infomask`에 **hint bit**(`HEAP_XMIN_COMMITTED`, `HEAP_XMIN_INVALID` 등)로 캐싱합니다. 다음 세션이 같은 튜플을 보면 hint bit만 확인하고 CLOG는 안 읽어도 됩니다. 이때 페이지가 dirty로 마킹되면서, hint bit를 세팅한 것만으로도 이후 checkpoint에서 디스크에 쓰게 됩니다.
 
@@ -131,26 +171,99 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 - **xmax가 진행 중이면**(xip[]에 포함): 삭제가 아직 확정되지 않음. 이 튜플은 **아직 살아 있음 → 보입니다**.
 - **xmax가 abort됨이면**: 삭제 시도가 무효화됨. 이때 `HEAP_XMAX_INVALID` hint bit가 세팅되어 이후 조회부터는 위의 첫 번째 분기(`HEAP_XMAX_INVALID`)로 빠집니다. **보입니다**.
 
-이걸 흐름도로 정리하면 이렇습니다.
+두 단계를 위에서 아래로 이어 붙이면 판정 흐름 전체가 이렇게 됩니다. 초록 체크는 보임, 빨강 X는 안 보임입니다.
 
-```
-튜플 하나를 집었다
-│
-├── t_xmin이 현재 트랜잭션? → cid 비교 → 보임/안 보임
-│
-├── t_xmin committed + snapshot 기준 과거?
-│   │
-│   ├── 예 → Step 2로
-│   │   │
-│   │   ├── HEAP_XMAX_INVALID? → 보임 (살아 있음)
-│   │   ├── xmax committed + 과거? → 안 보임 (죽었음)
-│   │   ├── xmax 진행 중? → 보임 (아직 안 죽음)
-│   │   └── xmax abort? → HEAP_XMAX_INVALID 세팅 → 보임
-│   │
-│   └── 아니오 (xmin이 미래 또는 진행 중) → 안 보임
-│
-└── t_xmin aborted? → 안 보임
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 1004" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="튜플 가시성 판정 흐름도. Step 1에서 t_xmin을 검사해 현재 트랜잭션인지, committed 과거인지, aborted인지를 따지고, 통과한 튜플만 Step 2로 내려가 t_xmax의 네 가지 상태에 따라 보임 또는 안 보임을 결정한다">
+<defs>
+<marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0d9488)"/></marker>
+</defs>
+<style>
+.mv2-t { fill: var(--text, #1c1917); }
+.mv2-m { fill: var(--text-muted, #78716c); }
+.mv2-h { fill: var(--text, #1c1917); font-weight: 600; }
+.mv2-ok { fill: var(--text-success, #16a34a); font-weight: 600; }
+.mv2-no { fill: var(--text-danger, #dc2626); font-weight: 600; }
+.mv2-go { fill: var(--primary, #0d9488); font-weight: 600; }
+.mv2-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
+.mv2-bar { fill: var(--primary, #0d9488); }
+.mv2-ck { fill: none; stroke: var(--text-success, #16a34a); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.mv2-xx { fill: none; stroke: var(--text-danger, #dc2626); stroke-width: 2.8; stroke-linecap: round; }
+.mv2-dn { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<!-- 시작 -->
+<rect x="126" y="16" width="228" height="42" rx="21" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)"/>
+<text x="240" y="44" text-anchor="middle" font-size="19" class="mv2-t">튜플 하나를 집었다</text>
+<line x1="240" y1="60" x2="240" y2="86" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
+<!-- Step 1 헤더 -->
+<text x="18" y="110" font-size="19" class="mv2-h">Step 1. t_xmin 검사</text>
+<text x="18" y="132" font-size="17" class="mv2-m">이 튜플을 만든 트랜잭션이 보이는가?</text>
+<!-- 분기 1-1 -->
+<rect x="18" y="146" width="444" height="112" rx="8" class="mv2-card"/>
+<rect x="18" y="146" width="5" height="112" rx="2.5" class="mv2-bar"/>
+<text x="38" y="173" font-size="18" class="mv2-t">t_xmin이 현재 트랜잭션인가?</text>
+<rect x="32" y="189" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,201)"/>
+<text x="64" y="207" font-size="18" class="mv2-ok">현재 명령 이전에 INSERT → 보임</text>
+<rect x="32" y="219" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,231)"/>
+<text x="64" y="237" font-size="18" class="mv2-no">현재 명령 이후에 INSERT → 안 보임</text>
+<!-- 분기 1-2 -->
+<rect x="18" y="272" width="444" height="134" rx="8" class="mv2-card"/>
+<rect x="18" y="272" width="5" height="134" rx="2.5" class="mv2-bar"/>
+<text x="38" y="299" font-size="18" class="mv2-t">t_xmin이 committed이고</text>
+<text x="38" y="321" font-size="18" class="mv2-t">snapshot 기준 과거인가?</text>
+<rect x="32" y="337" width="418" height="26" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-opacity="0.4"/>
+<path class="mv2-dn" d="M-5,-4 L0,3 L5,-4" transform="translate(46,349)"/>
+<text x="64" y="355" font-size="18" class="mv2-go">예 → Step 2로 내려감</text>
+<rect x="32" y="367" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,379)"/>
+<text x="64" y="385" font-size="18" class="mv2-no">아니오(진행 중·미래) → 안 보임</text>
+<!-- 분기 1-3 -->
+<rect x="18" y="420" width="444" height="82" rx="8" class="mv2-card"/>
+<rect x="18" y="420" width="5" height="82" rx="2.5" class="mv2-bar"/>
+<text x="38" y="447" font-size="18" class="mv2-t">t_xmin이 aborted인가?</text>
+<rect x="32" y="463" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,475)"/>
+<text x="64" y="481" font-size="18" class="mv2-no">안 보임 (INSERT가 롤백됨)</text>
+<!-- Step 2 헤더 -->
+<line x1="240" y1="510" x2="240" y2="532" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
+<text x="18" y="558" font-size="19" class="mv2-h">Step 2. t_xmax 검사</text>
+<text x="18" y="580" font-size="17" class="mv2-m">Step 1을 통과한 튜플만 여기로 옵니다</text>
+<!-- 분기 2-1 -->
+<rect x="18" y="594" width="444" height="82" rx="8" class="mv2-card"/>
+<rect x="18" y="594" width="5" height="82" rx="2.5" class="mv2-bar"/>
+<text x="38" y="621" font-size="18" class="mv2-t">t_infomask에 HEAP_XMAX_INVALID</text>
+<rect x="32" y="637" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,649)"/>
+<text x="64" y="655" font-size="18" class="mv2-ok">보임 (아무도 죽이지 않음)</text>
+<!-- 분기 2-2 -->
+<rect x="18" y="690" width="444" height="82" rx="8" class="mv2-card"/>
+<rect x="18" y="690" width="5" height="82" rx="2.5" class="mv2-bar"/>
+<text x="38" y="717" font-size="18" class="mv2-t">xmax가 committed이고 과거</text>
+<rect x="32" y="733" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,745)"/>
+<text x="64" y="751" font-size="18" class="mv2-no">안 보임 (삭제 확정)</text>
+<!-- 분기 2-3 -->
+<rect x="18" y="786" width="444" height="82" rx="8" class="mv2-card"/>
+<rect x="18" y="786" width="5" height="82" rx="2.5" class="mv2-bar"/>
+<text x="38" y="813" font-size="18" class="mv2-t">xmax가 아직 진행 중</text>
+<rect x="32" y="829" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,841)"/>
+<text x="64" y="847" font-size="18" class="mv2-ok">보임 (삭제가 아직 미확정)</text>
+<!-- 분기 2-4 -->
+<rect x="18" y="882" width="444" height="106" rx="8" class="mv2-card"/>
+<rect x="18" y="882" width="5" height="106" rx="2.5" class="mv2-bar"/>
+<text x="38" y="909" font-size="18" class="mv2-t">xmax가 aborted</text>
+<rect x="32" y="925" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,937)"/>
+<text x="64" y="943" font-size="18" class="mv2-ok">보임 (삭제 시도가 무효화됨)</text>
+<text x="38" y="969" font-size="17" class="mv2-m">이후 HEAP_XMAX_INVALID로 캐싱됨</text>
+</svg>
+</div>
 
 ### 도입부 시나리오를 손으로 풀어보기
 
@@ -165,7 +278,7 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 | 구 버전 | 740 (원래 INSERT) | 749 (Session B의 UPDATE) | 1000 | xmax=749, committed |
 | 신 버전 | 749 (Session B의 INSERT) | 0 (HEAP_XMAX_INVALID) | 2000 | xmin=749, committed |
 
-Session A의 snapshot이 `743:749:` (xmin=743, xmax=749, xip 비어있음)이라고 가정합니다. Session A가 이 트랜잭션을 시작한 시점에 xid 749는 아직 할당되지 않았으므로 xmax=749입니다.
+Session A의 snapshot이 `743:749:743` (xmin=743, xmax=749, 아직 진행 중인 트랜잭션은 743 하나)이라고 가정합니다. Session A가 이 트랜잭션을 시작한 시점에 xid 749는 아직 할당되지 않았으므로 xmax=749입니다.
 
 **구 버전**(balance=1000)에 대해:
 - Step 1: t_xmin=740. committed이고 snapshot의 xmin(743)보다 작으므로 과거. 통과.

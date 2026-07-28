@@ -9,7 +9,7 @@ summary: 'COMMIT 직후 전원이 꺼져도 데이터가 사라지지 않는 이
 thumbnail: './thumbnail.png'
 ---
 
-[지난 글](/postgres/isolation-and-locks/)에서 두 트랜잭션이 같은 row를 동시에 수정할 때 벌어지는 일, 락과 격리 수준의 체계를 봤습니다. 그런데 한 가지 빠진 게 있습니다. 트랜잭션이 `COMMIT`을 받았으면, 그 변경은 정말로 안전한 걸까요?
+[락과 격리 수준](/postgres/isolation-and-locks/)은 두 트랜잭션이 같은 row를 동시에 건드릴 때 누가 먼저 쓰고 누가 기다릴지를 정합니다. 그런데 여기에 한 가지가 빠져 있습니다. 트랜잭션이 `COMMIT`을 받았으면, 그 변경은 정말로 안전한 걸까요?
 
 한번 상황을 만들어 봅시다. `UPDATE accounts SET balance = 500 WHERE id = 1;`을 실행하고 `COMMIT`을 받았습니다. 이 순간 PostgreSQL은 변경 내용을 **shared_buffers** 안의 페이지에만 반영했을 뿐, 아직 실제 data file에는 쓰지 않았을 수 있습니다. 만약 이 직후에 서버 전원이 나간다면?
 
@@ -25,7 +25,7 @@ WAL의 핵심 규칙은 단순합니다.
 
 이 규칙만 지키면 data file 자체는 "아직 반영 안 된" 상태여도 괜찮습니다. crash 후 재시작 시 WAL을 처음부터 끝까지 replay하면 data file을 crash 직전 상태로 복원할 수 있기 때문입니다.
 
-실제로 WAL record는 먼저 shared memory의 **WAL buffer**에 기록된 뒤, COMMIT 시점이나 walwriter에 의해 디스크(`pg_wal/`)로 flush됩니다. [아키텍처 글](/postgres/architecture-overview/)에서 봤던 shared memory 구성 요소 중 하나입니다.
+실제로 WAL record는 먼저 shared memory의 **WAL buffer**에 기록된 뒤, COMMIT 시점이나 walwriter에 의해 디스크(`pg_wal/`)로 flush됩니다. WAL buffer는 shared_buffers와 나란히 [shared memory](/postgres/architecture-overview/)에 자리 잡은 공용 영역입니다.
 
 WAL이 없는 대안을 생각해보면 이 설계의 이유가 선명해집니다. 매번 COMMIT할 때마다 변경된 모든 data page를 디스크에 fsync하는 방식도 가능하지만, 수십 개 페이지에 흩어진 변경을 매 트랜잭션마다 random I/O로 쓰는 건 현실적으로 감당하기 어렵습니다. 반면 WAL은 **순차 쓰기**(sequential write)입니다. 변경 내용을 한 줄로 쭉 이어서 append하기 때문에 I/O 비용이 훨씬 낮습니다.
 
@@ -35,25 +35,76 @@ WAL이 없는 대안을 생각해보면 이 설계의 이유가 선명해집니�
 
 WAL에 기록되는 단위는 **WAL record**입니다. 각 record는 "어떤 리소스의 어떤 동작인지"를 기술하는 헤더와, 실제 변경 데이터를 담은 payload로 구성됩니다.
 
-```
-WAL Record
-┌──────────────────────────────────────────────┐
-│  Header                                      │
-│  ├── xl_tot_len    record 전체 길이           │
-│  ├── xl_xid        트랜잭션 ID                │
-│  ├── xl_prev       이전 WAL record의 LSN      │
-│  ├── xl_info       동작 종류 (insert/update…)  │
-│  └── xl_rmid       리소스 관리자 ID            │
-│                    (heap, btree, xact, …)     │
-├──────────────────────────────────────────────┤
-│  Block references  대상 페이지 + offset 정보   │
-├──────────────────────────────────────────────┤
-│  Payload           실제 변경 데이터            │
-│                    (또는 Full Page Image)      │
-└──────────────────────────────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 540" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="WAL record는 24바이트 고정 헤더와 가변 길이의 block references, payload로 구성된다. 헤더 안의 각 필드는 가로 폭이 실제 바이트 수에 비례하도록 그려져 있다.">
+<style>
+.wal1-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal1-sec { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal1-lbl { font-size: 18px; fill: var(--text, #1c1917); }
+.wal1-bld { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal1-sm  { font-size: 17px; fill: var(--text, #1c1917); }
+.wal1-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.wal1-fld { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.wal1-pad { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.wal1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+</style>
+<text x="240" y="30" text-anchor="middle" class="wal1-ttl">WAL record 구조</text>
+<!-- header strip: 24 bytes, 18.333px per byte -->
+<text x="20" y="64" class="wal1-sec">Header (고정 24바이트)</text>
+<rect x="20" y="78" width="73.3" height="48" rx="3" class="wal1-fld" />
+<rect x="93.3" y="78" width="73.3" height="48" rx="3" class="wal1-fld" />
+<rect x="166.7" y="78" width="146.7" height="48" rx="3" class="wal1-fld" />
+<rect x="313.3" y="78" width="18.3" height="48" rx="3" class="wal1-fld" />
+<rect x="331.7" y="78" width="18.3" height="48" rx="3" class="wal1-fld" />
+<rect x="350" y="78" width="36.7" height="48" rx="3" class="wal1-pad" />
+<rect x="386.7" y="78" width="73.3" height="48" rx="3" class="wal1-fld" />
+<text x="56.7" y="108" text-anchor="middle" class="wal1-sm">1</text>
+<text x="130" y="108" text-anchor="middle" class="wal1-sm">2</text>
+<text x="240" y="108" text-anchor="middle" class="wal1-sm">3</text>
+<text x="322.5" y="108" text-anchor="middle" class="wal1-sm">4</text>
+<text x="340.8" y="108" text-anchor="middle" class="wal1-sm">5</text>
+<text x="423.3" y="108" text-anchor="middle" class="wal1-sm">6</text>
+<text x="240" y="148" text-anchor="middle" class="wal1-mut">칸의 가로 폭이 실제 바이트 수에 비례합니다</text>
+<!-- field legend -->
+<text x="26" y="182" text-anchor="middle" class="wal1-sm">1</text>
+<text x="44" y="182" class="wal1-lbl">xl_tot_len</text>
+<text x="158" y="182" class="wal1-mut">4B</text>
+<text x="205" y="182" class="wal1-lbl">record 전체 길이</text>
+<text x="26" y="212" text-anchor="middle" class="wal1-sm">2</text>
+<text x="44" y="212" class="wal1-lbl">xl_xid</text>
+<text x="158" y="212" class="wal1-mut">4B</text>
+<text x="205" y="212" class="wal1-lbl">트랜잭션 ID</text>
+<text x="26" y="242" text-anchor="middle" class="wal1-sm">3</text>
+<text x="44" y="242" class="wal1-lbl">xl_prev</text>
+<text x="158" y="242" class="wal1-mut">8B</text>
+<text x="205" y="242" class="wal1-lbl">이전 record의 LSN</text>
+<text x="26" y="272" text-anchor="middle" class="wal1-sm">4</text>
+<text x="44" y="272" class="wal1-lbl">xl_info</text>
+<text x="158" y="272" class="wal1-mut">1B</text>
+<text x="205" y="272" class="wal1-lbl">동작 종류 (insert/update)</text>
+<text x="26" y="302" text-anchor="middle" class="wal1-sm">5</text>
+<text x="44" y="302" class="wal1-lbl">xl_rmid</text>
+<text x="158" y="302" class="wal1-mut">1B</text>
+<text x="205" y="302" class="wal1-lbl">리소스 관리자 ID</text>
+<text x="26" y="332" text-anchor="middle" class="wal1-sm">6</text>
+<text x="44" y="332" class="wal1-lbl">xl_crc</text>
+<text x="158" y="332" class="wal1-mut">4B</text>
+<text x="205" y="332" class="wal1-lbl">record 무결성 체크섬</text>
+<text x="26" y="362" class="wal1-mut">회색 칸은 정렬용 패딩 2바이트입니다</text>
+<!-- variable-length parts -->
+<rect x="20" y="382" width="440" height="60" rx="5" class="wal1-box" />
+<text x="240" y="409" text-anchor="middle" class="wal1-bld">Block references (가변 길이)</text>
+<text x="240" y="431" text-anchor="middle" class="wal1-mut">대상 페이지 번호와 offset 정보</text>
+<rect x="20" y="456" width="440" height="60" rx="5" class="wal1-box" />
+<text x="240" y="483" text-anchor="middle" class="wal1-bld">Payload (가변 길이)</text>
+<text x="240" y="505" text-anchor="middle" class="wal1-mut">실제 변경 데이터 또는 Full Page Image</text>
+</svg>
+</div>
 
-`xl_rmid`(Resource Manager ID)가 이 record의 종류를 결정합니다. heap 테이블 변경이면 `RM_HEAP_ID`, B-tree 인덱스 변경이면 `RM_BTREE_ID`, 트랜잭션 commit/abort면 `RM_XACT_ID`입니다. 각 리소스 관리자가 redo 시 자기 record를 어떻게 적용할지 알고 있습니다.
+헤더는 24바이트 고정이고, 그중 `xl_rmid`(Resource Manager ID)가 이 record의 종류를 결정합니다. heap 테이블 변경이면 `RM_HEAP_ID`, B-tree 인덱스 변경이면 `RM_BTREE_ID`, 트랜잭션 commit/abort면 `RM_XACT_ID`입니다. 각 리소스 관리자가 redo 시 자기 record를 어떻게 적용할지 알고 있습니다.
 
 `pg_waldump`로 실제 WAL record를 들여다볼 수 있습니다.
 
@@ -61,7 +112,7 @@ WAL Record
 pg_waldump /var/lib/postgresql/18/main/pg_wal/000000010000000000000001 --limit=5
 ```
 
-```
+```text
 rmgr: Heap    len (rec/tot):     63/    63, tx:  736, lsn: 0/01A00100,
       prev 0/01A000C8, desc: INSERT off: 2, flags: 0x00
 rmgr: Btree   len (rec/tot):     64/    64, tx:  736, lsn: 0/01A00140,
@@ -76,7 +127,7 @@ rmgr: Transaction len (rec/tot):    34/    34, tx:  736, lsn: 0/01A00180,
 
 **LSN**(Log Sequence Number)은 WAL 스트림 전체에서의 바이트 위치를 나타내는 64비트 값입니다. `0/01A00100`처럼 상위/하위 32비트를 슬래시로 구분해 표기합니다. 이 값 자체는 WAL의 시작점으로부터의 절대 바이트 오프셋이고, 어떤 세그먼트 파일의 몇 바이트 위치인지는 세그먼트 크기(기본 16MB)로 나누어 계산합니다.
 
-LSN이 중요한 이유는 **모든 데이터 페이지가 자신의 마지막 변경 LSN을 기억하고 있기** 때문입니다. [힙 페이지 글](/postgres/heap-page-tuple/)에서 봤던 PageHeaderData의 `pd_lsn` 필드가 바로 이것입니다. crash recovery 시 WAL record의 LSN과 페이지의 `pd_lsn`을 비교해서, WAL record의 LSN이 더 크면 "이 변경은 아직 페이지에 반영 안 됐다"고 판단하고 redo를 적용합니다. 이미 반영된 변경은 건너뜁니다.
+LSN이 중요한 이유는 **모든 데이터 페이지가 자신의 마지막 변경 LSN을 기억하고 있기** 때문입니다. [페이지 헤더](/postgres/heap-page-tuple/)(PageHeaderData)의 맨 앞 8바이트를 차지하는 `pd_lsn`이 바로 이 값입니다. crash recovery 시 WAL record의 LSN과 페이지의 `pd_lsn`을 비교해서, WAL record의 LSN이 더 크면 "이 변경은 아직 페이지에 반영 안 됐다"고 판단하고 redo를 적용합니다. 이미 반영된 변경은 건너뜁니다.
 
 현재 WAL의 기록 위치는 이렇게 확인합니다.
 
@@ -113,26 +164,57 @@ WAL의 write-ahead 원칙만으로는 한 가지 문제가 해결되지 않습�
 
 PostgreSQL의 해결책은 **Full Page Write**(FPW)입니다. checkpoint 직후 특정 페이지가 처음으로 변경될 때, 차분만이 아니라 **페이지 전체 8KB 이미지를 WAL에 기록**합니다. 이 이미지를 **Full Page Image**(FPI) 또는 **backup block**이라고 부릅니다.
 
-```
-checkpoint 발생
-    │
-    ▼
-페이지 P의 첫 변경 → WAL record에 페이지 P 전체 이미지 포함 (FPW)
-페이지 P의 두번째 변경 → 차분만 기록
-페이지 P의 세번째 변경 → 차분만 기록
-    │
-    ▼
-다음 checkpoint 발생
-    │
-    ▼
-페이지 P의 첫 변경 → 다시 FPW
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="checkpoint 직후 페이지 P의 첫 변경은 페이지 전체 이미지를 WAL에 쓰고, 같은 페이지의 두 번째 이후 변경은 수십 바이트짜리 차분만 쓴다. 다음 checkpoint가 지나면 다시 전체 이미지를 쓴다.">
+<style>
+.wal2-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal2-lbl { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal2-sm  { font-size: 17px; fill: var(--text, #1c1917); }
+.wal2-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.wal2-cp  { font-size: 17px; font-weight: 700; fill: var(--accent, #d97706); }
+.wal2-line { stroke: var(--accent, #d97706); stroke-width: 2; stroke-dasharray: 7 5; }
+.wal2-full { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 2; }
+.wal2-diff { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+</style>
+<text x="240" y="30" text-anchor="middle" class="wal2-ttl">Full Page Write</text>
+<text x="240" y="54" text-anchor="middle" class="wal2-mut">WAL에 실제로 쓰이는 양</text>
+<!-- checkpoint marker -->
+<line x1="20" y1="84" x2="182" y2="84" class="wal2-line" />
+<line x1="298" y1="84" x2="460" y2="84" class="wal2-line" />
+<text x="240" y="90" text-anchor="middle" class="wal2-cp">checkpoint</text>
+<!-- change 1: full page image -->
+<text x="24" y="114" class="wal2-sm">1번째 변경 · 페이지 P</text>
+<rect x="24" y="122" width="412" height="36" rx="4" class="wal2-full" />
+<text x="230" y="146" text-anchor="middle" class="wal2-lbl">Full Page Image · 최대 8192B</text>
+<!-- change 2: diff only -->
+<text x="24" y="182" class="wal2-sm">2번째 변경 · 같은 페이지</text>
+<rect x="24" y="190" width="14" height="36" rx="3" class="wal2-diff" />
+<text x="48" y="214" class="wal2-sm">차분 약 60B</text>
+<!-- change 3: diff only -->
+<text x="24" y="250" class="wal2-sm">3번째 변경 · 같은 페이지</text>
+<rect x="24" y="258" width="14" height="36" rx="3" class="wal2-diff" />
+<text x="48" y="282" class="wal2-sm">차분 약 60B</text>
+<!-- next checkpoint marker -->
+<line x1="20" y1="320" x2="164" y2="320" class="wal2-line" />
+<line x1="316" y1="320" x2="460" y2="320" class="wal2-line" />
+<text x="240" y="326" text-anchor="middle" class="wal2-cp">다음 checkpoint</text>
+<!-- change 4: full page image again -->
+<text x="24" y="350" class="wal2-sm">1번째 변경 · 같은 페이지</text>
+<rect x="24" y="358" width="412" height="36" rx="4" class="wal2-full" />
+<text x="230" y="382" text-anchor="middle" class="wal2-lbl">다시 Full Page Image</text>
+<text x="24" y="424" class="wal2-mut">차분 막대는 보이도록 과장했습니다.</text>
+<text x="24" y="448" class="wal2-mut">실제 크기 차이는 100배가 넘습니다.</text>
+</svg>
+</div>
 
 crash recovery 시 torn page를 만나면, FPI로 페이지 전체를 복원한 뒤 이후의 WAL record를 순서대로 적용합니다. 페이지가 깨져 있더라도 FPI가 덮어쓰므로 문제가 없습니다.
 
 ### FPW의 비용
 
-FPW의 대가는 **WAL 볼륨 증가**입니다. 한 row만 변경해도 8KB 전체가 WAL에 들어갑니다. checkpoint 직후에는 많은 페이지가 "첫 변경" 상태이므로 WAL 생성량이 일시적으로 급증합니다. `pg_waldump --stats`로 확인하면 FPI가 전체 WAL의 상당 부분을 차지하는 것을 볼 수 있습니다.
+FPW의 대가는 **WAL 볼륨 증가**입니다. 한 row만 변경해도 페이지 전체가 WAL에 들어갑니다. 정확히는 `pd_lower`와 `pd_upper` 사이의 빈 공간(hole)은 빼고 기록하므로 항상 8KB 꽉 채우는 것은 아니지만, 수십 바이트짜리 차분에 비하면 두 자릿수 이상 큽니다. checkpoint 직후에는 많은 페이지가 "첫 변경" 상태이므로 WAL 생성량이 일시적으로 급증합니다. `pg_waldump --stats`로 확인하면 FPI가 전체 WAL의 상당 부분을 차지하는 것을 볼 수 있습니다.
 
 `full_page_writes=off`로 FPW를 끌 수 있지만, 이 경우 torn page로부터 복구할 수 없게 됩니다. 배터리 백업 스토리지(BBU) 같은 하드웨어 보호 장치가 있어서 partial write가 발생하지 않는 환경이 아니라면 끄면 안 됩니다.
 
@@ -149,7 +231,7 @@ data checksum(`initdb --data-checksums` 또는 PG 12+ `pg_checksums`)은 페이�
 checkpoint는 **특정 시점까지의 모든 변경이 data file에 반영됐음을 보장**하는 동작입니다. 구체적으로 세 단계를 수행합니다.
 
 1. shared_buffers의 모든 dirty page를 data file에 flush
-2. `pg_control` 파일에 checkpoint 위치를 기록 — 이 위치를 **REDO point**라고 부르며, crash recovery는 여기서부터 WAL을 다시 적용합니다
+2. checkpoint를 시작한 시점의 WAL 위치를 `pg_control` 파일에 기록. 이 위치를 **REDO point**라고 부르며, crash recovery는 여기서부터 WAL을 다시 적용합니다
 3. 더 이상 필요 없는 오래된 WAL 세그먼트를 재활용 또는 삭제
 
 checkpoint가 완료되면 "이 시점 이전의 WAL은 crash recovery에 필요 없다"고 선언하는 것과 같습니다. 그래서 오래된 WAL 세그먼트를 정리할 수 있게 됩니다.
@@ -165,7 +247,7 @@ checkpoint가 실행되는 조건은 두 가지입니다.
 
 둘 중 **먼저 도달하는 조건**이 checkpoint를 트리거합니다. 대량 INSERT/UPDATE가 발생하면 5분을 기다리지 않고 `max_wal_size` 도달로 먼저 트리거될 수 있습니다. 이 경우 로그에 이런 경고가 남습니다.
 
-```
+```text
 LOG:  checkpoints are occurring too frequently (28 seconds apart)
 HINT:  Consider increasing the configuration parameter "max_wal_size".
 ```
@@ -184,11 +266,31 @@ checkpoint가 dirty page를 한꺼번에 flush하면 I/O spike가 발생합니�
 
 `checkpoint_completion_target`(기본 0.9)이 분산 비율을 결정합니다. 0.9라면 다음 checkpoint까지 예상 시간의 90% 구간에 걸쳐 dirty page를 나눠서 씁니다.
 
-```
-checkpoint_timeout = 5분, checkpoint_completion_target = 0.9인 경우:
-
-|--- checkpoint ---|---------- 4.5분에 걸쳐 dirty page flush ----------|-- 0.5분 유휴 --|--- 다음 checkpoint ---|
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 200" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="checkpoint_timeout 5분과 completion_target 0.9 설정에서, 앞쪽 4.5분 구간에 dirty page flush를 나눠서 수행하고 남은 0.5분은 다음 checkpoint 전 여유 구간으로 남는다.">
+<style>
+.wal3-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
+.wal3-lbl { font-size: 18px; fill: var(--text, #1c1917); }
+.wal3-sm  { font-size: 17px; fill: var(--text, #1c1917); }
+.wal3-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.wal3-work { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 2; }
+.wal3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 2; }
+.wal3-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+</style>
+<text x="240" y="30" text-anchor="middle" class="wal3-ttl">spread checkpoint</text>
+<text x="240" y="54" text-anchor="middle" class="wal3-mut">checkpoint_timeout 5분, completion_target 0.9</text>
+<text x="24" y="82" class="wal3-sm">checkpoint 시작</text>
+<text x="456" y="82" text-anchor="end" class="wal3-sm">다음 checkpoint</text>
+<rect x="24" y="92" width="388.8" height="44" rx="4" class="wal3-work" />
+<rect x="412.8" y="92" width="43.2" height="44" rx="4" class="wal3-idle" />
+<text x="218" y="121" text-anchor="middle" class="wal3-lbl">4.5분 동안 dirty page 분산 flush</text>
+<line x1="434" y1="140" x2="434" y2="160" class="wal3-lead" />
+<text x="456" y="180" text-anchor="end" class="wal3-mut">0.5분 여유 구간</text>
+</svg>
+</div>
 
 이 값을 1.0에 가깝게 올리면 I/O가 더 고르게 분산되지만, checkpoint 완료 시점과 다음 checkpoint 시작이 거의 겹칠 수 있습니다. 기본값 0.9가 대부분의 환경에서 적절합니다.
 
@@ -196,7 +298,7 @@ checkpoint_timeout = 5분, checkpoint_completion_target = 0.9인 경우:
 
 checkpoint 관련 I/O 문제를 진단하려면 먼저 `log_checkpoints=on`을 설정합니다.
 
-```
+```text
 LOG:  checkpoint starting: time
 LOG:  checkpoint complete: wrote 12847 buffers (9.8%); 0 WAL file(s) added,
       0 removed, 3 recycled; write=269.035 s, sync=0.014 s, total=269.089 s;
@@ -214,17 +316,11 @@ LOG:  checkpoint complete: wrote 12847 buffers (9.8%); 0 WAL file(s) added,
 
 서버가 비정상 종료된 뒤 다시 시작하면 PostgreSQL은 자동으로 crash recovery를 수행합니다. 과정은 아래와 같습니다.
 
-```
-1. pg_control에서 마지막 checkpoint의 REDO point 확인
-2. REDO point부터 WAL 끝까지 순차적으로 읽기
-3. 각 WAL record에 대해:
-   - 대상 페이지의 pd_lsn과 WAL record의 LSN 비교
-   - pd_lsn < WAL LSN이면 → redo 적용 (아직 반영 안 된 변경)
-   - pd_lsn >= WAL LSN이면 → 건너뜀 (이미 반영된 변경)
-4. 모든 WAL record 적용 완료
-5. 새 checkpoint 기록
-6. 정상 운영 모드 전환
-```
+1. `pg_control`에서 마지막 checkpoint의 REDO point를 읽습니다.
+2. REDO point부터 WAL 끝까지 순차적으로 읽습니다.
+3. WAL record마다 대상 페이지의 `pd_lsn`과 record의 LSN을 비교합니다. `pd_lsn`이 더 작으면 아직 페이지에 반영되지 않은 변경이므로 redo를 적용하고, `pd_lsn`이 record의 LSN 이상이면 이미 반영된 변경이므로 건너뜁니다.
+4. WAL 끝에 도달하면 새 checkpoint를 기록합니다.
+5. 정상 운영 모드로 전환합니다.
 
 3단계의 LSN 비교가 핵심입니다. 이 비교 덕분에 crash recovery는 **멱등**(idempotent)합니다. 같은 WAL을 두 번 적용해도 결과는 동일합니다. recovery 도중 다시 crash가 나더라도, 재시작하면 같은 과정이 반복되어 결국 올바른 상태에 도달합니다.
 
@@ -234,23 +330,87 @@ checkpoint가 자주 돌수록 REDO point가 최근으로 당겨져서 recovery 
 
 ## bgwriter, checkpointer, walwriter: 세 프로세스의 분담
 
-[아키텍처 글](/postgres/architecture-overview/)에서 이 세 프로세스를 간단히 소개했습니다. 여기서는 WAL 흐름 안에서 각각의 역할을 정리합니다.
+디스크에 실제로 쓰는 일은 세 개의 [백그라운드 프로세스](/postgres/architecture-overview/)가 나눠 맡습니다. 셋 다 "버퍼의 내용을 디스크로 내린다"는 점은 같지만, 대상과 시점이 다릅니다.
 
-```
-트랜잭션이 row 변경
-    │
-    ├──→ WAL record를 WAL buffer에 기록
-    │         │
-    │         └──→ walwriter가 주기적으로 pg_wal에 flush
-    │              (COMMIT 시에는 backend가 직접 flush)
-    │
-    └──→ shared_buffers의 해당 페이지를 변경 (dirty 표시)
-              │
-              ├──→ bgwriter가 주기적으로 일부 dirty page를 data file에 flush
-              │    (clean buffer 확보 목적)
-              │
-              └──→ checkpointer가 checkpoint 시 모든 dirty page를 data file에 flush
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 700" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="한 번의 row 변경은 두 갈래로 흐른다. WAL buffer에 쌓인 WAL record는 walwriter가 주기적으로 내리거나 COMMIT 시 backend가 직접 내려 pg_wal 세그먼트 파일이 되고, shared_buffers의 dirty page는 bgwriter가 조금씩 또는 checkpointer가 한꺼번에 내려 data file이 된다.">
+<defs>
+<marker id="wal4ArrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--primary, #0d9488)"/>
+</marker>
+<marker id="wal4ArrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #d97706)"/>
+</marker>
+<marker id="wal4ArrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<style>
+.wal4-sec { font-size: 19px; font-weight: 700; fill: var(--primary, #0d9488); }
+.wal4-lbl { font-size: 18px; fill: var(--text, #1c1917); }
+.wal4-hdT { font-size: 18px; font-weight: 700; fill: var(--primary, #0d9488); }
+.wal4-hdA { font-size: 18px; font-weight: 700; fill: var(--accent, #d97706); }
+.wal4-sm  { font-size: 17px; fill: var(--text, #1c1917); }
+.wal4-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.wal4-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.wal4-sink { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.wal4-bgP { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; stroke-dasharray: 6 4; }
+.wal4-bgA { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 2.5; }
+.wal4-lnP { stroke: var(--primary, #0d9488); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+.wal4-lnA { stroke: var(--accent, #d97706); stroke-width: 2.5; fill: none; }
+.wal4-lnM { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
+</style>
+<!-- panel 1: WAL -->
+<text x="20" y="32" class="wal4-sec">WAL 경로</text>
+<rect x="90" y="44" width="300" height="44" rx="5" class="wal4-box" />
+<text x="240" y="72" text-anchor="middle" class="wal4-lbl">트랜잭션이 row 변경</text>
+<line x1="240" y1="88" x2="240" y2="108" class="wal4-lnM" marker-end="url(#wal4ArrM)" />
+<rect x="60" y="112" width="360" height="52" rx="5" class="wal4-box" />
+<text x="240" y="136" text-anchor="middle" class="wal4-lbl">WAL record를 WAL buffer에 기록</text>
+<text x="240" y="156" text-anchor="middle" class="wal4-mut">shared memory 안의 버퍼</text>
+<line x1="220" y1="164" x2="140" y2="188" class="wal4-lnP" marker-end="url(#wal4ArrT)" />
+<line x1="260" y1="164" x2="340" y2="188" class="wal4-lnA" marker-end="url(#wal4ArrA)" />
+<rect x="20" y="192" width="224" height="86" rx="5" class="wal4-bgP" />
+<text x="132" y="217" text-anchor="middle" class="wal4-hdT">walwriter</text>
+<text x="132" y="239" text-anchor="middle" class="wal4-sm">wal_writer_delay</text>
+<text x="132" y="261" text-anchor="middle" class="wal4-sm">200ms 주기 flush</text>
+<rect x="256" y="192" width="204" height="86" rx="5" class="wal4-bgA" />
+<text x="358" y="217" text-anchor="middle" class="wal4-hdA">COMMIT 시</text>
+<text x="358" y="239" text-anchor="middle" class="wal4-sm">backend가 직접</text>
+<text x="358" y="261" text-anchor="middle" class="wal4-sm">flush하고 대기</text>
+<line x1="132" y1="278" x2="195" y2="302" class="wal4-lnP" marker-end="url(#wal4ArrT)" />
+<line x1="358" y1="278" x2="285" y2="302" class="wal4-lnA" marker-end="url(#wal4ArrA)" />
+<rect x="110" y="306" width="260" height="44" rx="5" class="wal4-sink" />
+<text x="240" y="334" text-anchor="middle" class="wal4-lbl">pg_wal/ 세그먼트 파일</text>
+<!-- panel 2: data page -->
+<text x="20" y="392" class="wal4-sec">데이터 페이지 경로</text>
+<rect x="60" y="404" width="360" height="52" rx="5" class="wal4-box" />
+<text x="240" y="428" text-anchor="middle" class="wal4-lbl">shared_buffers의 페이지 변경</text>
+<text x="240" y="448" text-anchor="middle" class="wal4-mut">dirty 표시</text>
+<line x1="220" y1="456" x2="140" y2="480" class="wal4-lnP" marker-end="url(#wal4ArrT)" />
+<line x1="260" y1="456" x2="340" y2="480" class="wal4-lnA" marker-end="url(#wal4ArrA)" />
+<rect x="20" y="484" width="224" height="86" rx="5" class="wal4-bgP" />
+<text x="132" y="509" text-anchor="middle" class="wal4-hdT">bgwriter</text>
+<text x="132" y="531" text-anchor="middle" class="wal4-sm">bgwriter_delay</text>
+<text x="132" y="553" text-anchor="middle" class="wal4-sm">일부 dirty page flush</text>
+<rect x="256" y="484" width="204" height="86" rx="5" class="wal4-bgA" />
+<text x="358" y="509" text-anchor="middle" class="wal4-hdA">checkpointer</text>
+<text x="358" y="531" text-anchor="middle" class="wal4-sm">checkpoint 시점</text>
+<text x="358" y="553" text-anchor="middle" class="wal4-sm">모든 dirty page</text>
+<line x1="132" y1="570" x2="195" y2="594" class="wal4-lnP" marker-end="url(#wal4ArrT)" />
+<line x1="358" y1="570" x2="285" y2="594" class="wal4-lnA" marker-end="url(#wal4ArrA)" />
+<rect x="110" y="598" width="260" height="44" rx="5" class="wal4-sink" />
+<text x="240" y="626" text-anchor="middle" class="wal4-lbl">data file (테이블 · 인덱스)</text>
+<!-- legend -->
+<line x1="24" y1="668" x2="54" y2="668" class="wal4-lnP" />
+<text x="62" y="674" class="wal4-mut">주기적으로 조금씩</text>
+<line x1="240" y1="668" x2="270" y2="668" class="wal4-lnA" />
+<text x="278" y="674" class="wal4-mut">특정 시점에 한꺼번에</text>
+</svg>
+</div>
 
 | 프로세스 | 대상 | 타이밍 | 목적 |
 |---------|------|--------|------|
@@ -270,7 +430,7 @@ SELECT buffers_clean FROM pg_stat_bgwriter;
 SELECT buffers_written FROM pg_stat_checkpointer;
 ```
 
-backend가 직접 dirty page를 evict한 횟수는 PG 17+에서 `pg_stat_io` 뷰로 확인합니다.
+backend가 직접 dirty page를 evict한 횟수는 PG 16부터 도입된 `pg_stat_io` 뷰로 확인합니다.
 
 ```sql
 SELECT writes, fsyncs

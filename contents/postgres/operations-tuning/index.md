@@ -9,7 +9,7 @@ summary: 'PostgreSQL 운영에서 가장 자주 건드리는 세 축인 연결 �
 thumbnail: './thumbnail.png'
 ---
 
-[지난 글](/postgres/slow-query-hunting/)에서 느린 쿼리의 원인을 추적하는 도구들을 살펴봤습니다. 원인을 찾았다면 이제 남은 질문은 하나입니다. **"어떤 설정을 어떻게 바꿔야 하는가?"**
+[느린 쿼리의 원인을 추적](/postgres/slow-query-hunting/)해서 병목을 찾아냈다면, 남은 질문은 하나입니다. **"어떤 설정을 어떻게 바꿔야 하는가?"**
 
 PostgreSQL의 설정 파라미터는 300개가 넘지만, 운영 환경에서 실제로 손대는 파라미터는 많지 않습니다. 대부분의 튜닝은 세 가지 축을 중심으로 돌아갑니다.
 
@@ -23,7 +23,7 @@ PostgreSQL의 설정 파라미터는 300개가 넘지만, 운영 환경에서 �
 
 ### 연결이 비싼 이유
 
-[아키텍처 글](/postgres/architecture-overview/)에서 봤듯이, PostgreSQL은 클라이언트 커넥션 하나당 OS 프로세스를 하나씩 `fork()`합니다. 커넥션이 100개면 프로세스가 100개, 500개면 500개입니다.
+PostgreSQL은 [프로세스 기반 아키텍처](/postgres/architecture-overview/)를 씁니다. 클라이언트 커넥션 하나당 OS 프로세스를 하나씩 `fork()`하므로, 커넥션이 100개면 프로세스가 100개, 500개면 500개입니다.
 
 프로세스 하나가 가지는 비용은 두 가지입니다.
 
@@ -36,33 +36,66 @@ PostgreSQL의 설정 파라미터는 300개가 넘지만, 운영 환경에서 �
 
 `max_connections`(기본 100)은 "최대 몇 개의 커넥션을 허용하는가"입니다. 직관적으로는 높게 잡는 것이 여유로워 보이지만, 실제로는 반대입니다.
 
-```
-max_connections = 500일 때:
+`max_connections = 500`으로 잡으면 이렇게 됩니다.
+
 - 500개 프로세스 × 수 MB(기본 메모리) = 수 GB
-- 500개 중 실제 활성 쿼리가 50개라도 → 450개는 idle 상태로 메모리만 차지
-- 500개가 모두 동시에 쿼리를 실행하면 → CPU 경합, lock 경합 폭증
-```
+- 500개 중 실제 활성 쿼리가 50개라면 나머지 450개는 idle 상태로 메모리만 차지
+- 500개가 모두 동시에 쿼리를 실행하면 CPU 경합과 lock 경합이 함께 폭증
 
 경험적으로 실제 동시 활성 쿼리 수는 CPU 코어 수의 2~4배를 넘으면 성능이 오히려 떨어집니다. 코어가 8개인 서버에서 동시 활성 쿼리가 32개를 넘기면 context switch 비용이 실제 작업 시간보다 커질 수 있습니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 핵심 포인트</strong><br>
-  <code>max_connections</code>이 결정하는 건 "최대 동시 커넥션 수"이지, "최대 동시 활성 쿼리 수"가 아닙니다. 대부분의 커넥션은 idle 상태이고, 이 idle 커넥션들도 메모리를 차지합니다. 필요한 건 높은 <code>max_connections</code>이 아니라 <strong>connection pooling</strong>입니다.
-</div>
+:::info
+
+**핵심 포인트**
+
+`max_connections`이 결정하는 건 "최대 동시 커넥션 수"이지, "최대 동시 활성 쿼리 수"가 아닙니다. 대부분의 커넥션은 idle 상태이고, 이 idle 커넥션들도 메모리를 차지합니다. 필요한 건 높은 `max_connections`이 아니라 **connection pooling**입니다.
+
+:::
 
 ### PgBouncer: connection pooling이 거의 필수인 이유
 
 PgBouncer는 클라이언트와 PostgreSQL 사이에서 커넥션을 **재사용**해주는 경량 proxy입니다. 클라이언트가 1,000개의 커넥션을 열어도, PgBouncer가 실제 PostgreSQL에 여는 커넥션은 30~50개로 유지할 수 있습니다.
 
-```
-                  클라이언트 (1000 커넥션)
-                         │
-                    ┌─────▼──────┐
-                    │  PgBouncer  │  ← 커넥션 멀티플렉싱
-                    └─────┬──────┘
-                         │
-                  PostgreSQL (30~50 커넥션)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 372" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="PgBouncer가 클라이언트 커넥션 1,000개를 PostgreSQL 커넥션 30~50개로 줄이는 구조. 위아래 두 막대는 같은 축척이며 폭이 커넥션 수에 비례한다">
+<style>
+.ot1-t { fill: var(--text, #1c1917); }
+.ot1-m { fill: var(--text-muted, #78716c); }
+.ot1-p { fill: var(--primary, #0d9488); }
+.ot1-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot1-ghost { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.ot1-pool { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ot1-real { fill: var(--primary, #0d9488); }
+.ot1-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+</style>
+<defs>
+<marker id="ot1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+</marker>
+</defs>
+<text class="ot1-t" x="240" y="26" text-anchor="middle" font-size="21" font-weight="600">PgBouncer 커넥션 멀티플렉싱</text>
+<!-- 위: 클라이언트가 여는 커넥션 -->
+<text class="ot1-m" x="15" y="58" font-size="18">클라이언트가 여는 커넥션</text>
+<rect class="ot1-bar" x="15" y="68" width="450" height="38" rx="4" />
+<text class="ot1-t" x="240" y="94" text-anchor="middle" font-size="21">1,000개</text>
+<line class="ot1-arr" x1="240" y1="112" x2="240" y2="140" marker-end="url(#ot1Arrow)" />
+<!-- 가운데: 풀러 -->
+<rect class="ot1-pool" x="40" y="146" width="400" height="66" rx="8" />
+<text class="ot1-p" x="240" y="175" text-anchor="middle" font-size="22" font-weight="600">PgBouncer</text>
+<text class="ot1-m" x="240" y="198" text-anchor="middle" font-size="17">트랜잭션이 끝나면 커넥션을 풀에 반환</text>
+<line class="ot1-arr" x1="240" y1="218" x2="240" y2="246" marker-end="url(#ot1Arrow)" />
+<!-- 아래: PostgreSQL이 실제로 여는 커넥션 -->
+<text class="ot1-m" x="15" y="268" font-size="18">PostgreSQL이 실제로 여는 커넥션</text>
+<rect class="ot1-ghost" x="15" y="278" width="450" height="38" rx="4" />
+<rect class="ot1-real" x="15" y="278" width="18" height="38" rx="2" />
+<text class="ot1-t" x="44" y="304" font-size="21">30~50개</text>
+<text class="ot1-m" x="240" y="342" text-anchor="middle" font-size="17">두 막대는 같은 축척입니다</text>
+<text class="ot1-m" x="240" y="362" text-anchor="middle" font-size="17">폭이 커넥션 수에 비례합니다 (약 25분의 1)</text>
+</svg>
+</div>
 
 PgBouncer는 세 가지 pooling 모드를 제공합니다.
 
@@ -76,16 +109,19 @@ PgBouncer는 세 가지 pooling 모드를 제공합니다.
 
 다만 transaction 모드에서는 주의할 점이 있습니다. `SET` 명령으로 바꾼 세션 파라미터, `LISTEN` 등 세션 상태에 의존하는 기능은 트랜잭션이 끝나고 다른 커넥션으로 넘어가면 사라집니다. `NOTIFY`는 transaction 모드에서도 동작하지만, `LISTEN`은 세션이 유지되어야 하므로 사용할 수 없습니다. 이런 기능이 필요한 애플리케이션이라면 session 모드를 써야 합니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  PgBouncer의 transaction 모드에서 <code>SET statement_timeout = '5s'</code>를 실행하면, 해당 트랜잭션 안에서는 적용되지만 다음 트랜잭션에서는 다른 커넥션으로 배정될 수 있어 설정이 유지되지 않습니다. 세션 단위 설정이 필요하면 <code>SET LOCAL</code>(현재 트랜잭션에만 적용)을 쓰거나, 애플리케이션 레벨에서 매 트랜잭션 시작 시 설정하는 패턴이 필요합니다.
-</div>
+:::warning
+
+**주의**
+
+PgBouncer의 transaction 모드에서 `SET statement_timeout = '5s'`를 실행하면, 해당 트랜잭션 안에서는 적용되지만 다음 트랜잭션에서는 다른 커넥션으로 배정될 수 있어 설정이 유지되지 않습니다. 세션 단위 설정이 필요하면 `SET LOCAL`(현재 트랜잭션에만 적용)을 쓰거나, 애플리케이션 레벨에서 매 트랜잭션 시작 시 설정하는 패턴이 필요합니다.
+
+:::
 
 ### idle in transaction의 위험과 대응
 
-[느린 쿼리 추적 글](/postgres/slow-query-hunting/)에서 `pg_stat_activity`로 `idle in transaction` 상태를 확인하는 방법을 다뤘습니다. 이 상태는 왜 위험할까요?
+`pg_stat_activity`에서 [`idle in transaction`](/postgres/slow-query-hunting/)으로 잡히는 세션은 왜 위험할까요?
 
-`BEGIN`으로 트랜잭션을 열고 아직 `COMMIT`이나 `ROLLBACK`을 하지 않은 세션은 VACUUM에 영향을 줄 수 있습니다. Repeatable Read 이상의 격리 수준에서는 트랜잭션 시작 시 잡은 snapshot이 계속 유지되므로 **xmin horizon을 직접 붙잡습니다.** 기본 격리 수준인 Read Committed에서는 문장 사이에 snapshot을 해제하므로, 읽기 전용 트랜잭션이라면 VACUUM을 차단하지 않습니다. 하지만 INSERT, UPDATE, DELETE를 한 번이라도 실행한 쓰기 트랜잭션은 xid를 할당받고, 이 xid가 xmin horizon 계산에 포함되어 dead tuple 회수를 지연시킵니다. [VACUUM 글](/postgres/vacuum-and-bloat/)에서 봤듯이, xmin horizon이 전진하지 않으면 autovacuum은 그 이후에 발생한 dead tuple을 회수할 수 없습니다. 실무에서 문제가 되는 건 대부분 쓰기 트랜잭션을 열어둔 채 방치하는 경우입니다.
+`BEGIN`으로 트랜잭션을 열고 아직 `COMMIT`이나 `ROLLBACK`을 하지 않은 세션은 VACUUM에 영향을 줄 수 있습니다. Repeatable Read 이상의 격리 수준에서는 트랜잭션 시작 시 잡은 snapshot이 계속 유지되므로 **xmin horizon을 직접 붙잡습니다.** 기본 격리 수준인 Read Committed에서는 문장 사이에 snapshot을 해제하므로, 읽기 전용 트랜잭션이라면 VACUUM을 차단하지 않습니다. 하지만 INSERT, UPDATE, DELETE를 한 번이라도 실행한 쓰기 트랜잭션은 xid를 할당받고, 이 xid가 xmin horizon 계산에 포함되어 dead tuple 회수를 지연시킵니다. [xmin horizon](/postgres/vacuum-and-bloat/)이 전진하지 않으면 autovacuum이 실행되더라도 그 이후에 생긴 dead tuple을 회수할 수 없습니다. 실무에서 문제가 되는 건 대부분 쓰기 트랜잭션을 열어둔 채 방치하는 경우입니다.
 
 대응 수단은 `idle_in_transaction_session_timeout` 파라미터입니다.
 
@@ -101,21 +137,54 @@ SELECT pg_reload_conf();
 
 PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로세스가 공유하는 **shared memory**와, 각 backend 프로세스가 독립적으로 사용하는 **private memory**입니다.
 
-```
-┌───────────────────────────────────────────────────────┐
-│                    Shared Memory                       │
-│  ┌─────────────────┐  ┌──────────┐  ┌──────────────┐  │
-│  │ shared_buffers   │  │WAL buffers│  │  CLOG        │  │
-│  │  (데이터 캐시)    │  │          │  │  (트랜잭션 상태)│  │
-│  └─────────────────┘  └──────────┘  └──────────────┘  │
-├───────────────────────────────────────────────────────┤
-│             Backend Process (커넥션마다 1개)             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐ │
-│  │ work_mem  │  │ catalog  │  │ temp_buffers         │ │
-│  │ (정렬/해시)│  │ cache    │  │ (임시 테이블 캐시)     │ │
-│  └──────────┘  └──────────┘  └──────────────────────┘ │
-└───────────────────────────────────────────────────────┘
-```
+튜닝할 때 중요한 것은 이 구분입니다. 공유 메모리는 서버당 한 번만 잡히지만, 프로세스별 메모리는 커넥션 수만큼 곱해집니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="PostgreSQL 메모리 파라미터를 튜닝 관점에서 나눈 그림. 위쪽 공유 메모리는 서버당 한 번만 잡히고, 아래쪽 프로세스별 메모리는 커넥션 수만큼 곱해지며, effective_cache_size는 실제 할당이 없는 플래너 힌트다">
+<style>
+.ot2-t { fill: var(--text, #1c1917); }
+.ot2-m { fill: var(--text-muted, #78716c); }
+.ot2-p { fill: var(--primary, #0d9488); }
+.ot2-a { fill: var(--accent, #d97706); }
+.ot2-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot2-row { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+</style>
+<text class="ot2-t" x="240" y="28" text-anchor="middle" font-size="21" font-weight="600">공유 메모리 vs 프로세스별 메모리</text>
+<!-- 위 패널: 공유 메모리 -->
+<rect class="ot2-panel" x="15" y="44" width="450" height="174" rx="8" />
+<text class="ot2-p" x="32" y="70" font-size="19" font-weight="600">공유 메모리: 서버 전체에 하나</text>
+<rect class="ot2-row" x="32" y="82" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="106" font-size="18">shared_buffers</text>
+<text class="ot2-m" x="434" y="106" text-anchor="end" font-size="17">기본 128MB, RAM의 25%</text>
+<rect class="ot2-row" x="32" y="124" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="148" font-size="18">wal_buffers</text>
+<text class="ot2-m" x="434" y="148" text-anchor="end" font-size="17">기본 -1 (자동, 최대 16MB)</text>
+<rect class="ot2-row" x="32" y="166" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="190" font-size="18">CLOG, lock table 등</text>
+<text class="ot2-m" x="434" y="190" text-anchor="end" font-size="17">자동 산정</text>
+<text class="ot2-m" x="240" y="240" text-anchor="middle" font-size="17">서버당 한 번만 잡힙니다. 커넥션 수와 무관합니다.</text>
+<!-- 아래 패널: 프로세스별 메모리 -->
+<rect class="ot2-panel" x="15" y="256" width="450" height="180" rx="8" />
+<text class="ot2-a" x="32" y="282" font-size="19" font-weight="600">프로세스별 메모리: 커넥션마다 따로</text>
+<rect class="ot2-row" x="32" y="294" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="318" font-size="18">work_mem</text>
+<text class="ot2-m" x="434" y="318" text-anchor="end" font-size="17">기본 4MB, 연산 하나당</text>
+<rect class="ot2-row" x="32" y="336" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="360" font-size="18">maintenance_work_mem</text>
+<text class="ot2-m" x="434" y="360" text-anchor="end" font-size="17">기본 64MB, 작업당</text>
+<rect class="ot2-row" x="32" y="378" width="416" height="36" rx="4" />
+<text class="ot2-t" x="46" y="402" font-size="18">temp_buffers</text>
+<text class="ot2-m" x="434" y="402" text-anchor="end" font-size="17">기본 8MB, 세션당</text>
+<text class="ot2-a" x="240" y="458" text-anchor="middle" font-size="17">커넥션 수 × 쿼리당 연산 수만큼 곱해집니다</text>
+<!-- 예외: 할당이 없는 파라미터 -->
+<rect class="ot2-panel" x="15" y="472" width="450" height="66" rx="8" />
+<text class="ot2-p" x="240" y="500" text-anchor="middle" font-size="19" font-weight="600">effective_cache_size</text>
+<text class="ot2-m" x="240" y="524" text-anchor="middle" font-size="17">메모리를 할당하지 않는 플래너 힌트</text>
+</svg>
+</div>
 
 ### shared_buffers
 
@@ -125,26 +194,71 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
 
 그런데 왜 "25%"이고 "전부"가 아닐까요? PostgreSQL은 OS의 page cache 위에서 동작합니다. shared_buffers에서 밀려난 페이지도 OS의 page cache에는 남아있을 가능성이 높습니다. 즉 실제로는 **이중 캐싱**이 일어납니다.
 
-```
-┌─────────────────────────────────────┐
-│          PostgreSQL                  │
-│  shared_buffers (메모리의 25%)       │  ← 1차 캐시
-│  "여기에 없으면 OS에 읽기 요청"       │
-├─────────────────────────────────────┤
-│          OS Page Cache               │
-│  나머지 여유 메모리 (메모리의 50%+)   │  ← 2차 캐시
-│  "여기에도 없으면 디스크 I/O 발생"    │
-├─────────────────────────────────────┤
-│          Disk                        │
-└─────────────────────────────────────┘
-```
-
-shared_buffers를 너무 크게 잡으면 OS page cache에 남는 메모리가 줄어들어 오히려 전체 캐시 효율이 떨어질 수 있습니다. 공식 문서도 40% 이상에서는 효과가 감소한다고 언급합니다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 checkpoint와의 관계</strong><br>
-  shared_buffers가 크면 dirty page도 그만큼 많이 쌓일 수 있습니다. <a href="/postgres/wal-and-checkpoint/">WAL 글</a>에서 다뤘듯이, checkpoint는 이 dirty page들을 디스크에 flush하는 시점입니다. shared_buffers를 크게 잡으면 checkpoint 시 flush해야 할 데이터도 늘어나므로, <code>checkpoint_completion_target</code>으로 I/O를 분산시키는 것이 더욱 중요해집니다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 458" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="물리 메모리를 shared_buffers 25퍼센트, OS page cache 50퍼센트 이상, 나머지로 나눈 막대와 shared_buffers, OS page cache, 디스크 순으로 내려가는 조회 순서">
+<style>
+.ot3-t { fill: var(--text, #1c1917); }
+.ot3-m { fill: var(--text-muted, #78716c); }
+.ot3-p { fill: var(--primary, #0d9488); }
+.ot3-d { fill: var(--text-danger, #dc2626); }
+.ot3-s1 { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ot3-s2 { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.ot3-s3 { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot3-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+</style>
+<defs>
+<marker id="ot3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+</marker>
+</defs>
+<text class="ot3-t" x="240" y="26" text-anchor="middle" font-size="21" font-weight="600">2단 캐시: 메모리를 어떻게 나누는가</text>
+<!-- 물리 메모리 100%를 폭에 비례해 분할 -->
+<rect class="ot3-s1" x="15" y="44" width="112" height="48" />
+<rect class="ot3-s2" x="127" y="44" width="225" height="48" />
+<rect class="ot3-s3" x="352" y="44" width="113" height="48" />
+<text class="ot3-t" x="71" y="74" text-anchor="middle" font-size="18" font-weight="600">25%</text>
+<text class="ot3-t" x="240" y="74" text-anchor="middle" font-size="18" font-weight="600">50%+</text>
+<text class="ot3-m" x="408" y="74" text-anchor="middle" font-size="18">나머지</text>
+<!-- 범례 -->
+<rect class="ot3-s1" x="15" y="106" width="16" height="16" />
+<text class="ot3-t" x="40" y="120" font-size="17">shared_buffers = RAM의 25% (1차)</text>
+<rect class="ot3-s2" x="15" y="136" width="16" height="16" />
+<text class="ot3-t" x="40" y="150" font-size="17">OS page cache = RAM의 50% 이상 (2차)</text>
+<rect class="ot3-s3" x="15" y="166" width="16" height="16" />
+<text class="ot3-m" x="40" y="180" font-size="17">백엔드 프로세스, OS 등</text>
+<!-- 조회 순서 -->
+<text class="ot3-p" x="15" y="212" font-size="19" font-weight="600">조회 순서</text>
+<rect class="ot3-box" x="15" y="222" width="450" height="42" rx="6" />
+<text class="ot3-t" x="32" y="249" font-size="19">① shared_buffers</text>
+<text class="ot3-m" x="448" y="249" text-anchor="end" font-size="17">가장 빠름</text>
+<line class="ot3-arr" x1="240" y1="266" x2="240" y2="288" marker-end="url(#ot3Arrow)" />
+<text class="ot3-m" x="256" y="284" font-size="17">없으면</text>
+<rect class="ot3-box" x="15" y="292" width="450" height="42" rx="6" />
+<text class="ot3-t" x="32" y="319" font-size="19">② OS page cache</text>
+<text class="ot3-m" x="448" y="319" text-anchor="end" font-size="17">메모리 복사 발생</text>
+<line class="ot3-arr" x1="240" y1="336" x2="240" y2="358" marker-end="url(#ot3Arrow)" />
+<text class="ot3-m" x="256" y="354" font-size="17">없으면</text>
+<rect class="ot3-box" x="15" y="362" width="450" height="42" rx="6" />
+<text class="ot3-t" x="32" y="389" font-size="19">③ 디스크 읽기</text>
+<text class="ot3-d" x="448" y="389" text-anchor="end" font-size="17">가장 느림</text>
+<text class="ot3-m" x="240" y="428" text-anchor="middle" font-size="17">①을 키우면 ②에 남을 메모리가 줄어듭니다</text>
+<text class="ot3-m" x="240" y="448" text-anchor="middle" font-size="17">총량이 아니라 배분이 문제입니다</text>
+</svg>
 </div>
+
+shared_buffers를 너무 크게 잡으면 OS page cache에 남는 메모리가 줄어들어 오히려 전체 캐시 효율이 떨어질 수 있습니다. 공식 문서도 RAM의 40%를 넘겨 할당해봐야 그보다 작게 잡은 것보다 나을 가능성은 낮다고 적고 있습니다.
+
+:::info
+
+**checkpoint와의 관계**
+
+shared_buffers가 크면 dirty page도 그만큼 많이 쌓일 수 있습니다. [checkpoint](/postgres/wal-and-checkpoint/)는 이 dirty page들을 디스크에 flush하는 시점입니다. shared_buffers를 크게 잡으면 checkpoint 시 flush해야 할 데이터도 늘어나므로, `checkpoint_completion_target`으로 I/O를 분산시키는 것이 더욱 중요해집니다.
+
+:::
 
 ### work_mem
 
@@ -154,27 +268,64 @@ shared_buffers를 너무 크게 잡으면 OS page cache에 남는 메모리가 �
 
 `work_mem`은 "커넥션당"이 아니라 **"정렬이나 해시 연산 하나당"** 할당됩니다. 하나의 쿼리 안에 `ORDER BY`, `Hash Join`, `GROUP BY`가 모두 있으면, 각 연산마다 독립적으로 `work_mem`만큼 할당될 수 있습니다.
 
-```
-하나의 쿼리:
-  Hash Join      → work_mem (4MB)
-  └─ Sort        → work_mem (4MB)
-  └─ Hash Agg    → work_mem (4MB)
-  = 최대 12MB
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 486" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="work_mem이 두 번 곱해지는 구조. 쿼리 하나의 실행 계획에 있는 연산 세 개가 각각 4MB를 잡아 12MB가 되고, 동시 활성 쿼리 50개를 곱하면 600MB가 된다">
+<style>
+.ot4-t { fill: var(--text, #1c1917); }
+.ot4-m { fill: var(--text-muted, #78716c); }
+.ot4-p { fill: var(--primary, #0d9488); }
+.ot4-a { fill: var(--accent, #d97706); }
+.ot4-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot4-row { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ot4-sum { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 2; }
+.ot4-line { stroke: var(--border, #e7e5e4); stroke-width: 2; }
+</style>
+<text class="ot4-t" x="240" y="28" text-anchor="middle" font-size="21" font-weight="600">work_mem은 두 번 곱해집니다</text>
+<text class="ot4-m" x="240" y="52" text-anchor="middle" font-size="17">커넥션당이 아니라 연산 하나당 할당됩니다</text>
+<!-- 1단계: 쿼리 하나 안의 연산마다 -->
+<rect class="ot4-panel" x="15" y="66" width="450" height="176" rx="8" />
+<text class="ot4-m" x="32" y="92" font-size="18">쿼리 하나의 실행 계획</text>
+<rect class="ot4-row" x="32" y="102" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="126" font-size="19">Hash Join</text>
+<text class="ot4-p" x="432" y="126" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<rect class="ot4-row" x="32" y="144" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="168" font-size="19">Sort</text>
+<text class="ot4-p" x="432" y="168" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<rect class="ot4-row" x="32" y="186" width="416" height="36" rx="4" />
+<text class="ot4-t" x="48" y="210" font-size="19">Hash Agg</text>
+<text class="ot4-p" x="432" y="210" text-anchor="end" font-size="19" font-weight="600">4MB</text>
+<!-- 첫 번째 합계 -->
+<line class="ot4-line" x1="250" y1="256" x2="465" y2="256" />
+<text class="ot4-m" x="15" y="282" font-size="18">연산 3개 × work_mem</text>
+<text class="ot4-p" x="465" y="282" text-anchor="end" font-size="21" font-weight="600">= 12MB</text>
+<!-- 2단계: 동시 쿼리 수만큼 다시 곱하기 -->
+<text class="ot4-a" x="240" y="316" text-anchor="middle" font-size="21" font-weight="600">× 동시 활성 쿼리 50개</text>
+<rect class="ot4-sum" x="15" y="332" width="450" height="66" rx="8" />
+<text class="ot4-t" x="240" y="361" text-anchor="middle" font-size="22" font-weight="600">12MB × 50 = 600MB</text>
+<text class="ot4-m" x="240" y="384" text-anchor="middle" font-size="17">최악의 경우 backend 프로세스가 쓰는 총량</text>
+<!-- 해시 연산 보정 -->
+<text class="ot4-p" x="15" y="426" font-size="18" font-weight="600">PG 15+ 기본 hash_mem_multiplier = 2.0</text>
+<text class="ot4-m" x="15" y="450" font-size="17">해시 연산은 work_mem의 2배까지 쓸 수 있어</text>
+<text class="ot4-m" x="15" y="472" font-size="17">쿼리당 20MB, 50개면 1GB입니다 (정렬 제외)</text>
+</svg>
+</div>
 
-동시 활성 쿼리 50개:
-  50 × 12MB = 600MB (최악의 경우)
-```
-
-참고로, PG 15부터 `hash_mem_multiplier`의 기본값이 2.0으로 올라서 해시 연산(Hash Join, Hash Agg)은 `work_mem`의 2배까지 사용할 수 있습니다. 위 예시에서 해시 연산 두 개가 실제로는 각 8MB를 쓸 수 있어 최대 20MB가 됩니다. 정렬 연산에는 이 배수가 적용되지 않습니다.
+PG 15부터 `hash_mem_multiplier`의 기본값이 2.0으로 올라서 해시 연산(Hash Join, Hash Agg)은 `work_mem`의 2배까지 사용할 수 있습니다. 위 예시에서 해시 연산 두 개가 실제로는 각 8MB를 쓸 수 있어 쿼리 하나가 최대 20MB, 동시 50개면 1GB가 됩니다. 정렬 연산에는 이 배수가 적용되지 않습니다.
 
 그래서 `work_mem`을 올릴 때는 단순히 "4MB → 64MB"로 올리는 게 아니라, 동시 활성 커넥션 수와 쿼리당 연산 수를 함께 고려해야 합니다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 실전 팁</strong><br>
-  전역 <code>work_mem</code>은 보수적으로 유지하고(4~16MB), 대용량 정렬이 필요한 특정 쿼리/세션에서만 <code>SET work_mem = '256MB'</code>로 높이는 패턴이 안전합니다. 배치 작업용 세션에서만 올려쓰고, OLTP 트래픽에는 기본값을 적용하는 식입니다.
-</div>
+:::tip
 
-[조인 알고리즘 글](/postgres/join-algorithms/)에서 다뤘던 Hash Join의 batch split도 `work_mem`과 직결됩니다. `work_mem`이 부족하면 해시 테이블이 메모리에 다 안 들어가서 여러 batch로 나뉘고, 각 batch마다 디스크 I/O가 발생합니다. `EXPLAIN ANALYZE`에서 `Batches: 4`처럼 batch 수가 1보다 크면 `work_mem` 부족을 의심할 수 있습니다.
+**실전 팁**
+
+전역 `work_mem`은 보수적으로 유지하고(4~16MB), 대용량 정렬이 필요한 특정 쿼리나 세션에서만 `SET work_mem = '256MB'`로 높이는 패턴이 안전합니다. 배치 작업용 세션에서만 올려 쓰고, OLTP 트래픽에는 기본값을 적용하는 식입니다.
+
+:::
+
+[Hash Join의 batch split](/postgres/join-algorithms/)도 `work_mem`과 직결됩니다. `work_mem`이 부족하면 해시 테이블이 메모리에 다 안 들어가서 여러 batch로 나뉘고, 각 batch마다 디스크 I/O가 발생합니다. `EXPLAIN ANALYZE`에서 `Batches: 4`처럼 batch 수가 1보다 크면 `work_mem` 부족을 의심할 수 있습니다.
 
 ### maintenance_work_mem
 
@@ -190,7 +341,7 @@ autovacuum이 사용하는 메모리는 별도로 `autovacuum_work_mem`(기본 -
 
 기본값은 4GB이고, 전용 서버라면 물리 메모리의 50~75%가 적당합니다.
 
-이 값이 중요한 이유는 [플래너 통계 글](/postgres/planner-statistics/)에서 다뤘던 **cost 계산**에 영향을 주기 때문입니다. `effective_cache_size`가 작으면 플래너는 "디스크 접근이 많겠구나"라고 판단해서 random I/O가 필요한 index scan보다 sequential scan을 선호하게 됩니다. 반대로 적절히 크게 잡으면 index scan의 cost가 낮아져서 인덱스를 더 적극적으로 활용합니다.
+이 값이 중요한 이유는 플래너의 [**cost 계산**](/postgres/planner-statistics/)에 영향을 주기 때문입니다. `effective_cache_size`가 작으면 플래너는 "디스크 접근이 많겠구나"라고 판단해서 random I/O가 필요한 index scan보다 sequential scan을 선호하게 됩니다. 반대로 적절히 크게 잡으면 index scan의 cost가 낮아져서 인덱스를 더 적극적으로 활용합니다.
 
 ### 파라미터 한눈에 보기
 
@@ -203,13 +354,13 @@ autovacuum이 사용하는 메모리는 별도로 `autovacuum_work_mem`(기본 -
 
 ## Autovacuum 튜닝: "알아서 해준다"를 넘어서
 
-[VACUUM 글](/postgres/vacuum-and-bloat/)에서 autovacuum의 트리거 공식과 동작 원리를 다뤘습니다. 기본 설정으로도 대부분의 테이블은 잘 관리되지만, 테이블이 크거나 write가 많은 환경에서는 기본값이 부족합니다.
+[autovacuum](/postgres/vacuum-and-bloat/)은 기본 설정으로도 대부분의 테이블을 잘 관리하지만, 테이블이 크거나 write가 많은 환경에서는 기본값이 부족합니다.
 
-### 트리거 공식 복습
+### 트리거 공식
 
 autovacuum은 다음 조건을 만족하면 해당 테이블에 대해 VACUUM을 실행합니다.
 
-```
+```text
 dead tuples > autovacuum_vacuum_threshold
               + autovacuum_vacuum_scale_factor × reltuples
 ```
@@ -228,7 +379,9 @@ dead tuples > autovacuum_vacuum_threshold
 
 1억 행 테이블에서는 dead tuple이 **2천만 개** 쌓여야 autovacuum이 반응합니다. 그 사이에 Seq Scan 성능은 이미 크게 떨어져 있습니다.
 
-해결책은 **테이블별로 설정을 override**하는 것입니다.
+PG 18에는 이 계산값에 상한을 씌우는 `autovacuum_vacuum_max_threshold`(기본 1억)가 추가됐습니다. 발동 기준이 `threshold + scale_factor × reltuples`와 이 상한 중 **작은 쪽**으로 바뀌므로, 수억 행 규모부터는 비율 대신 1억 개라는 절대 수치에서 걸립니다. 다만 위 표의 1억 행 테이블은 2천만 개가 상한보다 작아서 계산이 그대로입니다.
+
+근본적인 해결책은 **테이블별로 설정을 override**하는 것입니다.
 
 ```sql
 -- 1억 행 orders 테이블: 1%만 쌓여도 autovacuum 발동
@@ -272,14 +425,16 @@ worker를 늘릴 때는 `cost_limit`도 **비례해서** 올려야 합니다.
 
 ```sql
 -- worker를 6개로 늘리면서 cost_limit도 2배로
-ALTER SYSTEM SET autovacuum_max_workers = 6;   -- postmaster context: 재시작 필요
-ALTER SYSTEM SET autovacuum_vacuum_cost_limit = 400;  -- sighup context: reload로 적용
--- cost_limit은 reload로 즉시 적용되지만, max_workers는 서버 재시작 후 반영됨
+ALTER SYSTEM SET autovacuum_max_workers = 6;
+ALTER SYSTEM SET autovacuum_vacuum_cost_limit = 400;
+SELECT pg_reload_conf();
 ```
+
+PG 18부터는 두 파라미터 모두 reload만으로 적용됩니다. worker 슬롯 자체는 `autovacuum_worker_slots`(기본 16)가 서버 시작 시점에 미리 확보하고, `autovacuum_max_workers`는 그 범위 안에서 재시작 없이 조정할 수 있습니다. PG 17 이하에서는 `autovacuum_max_workers`가 postmaster 파라미터여서 값을 바꾸려면 재시작해야 했습니다.
 
 ### wraparound 방지
 
-[VACUUM 글](/postgres/vacuum-and-bloat/)에서 다뤘듯이, PostgreSQL의 트랜잭션 ID는 32비트 순환 카운터입니다. 약 21억 트랜잭션이 지나면 과거 데이터가 "미래의 트랜잭션"으로 보이는 wraparound가 발생할 수 있습니다. 이를 방지하기 위해 VACUUM은 오래된 xid를 frozen 상태로 바꾸는 freeze 작업도 수행합니다.
+PostgreSQL의 [트랜잭션 ID](/postgres/vacuum-and-bloat/)는 32비트 순환 카운터입니다. 약 21억 트랜잭션이 지나면 과거 데이터가 "미래의 트랜잭션"으로 보이는 wraparound가 발생할 수 있습니다. 이를 방지하기 위해 VACUUM은 오래된 xid를 frozen 상태로 바꾸는 freeze 작업도 수행합니다.
 
 관련 파라미터:
 
@@ -294,7 +449,7 @@ ALTER SYSTEM SET autovacuum_vacuum_cost_limit = 400;  -- sighup context: reload�
 
 ## Checkpoint 튜닝
 
-[WAL 글](/postgres/wal-and-checkpoint/)에서 checkpoint의 동작 원리를 자세히 다뤘습니다. 여기서는 운영 관점에서 자주 조정하는 파라미터만 정리합니다.
+[checkpoint](/postgres/wal-and-checkpoint/)는 shared_buffers에 쌓인 dirty page를 디스크에 반영하고, 그 지점까지의 WAL을 재사용 가능하게 만드는 작업입니다. 여기서는 운영 관점에서 자주 조정하는 파라미터만 정리합니다.
 
 ### 핵심 파라미터 3개
 
@@ -308,7 +463,7 @@ ALTER SYSTEM SET autovacuum_vacuum_cost_limit = 400;  -- sighup context: reload�
 
 write가 많은 환경에서 로그에 이런 메시지가 자주 보인다면:
 
-```
+```text
 LOG: checkpoints are occurring too frequently (15 seconds apart)
 HINT: Consider increasing the configuration parameter "max_wal_size".
 ```
@@ -378,7 +533,7 @@ ORDER BY xact_start;
 
 **증상**: PostgreSQL 로그에 다음과 같은 경고가 나타난다.
 
-```
+```text
 WARNING: database "mydb" must be vacuumed within 10000000 transactions
 HINT: To avoid XID assignment failures, execute a database-wide VACUUM in that database.
 ```
@@ -445,8 +600,8 @@ PostgreSQL 파라미터는 변경 시 **적용 방식**이 다릅니다.
 
 | context | 적용 방법 | 예시 |
 |---------|----------|------|
-| `postmaster` | 서버 재시작 필요 | `shared_buffers`, `max_connections`, `wal_level`, `autovacuum_max_workers` |
-| `sighup` | `SELECT pg_reload_conf()` 또는 `pg_ctl reload` | `autovacuum_vacuum_cost_limit`, `checkpoint_timeout`, `checkpoint_completion_target` |
+| `postmaster` | 서버 재시작 필요 | `shared_buffers`, `max_connections`, `wal_level`, `autovacuum_worker_slots` |
+| `sighup` | `SELECT pg_reload_conf()` 또는 `pg_ctl reload` | `autovacuum_vacuum_cost_limit`, `autovacuum_max_workers`(PG 18+), `checkpoint_timeout`, `checkpoint_completion_target` |
 | `user` | 세션 단위로 `SET` 가능 (reload로도 전역 적용 가능) | `work_mem`, `maintenance_work_mem`, `effective_cache_size`, `statement_timeout` |
 
 어떤 파라미터가 어떤 context인지 확인하려면:
@@ -460,10 +615,13 @@ WHERE name IN ('shared_buffers', 'work_mem', 'max_connections',
 
 `pending_restart = true`인 파라미터가 있다면 `ALTER SYSTEM`으로 값을 바꿨지만 아직 재시작하지 않은 것입니다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 튜닝의 기본 원칙</strong><br>
-  <strong>한 번에 하나만 바꾸고, 전후를 측정하라.</strong> 여러 파라미터를 동시에 바꾸면 어떤 변경이 효과가 있었는지 알 수 없습니다. 변경 전 <code>pg_stat_statements</code>를 리셋하고, 변경 후 동일 워크로드에서 상위 쿼리의 실행 시간과 블록 I/O를 비교하는 습관이 좋습니다.
-</div>
+:::tip
+
+**튜닝의 기본 원칙**
+
+**한 번에 하나만 바꾸고, 전후를 측정합니다.** 여러 파라미터를 동시에 바꾸면 어떤 변경이 효과가 있었는지 알 수 없습니다. 변경 전 `pg_stat_statements`를 리셋하고, 변경 후 동일 워크로드에서 상위 쿼리의 실행 시간과 블록 I/O를 비교하는 습관이 좋습니다.
+
+:::
 
 ## 마치며
 
@@ -477,8 +635,9 @@ WHERE name IN ('shared_buffers', 'work_mem', 'max_connections',
 
 ## 참고자료
 
-- [PostgreSQL 18 공식 문서: Chapter 20. Server Configuration](https://www.postgresql.org/docs/18/runtime-config.html)
-- [PostgreSQL 18 공식 문서: Chapter 25. Routine Database Maintenance Tasks](https://www.postgresql.org/docs/18/maintenance.html)
+- [PostgreSQL 18 공식 문서: Chapter 19. Server Configuration](https://www.postgresql.org/docs/18/runtime-config.html)
+- [PostgreSQL 18 공식 문서: Chapter 24. Routine Database Maintenance Tasks](https://www.postgresql.org/docs/18/maintenance.html)
+- [PostgreSQL 18 공식 문서: 19.10. Vacuuming](https://www.postgresql.org/docs/18/runtime-config-vacuum.html)
 - [PgBouncer 공식 문서](https://www.pgbouncer.org/)
-- [Crunchy Data: PostgreSQL Connection Pooling](https://www.crunchydata.com/blog)
-- [EDB: Tuning PostgreSQL for Performance](https://www.enterprisedb.com/blog)
+- [PgBouncer 공식 문서: Configuration (pooling 모드)](https://www.pgbouncer.org/config.html)
+- [PostgreSQL Wiki: Tuning Your PostgreSQL Server](https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server)

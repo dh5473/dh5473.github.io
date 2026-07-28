@@ -13,7 +13,7 @@ thumbnail: './thumbnail.png'
 
 이 시리즈는 두 번째 답을 따라갑니다. 그 출발점으로 첫 글에서는 PostgreSQL이라는 데이터베이스가 한 대의 서버 안에서 어떤 모습으로 살아 있는지를 둘러봅니다. 가장 직관적인 시작은 동작 중인 서버에 접속해 프로세스 목록을 한 번 들여다보는 것입니다.
 
-```
+```text
 $ ps -ef | grep postgres
 postgres  1021     1  0  postgres -D /var/lib/postgresql/data
 postgres  1023  1021  0  postgres: checkpointer
@@ -64,20 +64,95 @@ Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 
 부모 입장에서 본 Postgres의 구조는 이렇습니다.
 
-```
-postmaster (PID 1021)
-├── checkpointer
-├── background writer
-├── walwriter
-├── autovacuum launcher
-│   └── autovacuum worker (필요할 때 기동)
-├── logical replication launcher
-│   └── logical replication worker
-├── io worker 0..2  (PG 18 기본 io_method=worker)
-├── backend (appuser 10.0.1.5: SELECT)
-├── backend (appuser 10.0.1.5: idle)
-└── backend (other_user: COMMIT)
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 724" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="postmaster를 부모로 하는 PostgreSQL 프로세스 트리. checkpointer, background writer, walwriter, autovacuum launcher, logical replication launcher, io worker 같은 background 프로세스와, 커넥션마다 fork되는 backend 프로세스가 자식으로 매달려 있는 구조">
+<style>
+.pao1-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+.pao1-root { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
+.pao1-name { font-size: 19px; fill: var(--text, #1c1917); }
+.pao1-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pao1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.pao1-rootbox { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.pao1-tagb { fill: var(--primary, #0d9488); }
+.pao1-tagc { fill: var(--accent, #d97706); }
+.pao1-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+</style>
+<!-- 부모 -->
+<rect class="pao1-rootbox" x="24" y="12" width="432" height="54" rx="8"/>
+<text class="pao1-mono pao1-root" x="44" y="35">postmaster</text>
+<text class="pao1-sub" x="44" y="56">PID 1021 · 실행 파일명은 그냥 postgres</text>
+<!-- 트렁크 -->
+<path class="pao1-line" d="M 48 66 L 48 628"/>
+<!-- checkpointer -->
+<path class="pao1-line" d="M 48 96 L 72 96"/>
+<rect class="pao1-box" x="72" y="78" width="384" height="36" rx="6"/>
+<rect class="pao1-tagb" x="72" y="78" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="102">checkpointer</text>
+<!-- background writer -->
+<path class="pao1-line" d="M 48 142 L 72 142"/>
+<rect class="pao1-box" x="72" y="124" width="384" height="36" rx="6"/>
+<rect class="pao1-tagb" x="72" y="124" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="148">background writer</text>
+<!-- walwriter -->
+<path class="pao1-line" d="M 48 188 L 72 188"/>
+<rect class="pao1-box" x="72" y="170" width="384" height="36" rx="6"/>
+<rect class="pao1-tagb" x="72" y="170" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="194">walwriter</text>
+<!-- autovacuum launcher -->
+<path class="pao1-line" d="M 48 234 L 72 234"/>
+<rect class="pao1-box" x="72" y="216" width="384" height="36" rx="6"/>
+<rect class="pao1-tagb" x="72" y="216" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="240">autovacuum launcher</text>
+<!-- autovacuum worker (손자) -->
+<path class="pao1-line" d="M 90 252 L 90 288 L 108 288"/>
+<rect class="pao1-box" x="108" y="262" width="348" height="52" rx="6"/>
+<rect class="pao1-tagb" x="108" y="262" width="5" height="52" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="126" y="285">autovacuum worker</text>
+<text class="pao1-sub" x="126" y="306">필요할 때 postmaster가 fork</text>
+<!-- logical replication launcher -->
+<path class="pao1-line" d="M 48 342 L 72 342"/>
+<rect class="pao1-box" x="72" y="324" width="384" height="36" rx="6"/>
+<rect class="pao1-tagb" x="72" y="324" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="348">logical replication launcher</text>
+<!-- logical replication worker (손자) -->
+<path class="pao1-line" d="M 90 360 L 90 388 L 108 388"/>
+<rect class="pao1-box" x="108" y="370" width="348" height="36" rx="6"/>
+<rect class="pao1-tagb" x="108" y="370" width="5" height="36" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="126" y="394">logical replication worker</text>
+<!-- io worker -->
+<path class="pao1-line" d="M 48 442 L 72 442"/>
+<rect class="pao1-box" x="72" y="416" width="384" height="52" rx="6"/>
+<rect class="pao1-tagb" x="72" y="416" width="5" height="52" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="439">io worker 0..2</text>
+<text class="pao1-sub" x="90" y="460">PG 18 기본 io_method=worker</text>
+<!-- backend 1 -->
+<path class="pao1-line" d="M 48 504 L 72 504"/>
+<rect class="pao1-box" x="72" y="478" width="384" height="52" rx="6"/>
+<rect class="pao1-tagc" x="72" y="478" width="5" height="52" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="501">backend · SELECT</text>
+<text class="pao1-sub" x="90" y="522">appuser 10.0.1.5(52015)</text>
+<!-- backend 2 -->
+<path class="pao1-line" d="M 48 566 L 72 566"/>
+<rect class="pao1-box" x="72" y="540" width="384" height="52" rx="6"/>
+<rect class="pao1-tagc" x="72" y="540" width="5" height="52" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="563">backend · idle</text>
+<text class="pao1-sub" x="90" y="584">appuser 10.0.1.5(52014)</text>
+<!-- backend 3 -->
+<path class="pao1-line" d="M 48 628 L 72 628"/>
+<rect class="pao1-box" x="72" y="602" width="384" height="52" rx="6"/>
+<rect class="pao1-tagc" x="72" y="602" width="5" height="52" rx="2.5"/>
+<text class="pao1-mono pao1-name" x="90" y="625">backend · COMMIT</text>
+<text class="pao1-sub" x="90" y="646">other_user</text>
+<!-- 범례 -->
+<rect class="pao1-tagb" x="40" y="668" width="16" height="16" rx="3"/>
+<text class="pao1-sub" x="64" y="681">background 프로세스 (서버가 띄움)</text>
+<rect class="pao1-tagc" x="40" y="694" width="16" height="16" rx="3"/>
+<text class="pao1-sub" x="64" y="707">backend 프로세스 (커넥션마다 fork)</text>
+</svg>
+</div>
 
 `postmaster`는 Postgres 초창기부터 쓰인 이름이지만, 실제 실행 파일명과 `ps` 출력에서 보이는 이름은 그냥 `postgres`입니다. 제일 위의 PID가 부모이고 나머지가 자식이라고 읽으면 됩니다.
 
@@ -92,7 +167,7 @@ background 프로세스 중 자주 마주치는 것들만 정리해봅시다.
 | **logical replication launcher** | logical replication의 apply/sync worker를 관리 |
 | **io worker** (PG 18+) | `io_method=worker` 모드(기본값)에서 비동기 I/O 요청을 처리. `io_workers` 파라미터로 개수 조절(기본 3) |
 
-이 외에도 `archiver`(WAL 아카이빙), `logging collector`(로그 파일 기록) 같은 프로세스가 설정에 따라 추가로 뜹니다. background writer에 대해 "checkpoint 부담을 분산시킨다"는 설명이 인터넷에 자주 돌아다니는데, 공식 문서의 표현을 엄밀히 따지면 주 목적은 **clean buffer 확보**이고 checkpoint 부담 분산은 부수 효과에 가깝습니다.
+이 외에도 `archiver`(WAL 아카이빙), `logging collector`(로그 파일 기록) 같은 프로세스가 설정에 따라 추가로 뜹니다. background writer를 두고 "checkpoint 부담을 분산시키는 프로세스"라고 설명하는 경우가 있는데, 공식 문서의 표현을 엄밀히 따지면 주 목적은 **clean buffer 확보**입니다. 쿼리를 처리하던 backend가 빈 버퍼를 못 찾아 직접 write하는 상황을 줄이는 것이 목표이고, checkpoint 부담 분산은 부수 효과에 가깝습니다.
 
 ### PG 15: stats collector가 사라졌습니다
 
@@ -104,10 +179,13 @@ Postgres 15부터 이 구조가 완전히 바뀌었습니다. 공식 릴리즈 �
 
 이제 각 backend가 통계를 로컬에서 모았다가 주기적으로 **shared memory에 flush**합니다. UDP도 없고 파일도 없습니다. PG 15 이후 서버에서 `ps`를 쳤는데 `stats collector`가 안 보인다면 그건 정상입니다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고: PG 18의 비동기 I/O</strong><br>
-  Postgres 18부터 비동기 I/O subsystem(<code>io_method</code> 설정)이 도입됐습니다. 기본값은 <code>worker</code>이고, 이 모드에서는 별도의 io worker 프로세스(<code>io_workers</code> 기본 3개)가 큐에 쌓인 I/O 요청을 백엔드 대신 처리합니다. Linux에서 <code>io_method=io_uring</code>으로 두면 io worker 없이 backend가 직접 커널 큐(io_uring)에 제출하는 방식으로 동작합니다. 이 기능으로 sequential scan, bitmap heap scan, VACUUM 같은 대량 읽기의 체감 성능이 개선됐고, <code>effective_io_concurrency</code> 기본값도 1에서 16으로 상향됐습니다.
-</div>
+:::info
+
+**PG 18의 비동기 I/O**
+
+Postgres 18부터 비동기 I/O subsystem(`io_method` 설정)이 도입됐습니다. 기본값은 `worker`이고, 이 모드에서는 별도의 io worker 프로세스(`io_workers` 기본 3개)가 큐에 쌓인 I/O 요청을 backend 대신 처리합니다. Linux에서 `io_method=io_uring`으로 두면 io worker 없이 backend가 직접 커널 큐에 제출하는 방식으로 동작합니다. 이 기능으로 sequential scan, bitmap heap scan, VACUUM 같은 대량 읽기의 체감 성능이 개선됐고, `effective_io_concurrency` 기본값도 1에서 16으로 올라갔습니다.
+
+:::
 
 ## Backend process: 내 연결이 사는 곳
 
@@ -148,33 +226,72 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 
 주요 영역을 간단히 보면 이렇습니다.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                  Shared Memory                          │
-├─────────────────────────────────────────────────────────┤
-│  shared_buffers    테이블/인덱스 페이지 캐시 (8KB 블록)    │
-│                    기본 128MB, 권장 RAM의 25%             │
-├─────────────────────────────────────────────────────────┤
-│  WAL buffers       WAL 레코드 쓰기 전 버퍼                │
-│                    기본 -1 (shared_buffers의 1/32)        │
-├─────────────────────────────────────────────────────────┤
-│  proc array        살아있는 backend의 상태 목록           │
-│                    (xmin, xmax, snapshot 계산에 사용)     │
-├─────────────────────────────────────────────────────────┤
-│  lock table        heavyweight lock 관리                 │
-├─────────────────────────────────────────────────────────┤
-│  CLOG (pg_xact)    트랜잭션 상태 비트맵                   │
-│                    (진행 중 / 커밋 / 롤백)                │
-├─────────────────────────────────────────────────────────┤
-│  cumulative stats  PG 15+ 통계 데이터                    │
-├─────────────────────────────────────────────────────────┤
-│  multixact, predicate locks, replication slots, ...     │
-└─────────────────────────────────────────────────────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 592" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="PostgreSQL shared memory 한 덩어리 안에 들어 있는 영역들. shared_buffers, wal_buffers, proc array, lock table, CLOG, cumulative stats, 그리고 multixact와 복제 슬롯 등이 차례로 나열된 그림">
+<style>
+.pao2-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+.pao2-title { font-size: 22px; fill: var(--text, #1c1917); font-weight: 600; }
+.pao2-name { font-size: 19px; fill: var(--text, #1c1917); }
+.pao2-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pao2-outer { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.pao2-row { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.pao2-tag { fill: var(--primary, #0d9488); }
+.pao2-tagm { fill: var(--border, #e7e5e4); }
+</style>
+<!-- 제목 -->
+<text class="pao2-title" x="240" y="28" text-anchor="middle">Shared Memory</text>
+<text class="pao2-desc" x="240" y="52" text-anchor="middle">모든 프로세스가 attach하는 하나의 공용 영역</text>
+<!-- 바깥 껍데기 -->
+<rect class="pao2-outer" x="16" y="64" width="448" height="488" rx="10"/>
+<!-- shared_buffers -->
+<rect class="pao2-row" x="26" y="72" width="428" height="76" rx="6"/>
+<rect class="pao2-tag" x="26" y="72" width="5" height="76" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="97">shared_buffers</text>
+<text class="pao2-desc" x="42" y="119">테이블·인덱스 8KB 페이지 캐시</text>
+<text class="pao2-desc" x="42" y="140">기본 128MB (권장 출발점은 RAM의 25%)</text>
+<!-- wal_buffers -->
+<rect class="pao2-row" x="26" y="151" width="428" height="76" rx="6"/>
+<rect class="pao2-tag" x="26" y="151" width="5" height="76" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="176">wal_buffers</text>
+<text class="pao2-desc" x="42" y="198">디스크 flush 전 WAL 레코드 버퍼</text>
+<text class="pao2-desc" x="42" y="219">기본 -1 = shared_buffers ÷ 32</text>
+<!-- proc array -->
+<rect class="pao2-row" x="26" y="230" width="428" height="76" rx="6"/>
+<rect class="pao2-tag" x="26" y="230" width="5" height="76" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="255">proc array</text>
+<text class="pao2-desc" x="42" y="277">살아있는 backend의 상태 목록</text>
+<text class="pao2-desc" x="42" y="298">스냅샷(xmin/xmax) 계산에 사용</text>
+<!-- lock table -->
+<rect class="pao2-row" x="26" y="309" width="428" height="56" rx="6"/>
+<rect class="pao2-tag" x="26" y="309" width="5" height="56" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="334">lock table</text>
+<text class="pao2-desc" x="42" y="356">heavyweight lock 관리</text>
+<!-- CLOG -->
+<rect class="pao2-row" x="26" y="368" width="428" height="76" rx="6"/>
+<rect class="pao2-tag" x="26" y="368" width="5" height="76" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="393">CLOG (pg_xact)</text>
+<text class="pao2-desc" x="42" y="415">트랜잭션 상태 2비트 비트맵</text>
+<text class="pao2-desc" x="42" y="436">진행 중 / 커밋 / 롤백</text>
+<!-- cumulative stats -->
+<rect class="pao2-row" x="26" y="447" width="428" height="56" rx="6"/>
+<rect class="pao2-tag" x="26" y="447" width="5" height="56" rx="2.5"/>
+<text class="pao2-mono pao2-name" x="42" y="472">cumulative stats</text>
+<text class="pao2-desc" x="42" y="494">PG 15+ 누적 통계 (stats collector 대체)</text>
+<!-- 나머지 -->
+<rect class="pao2-row" x="26" y="506" width="428" height="38" rx="6"/>
+<rect class="pao2-tagm" x="26" y="506" width="5" height="38" rx="2.5"/>
+<text class="pao2-desc" x="42" y="530">multixact, predicate lock, 복제 슬롯 등</text>
+<!-- 캡션 -->
+<text class="pao2-desc" x="240" y="576" text-anchor="middle">영역 높이는 실제 크기 비율이 아닙니다</text>
+</svg>
+</div>
 
 주요 영역 세 가지를 짚어봅시다.
 
-**shared_buffers**는 Postgres가 디스크에서 읽어온 8KB 페이지를 캐싱하는 공간입니다. 기본값은 128MB이지만, 전용 서버라면 공식 문서가 권장하는 출발점은 물리 메모리의 25% 정도입니다. 더 크게 잡는다고 해서 무조건 빨라지지 않습니다. OS의 페이지 캐시와 이중으로 캐싱되기 때문에 40%를 넘기면 효과가 빠르게 감소한다고 공식 문서도 언급합니다. 이 파라미터는 **서버 시작 시에만 변경 가능**합니다.
+**shared_buffers**는 Postgres가 디스크에서 읽어온 8KB 페이지를 캐싱하는 공간입니다. 기본값은 128MB이지만, 전용 서버라면 공식 문서가 권장하는 출발점은 물리 메모리의 25% 정도입니다. 더 크게 잡는다고 해서 무조건 빨라지지 않습니다. Postgres가 OS의 페이지 캐시에도 의존하는 구조라, RAM의 40%를 넘겨 할당하는 편이 더 작게 잡는 것보다 나을 가능성은 낮다고 공식 문서가 못 박고 있습니다. 이 파라미터는 **서버 시작 시에만 변경 가능**합니다.
 
 **WAL buffers**는 트랜잭션이 write한 WAL 레코드가 디스크로 flush되기 전 잠깐 머무는 공간입니다. 기본값 `-1`은 "자동 계산"을 의미하고, 실제 공식은 `shared_buffers`의 1/32, 단 최소 64kB, 최대 WAL 세그먼트 크기(보통 16MB)입니다. 대부분의 환경에서 기본값 그대로 두면 됩니다.
 
@@ -184,33 +301,73 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 
 ## 쿼리 한 줄이 지나가는 경로
 
-`psql`에서 `SELECT * FROM users WHERE email = 'foo@bar.com';`을 엔터로 쳤을 때, 이 한 줄이 서버 내부에서 거쳐가는 경로를 따라가봅시다. 공식 문서의 [Query Path](https://www.postgresql.org/docs/18/query-path.html) 는 이 과정을 **connection → parser → rewrite → planner → executor** 5단계로 기술하는데, 여기에 클라이언트↔서버 네트워크 경계와 storage 경계까지 포함하면 아래와 같습니다.
+`psql`에서 `SELECT * FROM users WHERE email = 'foo@bar.com';`을 엔터로 쳤을 때, 이 한 줄이 서버 내부에서 거쳐가는 경로를 따라가봅시다. 공식 문서의 [Query Path](https://www.postgresql.org/docs/18/query-path.html) 항목은 이 과정을 **connection → parser → rewrite → planner → executor** 5단계로 기술하는데, 여기에 클라이언트↔서버 네트워크 경계와 storage 경계까지 포함하면 아래와 같습니다.
 
-```
-┌──────────┐
-│  client  │  psql, psycopg, pg, asyncpg, ...
-└────┬─────┘
-     │ ① libpq 프론트엔드/백엔드 프로토콜 (TCP 5432)
-     ▼
-┌──────────┐
-│postmaster│  ② accept() → fork() → backend 인계
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│ backend  │
-│          │  ③ parser       SQL 문자열 → parse tree → query tree
-│          │  ④ rewriter     view/rule 확장
-│          │  ⑤ planner      cost 기반으로 plan 선택
-│          │  ⑥ executor     plan 노드를 실행
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│  storage │  shared_buffers hit? → yes면 메모리에서
-│          │                     → no면 OS로부터 read
-└──────────┘
-```
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 480 734" style="width: 100%; height: auto; max-width: 480px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="SELECT 한 줄이 지나가는 경로. client에서 libpq 프로토콜로 postmaster에 닿고, postmaster가 fork한 backend 안에서 parser, rewriter, planner, executor 순으로 처리된 뒤 storage 경계에서 shared_buffers hit 또는 read로 갈리는 흐름">
+<style>
+.pao3-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+.pao3-head { font-size: 20px; fill: var(--text, #1c1917); font-weight: 600; }
+.pao3-name { font-size: 19px; fill: var(--text, #1c1917); }
+.pao3-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pao3-step { font-size: 19px; fill: var(--text, #1c1917); }
+.pao3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.pao3-outer { fill: var(--bg, #fafaf8); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.pao3-arrow { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
+.pao3-hit { fill: var(--text-success, #16a34a); }
+.pao3-read { fill: var(--accent, #d97706); }
+</style>
+<defs>
+<marker id="pao3Arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<!-- client -->
+<rect class="pao3-box" x="24" y="12" width="432" height="56" rx="8"/>
+<text class="pao3-mono pao3-head" x="44" y="38">client</text>
+<text class="pao3-desc" x="44" y="59">psql, psycopg, pg, asyncpg, ...</text>
+<!-- 화살표 1 -->
+<line class="pao3-arrow" x1="52" y1="68" x2="52" y2="142" marker-end="url(#pao3Arrow)"/>
+<text class="pao3-step" x="70" y="94">① libpq FE/BE 프로토콜</text>
+<text class="pao3-desc" x="70" y="116">TCP 5432 위의 메시지 교환</text>
+<!-- postmaster -->
+<rect class="pao3-box" x="24" y="150" width="432" height="56" rx="8"/>
+<text class="pao3-mono pao3-head" x="44" y="176">postmaster</text>
+<text class="pao3-desc" x="44" y="197">② accept() → fork() → backend 인계</text>
+<!-- 화살표 2 -->
+<line class="pao3-arrow" x1="52" y1="206" x2="52" y2="262" marker-end="url(#pao3Arrow)"/>
+<text class="pao3-desc" x="70" y="238">fork 이후의 쿼리는 이 backend가 전담</text>
+<!-- backend -->
+<rect class="pao3-outer" x="24" y="270" width="432" height="272" rx="8"/>
+<text class="pao3-mono pao3-head" x="44" y="296">backend</text>
+<rect class="pao3-box" x="40" y="310" width="400" height="52" rx="6"/>
+<text class="pao3-step" x="54" y="332">③ parser</text>
+<text class="pao3-desc" x="54" y="353">SQL 문자열 → parse tree → query tree</text>
+<rect class="pao3-box" x="40" y="366" width="400" height="52" rx="6"/>
+<text class="pao3-step" x="54" y="388">④ rewriter</text>
+<text class="pao3-desc" x="54" y="409">view와 rule을 펼쳐 넣음</text>
+<rect class="pao3-box" x="40" y="422" width="400" height="52" rx="6"/>
+<text class="pao3-step" x="54" y="444">⑤ planner</text>
+<text class="pao3-desc" x="54" y="465">통계와 cost로 실행 계획 선택</text>
+<rect class="pao3-box" x="40" y="478" width="400" height="52" rx="6"/>
+<text class="pao3-step" x="54" y="500">⑥ executor</text>
+<text class="pao3-desc" x="54" y="521">plan 노드를 위에서 끌어당기며 실행</text>
+<!-- 화살표 3 -->
+<line class="pao3-arrow" x1="52" y1="542" x2="52" y2="596" marker-end="url(#pao3Arrow)"/>
+<text class="pao3-desc" x="70" y="572">executor가 페이지를 요구</text>
+<!-- storage -->
+<rect class="pao3-box" x="24" y="604" width="432" height="116" rx="8"/>
+<text class="pao3-mono pao3-head" x="44" y="630">storage</text>
+<circle class="pao3-hit" cx="50" cy="650" r="6"/>
+<text class="pao3-desc" x="66" y="656">shared hit · shared_buffers 안에서 반환</text>
+<rect class="pao3-read" x="44" y="670" width="12" height="12" rx="2"/>
+<text class="pao3-desc" x="66" y="681">shared read · OS에 read() 호출</text>
+<text class="pao3-desc" x="44" y="708">read가 곧 디스크 I/O를 뜻하지는 않습니다</text>
+</svg>
+</div>
 
 ### ① libpq: 네트워크 경계
 
@@ -236,27 +393,28 @@ query tree에 view가 포함돼 있으면 rewriter가 view의 정의를 펼쳐�
 
 여기서 고른 plan이 `EXPLAIN`으로 출력되는 바로 그 트리입니다. 같은 SQL 한 줄이 테이블 크기·통계 상태·설정에 따라 전혀 다른 plan으로 번역될 수 있다는 점이 Postgres 튜닝의 거의 모든 출발점입니다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li>Parser와 rewriter는 "SQL 문자열을 내부 트리로 바꾸는" 앞단 작업으로, 대부분의 경우 병목이 아님</li>
-    <li>Planner가 <code>pg_statistic</code>의 통계와 cost 파라미터로 최적 plan을 선택</li>
-    <li>Executor는 그 plan 트리를 노드별 iterator 방식으로 실행하며 storage 경계를 넘나듦. <code>EXPLAIN (ANALYZE, BUFFERS)</code>의 <code>shared hit/read</code>로 측정 가능</li>
-  </ul>
-</div>
-
 ### ⑥ Executor: plan 트리를 실행
 
 executor는 planner가 준 plan 트리를 공식 문서가 "demand-pull pipeline"이라고 부르는 방식으로 실행합니다(업계에서는 Volcano/iterator 모델로 알려진 방식과 같습니다). 각 plan 노드(SeqScan, IndexScan, HashJoin 등)는 `ExecProcNode()`가 호출될 때마다 자식 노드에서 튜플 하나를 끌어올리고, 변환·필터·조인을 거쳐 최상단 노드까지 올립니다. 최상단 튜플이 바로 클라이언트에게 돌아갈 row입니다.
 
 executor가 실제로 데이터를 읽어야 할 때는 storage manager를 통해 shared_buffers를 먼저 들여다봅니다. 찾는 페이지가 이미 캐시되어 있으면 **buffer hit**, 없으면 `read()` 시스템 콜로 OS에게 요청하는 **buffer read**입니다. 이 `read`는 반드시 디스크 I/O를 뜻하지 않습니다. OS 페이지 캐시에서 응답이 오는 경우도 Postgres 입장에서는 똑같이 "read"로 집계됩니다. Postgres가 구분하는 건 "shared_buffers 안에서 찾았나, 아니면 OS에게 물어봤나"까지입니다.
 
+:::summary
+
+**쿼리 경로 요약**
+
+- Parser와 rewriter는 SQL 문자열을 내부 트리로 바꾸는 앞단 작업이고, 대부분의 경우 병목이 아닙니다.
+- Planner가 `pg_statistic`의 통계와 cost 파라미터로 plan을 고릅니다. 같은 SQL이 날마다 다른 속도를 보이는 원인 대부분이 여기에 있습니다.
+- Executor는 그 plan 트리를 노드별 iterator 방식으로 실행하며 storage 경계를 넘나듭니다. `EXPLAIN (ANALYZE, BUFFERS)`의 `shared hit/read`로 그 횟수를 셀 수 있습니다.
+
+:::
+
 ## 실험: 쿼리 한 줄의 족적 따라가기
 
 글로 설명한 경로를 실제 서버에서 눈으로 확인해봅시다. Docker 한 줄이면 됩니다.
 
 ```bash
-docker run --name pg-arch -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:17
+docker run --name pg-arch -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:18
 docker exec -it pg-arch psql -U postgres
 ```
 
@@ -356,7 +514,8 @@ PostgreSQL은 "프로세스 덩어리"로 돌아가는 DB이고, 그 덩어리�
 
 ## 참고자료
 
-- PostgreSQL 18 공식 문서: [Chapter 19. Server Administration / Chapter 20. Server Configuration](https://www.postgresql.org/docs/18/)
+- PostgreSQL 18 공식 문서: [Part III. Server Administration](https://www.postgresql.org/docs/18/admin.html), [Chapter 19. Server Configuration](https://www.postgresql.org/docs/18/runtime-config.html)
+- [`shared_buffers` / `io_method` / `effective_io_concurrency` (runtime-config-resource)](https://www.postgresql.org/docs/18/runtime-config-resource.html)
 - [`wal_buffers` 기본값 계산식 (runtime-config-wal)](https://www.postgresql.org/docs/18/runtime-config-wal.html)
 - [PG 15 Release Notes (shared memory 기반 cumulative statistics)](https://www.postgresql.org/docs/release/15.0/)
 - Hironobu Suzuki, *The Internals of PostgreSQL*, [Chapter 2: Process and Memory Architecture](https://www.interdb.jp/pg/pgsql02.html)
