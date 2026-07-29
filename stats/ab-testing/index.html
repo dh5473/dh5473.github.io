@@ -6,8 +6,8 @@
 <p>제품 개발에서 “느낌”으로 의사결정을 내리는 시대는 지났다. Google은 연간 10,000건 이상의 A/B 테스트를 실행하고, Netflix는 UI의 모든 변경 사항을 실험으로 검증한다. A/B 테스트는 <a href="/stats/hypothesis-testing/">가설검정</a>의 가장 실용적인 응용이며, 데이터 기반 의사결정의 핵심 도구다.</p>
 <p>이 글에서는 A/B 테스트를 올바르게 설계하고, 결과를 정확하게 분석하는 전 과정을 다룬다.</p>
 <hr>
-<h2>A/B 테스트의 구조</h2>
-<h3>대조군과 실험군</h3>
+<h2 id="ab-테스트의-구조">A/B 테스트의 구조</h2>
+<h3 id="대조군과-실험군">대조군과 실험군</h3>
 <p>A/B 테스트의 구조는 단순하다. 사용자를 두 그룹으로 나누어 서로 다른 경험을 제공하고, 결과를 비교한다.</p>
 <table>
 <thead>
@@ -40,23 +40,47 @@
 </tr>
 </tbody>
 </table>
-<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">사용자 풀 (N명)
-    │
-    ├─── 무작위 배정 ───┐
-    │                    │
-    ▼                    ▼
- 대조군 (A)          실험군 (B)
- 기존 UI              새 UI
-    │                    │
-    ▼                    ▼
- 지표 측정            지표 측정
- (전환율 p_A)        (전환율 p_B)
-    │                    │
-    └────── 비교 ────────┘
-              │
-         p_B - p_A 가
-        우연인가, 실재인가?</code></pre></div>
-<h3>무작위 배정이 핵심인 이유</h3>
+<div style="text-align: center; margin: 24px 0;">
+  <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" style="max-width: 720px; width: 100%; height: auto;" role="img" aria-label="A/B 테스트 구조">
+    <defs>
+      <marker id="arrow-ab" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/>
+      </marker>
+    </defs>
+    <!-- user pool -->
+    <rect x="280" y="16" width="160" height="40" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="360" y="41" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2937" font-family="sans-serif">사용자 풀 (N명)</text>
+    <!-- split -->
+    <line x1="320" y1="56" x2="210" y2="112" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <line x1="400" y1="56" x2="510" y2="112" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <text x="360" y="92" text-anchor="middle" font-size="12.5" fill="#6b7280" font-family="sans-serif">무작위 배정</text>
+    <!-- control -->
+    <rect x="120" y="116" width="170" height="56" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="205" y="139" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">대조군 (A)</text>
+    <text x="205" y="159" text-anchor="middle" font-size="12.5" fill="#4b5563" font-family="sans-serif">기존 UI</text>
+    <!-- treatment -->
+    <rect x="430" y="116" width="170" height="56" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="515" y="139" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">실험군 (B)</text>
+    <text x="515" y="159" text-anchor="middle" font-size="12.5" fill="#4b5563" font-family="sans-serif">새 UI</text>
+    <!-- measure -->
+    <line x1="205" y1="172" x2="205" y2="212" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <line x1="515" y1="172" x2="515" y2="212" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <rect x="120" y="216" width="170" height="56" rx="8" fill="#f9fafb" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="205" y="239" text-anchor="middle" font-size="13" fill="#1f2937" font-family="sans-serif">지표 측정</text>
+    <text x="205" y="259" text-anchor="middle" font-size="12.5" fill="#4b5563" font-family="sans-serif">전환율 p_A</text>
+    <rect x="430" y="216" width="170" height="56" rx="8" fill="#f9fafb" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="515" y="239" text-anchor="middle" font-size="13" fill="#1f2937" font-family="sans-serif">지표 측정</text>
+    <text x="515" y="259" text-anchor="middle" font-size="12.5" fill="#4b5563" font-family="sans-serif">전환율 p_B</text>
+    <!-- converge -->
+    <line x1="205" y1="272" x2="320" y2="328" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <line x1="515" y1="272" x2="400" y2="328" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-ab)"/>
+    <rect x="220" y="332" width="280" height="52" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="360" y="354" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#92400e" font-family="sans-serif">비교: p_B - p_A</text>
+    <text x="360" y="373" text-anchor="middle" font-size="12.5" fill="#92400e" font-family="sans-serif">우연인가, 실재하는 차이인가?</text>
+  </svg>
+</div>
+<p align="center" style="color: #888; font-size: 13px;"><em>A/B 테스트의 기본 구조. 무작위 배정으로 나눈 두 그룹의 지표를 비교한다.</em></p>
+<h3 id="무작위-배정이-핵심인-이유">무작위 배정이 핵심인 이유</h3>
 <p>A/B 테스트가 단순한 전후 비교와 근본적으로 다른 이유는 <strong>무작위 배정(Randomization)</strong> 때문이다. 무작위 배정은 관측되지 않는 교란 변수(Confounding Variable)의 영향을 두 그룹 사이에 균등하게 분배한다. 이로써 그룹 간 지표 차이를 <strong>처리 효과</strong>(Treatment Effect)로 귀인할 수 있게 되는 것이다.</p>
 <p>예를 들어 “주말에 새 UI를 출시하고 전환율이 올랐다”는 분석에서, 전환율 상승이 새 UI 때문인지 주말 효과 때문인지 구분할 수 없다. 무작위 배정은 이런 혼동을 원천적으로 차단한다.</p>
 <div class="callout callout-info">
@@ -64,20 +88,45 @@
 <p>한 사용자가 A와 B를 동시에 경험할 수는 없다. 이를 <strong>인과 추론의 근본 문제</strong>(Fundamental Problem of Causal Inference)라고 한다. 무작위 배정은 이 문제를 집단 수준에서 해결한다 — 두 그룹의 잠재 결과(Potential Outcome) 분포가 동일해지므로, 관측된 차이를 처리 효과로 해석할 수 있다.</p>
 </div>
 <hr>
-<h2>실험 설계 5단계</h2>
+<h2 id="실험-설계-5단계">실험 설계 5단계</h2>
 <p>A/B 테스트에서 분석은 쉽다. 어려운 것은 설계다. 잘못 설계된 실험은 아무리 정교하게 분석해도 올바른 결론을 내릴 수 없다. 실험 설계는 다음 5단계를 거친다.</p>
-<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ 1. 가설  │──▶│ 2. 지표  │──▶│ 3. 표본  │──▶│ 4. 배정  │──▶│ 5. 기간  │
-│   수립   │   │   선정   │   │ 크기 결정│   │   방법   │   │   결정   │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘</code></pre></div>
-<h3>1단계: 가설 수립</h3>
+<div style="text-align: center; margin: 24px 0;">
+  <svg viewBox="0 0 720 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 720px; width: 100%; height: auto;" role="img" aria-label="실험 설계 5단계">
+    <defs>
+      <marker id="arrow-steps" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/>
+      </marker>
+    </defs>
+    <rect x="10" y="14" width="118" height="52" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="69" y="36" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">1. 가설</text>
+    <text x="69" y="54" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">수립</text>
+    <line x1="128" y1="40" x2="152" y2="40" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-steps)"/>
+    <rect x="156" y="14" width="118" height="52" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="215" y="36" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">2. 지표</text>
+    <text x="215" y="54" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">선정</text>
+    <line x1="274" y1="40" x2="298" y2="40" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-steps)"/>
+    <rect x="302" y="14" width="118" height="52" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="361" y="36" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">3. 표본 크기</text>
+    <text x="361" y="54" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">결정</text>
+    <line x1="420" y1="40" x2="444" y2="40" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-steps)"/>
+    <rect x="448" y="14" width="118" height="52" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="507" y="36" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">4. 배정</text>
+    <text x="507" y="54" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">방법</text>
+    <line x1="566" y1="40" x2="590" y2="40" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-steps)"/>
+    <rect x="594" y="14" width="118" height="52" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="653" y="36" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">5. 기간</text>
+    <text x="653" y="54" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">결정</text>
+  </svg>
+</div>
+<p align="center" style="color: #888; font-size: 13px;"><em>A/B 테스트 실험 설계 5단계</em></p>
+<h3 id="1단계-가설-수립">1단계: 가설 수립</h3>
 <p>“새 UI가 더 좋을 것 같다”는 가설이 아니다. <a href="/stats/hypothesis-testing/">가설검정</a>에서 배운 대로, 통계적으로 검증 가능한 형태로 수립해야 한다.</p>
 <ul>
 <li><strong><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">H_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></strong>: 새 UI의 전환율은 기존 UI와 같다 (<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>B</mi></msub><mo>=</mo><msub><mi>p</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">p_B = p_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>)</li>
 <li><strong><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">H_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></strong>: 새 UI의 전환율은 기존 UI보다 높다 (<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>B</mi></msub><mo>></mo><msub><mi>p</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">p_B > p_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7335em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>)</li>
 </ul>
 <p>단측 검정(One-sided)과 양측 검정(Two-sided)의 선택은 사전에 결정해야 한다. “일단 양측으로 돌려보고, 유의하면 단측으로 바꿔 보겠다”는 p-hacking의 전형적인 패턴이다.</p>
-<h3>2단계: 지표 선정</h3>
+<h3 id="2단계-지표-선정">2단계: 지표 선정</h3>
 <p>A/B 테스트의 지표는 세 종류로 나뉜다.</p>
 <table>
 <thead>
@@ -106,7 +155,7 @@
 </tbody>
 </table>
 <p>1차 지표가 여러 개면 다중 비교 문제(Multiple Comparisons Problem)가 발생한다. 유의수준 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">\alpha = 0.05</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.05</span></span></span></span></span>로 10개 지표를 검정하면, 하나 이상 거짓 양성(False Positive)이 나올 확률이 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mn>0.05</mn><msup><mo stretchy="false">)</mo><mn>10</mn></msup><mo>≈</mo><mn>0.40</mn></mrow><annotation encoding="application/x-tex">1 - (1 - 0.05)^{10} \approx 0.40</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">0.05</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.40</span></span></span></span></span>이다. 1차 지표는 반드시 하나만 정해야 한다.</p>
-<h3>3단계: 표본 크기 결정 (검정력 분석)</h3>
+<h3 id="3단계-표본-크기-결정-검정력-분석">3단계: 표본 크기 결정 (검정력 분석)</h3>
 <p>이 단계가 가장 중요하다. 표본이 부족하면 실제로 효과가 있어도 감지하지 못한다. 표본 크기 결정에 필요한 네 가지 파라미터는 다음과 같다.</p>
 <table>
 <thead>
@@ -144,17 +193,17 @@
 </tr>
 </tbody>
 </table>
-<h3>4단계: 무작위 배정</h3>
+<h3 id="4단계-무작위-배정">4단계: 무작위 배정</h3>
 <p>실무에서 가장 흔한 방식은 사용자 ID의 해시값을 기반으로 배정하는 것이다. 세션 기반 배정은 같은 사용자가 A와 B를 번갈아 경험할 수 있어 위험하다.</p>
-<h3>5단계: 실험 기간 결정</h3>
+<h3 id="5단계-실험-기간-결정">5단계: 실험 기간 결정</h3>
 <p>표본 크기를 일일 트래픽으로 나누면 최소 실험 기간이 나온다. 단, 요일 효과를 보정하기 위해 최소 1~2주(한 주기 이상)는 실행해야 한다.</p>
 <hr>
-<h2>표본 크기와 검정력</h2>
-<h3>비율 검정의 표본 크기 공식</h3>
+<h2 id="표본-크기와-검정력">표본 크기와 검정력</h2>
+<h3 id="비율-검정의-표본-크기-공식">비율 검정의 표본 크기 공식</h3>
 <p>전환율 비교(비율 검정)에서 양측 검정의 그룹당 필요 표본 수는 다음과 같다.</p>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><msup><mrow><mo fence="true">(</mo><mfrac><mrow><msub><mi>z</mi><mrow><mi>α</mi><mi mathvariant="normal">/</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>z</mi><mi>β</mi></msub></mrow><mi>δ</mi></mfrac><mo fence="true">)</mo></mrow><mn>2</mn></msup><mo>⋅</mo><mrow><mo fence="true">[</mo><mover accent="true"><mi>p</mi><mo>ˉ</mo></mover><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mover accent="true"><mi>p</mi><mo>ˉ</mo></mover><mo stretchy="false">)</mo><mo>⋅</mo><mn>2</mn><mo fence="true">]</mo></mrow></mrow><annotation encoding="application/x-tex">n = \left(\frac{z_{\alpha/2} + z_{\beta}}{\delta}\right)^2 \cdot \left[\bar{p}(1 - \bar{p}) \cdot 2\right]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.004em;vertical-align:-0.65em;"></span><span class="minner"><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size2">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.977em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03785em;">δ</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.5686em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3448em;margin-left:-0.044em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5357em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="mord mtight">/2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3695em;"><span></span></span></span></span></span></span><span class="mbin mtight">+</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3488em;margin-left:-0.044em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05278em;">β</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2901em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size2">)</span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.354em;"><span style="top:-3.6029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">[</span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2</span><span class="mclose delimcenter" style="top:0em;">]</span></span></span></span></span></span></p>
 <p>여기서 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>p</mi><mo>ˉ</mo></mover><mo>=</mo><mo stretchy="false">(</mo><msub><mi>p</mi><mi>A</mi></msub><mo>+</mo><msub><mi>p</mi><mi>B</mi></msub><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\bar{p} = (p_A + p_B) / 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7622em;vertical-align:-0.1944em;"></span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">/2</span></span></span></span></span>는 통합 비율, <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mo>=</mo><msub><mi>p</mi><mi>B</mi></msub><mo>−</mo><msub><mi>p</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">\delta = p_B - p_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>는 MDE다. 이 공식은 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">H_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>과 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">H_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> 하의 분산을 동일하게 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>p</mi><mo>ˉ</mo></mover><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mover accent="true"><mi>p</mi><mo>ˉ</mo></mover><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\bar{p}(1-\bar{p})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span>로 놓은 <strong>근사 공식</strong>이다. MDE가 작을 때는 정밀 공식과 거의 차이가 없어 실무에서 널리 사용된다.</p>
-<h3>Python으로 검정력 분석</h3>
+<h3 id="python으로-검정력-분석">Python으로 검정력 분석</h3>
 <p><code class="language-text">statsmodels</code>의 검정력 분석 모듈을 사용하면 간단하다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> statsmodels<span class="token punctuation">.</span>stats<span class="token punctuation">.</span>proportion <span class="token keyword">import</span> proportion_effectsize
@@ -182,7 +231,7 @@ n_per_group <span class="token operator">=</span> power_analysis<span class="tok
 <span class="token comment"># 그룹당 필요 표본 수: 3835</span>
 <span class="token comment"># 총 필요 표본 수: 7669</span></code></pre></div>
 <p>전환율 10%에서 2%p 상승을 감지하려면 그룹당 약 3,800명이 필요하다. MDE가 작을수록 필요 표본 수는 급격히 증가한다.</p>
-<h3>MDE에 따른 표본 크기 변화</h3>
+<h3 id="mde에-따른-표본-크기-변화">MDE에 따른 표본 크기 변화</h3>
 <p>MDE를 바꿔가며 필요 표본 수의 변화를 확인해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> statsmodels<span class="token punctuation">.</span>stats<span class="token punctuation">.</span>proportion <span class="token keyword">import</span> proportion_effectsize
@@ -214,9 +263,9 @@ power_analysis <span class="token operator">=</span> NormalIndPower<span class="
 <p>MDE를 0.1%p로 설정하면 수십만 명이 필요하고, 5%p로 설정하면 수백 명이면 된다. 핵심은 “어느 정도의 변화가 실제로 비즈니스에 의미 있는가?”를 먼저 정의하는 것이다. 이는 통계가 아니라 비즈니스 맥락에서 답해야 할 질문이다.</p>
 </div>
 <hr>
-<h2>결과 분석: 비율 검정</h2>
+<h2 id="결과-분석-비율-검정">결과 분석: 비율 검정</h2>
 <p>전환율, 클릭률 등 이진(Binary) 지표의 A/B 테스트는 <strong>비율 검정</strong>(Proportion Test)으로 분석한다.</p>
-<h3>두 비율의 z-검정</h3>
+<h3 id="두-비율의-z-검정">두 비율의 z-검정</h3>
 <p>A/B 테스트에서 가장 기본적인 분석이다. 대조군과 실험군의 전환율 차이가 통계적으로 유의한지 검정한다.</p>
 <p>검정 통계량은 다음과 같다.</p>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><mfrac><mrow><msub><mover accent="true"><mi>p</mi><mo>^</mo></mover><mi>B</mi></msub><mo>−</mo><msub><mover accent="true"><mi>p</mi><mo>^</mo></mover><mi>A</mi></msub></mrow><msqrt><mrow><mover accent="true"><mi>p</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mover accent="true"><mi>p</mi><mo>^</mo></mover><mo stretchy="false">)</mo><mrow><mo fence="true">(</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>A</mi></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>B</mi></msub></mfrac><mo fence="true">)</mo></mrow></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">Z = \frac{\hat{p}_B - \hat{p}_A}{\sqrt{\hat{p}(1 - \hat{p})\left(\frac{1}{n_A} + \frac{1}{n_B}\right)}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">Z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.5618em;vertical-align:-1.6296em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9322em;"><span style="top:-2.19em;"><span class="pstrut" style="height:3.1446em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord sqrt mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6351em;"><span class="svg-align" style="top:-4.5714em;"><span class="pstrut" style="height:4.5714em;"></span><span class="mord mtight" style="padding-left:1.4286em;"><span class="mord accent mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">p</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord mtight">^</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mopen mtight">(</span><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord accent mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">p</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord mtight">^</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose mtight">)</span><span class="minner mtight"><span class="mopen sizing reset-size3 size6 mtight delimcenter" style="top:0.075em;"><span class="delimsizing size1 mtight"><span class="mtight">(</span></span></span><span class="mord mtight"><span class="mopen nulldelimiter sizing reset-size3 size6"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8443em;"><span style="top:-2.656em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3448em;margin-left:0em;margin-right:0.1em;"><span class="pstrut" style="height:2.6833em;"></span><span class="mord mathnormal mtight">A</span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3385em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.2255em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line mtight" style="border-bottom-width:0.049em;"></span></span><span style="top:-3.384em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.5858em;"><span></span></span></span></span></span><span class="mclose nulldelimiter sizing reset-size3 size6"></span></span><span class="mbin mtight">+</span><span class="mord mtight"><span class="mopen nulldelimiter sizing reset-size3 size6"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8443em;"><span style="top:-2.656em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3448em;margin-left:0em;margin-right:0.1em;"><span class="pstrut" style="height:2.6833em;"></span><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3385em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.2255em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line mtight" style="border-bottom-width:0.049em;"></span></span><span style="top:-3.384em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.5858em;"><span></span></span></span></span></span><span class="mclose nulldelimiter sizing reset-size3 size6"></span></span><span class="mclose sizing reset-size3 size6 mtight delimcenter" style="top:0.075em;"><span class="delimsizing size1 mtight"><span class="mtight">)</span></span></span></span></span></span><span style="top:-3.6071em;"><span class="pstrut" style="height:4.5714em;"></span><span class="hide-tail mtight" style="min-width:1.02em;height:2.6857em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="2.6857em" viewBox="0 0 400000 1944" preserveAspectRatio="xMinYMin slice"><path d="M983 90
@@ -274,9 +323,9 @@ ci_diff <span class="token operator">=</span> <span class="token punctuation">(<
 <span class="token comment"># 전환율 차이: 0.0225 (2.25%p)</span>
 <span class="token comment"># 차이의 95% CI: [0.0089, 0.0361]</span></code></pre></div>
 <p>p-value가 0.05보다 작으므로 귀무가설을 기각한다. 전환율 차이의 95% 신뢰구간이 0을 포함하지 않으므로, <a href="/stats/confidence-intervals/">신뢰구간</a>의 관점에서도 동일한 결론이다.</p>
-<h3>Wilson 신뢰구간을 쓰는 이유</h3>
+<h3 id="wilson-신뢰구간을-쓰는-이유">Wilson 신뢰구간을 쓰는 이유</h3>
 <p>비율의 신뢰구간에는 Wald, Wilson, Clopper-Pearson 등 여러 방법이 있다. <strong>Wilson 신뢰구간</strong>은 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mover accent="true"><mi>p</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">n\hat{p}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">n</span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">p</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">^</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span></span></span></span></span>가 작을 때도 포함 확률(Coverage Probability)이 명목 수준에 가까워 실무에서 권장된다. Wald 구간은 표본이 작거나 비율이 0이나 1에 가까울 때 포함 확률이 급격히 떨어진다.</p>
-<h3>통계적 유의성 vs 실질적 유의성</h3>
+<h3 id="통계적-유의성-vs-실질적-유의성">통계적 유의성 vs 실질적 유의성</h3>
 <p>p-value가 작다고 비즈니스적으로 의미 있는 것은 아니다. 표본이 수백만이면 0.01%p 차이도 통계적으로 유의할 수 있다. 반드시 <strong>효과 크기</strong>(Effect Size)를 함께 보고해야 한다.</p>
 <table>
 <thead>
@@ -301,9 +350,9 @@ ci_diff <span class="token operator">=</span> <span class="token punctuation">(<
 </table>
 <p>“전환율이 통계적으로 유의하게 0.02%p 상승했다”는 보고서는 의미가 없다. 상대적 효과 크기(<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>Lift</mtext><mo>=</mo><mi mathvariant="normal">Δ</mi><mi>p</mi><mi mathvariant="normal">/</mi><msub><mi>p</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">\text{Lift} = \Delta p / p_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Lift</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">Δ</span><span class="mord mathnormal">p</span><span class="mord">/</span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>)와 비즈니스 임팩트를 함께 제시해야 의사결정에 쓸 수 있다.</p>
 <hr>
-<h2>연속형 지표 분석</h2>
+<h2 id="연속형-지표-분석">연속형 지표 분석</h2>
 <p>전환율 같은 이진 지표가 아닌, 평균 매출(ARPU), 체류 시간 같은 연속형 지표는 t-검정과 부트스트랩으로 분석한다.</p>
-<h3>Welch t-검정</h3>
+<h3 id="welch-t-검정">Welch t-검정</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> scipy <span class="token keyword">import</span> stats
 
@@ -335,7 +384,7 @@ ci <span class="token operator">=</span> <span class="token punctuation">(</span
 <span class="token comment"># 평균 매출 차이: $0.48</span>
 <span class="token comment"># 차이의 95% CI: [$-2.48, $3.44]</span></code></pre></div>
 <p>p-value가 0.05보다 크고, 신뢰구간이 0을 포함한다. 매출 차이가 통계적으로 유의하지 않다는 뜻이다. 매출 데이터는 분산이 크기 때문에(오른쪽으로 긴 꼬리), 같은 효과 크기를 감지하려면 전환율보다 훨씬 많은 표본이 필요하다.</p>
-<h3>부트스트랩 신뢰구간</h3>
+<h3 id="부트스트랩-신뢰구간">부트스트랩 신뢰구간</h3>
 <p>매출 데이터는 정규 분포가 아니므로, <a href="/stats/bootstrap/">부트스트랩</a>이 더 강건한 대안이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -371,8 +420,8 @@ boot_p <span class="token operator">=</span> np<span class="token punctuation">.
 <p>매출 같은 분산이 큰 지표를 1차 지표로 쓰면 필요 표본 수가 폭증한다. 실무에서는 전환율(이진)을 1차 지표로, 매출(연속)을 2차 지표로 설정하는 것이 일반적이다. 분산 축소 기법(CUPED, 로그 변환, 아웃라이어 캐핑)을 활용하면 필요 표본 수를 줄일 수 있다.</p>
 </div>
 <hr>
-<h2>조기 종료의 함정: Peeking Problem</h2>
-<h3>왜 중간에 결과를 보면 안 되는가</h3>
+<h2 id="조기-종료의-함정-peeking-problem">조기 종료의 함정: Peeking Problem</h2>
+<h3 id="왜-중간에-결과를-보면-안-되는가">왜 중간에 결과를 보면 안 되는가</h3>
 <p>실험 도중 p-value를 확인하고 유의하면 일찍 종료하는 것 — 매우 자연스러운 행동이지만 통계적으로 심각한 오류를 낳는다. 이를 <strong>피킹 문제(Peeking Problem)</strong> 또는 <strong>선택적 종료</strong>(Optional Stopping)라고 한다.</p>
 <p>핵심 원리는 이렇다. 효과가 전혀 없어도(<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">H_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>이 참), 충분히 오래 반복 확인하면 <strong>언젠가는</strong> p-value &#x3C; 0.05인 시점이 나타난다. 이것은 <a href="/stats/probability-fundamentals/">확률론</a>의 필연적 결과다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
@@ -419,7 +468,7 @@ data_B <span class="token operator">=</span> <span class="token punctuation">[</
 <span class="token keyword">else</span><span class="token punctuation">:</span>
     <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n=> 50일 동안 거짓 양성이 나타나지 않았다."</span></span><span class="token punctuation">)</span></code></pre></div>
 <p>이 시뮬레이션에서 두 그룹의 전환율은 동일(10%)하다. 효과가 없는데도 반복 확인하면 거짓 양성이 등장할 수 있다. 매일 확인하면 50일 기준으로 거짓 양성 확률이 5%보다 훨씬 높아진다.</p>
-<h3>거짓 양성률의 누적</h3>
+<h3 id="거짓-양성률의-누적">거짓 양성률의 누적</h3>
 <p>반복 확인 시 실제 1종 오류율을 시뮬레이션으로 확인해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> scipy <span class="token keyword">import</span> stats
@@ -478,7 +527,7 @@ fpr_peeking <span class="token operator">=</span> false_positive_peeking <span c
 <span class="token comment"># 매주 4회 확인   — 거짓 양성률: 0.1242 (12.4%)</span>
 <span class="token comment"># 거짓 양성률 증가 배수: 2.8x</span></code></pre></div>
 <p>4번만 중간 확인해도 거짓 양성률이 약 3배로 뛴다. 매일 확인하면 이 수치는 더 올라간다. “유의하면 멈추겠다”는 전략은 유의수준 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span></span>를 무력화시킨다.</p>
-<h3>순차 검정: 올바른 조기 종료</h3>
+<h3 id="순차-검정-올바른-조기-종료">순차 검정: 올바른 조기 종료</h3>
 <p>그렇다면 중간 점검은 원천적으로 불가능한가? 그렇지 않다. <strong>순차 검정</strong>(Sequential Testing)은 다중 확인을 고려하여 유의 수준을 조정하는 방법이다.</p>
 <p>대표적인 방법이 <strong>O’Brien-Fleming</strong> 경계다. 초기에는 매우 엄격한 기준을 적용하고, 실험 후반부로 갈수록 일반적인 수준에 가까워진다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
@@ -515,7 +564,7 @@ z_alpha <span class="token operator">=</span> stats<span class="token punctuatio
 <p>순차 검정은 공짜가 아니다. 중간 분석 횟수가 늘어날수록 최종 분석의 임계값이 높아지거나 필요 표본 수가 증가한다 (보통 2~5%). 하지만 명확한 효과가 있을 때 일찍 종료할 수 있으므로, 기대 표본 크기는 오히려 줄어드는 경우가 많다.</p>
 </div>
 <hr>
-<h2>실전 체크리스트</h2>
+<h2 id="실전-체크리스트">실전 체크리스트</h2>
 <p>A/B 테스트의 전 과정을 체크리스트로 정리한다. 실험 전/중/후 각 단계에서 놓치기 쉬운 항목을 담았다.</p>
 <table>
 <thead>
@@ -599,25 +648,25 @@ z_alpha <span class="token operator">=</span> stats<span class="token punctuatio
 </tbody>
 </table>
 <hr>
-<h2>흔한 실수와 함정</h2>
-<h3>1. 표본 크기 부족</h3>
+<h2 id="흔한-실수와-함정">흔한 실수와 함정</h2>
+<h3 id="1-표본-크기-부족">1. 표본 크기 부족</h3>
 <p>검정력 분석 없이 “일주일 정도면 되겠지”로 실험하는 경우. 표본이 부족하면 실제 효과가 있어도 감지하지 못한다(2종 오류). 효과가 없다는 결론이 아니라, <strong>판단을 내릴 수 없는 상태</strong>인 것이다.</p>
-<h3>2. Peeking (선택적 종료)</h3>
+<h3 id="2-peeking-선택적-종료">2. Peeking (선택적 종료)</h3>
 <p>위에서 자세히 다뤘다. “매일 대시보드 확인”이 얼마나 위험한지, 그리고 순차 검정이라는 대안이 있다는 것을 기억하자.</p>
-<h3>3. 세그먼트 남용 (Texas Sharpshooter Fallacy)</h3>
+<h3 id="3-세그먼트-남용-texas-sharpshooter-fallacy">3. 세그먼트 남용 (Texas Sharpshooter Fallacy)</h3>
 <p>전체 결과가 유의하지 않으면 하위 그룹을 쪼개서 유의한 세그먼트를 찾는 행위. 이는 <strong>텍사스 명사수 오류</strong> — 벽에 먼저 총을 쏘고 나서 구멍 주위에 과녁을 그리는 것과 같다. 20개 세그먼트를 검정하면 하나쯤은 우연히 유의하게 나온다. 사후 세그먼트 분석은 가설 생성 목적으로만 사용하고, Bonferroni 보정을 적용해야 한다.</p>
-<h3>4. 노벨티 효과 무시</h3>
+<h3 id="4-노벨티-효과-무시">4. 노벨티 효과 무시</h3>
 <p>새 UI에 대한 호기심으로 초기에 참여도가 높아지는 현상. 시간이 지나면 원래 수준으로 돌아간다. 이를 무시하고 초기 결과만 보면 효과를 과대추정한다. 실험 초반 1~2주 데이터를 제외하거나, 시간 경과에 따른 효과 추이를 확인해야 한다.</p>
-<h3>5. 네트워크 효과 무시</h3>
+<h3 id="5-네트워크-효과-무시">5. 네트워크 효과 무시</h3>
 <p>소셜 네트워크 서비스에서 A 그룹 사용자의 행동이 B 그룹 사용자에게 영향을 미치는 경우. 이러면 SUTVA(Stable Unit Treatment Value Assumption)가 위반되어 처리 효과 추정이 편향된다. 클러스터 무작위 배정(Cluster Randomization)이 대안이다.</p>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>A/B 테스트는 인과 추론을 실무에 적용하는 가장 강력한 도구다. 그 핵심은 무작위 배정에 있으며, 통계적 분석은 <a href="/stats/hypothesis-testing/">가설검정</a>, <a href="/stats/confidence-intervals/">신뢰구간</a>, <a href="/stats/bootstrap/">부트스트랩</a>의 직접적인 응용이다.</p>
 <p>그러나 A/B 테스트도 만능이 아니다. 표본 크기 부족, Peeking, 세그먼트 남용, 노벨티 효과 — 이런 함정에 빠지면 오히려 데이터 없이 직감으로 결정하는 것보다 더 위험해진다. “데이터에 기반했다”는 확신이 잘못된 결정을 정당화하기 때문이다.</p>
 <p><a href="/stats/point-estimation/">효과 크기의 추정</a>은 결국 점추정의 문제이고, A/B 테스트 결과에 <a href="/stats/bootstrap/">부트스트랩 CI</a>를 씌우면 분포 가정 없이도 불확실성을 정량화할 수 있다. 통계의 도구들이 하나의 실험 프레임워크 안에서 유기적으로 연결되는 것이다.</p>
 <p><a href="/stats/statistical-pitfalls/">다음 글</a>에서는 A/B 테스트를 포함해 통계적 분석 전반에서 빠지기 쉬운 함정들을 다룬다. 심슨의 역설, 다중 비교 문제, 생존자 편향 — 통계를 잘못 쓰면 오히려 더 위험한 이유를 파헤친다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li>Kohavi, R., Tang, D., &#x26; Xu, Y. (2020). <em>Trustworthy Online Controlled Experiments: A Practical Guide to A/B Testing</em>. Cambridge University Press.</li>
 <li>Deng, A., et al. (2013). “Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data.” <em>WSDM 2013</em>.</li>
@@ -646,6 +695,6 @@ z_alpha <span class="token operator">=</span> stats<span class="token punctuatio
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

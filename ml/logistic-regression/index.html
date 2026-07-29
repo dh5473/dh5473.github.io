@@ -8,7 +8,7 @@
 “이 고객이 이탈할 것인가, 아닌가?”</p>
 <p>Yes 또는 No. 0 또는 1. 이런 문제를 <strong>분류(Classification)</strong> 라고 한다. 그리고 이 분류 문제를 푸는 가장 기본적인 모델이 <strong>로지스틱 회귀(Logistic Regression)</strong> 다. 직감적으로 “선형 회귀를 살짝 변형하면 되지 않을까?”라는 생각이 드는데 — 실제로 그 직감이 맞다. 다만, <strong>어디를 어떻게 변형하는지</strong>가 핵심이다.</p>
 <hr>
-<h2>왜 선형 회귀로는 분류할 수 없을까?</h2>
+<h2 id="왜-선형-회귀로는-분류할-수-없을까">왜 선형 회귀로는 분류할 수 없을까?</h2>
 <p>가장 먼저 떠오르는 아이디어: 선형 회귀의 출력이 0.5 이상이면 1, 미만이면 0으로 분류하면 되지 않을까?</p>
 <p>간단한 예로 확인해보자. 공부 시간(x)에 따른 합격 여부(y = 0 또는 1) 데이터가 있다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
@@ -87,7 +87,7 @@ model2<span class="token punctuation">.</span>fit<span class="token punctuation"
 </ol>
 <p>분류에는 “출력을 0과 1 사이로 가두는” 새로운 장치가 필요하다.</p>
 <hr>
-<h2>시그모이드 함수: 실수를 확률로 바꾸는 장치</h2>
+<h2 id="시그모이드-함수-실수를-확률로-바꾸는-장치">시그모이드 함수: 실수를 확률로 바꾸는 장치</h2>
 <p><strong>시그모이드 함수(Sigmoid Function)</strong> 는 실수 전체를 (0, 1) 범위로 매핑하는 함수다.</p>
 <blockquote>
 <p><strong>σ(z) = 1 / (1 + e⁻ᶻ)</strong></p>
@@ -166,7 +166,7 @@ model2<span class="token punctuation">.</span>fit<span class="token punctuation"
 </tbody>
 </table>
 <p>z가 0에서 멀어질수록 출력이 0 또는 1에 빠르게 수렴한다. “확신이 강할수록 극단에 가까워지는” 직관적인 형태다.</p>
-<h3>“Logistic”이라는 이름의 유래</h3>
+<h3 id="logistic이라는-이름의-유래">“Logistic”이라는 이름의 유래</h3>
 <p>시그모이드가 왜 분류에 자연스러운 선택인지, odds와 logit의 관계에서 이해할 수 있다.</p>
 <p>어떤 사건이 일어날 확률이 p라면, <strong>승산(Odds)</strong> 은 “일어날 확률 / 일어나지 않을 확률”이다.</p>
 <blockquote>
@@ -187,7 +187,7 @@ model2<span class="token punctuation">.</span>fit<span class="token punctuation"
   σ'(z) = σ(z) × (1 − σ(z)). 미분 결과가 자기 자신으로 표현된다. 이 성질 덕분에 경사하강법 계산이 깔끔해진다. 뒤에서 직접 확인한다.
 </div>
 <hr>
-<h2>로지스틱 회귀 모델</h2>
+<h2 id="로지스틱-회귀-모델">로지스틱 회귀 모델</h2>
 <p><a href="/ml/linear-regression/">선형 회귀</a>의 가설 함수 h(x) = wx + b에 시그모이드를 씌우면, 로지스틱 회귀가 된다.</p>
 <blockquote>
 <p><strong>h(x) = σ(wx + b) = 1 / (1 + e⁻⁽ʷˣ⁺ᵇ⁾)</strong></p>
@@ -206,14 +206,14 @@ h(x) &lt; 0.5 → 클래스 0으로 예측</code></pre></div>
   차이는 <strong>시그모이드 하나</strong>뿐이다. 나머지 학습 프레임워크(비용 함수 → 경사하강법)는 동일한 구조를 따른다.
 </div>
 <hr>
-<h2>비용 함수: Binary Cross-Entropy</h2>
-<h3>MSE를 쓰면 안 되는 이유</h3>
+<h2 id="비용-함수-binary-cross-entropy">비용 함수: Binary Cross-Entropy</h2>
+<h3 id="mse를-쓰면-안-되는-이유">MSE를 쓰면 안 되는 이유</h3>
 <p><a href="/ml/cost-function/">비용 함수 글</a>에서 배운 MSE를 그대로 쓰면 안 될까?</p>
 <blockquote>
 <p><strong>J(w, b) = (1/m) × Σᵢ(h(xᵢ) − yᵢ)²</strong></p>
 </blockquote>
 <p>문제는 h(x)가 시그모이드라서 <strong>J(w, b)가 non-convex</strong>가 된다는 것이다. 볼록하지 않은 곡면에는 지역 최솟값(local minimum)이 여러 개 존재하고, <a href="/ml/gradient-descent/">경사하강법</a>이 전역 최솟값을 찾는다는 보장이 사라진다.</p>
-<h3>Log Loss</h3>
+<h3 id="log-loss">Log Loss</h3>
 <p>로지스틱 회귀에서는 <strong>Binary Cross-Entropy</strong>(또는 Log Loss)를 사용한다.</p>
 <blockquote>
 <p><strong>J(w, b) = −(1/m) × Σᵢ [yᵢ × log(h(xᵢ)) + (1 − yᵢ) × log(1 − h(xᵢ))]</strong></p>
@@ -329,7 +329,7 @@ h(x) &lt; 0.5 → 클래스 0으로 예측</code></pre></div>
   Cross-Entropy는 원래 정보이론에서 "두 확률분포의 차이"를 측정하는 개념이다. 여기서 두 분포는 실제 레이블의 분포(y)와 모델이 예측한 분포(h(x))다. 이 둘의 차이를 최소화하는 것이 곧 모델을 학습시키는 것이다.
 </div>
 <hr>
-<h2>경사하강법으로 학습</h2>
+<h2 id="경사하강법으로-학습">경사하강법으로 학습</h2>
 <p>비용 함수 J(w, b)를 w와 b에 대해 편미분하면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">∂J/∂w = (1/m) × Σᵢ(h(xᵢ) − yᵢ) × xᵢ
 ∂J/∂b = (1/m) × Σᵢ(h(xᵢ) − yᵢ)</code></pre></div>
@@ -438,7 +438,7 @@ predictions <span class="token operator">=</span> <span class="token punctuation
     </span></p>
 <p>비용이 매 반복마다 감소하면서 수렴하는 모습 — 경사하강법이 정상적으로 동작하고 있다는 신호다.</p>
 <hr>
-<h2>sklearn으로 실전 적용</h2>
+<h2 id="sklearn으로-실전-적용">sklearn으로 실전 적용</h2>
 <p>실전에서는 직접 구현 대신 <code class="language-text">LogisticRegression</code>을 쓴다. 유방암 진단 데이터셋으로 실습해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
@@ -470,7 +470,7 @@ y_pred <span class="token operator">=</span> pipe<span class="token punctuation"
 [[41  2]
  [ 1 70]]</code></pre></div>
 <p>30개의 특성으로 악성/양성을 구분하는데, 정확도가 97%다. 114개 테스트 데이터 중 3개만 틀렸다.</p>
-<h3>혼동 행렬 읽는 법</h3>
+<h3 id="혼동-행렬-읽는-법">혼동 행렬 읽는 법</h3>
 <p><span
       class="gatsby-resp-image-wrapper"
       style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
@@ -551,10 +551,10 @@ y_pred <span class="token operator">=</span> pipe<span class="token punctuation"
   sklearn의 <code>LogisticRegression(C=1.0)</code>에서 C는 <strong>규제 강도의 역수</strong>다. C가 크면 규제가 약하고(과적합 위험↑), C가 작으면 규제가 강하다(과소적합 위험↑). 뒤에서 다룰 <a href="/ml/regularization/">규제(Regularization) 글</a>의 α(lambda)와 반대 관계인 셈이다. 기본값 C=1.0은 대부분의 경우 잘 동작한다.
 </div>
 <hr>
-<h2>흔한 실수</h2>
-<h3>1. “회귀인데 왜 분류에 쓰나요?”</h3>
+<h2 id="흔한-실수">흔한 실수</h2>
+<h3 id="1-회귀인데-왜-분류에-쓰나요">1. “회귀인데 왜 분류에 쓰나요?”</h3>
 <p>이름 때문에 혼란스러울 수 있다. “로지스틱 <strong>회귀</strong>“인데 실제로는 <strong>분류 모델</strong>이다. 역사적으로 이 모델이 처음 등장했을 때(1958년), 출력이 연속적인 확률값이라서 “회귀”라는 이름이 붙었다. 최종 예측은 분류이지만, 내부적으로는 <strong>확률을 회귀</strong>하는 것이라고 이해하면 된다.</p>
-<h3>2. Feature Scaling을 빠뜨린다</h3>
+<h3 id="2-feature-scaling을-빠뜨린다">2. Feature Scaling을 빠뜨린다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 스케일링 없이 바로 학습</span>
 lr <span class="token operator">=</span> LogisticRegression<span class="token punctuation">(</span><span class="token punctuation">)</span>
 lr<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>  <span class="token comment"># 수렴이 느리거나 실패할 수 있음</span>
@@ -565,7 +565,7 @@ pipe <span class="token operator">=</span> Pipeline<span class="token punctuatio
     <span class="token punctuation">(</span><span class="token string">'lr'</span><span class="token punctuation">,</span> LogisticRegression<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
 <span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
 <p>로지스틱 회귀도 경사하강법으로 학습한다. <a href="/ml/multiple-linear-regression/">다중 선형 회귀 글</a>에서 봤듯이, 변수 간 스케일이 다르면 경사하강법이 지그재그로 수렴하거나 아예 수렴하지 않는다.</p>
-<h3>3. threshold 0.5를 무조건 쓴다</h3>
+<h3 id="3-threshold-05를-무조건-쓴다">3. threshold 0.5를 무조건 쓴다</h3>
 <p>기본 threshold 0.5가 항상 최적은 아니다. 특히 <strong>오분류 비용이 비대칭인 경우</strong>:</p>
 <ul>
 <li><strong>암 진단</strong>: FN(양성을 놓침)이 FP(과잉 진단)보다 치명적 → threshold를 낮춰서 양성 판정을 더 관대하게</li>
@@ -577,10 +577,10 @@ pipe <span class="token operator">=</span> Pipeline<span class="token punctuatio
   사기 탐지처럼 양성 비율이 0.1%인 데이터에서는, 모든 걸 "정상"으로 예측해도 정확도 99.9%가 나온다. 정확도만 보면 안 되는 이유다. 이런 경우 <code>class_weight='balanced'</code> 옵션을 사용하거나, F1 Score 같은 다른 지표를 봐야 한다.
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>선형 회귀에 <strong>시그모이드 하나</strong>를 얹었을 뿐인데, 연속값 예측이 확률 기반 분류로 바뀐다. 비용 함수가 MSE에서 Log Loss로 바뀌지만, 경사하강법의 업데이트 규칙은 놀랍도록 같은 형태를 유지한다. 개인적으로 로지스틱 회귀는 새 데이터셋을 만나면 가장 먼저 돌려보는 모델이다. 구현이 단순하고, 결과가 확률로 나오며, 베이스라인으로 충분히 강력하다.</p>
 <p>다음 글에서는 로지스틱 회귀가 만드는 <strong>결정 경계(Decision Boundary)</strong> 를 자세히 분석한다. 직선 하나로 데이터를 가르는 과정, 비선형 결정 경계를 만드는 방법, 그리고 모델 출력의 확률적 해석까지 다룬다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Classification (Coursera)</a></li>
 <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html" target="_blank" rel="noopener noreferrer">Scikit-learn — LogisticRegression Documentation</a></li>
@@ -608,6 +608,6 @@ pipe <span class="token operator">=</span> Pipeline<span class="token punctuatio
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

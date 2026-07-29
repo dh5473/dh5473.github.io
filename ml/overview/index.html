@@ -6,7 +6,7 @@
 <p>막연하게 시작해서 검색하다 보면 금세 딥러닝, 트랜스포머, LLM 같은 단어들이 튀어나온다. 정작 <strong>머신러닝(Machine Learning)</strong> 이 뭔지, 지도학습과 비지도학습이 어떻게 다른지는 누군가 제대로 설명해주지 않는다.</p>
 <p>이 글은 머신러닝 시리즈의 첫 번째 글이다. 화려한 알고리즘 전에, 머신러닝이 기존 프로그래밍과 근본적으로 어떻게 다른지부터 짚고 넘어간다. 세 가지 학습 패러다임 — 지도학습, 비지도학습, 강화학습 — 의 개념과 차이를 이해하고 나면, 이후 어떤 알고리즘을 배우든 “이게 왜 여기에 쓰이는지”가 보이기 시작한다.</p>
 <hr>
-<h2>머신러닝이란?</h2>
+<h2 id="머신러닝이란">머신러닝이란?</h2>
 <p>전통적인 프로그래밍과 머신러닝의 차이를 한 문장으로 표현하면 이렇다.</p>
 <blockquote>
 <p><strong>전통적 프로그래밍</strong>: 데이터 + 규칙 → 결과
@@ -53,7 +53,7 @@
 </tbody>
 </table>
 <hr>
-<h2>지도학습 (Supervised Learning)</h2>
+<h2 id="지도학습-supervised-learning">지도학습 (Supervised Learning)</h2>
 <p>지도학습은 머신러닝에서 가장 많이 쓰이는 패러다임이다. <strong>정답(레이블)이 붙어 있는 데이터로 모델을 훈련</strong>시킨다.</p>
 <p>학습 방식을 비유하자면 과외 선생님과 학생의 관계다. 선생님이 문제와 정답을 함께 보여주면서 가르친다. “이 입력값에 대한 정답은 이거야”를 반복하다 보면, 모델이 입력과 출력 사이의 관계를 학습한다.</p>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
@@ -89,7 +89,7 @@ prediction <span class="token operator">=</span> model<span class="token punctua
 <span class="token comment"># 예측 집값: 37,350만원</span></code></pre></div>
 <p><code class="language-text">fit()</code> 한 줄로 모델이 데이터의 패턴을 학습한다. 면적이 늘어날수록 집값이 어떻게 변하는지 스스로 파악하는 것이다. 이 시리즈에서는 선형 회귀부터 시작해서 의사결정 트리, XGBoost까지 지도학습 알고리즘을 차례로 다룬다.</p>
 <hr>
-<h2>비지도학습 (Unsupervised Learning)</h2>
+<h2 id="비지도학습-unsupervised-learning">비지도학습 (Unsupervised Learning)</h2>
 <p>비지도학습은 <strong>레이블 없이 데이터 자체의 구조와 패턴을 발견</strong>한다. 정답이 없는 상태에서 “비슷한 것들끼리 모아봐” 혹은 “이 데이터의 핵심 구조가 뭐야?”를 묻는 방식이다.</p>
 <p>현실에서는 레이블 없는 데이터가 훨씬 많다. 유저 행동 로그, 센서 데이터, 의료 이미지 — 이런 데이터에 일일이 사람이 레이블을 붙이는 건 비용이 너무 크다. 비지도학습이 강력한 이유다.</p>
 <p>대표적인 세 가지 활용 영역이 있다.</p>
@@ -131,7 +131,7 @@ kmeans<span class="token punctuation">.</span>fit<span class="token punctuation"
   비지도학습은 "탐색적 데이터 분석(EDA)"과 찰떡궁합이다. 어떤 패턴이 있는지 모르는 상태에서 데이터를 이해하는 첫 단계로 자주 쓰인다.
 </div>
 <hr>
-<h2>강화학습 (Reinforcement Learning)</h2>
+<h2 id="강화학습-reinforcement-learning">강화학습 (Reinforcement Learning)</h2>
 <p>강화학습은 앞의 두 패러다임과 결이 다르다. <strong>에이전트(Agent)가 환경(Environment)과 상호작용하며 보상(Reward)을 최대화하는 방향으로 행동 전략을 학습</strong>한다.</p>
 <p>아이가 자전거를 배우는 과정을 생각해보자. 처음엔 어떻게 페달을 밟고 균형을 잡아야 하는지 모른다. 넘어지면(페널티), 잘 달리면(보상) — 이런 피드백을 반복하면서 자연스럽게 자전거 타는 법을 익힌다. 명시적인 규칙도 없고, 정답 레이블도 없다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">강화학습의 핵심 요소:
@@ -155,7 +155,7 @@ kmeans<span class="token punctuation">.</span>fit<span class="token punctuation"
   강화학습은 학습에 엄청난 시뮬레이션 비용이 든다. AlphaGo가 인간 챔피언을 이기기까지 수백만 번의 자가 대국이 필요했다. 간단한 문제라면 지도학습이나 비지도학습이 훨씬 실용적이다.
 </div>
 <hr>
-<h2>어떤 방식을 언제 쓸까?</h2>
+<h2 id="어떤-방식을-언제-쓸까">어떤 방식을 언제 쓸까?</h2>
 <p>셋 중 무엇을 선택해야 할지는 결국 <strong>“내가 가진 데이터가 어떤 형태인가”</strong> 와 <strong>“무엇을 예측/발견하고 싶은가”</strong> 로 결정된다.</p>
 <table>
 <thead>
@@ -204,12 +204,12 @@ kmeans<span class="token punctuation">.</span>fit<span class="token punctuation"
   </ul>
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>머신러닝의 큰 그림을 그려봤다. 사실 이 세 가지 구분은 공부를 시작할 때 방향을 잡는 나침반 역할이지, 실무에서 항상 명확하게 구분되지는 않는다. 준지도학습(Semi-supervised Learning)처럼 경계를 넘나드는 방식도 있고, 한 시스템 안에 여러 패러다임이 섞이기도 한다.</p>
 <p>이 시리즈는 지도학습 알고리즘을 중심으로 진행된다. 선형 회귀, 경사하강법, 신경망, 트리 기반 모델까지 — 각 알고리즘이 어떤 문제를 어떻게 푸는지를 코드와 함께 깊이 파고들 예정이다.</p>
 <p>다음 글에서는 머신러닝 프로젝트의 전 과정 — 데이터 수집부터 모델 배포까지 — 를 큰 그림으로 살펴본다. 어떤 알고리즘을 쓰든 반복되는 공통 워크플로우를 이해해두면, 이후 글들이 훨씬 잘 들어온다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://scikit-learn.org/stable/" target="_blank" rel="noopener noreferrer">Scikit-learn: Machine Learning in Python</a></li>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization (Coursera)</a></li>
@@ -236,6 +236,6 @@ kmeans<span class="token punctuation">.</span>fit<span class="token punctuation"
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

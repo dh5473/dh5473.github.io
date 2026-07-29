@@ -6,7 +6,7 @@
 <p>공식 발표가 강조한 메시지는 하나입니다. <strong>Opus 4.8에 근접하는 성능을 Sonnet 가격대에 제공한다</strong>는 것. 사실 이 패턴은 처음이 아닙니다. 2024년에 Sonnet 3.5가 당시 최상위 모델이었던 Opus 3을 뛰어넘은 전례가 있고, Sonnet 라인이 이전 세대 Opus를 따라잡는 구도는 이제 하나의 패턴이 된 셈입니다.</p>
 <p>이 글에서는 Sonnet 5의 스펙, 벤치마크, 가격, 안전성 개선, 경쟁 모델 비교까지 출시 시점에서 알아야 할 내용을 정리합니다.</p>
 <hr>
-<h2>핵심 스펙</h2>
+<h2 id="핵심-스펙">핵심 스펙</h2>
 <table>
 <thead>
 <tr>
@@ -59,7 +59,7 @@
   Sonnet 5는 새로운 토크나이저를 사용합니다. 동일한 텍스트를 처리할 때 이전 모델 대비 최대 35% 더 많은 토큰이 생성되므로, 토큰 단가가 같더라도 실제 비용은 달라집니다. 이 부분은 뒤에서 자세히 다룹니다.
 </div>
 <hr>
-<h2>벤치마크: Sonnet 4.6과 Opus 4.8 사이</h2>
+<h2 id="벤치마크-sonnet-46과-opus-48-사이">벤치마크: Sonnet 4.6과 Opus 4.8 사이</h2>
 <p>Sonnet 5의 벤치마크 성능은 Sonnet 4.6보다 확실히 올랐고, Opus 4.8에는 미치지 못하지만 상당히 가까워졌습니다.</p>
 <table>
 <thead>
@@ -107,7 +107,7 @@
 <p>GDPval-AA v2 결과도 눈에 띕니다. 지식 업무(문서 작성, 분석, 요약 등)를 측정하는 이 벤치마크에서 Sonnet 5(1,618)가 Opus 4.8(1,615)을 근소하게 앞섰습니다. 코딩 벤치마크에서는 Opus 4.8이 여전히 우위이지만, 지식 업무에서는 Sonnet 가격으로 Opus급 결과를 기대해도 좋다는 의미입니다.</p>
 <p>Artificial Analysis의 Intelligence Index v4.1에서는 53점으로, Sonnet 4.6(47)보다 6점 올랐습니다. Opus 4.8(56)과의 격차가 3점으로 좁혀졌고, “Near-Opus”라는 포지셔닝이 벤치마크상으로는 과장이 아닌 셈입니다. 참고로 <a href="/issue/fable-5/">Fable 5</a>는 같은 지표에서 60점(v4.1 기준, 출시 직후 측정에서는 64.9점)을 기록한 바 있습니다.</p>
 <hr>
-<h2>안전성: 전 세대 대비 눈에 띄는 개선</h2>
+<h2 id="안전성-전-세대-대비-눈에-띄는-개선">안전성: 전 세대 대비 눈에 띄는 개선</h2>
 <p>함께 공개된 시스템 카드에 따르면, Sonnet 5는 Sonnet 4.6 대비 여러 안전성 지표에서 개선됐습니다.</p>
 <table>
 <thead>
@@ -153,7 +153,7 @@
   위 수치는 Anthropic의 자체 시스템 카드 기준입니다. 자사 모델의 안전성 평가를 자체 발표하는 것은 업계 표준 관행이지만, 독립적인 3자 평가 결과는 아직 나오지 않은 상태입니다.
 </div>
 <hr>
-<h2>경쟁 모델 가격 비교</h2>
+<h2 id="경쟁-모델-가격-비교">경쟁 모델 가격 비교</h2>
 <p>프로모션 가격 기준으로 Sonnet 5는 프런티어 모델 중 저렴한 축에 속합니다.</p>
 <table>
 <thead>
@@ -213,7 +213,7 @@
 <p>코딩 벤치마크를 함께 놓고 보면, SWE-bench Pro에서 Sonnet 5(63.2%)가 GPT-5.5(58.6%)를 앞서면서 가격은 절반 이하입니다. 가격 대비 성능에서 상당히 유리한 위치를 잡은 셈입니다. <a href="/issue/gpt-5-1/">GPT-5.1 출시</a> 이후 OpenAI 쪽도 빠르게 모델을 갱신해온 만큼, 이 경쟁 구도가 어떻게 전개될지 지켜볼 만합니다.</p>
 <p>9월 이후 정규 가격($3/$15)이 적용되면 Gemini 3.1 Pro보다 비싸집니다. 프로모션 종료 후의 가격 경쟁력이 어떻게 될지는 두고 봐야 할 부분입니다.</p>
 <hr>
-<h2>토큰 단가만으로 비용을 판단하기 어려운 이유</h2>
+<h2 id="토큰-단가만으로-비용을-판단하기-어려운-이유">토큰 단가만으로 비용을 판단하기 어려운 이유</h2>
 <p>Sonnet 5의 정규 토큰 단가는 Sonnet 4.6과 동일합니다($3/$15). 그런데 Artificial Analysis와 The Decoder의 분석에 따르면, 실제 태스크 수행 시 비용 구조는 꽤 다릅니다.</p>
 <p>Artificial Analysis의 Intelligence Index 기준으로, 태스크당 평균 비용은 다음과 같습니다.</p>
 <table>
@@ -250,10 +250,10 @@
   API 사용 시 토큰 단가뿐 아니라 태스크 완료에 소요되는 총 토큰량을 함께 모니터링하는 것이 좋습니다. 특히 에이전틱 워크플로우에서는 모델별 턴 수 차이가 비용에 큰 영향을 줍니다.
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>Sonnet 라인이 이전 세대 Opus를 따라잡는 패턴은 이제 우연이 아니라 Anthropic의 명확한 전략입니다. 벤치마크상으로 Opus 4.8과의 격차는 SWE-bench Pro 기준 6%p, Intelligence Index 기준 3점까지 좁혀졌고, 지식 업무에서는 오히려 앞섰습니다. 그렇다면 Opus 4.8의 존재 의미가 희미해지는 건 아닌지, 9월 정규 가격 전환 이후에도 이 가격 경쟁력이 유지될 수 있는지가 앞으로의 관전 포인트입니다.</p>
 <p>프로모션 기간(8월 31일까지)에 직접 써보면서 자신의 워크플로우에서 체감 차이를 확인해보기 좋은 시기입니다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.anthropic.com/news/claude-sonnet-5" target="_blank" rel="noopener noreferrer">Introducing Claude Sonnet 5 - Anthropic</a></li>
 <li><a href="https://www.anthropic.com/claude-sonnet-5-system-card" target="_blank" rel="noopener noreferrer">Claude Sonnet 5 System Card - Anthropic</a></li>
@@ -282,6 +282,6 @@
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

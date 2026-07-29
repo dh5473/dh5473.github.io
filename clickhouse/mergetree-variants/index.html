@@ -6,11 +6,11 @@
 <p>주문 상태가 “접수”에서 “배송중”으로 바뀔 때도 마찬가지입니다. 불변 Part에 UPDATE를 하려면 뮤테이션이 필요하고, 이것은 비상 도구이지 일상적 연산이 아닙니다.</p>
 <br>
 <p>이런 요구사항을 머지 과정 자체에서 해결하는 것이 MergeTree 변종 엔진들입니다. 이 글에서는 ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree가 각각 머지 시점에 어떤 추가 로직을 수행하는지, 그리고 그 한계가 무엇인지를 다룹니다.</p>
-<h2>머지에 로직을 끼워 넣는다는 것</h2>
+<h2 id="머지에-로직을-끼워-넣는다는-것">머지에 로직을 끼워 넣는다는 것</h2>
 <p>기본 MergeTree의 <a href="/clickhouse/merge-and-mutation/">머지</a>는 단순합니다. 백그라운드 스레드가 같은 파티션 내의 Part들을 선택하고, <code class="language-text">ORDER BY</code> 순서로 merge-sort하여 하나의 새 Part를 만듭니다. 이것이 전부입니다. 데이터는 합쳐질 뿐, 내용이 변하지 않습니다.</p>
 <p>변종 엔진은 이 merge-sort 과정에 한 단계를 추가합니다. 정렬하면서 <strong>같은 ORDER BY 키를 가진 행들이 만나면</strong>, 엔진별로 정해진 로직을 실행합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 516" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 516" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="기본 MergeTree 머지는 두 Part를 merge-sort로 합칠 뿐이지만, 변종 엔진 머지는 merge-sort 과정에 추가 로직을 끼워 넣어 같은 ORDER BY 키의 행을 엔진별로 처리한다는 비교 그림">
@@ -77,11 +77,11 @@
 </div>
 <p>여기서 반드시 기억해야 할 전제가 하나 있습니다. <strong>이 추가 로직은 머지 시점에만 동작합니다.</strong> INSERT할 때는 아무 일도 일어나지 않습니다. 머지가 일어나기 전까지 “중간 상태”(중복 행, 미합산 행, 상쇄되지 않은 +1/-1 쌍)가 그대로 존재합니다.</p>
 <p>따라서 네 엔진 모두에 공통되는 실무 규칙이 있습니다. <strong>쿼리 시 중간 상태를 올바르게 처리하는 것은 사용자의 책임입니다.</strong> 이것을 모르면 “분명 ReplacingMergeTree인데 왜 중복이 보이지?”라는 함정에 빠집니다. 각 엔진의 처리 패턴을 섹션마다 다룹니다.</p>
-<h2>ReplacingMergeTree</h2>
-<h3>문제: 같은 키의 중복 행</h3>
+<h2 id="replacingmergetree">ReplacingMergeTree</h2>
+<h3 id="문제-같은-키의-중복-행">문제: 같은 키의 중복 행</h3>
 <p>CDC(Change Data Capture)로 외부 DB의 변경을 ClickHouse로 동기화하거나, 장애 복구 후 데이터를 재처리하면 같은 <code class="language-text">order_id</code>를 가진 행이 여러 번 INSERT될 수 있습니다. 기본 MergeTree에서는 ORDER BY 키가 같은 행이 여러 개 존재해도 아무 문제 없이 전부 저장합니다. Primary Key가 유니크 제약이 아니기 때문입니다.</p>
 <p>중복을 제거하려면? <a href="/clickhouse/merge-and-mutation/">뮤테이션</a>으로 <code class="language-text">ALTER TABLE DELETE</code>를 실행할 수 있지만, 이것은 Part 전체를 재작성하는 무거운 연산입니다. 정기적으로 중복이 들어오는 환경에서는 현실적이지 않습니다.</p>
-<h3>ORDER BY 키 기준 중복 제거</h3>
+<h3 id="order-by-키-기준-중복-제거">ORDER BY 키 기준 중복 제거</h3>
 <p>ReplacingMergeTree는 머지 시점에 같은 ORDER BY 키를 가진 행 중 하나만 남기고 나머지를 삭제합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> orders_replacing
 <span class="token punctuation">(</span>
@@ -94,7 +94,7 @@
 <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> order_id<span class="token punctuation">;</span></code></pre></div>
 <p><code class="language-text">ReplacingMergeTree(ver)</code>에서 <code class="language-text">ver</code>은 버전 컬럼입니다. 같은 <code class="language-text">order_id</code>를 가진 행이 여러 개 있으면, <code class="language-text">ver</code> 값이 가장 큰 행 하나만 살아남습니다. <code class="language-text">ver</code>을 지정하지 않으면 가장 최근에 생성된 Part(가장 나중에 INSERT된 데이터)의 행이 남습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 550" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 550" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="ReplacingMergeTree 머지 전에는 Part A와 Part B에 order_id 1이 각각 존재하지만, 머지 후에는 ver 값이 큰 행 하나만 남는다는 비교 그림">
@@ -170,7 +170,7 @@
 </svg>
 </div>
 <p><code class="language-text">order_id = 1</code>이 두 Part에 각각 존재했지만, 머지 후에는 <code class="language-text">ver = 2</code>인 행만 남습니다.</p>
-<h3>FINAL 키워드와 그 한계</h3>
+<h3 id="final-키워드와-그-한계">FINAL 키워드와 그 한계</h3>
 <p>머지가 아직 일어나지 않았다면? 서로 다른 Part에 있는 중복 행은 머지 전까지 모두 보입니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- 머지 전: order_id=1이 두 행 보임</span>
 <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> orders_replacing <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> order_id<span class="token punctuation">;</span>
@@ -191,11 +191,11 @@
 <p>ReplacingMergeTree는 머지 시점에만 중복을 제거합니다. 머지는 백그라운드에서 비동기로 일어나므로, <code class="language-text">FINAL</code> 없이 SELECT하면 같은 ORDER BY 키의 행이 여러 개 보일 수 있습니다. “중복 없는 결과”가 필요하면 반드시 <code class="language-text">FINAL</code>을 사용하거나 <code class="language-text">argMax</code> 패턴을 적용하세요.</p>
 </div>
 <p>한 가지 더. 물리적 머지는 <strong>같은 파티션 안에서만</strong> 일어납니다. 같은 <code class="language-text">order_id</code>가 서로 다른 파티션에 들어갔다면, 백그라운드 머지로는 영원히 중복이 제거되지 않습니다. <code class="language-text">FINAL</code>은 기본적으로 파티션을 넘어 중복을 제거하지만(<code class="language-text">do_not_merge_across_partitions_select_final</code> 설정으로 파티션 단위 처리를 강제할 수 있습니다), 물리적 중복은 그대로 남습니다. 중복 제거 키가 여러 파티션에 흩어지지 않도록 파티션 키를 잡아야 합니다.</p>
-<h2>SummingMergeTree</h2>
-<h3>문제: 선집계가 필요한 대량 데이터</h3>
+<h2 id="summingmergetree">SummingMergeTree</h2>
+<h3 id="문제-선집계가-필요한-대량-데이터">문제: 선집계가 필요한 대량 데이터</h3>
 <p>이벤트 로그 테이블에 하루 수억 건이 쌓인다고 합시다. “카테고리별 일별 매출 합계”를 매번 원본 테이블에서 <code class="language-text">GROUP BY</code>로 구하면, 수억 행을 읽어야 합니다. 대시보드가 이 쿼리를 매 분마다 실행한다면 서버에 상당한 부하가 걸립니다.</p>
 <p>해결책은 미리 합산된 요약 테이블을 만드는 것입니다. 원본 이벤트 대신 (카테고리, 날짜, 매출합계, 건수) 형태의 행을 INSERT하면, 쿼리는 수백 행만 읽으면 됩니다.</p>
-<h3>숫자 컬럼 자동 합산</h3>
+<h3 id="숫자-컬럼-자동-합산">숫자 컬럼 자동 합산</h3>
 <p>SummingMergeTree는 머지 시점에 같은 ORDER BY 키를 가진 행들의 숫자 컬럼을 합산합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> daily_sales
 <span class="token punctuation">(</span>
@@ -208,7 +208,7 @@
 <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token punctuation">(</span>category<span class="token punctuation">,</span> sale_date<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre></div>
 <p><code class="language-text">SummingMergeTree((revenue, order_count))</code>에서 괄호 안의 컬럼이 합산 대상입니다. 생략하면 ORDER BY에 포함되지 않은 모든 숫자 컬럼이 자동으로 합산됩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 578" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 578" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="SummingMergeTree 머지 전에는 도서 05-01 키가 Part A와 Part B에 나뉘어 있지만, 머지 후에는 revenue와 count가 합산된 한 행으로 합쳐진다는 비교 그림">
@@ -294,7 +294,7 @@
 </svg>
 </div>
 <p>(도서, 05-01) 키가 두 Part에 존재했지만, 머지 후에는 revenue 5000+3000=8000, count 2+1=3으로 합산된 하나의 행만 남습니다.</p>
-<h3>쿼리 시 주의점</h3>
+<h3 id="쿼리-시-주의점">쿼리 시 주의점</h3>
 <p>ReplacingMergeTree와 마찬가지로, 머지 전에는 부분 합산 상태입니다. 같은 키의 행이 여러 Part에 걸쳐 존재할 수 있습니다. 정확한 합계를 보장하려면 쿼리에서도 <code class="language-text">sum()</code>을 사용해야 합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
     category<span class="token punctuation">,</span>
@@ -308,11 +308,11 @@
 <p><strong>참고</strong></p>
 <p>SummingMergeTree는 단순 합산(sum)만 지원합니다. 평균(avg), 유니크 카운트(uniq), 퍼센타일 같은 집계는 합산으로 구할 수 없습니다. 임의의 집계 함수가 필요하면 AggregatingMergeTree를 사용합니다.</p>
 </div>
-<h2>AggregatingMergeTree</h2>
-<h3>문제: 합산 이상의 집계가 필요할 때</h3>
+<h2 id="aggregatingmergetree">AggregatingMergeTree</h2>
+<h3 id="문제-합산-이상의-집계가-필요할-때">문제: 합산 이상의 집계가 필요할 때</h3>
 <p>“일별 고유 사용자 수(DAU)“를 선집계하고 싶다면? 두 Part에서 각각 구한 <code class="language-text">uniq(user_id)</code>를 단순히 더할 수 없습니다. 사용자가 겹칠 수 있기 때문입니다. Part A에서 uniq = 100, Part B에서 uniq = 80이라도, 합계가 180이 아닐 수 있습니다.</p>
 <p>평균, 퍼센타일도 마찬가지입니다. 부분 합산으로는 올바른 결과를 구할 수 없는 집계 함수가 많습니다. AggregatingMergeTree는 이 문제를 <strong>집계 함수의 중간 상태(intermediate state)</strong>를 저장하는 방식으로 해결합니다.</p>
-<h3>AggregateFunction 타입과 -State/-Merge 콤비네이터</h3>
+<h3 id="aggregatefunction-타입과--state-merge-콤비네이터">AggregateFunction 타입과 -State/-Merge 콤비네이터</h3>
 <p>AggregatingMergeTree의 핵심은 <code class="language-text">AggregateFunction</code> 타입입니다. 최종 결과가 아니라 집계의 중간 상태를 바이너리로 저장합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> daily_user_stats
 <span class="token punctuation">(</span>
@@ -347,7 +347,7 @@
 <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> event_date<span class="token punctuation">,</span> category<span class="token punctuation">;</span></code></pre></div>
 <p><code class="language-text">uniqMerge</code>는 저장된 중간 상태들을 병합해서 최종 결과를 도출합니다. 머지가 일어나면 같은 ORDER BY 키의 중간 상태끼리 자동으로 병합되므로, 시간이 지날수록 행 수가 줄어들면서도 정확도는 유지됩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 405" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 405" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="AggregatingMergeTree는 INSERT 시 uniqState로 중간 상태를 저장하고, 머지 시점에 같은 키의 상태끼리 병합하며, SELECT 시 uniqMerge로 최종 값을 도출한다는 흐름 그림">
@@ -389,10 +389,10 @@
 <text class="mv4-t" x="240" y="368" text-anchor="middle">최종 값 (unique_users)</text>
 </svg>
 </div>
-<h3>직접 INSERT vs Materialized View</h3>
+<h3 id="직접-insert-vs-materialized-view">직접 INSERT vs Materialized View</h3>
 <p>위 예시처럼 직접 <code class="language-text">INSERT INTO ... SELECT ... -State()</code> 패턴을 쓸 수도 있지만, 실무에서는 거의 항상 <strong>Materialized View</strong>를 통해 자동화합니다. 원본 테이블에 INSERT가 들어올 때마다 Materialized View가 자동으로 <code class="language-text">-State</code> 변환을 실행하고 AggregatingMergeTree 테이블에 넣어줍니다.</p>
 <p>AggregatingMergeTree + Materialized View 조합은 ClickHouse 실시간 집계의 표준 패턴입니다.</p>
-<h3>엔진별 비교</h3>
+<h3 id="엔진별-비교">엔진별 비교</h3>
 <p>세 엔진의 차이를 정리합니다.</p>
 <table>
 <thead>
@@ -429,12 +429,12 @@
 <p><strong>참고</strong></p>
 <p><code class="language-text">AggregateFunction</code> 타입 컬럼은 바이너리 상태를 저장하므로 <code class="language-text">SELECT *</code>로 직접 읽으면 깨진 문자가 출력됩니다. 반드시 <code class="language-text">-Merge</code> 콤비네이터(<code class="language-text">uniqMerge</code>, <code class="language-text">sumMerge</code>, <code class="language-text">avgMerge</code> 등)를 통해 읽어야 합니다.</p>
 </div>
-<h2>CollapsingMergeTree</h2>
-<h3>문제: 상태 변경을 어떻게 표현할 것인가</h3>
+<h2 id="collapsingmergetree">CollapsingMergeTree</h2>
+<h3 id="문제-상태-변경을-어떻게-표현할-것인가">문제: 상태 변경을 어떻게 표현할 것인가</h3>
 <p>e-commerce 시스템에서 주문 상태가 변합니다. “접수” → “배송중” → “완료”. RDB에서는 <code class="language-text">UPDATE orders SET status = '배송중' WHERE order_id = 1</code>로 끝나지만, ClickHouse의 기본 MergeTree는 INSERT만 효율적입니다. 뮤테이션으로 UPDATE할 수 있지만 Part를 통째로 재작성합니다.</p>
 <p>ReplacingMergeTree로 해결할 수도 있습니다. 하지만 ReplacingMergeTree는 최신 버전만 조회하는 패턴(<code class="language-text">argMax</code>)을 쓰므로, 이전 상태의 값을 빼고 새 상태의 값을 더하는 증분 집계가 필요한 경우에는 적합하지 않습니다.</p>
 <p>CollapsingMergeTree는 다른 접근을 취합니다. <strong>“이전 상태를 취소하는 행”을 INSERT하는 것</strong>입니다.</p>
-<h3>Sign 컬럼으로 삽입/취소</h3>
+<h3 id="sign-컬럼으로-삽입취소">Sign 컬럼으로 삽입/취소</h3>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> orders_collapsing
 <span class="token punctuation">(</span>
     order_id    UInt64<span class="token punctuation">,</span>
@@ -456,7 +456,7 @@
 </ul>
 <p>머지할 때 같은 ORDER BY 키의 <code class="language-text">+1</code>과 <code class="language-text">-1</code> 쌍이 만나면 둘 다 삭제됩니다. 결과적으로 최종 상태만 남습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 392" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="CollapsingMergeTree 머지 전에는 접수 상태의 sign 플러스1 행과 마이너스1 행, 배송중 행 세 개가 남아 있지만, 머지 후에는 접수 쌍이 상쇄되어 배송중 행 하나만 남는다는 비교 그림">
@@ -521,10 +521,9 @@
 <text class="mv5-td" x="170" y="322" text-anchor="middle">배송중</text>
 <text class="mv5-td" x="270" y="322" text-anchor="middle">10000</text>
 <text class="mv5-td" x="355" y="322" text-anchor="middle">+1</text>
-<text class="mv5-m" x="240" y="368" text-anchor="middle">+1/-1 쌍이 사라지고 최종 상태만 남습니다</text>
 </svg>
 </div>
-<h3>VersionedCollapsingMergeTree</h3>
+<h3 id="versionedcollapsingmergetree">VersionedCollapsingMergeTree</h3>
 <p>CollapsingMergeTree에는 한 가지 함정이 있습니다. 상쇄 알고리즘은 같은 ORDER BY 키를 가진 연속 행들의 sign 값과 순서에 의존합니다. 분산 환경이나 동시 INSERT 상황에서는 행의 삽입 순서가 보장되지 않아 상쇄가 올바르게 일어나지 않을 수 있습니다.</p>
 <p>VersionedCollapsingMergeTree는 <code class="language-text">version</code> 컬럼을 추가해서 이 문제를 해결합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> orders_versioned
@@ -538,7 +537,7 @@
 <span class="token keyword">ENGINE</span> <span class="token operator">=</span> VersionedCollapsingMergeTree<span class="token punctuation">(</span>sign<span class="token punctuation">,</span> version<span class="token punctuation">)</span>
 <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> order_id<span class="token punctuation">;</span></code></pre></div>
 <p>같은 ORDER BY 키와 같은 <code class="language-text">version</code>을 가진 <code class="language-text">+1</code>과 <code class="language-text">-1</code> 쌍을 정확히 매칭해서 상쇄합니다. Part 내 순서에 의존하지 않으므로 분산 환경에서도 안전합니다. 실무에서는 VersionedCollapsingMergeTree를 사용하는 것이 더 안전합니다.</p>
-<h3>쿼리 시 주의점</h3>
+<h3 id="쿼리-시-주의점-1">쿼리 시 주의점</h3>
 <p>머지 전에는 <code class="language-text">+1</code>과 <code class="language-text">-1</code> 행이 모두 보입니다. 올바른 현재 상태를 조회하려면 <code class="language-text">sign</code>을 활용해야 합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- 현재 유효한 주문만 조회</span>
 <span class="token keyword">SELECT</span>
@@ -553,7 +552,7 @@
 <p><strong>주의</strong></p>
 <p>CollapsingMergeTree를 사용하려면 상태를 취소할 때 “이전 상태의 정확한 복사본”을 <code class="language-text">sign=-1</code>과 함께 INSERT해야 합니다. 애플리케이션이 이전 상태를 알지 못하면 cancel row를 만들 수 없습니다. 이전 상태를 추적하기 어려운 시스템에서는 ReplacingMergeTree가 더 적합합니다.</p>
 </div>
-<h2>변종 엔진 선택 가이드</h2>
+<h2 id="변종-엔진-선택-가이드">변종 엔진 선택 가이드</h2>
 <p>네 엔진의 선택 기준을 정리합니다.</p>
 <table>
 <thead>
@@ -599,9 +598,9 @@
 <p>복제가 필요하면 엔진 이름 앞에 <code class="language-text">Replicated</code>를 붙입니다. <code class="language-text">ReplicatedReplacingMergeTree</code>, <code class="language-text">ReplicatedSummingMergeTree</code> 같은 형태입니다.</p>
 <p>네 엔진 모두 ORDER BY 키가 핵심 동작을 결정합니다. ReplacingMergeTree에서는 중복 제거 키, SummingMergeTree에서는 집계 차원, CollapsingMergeTree에서는 상쇄 매칭 키입니다. ORDER BY를 잘못 설계하면 엔진이 의도대로 동작하지 않습니다.</p>
 <p>모든 변종에 공통되는 원칙을 다시 강조합니다. <strong>머지 전에는 중간 상태가 보입니다.</strong> 쿼리 레벨에서 이를 처리하는 것은 사용자의 책임입니다.</p>
-<h2>실험: Docker로 직접 확인하기</h2>
+<h2 id="실험-docker로-직접-확인하기">실험: Docker로 직접 확인하기</h2>
 <p><a href="/clickhouse/merge-and-mutation/">이전 글</a>의 Docker 환경(<code class="language-text">ch-test</code> 컨테이너)을 그대로 사용합니다. 컨테이너가 없다면 <a href="/clickhouse/why-clickhouse/">첫 번째 글</a>의 Docker 실험 섹션을 참고하세요.</p>
-<h3>실험 1: ReplacingMergeTree로 중복 제거</h3>
+<h3 id="실험-1-replacingmergetree로-중복-제거">실험 1: ReplacingMergeTree로 중복 제거</h3>
 <p>같은 <code class="language-text">order_id</code>를 다른 버전으로 두 번 INSERT하고, 머지 전후의 차이를 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> <span class="token keyword">IF</span> <span class="token keyword">EXISTS</span> orders_replacing<span class="token punctuation">;</span>
 
@@ -651,7 +650,7 @@
 │        4 │   1 │ 접수    │ 40000 │
 └──────────┴─────┴─────────┴───────┘</code></pre></div>
 <p>물리적으로도 중복이 제거되었습니다.</p>
-<h3>실험 2: SummingMergeTree로 자동 합산</h3>
+<h3 id="실험-2-summingmergetree로-자동-합산">실험 2: SummingMergeTree로 자동 합산</h3>
 <p>같은 (카테고리, 날짜) 키로 세 번 INSERT하고, 머지 전후 행 수 변화를 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> <span class="token keyword">IF</span> <span class="token keyword">EXISTS</span> daily_sales<span class="token punctuation">;</span>
 
@@ -692,7 +691,7 @@
 │ 전자제품  │ 2026-05-01 │  160000 │           6 │
 └───────────┴────────────┴─────────┴─────────────┘</code></pre></div>
 <p>세 행이 하나로 합산되었습니다. <code class="language-text">revenue</code> 50000+30000+80000=160000, <code class="language-text">order_count</code> 2+1+3=6.</p>
-<h3>실험 3: CollapsingMergeTree로 상태 변경</h3>
+<h3 id="실험-3-collapsingmergetree로-상태-변경">실험 3: CollapsingMergeTree로 상태 변경</h3>
 <p>주문 상태를 +1/-1 패턴으로 변경하고, 머지 전후의 동작을 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> <span class="token keyword">IF</span> <span class="token keyword">EXISTS</span> orders_collapsing<span class="token punctuation">;</span>
 
@@ -736,8 +735,8 @@
 │        1 │ 배송중  │ 10000 │    1 │
 └──────────┴─────────┴───────┴──────┘</code></pre></div>
 <p>(접수, +1)과 (접수, -1) 쌍이 상쇄되어 사라지고, (배송중, +1)만 남았습니다.</p>
-<h2>실전에서는</h2>
-<h3>변종 엔진의 ORDER BY 설계</h3>
+<h2 id="실전에서는">실전에서는</h2>
+<h3 id="변종-엔진의-order-by-설계">변종 엔진의 ORDER BY 설계</h3>
 <p>변종 엔진에서 ORDER BY는 단순한 정렬 키가 아닙니다. 엔진의 핵심 동작을 결정하는 키입니다.</p>
 <ul>
 <li><strong>ReplacingMergeTree</strong>: ORDER BY가 곧 중복 제거 키입니다. 비즈니스 유니크 키(<code class="language-text">order_id</code>, <code class="language-text">user_id</code> 등)를 ORDER BY에 넣어야 합니다. 만약 <code class="language-text">ORDER BY (category, order_id)</code>로 설정하면, <code class="language-text">(category, order_id)</code> 조합이 같아야 중복으로 인식합니다.</li>
@@ -745,21 +744,21 @@
 <li><strong>CollapsingMergeTree</strong>: ORDER BY가 곧 상쇄 매칭 키입니다. 개별 엔티티를 식별하는 키(<code class="language-text">order_id</code> 등)를 넣어야 합니다.</li>
 </ul>
 <p>ORDER BY를 잘못 잡으면 엔진이 전혀 다른 행을 “같은 키”로 인식합니다.</p>
-<h3>머지 전 중간 상태 처리 패턴</h3>
+<h3 id="머지-전-중간-상태-처리-패턴">머지 전 중간 상태 처리 패턴</h3>
 <p>모든 변종의 공통 과제입니다. 세 가지 접근이 있습니다.</p>
 <p><strong>패턴 1: FINAL 키워드</strong>. 가장 간단합니다. <code class="language-text">SELECT ... FROM table FINAL</code>로 머지 전 중간 상태를 쿼리 시점에 처리합니다. 단점은 모든 Part를 읽어야 하므로 대용량 테이블에서 느려질 수 있다는 것입니다.</p>
 <p><strong>패턴 2: GROUP BY + 집계 함수</strong>. FINAL보다 유연하고 다른 조건과 함께 사용하기 좋습니다. ReplacingMergeTree에서는 <code class="language-text">argMax</code>, SummingMergeTree에서는 <code class="language-text">sum</code>, CollapsingMergeTree에서는 <code class="language-text">sum(sign)</code> 패턴입니다. 쿼리가 약간 복잡해지지만 WHERE 조건이나 다른 집계와 자연스럽게 결합됩니다.</p>
 <p><strong>패턴 3: Materialized View로 선집계</strong>. 원본 테이블은 기본 MergeTree로 두고, Materialized View가 AggregatingMergeTree 요약 테이블에 자동으로 넣어줍니다. 가장 확장성이 좋은 패턴입니다.</p>
-<h3>모니터링</h3>
+<h3 id="모니터링">모니터링</h3>
 <p>변종 엔진에서도 Part 수 추적은 기본 MergeTree와 동일합니다. <code class="language-text">system.parts</code>에서 active Part 수를 모니터링하고, 지속적으로 증가하면 머지가 따라가지 못하는 상황입니다.</p>
 <p>ReplacingMergeTree에서는 <code class="language-text">SELECT count() FROM table</code>과 <code class="language-text">SELECT count() FROM table FINAL</code>의 차이를 비교하면 현재 중복 비율을 추정할 수 있습니다. 차이가 크다면 머지가 충분히 진행되지 않은 것입니다.</p>
 <p><a href="/clickhouse/merge-and-mutation/"><code class="language-text">OPTIMIZE TABLE FINAL</code></a>은 강제 머지를 유발하므로 프로덕션에서 정기적으로 실행하면 안 됩니다. 변종 엔진이라고 해서 예외가 아닙니다. 백그라운드 머지 스케줄러가 최적의 시점에 머지를 수행하도록 맡기는 것이 올바른 운영 방식입니다.</p>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>기본 MergeTree의 머지는 Part를 합칠 뿐이지만, 변종 엔진은 그 과정에 추가 로직을 끼워 넣습니다. ReplacingMergeTree는 중복을 제거하고, SummingMergeTree는 숫자를 합산하고, AggregatingMergeTree는 임의의 집계 상태를 병합하고, CollapsingMergeTree는 +1/-1 쌍을 상쇄합니다.</p>
 <p>공통 원칙을 기억하세요. 이 로직은 머지 시점에만 동작하고, 쿼리 시 중간 상태를 처리하는 것은 사용자의 몫입니다. <code class="language-text">FINAL</code>, <code class="language-text">argMax</code>, <code class="language-text">sum(sign)</code> 같은 패턴 없이 변종 엔진을 쓰면 “왜 중복이 보이지?”라는 함정에 빠집니다.</p>
 <p>네 가지 엔진 모두 ORDER BY 키가 핵심 동작을 결정합니다. 다음 글에서는 ORDER BY가 인덱스이자 중복 제거 키이자 집계 키인 ClickHouse에서, 정렬 키를 어떻게 설계해야 하는지를 다룹니다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/replacingmergetree" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: ReplacingMergeTree</a></li>
 <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/summingmergetree" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: SummingMergeTree</a></li>
@@ -789,6 +788,6 @@
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

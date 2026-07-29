@@ -6,30 +6,80 @@
 <p>A/B 테스트에서 전환율 차이를 보려면? 세 가지 교육 프로그램의 효과를 비교하려면? 설문 응답 분포가 기대와 다른지 확인하려면? 상황마다 적합한 검정 방법이 다르고, 잘못된 검정을 쓰면 결론 자체가 틀어진다.</p>
 <p>이 글은 상황별 검정 방법 선택의 로드맵이다. 플로차트 하나로 전체 그림을 잡고, 각 검정의 원리와 Python 구현을 하나씩 짚어간다.</p>
 <hr>
-<h2>검정 방법 선택 플로차트</h2>
+<h2 id="검정-방법-선택-플로차트">검정 방법 선택 플로차트</h2>
 <p>데이터를 보고 검정 방법을 고르는 판단 기준은 세 가지다: <strong>(1) 데이터 유형</strong>, <strong>(2) 비교할 집단 수</strong>, <strong>(3) 표본 간 관계</strong>. 이 세 축만 파악하면 어떤 검정을 쓸지 거의 자동으로 결정된다.</p>
-<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">                        데이터 유형은?
-                     ┌──────┴──────┐
-                   연속형          범주형
-                     │               │
-               집단 수는?        ┌───┴───┐
-            ┌────┼────┐      적합도    독립성
-            1    2    3+     검정      검정
-            │    │    │       │         │
-         단일   독립/  ANOVA  카이제곱   카이제곱
-        표본   대응?   (F)   적합도    독립성
-        t-검정  │             검정      검정
-            ┌──┴──┐
-          독립   대응
-           │      │
-       독립 표본  대응 표본
-       t-검정    t-검정
-       (Welch)
-
-  ※ 정규성 가정 불만족 시 → 비모수 검정으로 대체
-     · 독립 2집단: Mann-Whitney U
-     · 대응 2집단: Wilcoxon signed-rank
-     · 3집단 이상: Kruskal-Wallis</code></pre></div>
+<div style="text-align: center; margin: 24px 0;">
+  <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" style="max-width: 720px; width: 100%; height: auto;" role="img" aria-label="검정 방법 선택 플로차트">
+    <defs>
+      <marker id="arrow-st" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/>
+      </marker>
+    </defs>
+    <!-- root -->
+    <rect x="290" y="16" width="140" height="36" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="360" y="39" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2937" font-family="sans-serif">데이터 유형은?</text>
+    <!-- root -> A / B -->
+    <line x1="325" y1="52" x2="210" y2="92" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="240" y="66" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">연속형</text>
+    <line x1="395" y1="52" x2="530" y2="92" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="490" y="66" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">범주형</text>
+    <!-- A: group count -->
+    <rect x="140" y="96" width="120" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="200" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937" font-family="sans-serif">집단 수는?</text>
+    <!-- B: purpose -->
+    <rect x="470" y="96" width="140" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="540" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f2937" font-family="sans-serif">검정 목적은?</text>
+    <!-- A -> leaves -->
+    <line x1="170" y1="130" x2="90" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="112" y="152" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">1개</text>
+    <line x1="205" y1="130" x2="215" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="228" y="158" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">2개</text>
+    <line x1="235" y1="130" x2="340" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="310" y="152" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">3개 이상</text>
+    <!-- leaf: one-sample t -->
+    <rect x="25" y="186" width="110" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="80" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">단일 표본</text>
+    <text x="80" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">t-검정</text>
+    <!-- C: paired? -->
+    <rect x="160" y="186" width="110" height="34" rx="8" fill="#eff6ff" stroke="#3182f6" stroke-width="1.5"/>
+    <text x="215" y="208" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f2937" font-family="sans-serif">표본 관계는?</text>
+    <!-- leaf: ANOVA -->
+    <rect x="295" y="186" width="110" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="350" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">일원 ANOVA</text>
+    <text x="350" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">(F-검정)</text>
+    <!-- B -> categorical leaves -->
+    <line x1="510" y1="130" x2="475" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="462" y="156" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">분포 적합도</text>
+    <line x1="575" y1="130" x2="620" y2="182" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="640" y="156" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">변수 독립성</text>
+    <!-- leaf: chi2 gof -->
+    <rect x="415" y="186" width="115" height="48" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="472" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">카이제곱</text>
+    <text x="472" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">적합도 검정</text>
+    <!-- leaf: chi2 independence -->
+    <rect x="565" y="186" width="115" height="48" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="622" y="206" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">카이제곱</text>
+    <text x="622" y="223" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">독립성 검정</text>
+    <!-- C -> t-test leaves -->
+    <line x1="195" y1="220" x2="160" y2="262" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="160" y="242" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">독립</text>
+    <line x1="240" y1="220" x2="280" y2="262" stroke="#6b7280" stroke-width="1.3" marker-end="url(#arrow-st)"/>
+    <text x="278" y="242" text-anchor="middle" font-size="12" fill="#6b7280" font-family="sans-serif">대응</text>
+    <!-- leaf: independent t -->
+    <rect x="90" y="266" width="130" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="155" y="286" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">독립 표본 t-검정</text>
+    <text x="155" y="303" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">(Welch)</text>
+    <!-- leaf: paired t -->
+    <rect x="235" y="266" width="120" height="48" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="295" y="286" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">대응 표본</text>
+    <text x="295" y="303" text-anchor="middle" font-size="12.5" fill="#1f2937" font-family="sans-serif">t-검정</text>
+    <!-- nonparametric note -->
+    <rect x="40" y="348" width="640" height="72" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="360" y="374" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e" font-family="sans-serif">정규성 가정 불만족 시 → 비모수 검정으로 대체</text>
+    <text x="360" y="398" text-anchor="middle" font-size="12.5" fill="#92400e" font-family="sans-serif">독립 2집단: Mann-Whitney U · 대응 2집단: Wilcoxon signed-rank · 3집단 이상: Kruskal-Wallis</text>
+  </svg>
+</div>
+<p align="center" style="color: #888; font-size: 13px;"><em>데이터 유형, 집단 수, 표본 관계에 따른 검정 방법 선택 플로차트</em></p>
 <p>이 플로차트를 머릿속에 넣어두면, 나머지는 각 검정의 구체적인 메커니즘을 이해하는 일이다. 아래 표로 전체 검정 방법을 한눈에 정리해두자 — 글을 읽는 동안 레퍼런스로 돌아와도 좋다.</p>
 <table>
 <thead>
@@ -119,9 +169,9 @@
 </table>
 <p>그렇다면 플로차트의 왼쪽 가지, 연속형 데이터의 검정부터 시작하자. 가장 기본이 되는 t-검정이다.</p>
 <hr>
-<h2>t-검정(t-test): 평균의 차이를 검증하는 세 가지 방법</h2>
+<h2 id="t-검정t-test-평균의-차이를-검증하는-세-가지-방법">t-검정(t-test): 평균의 차이를 검증하는 세 가지 방법</h2>
 <p>t-검정은 평균에 대한 가설검정의 기본 도구다. 비교 대상과 표본 구조에 따라 세 가지 변형이 있는데, 각각의 쓰임새가 뚜렷이 다르다.</p>
-<h3>단일 표본 t-검정 (One-Sample t-test)</h3>
+<h3 id="단일-표본-t-검정-one-sample-t-test">단일 표본 t-검정 (One-Sample t-test)</h3>
 <p><strong>언제 쓰는가.</strong> “이 집단의 평균이 특정 값과 같은가?”를 검정할 때 사용한다. 비교 대상이 다른 집단이 아니라 <strong>이미 알려진 기준값</strong>이다.</p>
 <ul>
 <li>배터리 공정에서 평균 수명이 사양서의 1000시간과 같은가?</li>
@@ -165,7 +215,7 @@ t_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <span class="token comment"># p-value:  0.3001</span>
 <span class="token comment"># → p > 0.05이므로 귀무가설을 기각하지 못한다 (사양과 다르다는 증거 불충분)</span></code></pre></div>
 <p>p-value가 0.30으로, 사양과 다르다는 근거가 부족하다. 그런데 만약 비교 대상이 기준값이 아니라 <strong>다른 집단</strong>이라면 어떻게 할까?</p>
-<h3>독립 표본 t-검정 (Independent Two-Sample t-test)</h3>
+<h3 id="독립-표본-t-검정-independent-two-sample-t-test">독립 표본 t-검정 (Independent Two-Sample t-test)</h3>
 <p><strong>언제 쓰는가.</strong> <strong>서로 다른 두 집단</strong>의 평균을 비교할 때 사용한다. 두 집단의 구성원이 완전히 다른, 즉 독립적인 상황이다.</p>
 <ul>
 <li>신약 투여 그룹 vs 위약 그룹의 혈압 차이</li>
@@ -230,7 +280,7 @@ t_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <span class="token comment"># p-value:  0.0520</span>
 <span class="token comment"># → 두 교육 방법의 평균 차이가 통계적으로 유의하지 않다 (경계선)</span></code></pre></div>
 <p>독립 표본 t-검정은 서로 다른 사람들을 비교한다. 한편, 같은 사람을 두 번 측정한 데이터라면 접근이 달라진다.</p>
-<h3>대응 표본 t-검정 (Paired t-test)</h3>
+<h3 id="대응-표본-t-검정-paired-t-test">대응 표본 t-검정 (Paired t-test)</h3>
 <p><strong>언제 쓰는가.</strong> <strong>같은 대상을 두 번 측정</strong>한 데이터를 비교할 때 사용한다. 전후 비교, 처치 전/후 비교가 대표적이다.</p>
 <ul>
 <li>다이어트 프로그램 전/후 체중</li>
@@ -274,14 +324,14 @@ t_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <p>대응 표본에 독립 표본 t-검정을 쓰면, 개인 간 변동(사람마다 혈압이 다른 것)이 노이즈로 들어가 검정력이 크게 떨어진다. 대응 검정은 쌍별 차이만 보기 때문에 개인 간 변동을 제거하고, 처치 효과를 더 민감하게 잡아낸다.</p>
 </div>
 <hr>
-<h2>일원 분산분석 (One-way ANOVA)</h2>
+<h2 id="일원-분산분석-one-way-anova">일원 분산분석 (One-way ANOVA)</h2>
 <p>t-검정은 두 집단까지만 다룬다. 비교 대상이 세 개 이상으로 늘어나면 다른 도구가 필요하다.</p>
-<h3>왜 다중 t-검정을 하면 안 되는가</h3>
+<h3 id="왜-다중-t-검정을-하면-안-되는가">왜 다중 t-검정을 하면 안 되는가</h3>
 <p>세 개 이상의 집단을 비교해야 할 때, “A-B, A-C, B-C 각각 t-검정하면 되지 않나?”라는 생각이 자연스럽다. 하지만 이것은 <strong>다중 검정 문제</strong>(Multiple Testing Problem)를 일으킨다.</p>
 <p>유의수준 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">\alpha = 0.05</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.05</span></span></span></span></span>로 검정 하나를 수행하면, 실제 차이가 없을 때 잘못 기각할 확률이 5%다. 그런데 3번 검정하면?</p>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false">(</mo><mtext>적어도 하나 잘못 기각</mtext><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mn>0.05</mn><msup><mo stretchy="false">)</mo><mn>3</mn></msup><mo>=</mo><mn>0.1426</mn></mrow><annotation encoding="application/x-tex">P(\text{적어도 하나 잘못 기각}) = 1 - (1 - 0.05)^3 = 0.1426</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mopen">(</span><span class="mord text"><span class="mord hangul_fallback">적어도</span><span class="mord"> </span><span class="mord hangul_fallback">하나</span><span class="mord"> </span><span class="mord hangul_fallback">잘못</span><span class="mord"> </span><span class="mord hangul_fallback">기각</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">0.05</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.1426</span></span></span></span></span></p>
 <p>검정 횟수가 늘어날수록 1종 오류가 눈덩이처럼 불어난다. 집단이 5개면 10번의 쌍별 비교가 필요하고, 전체 오류율은 40%에 육박한다. 이래서는 “유의하다”는 결론을 신뢰할 수 없다.</p>
-<h3>ANOVA의 아이디어</h3>
+<h3 id="anova의-아이디어">ANOVA의 아이디어</h3>
 <p><strong>분산분석</strong>(ANOVA, Analysis of Variance)은 이름 그대로 분산을 분석한다. 전체 데이터의 변동을 두 성분으로 분해하는 것이 핵심이다.</p>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mrow><mi>S</mi><msub><mi>S</mi><mi>T</mi></msub></mrow><mo stretchy="true">⏟</mo></munder><mtext>전체 변동</mtext></munder><mo>=</mo><munder><munder><mrow><mi>S</mi><msub><mi>S</mi><mi>B</mi></msub></mrow><mo stretchy="true">⏟</mo></munder><mtext>집단 간 변동</mtext></munder><mo>+</mo><munder><munder><mrow><mi>S</mi><msub><mi>S</mi><mi>W</mi></msub></mrow><mo stretchy="true">⏟</mo></munder><mtext>집단 내 변동</mtext></munder></mrow><annotation encoding="application/x-tex">\underbrace{SS_T}_{\text{전체 변동}} = \underbrace{SS_B}_{\text{집단 간 변동}} + \underbrace{SS_W}_{\text{집단 내 변동}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.1597em;vertical-align:-1.4763em;"></span><span class="mord munder"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span style="top:-1.5237em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord hangul_fallback mtight">전체</span><span class="mord mtight"> </span><span class="mord hangul_fallback mtight">변동</span></span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord munder"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6833em;"><span class="svg-align" style="top:-2.202em;"><span class="pstrut" style="height:3em;"></span><span class="stretchy" style="height:0.548em;min-width:1.6em;"><span class="brace-left" style="height:0.548em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="0.548em" viewBox="0 0 400000 548" preserveAspectRatio="xMinYMin slice"><path d="M0 6l6-6h17c12.688 0 19.313.3 20 1 4 4 7.313 8.3 10 13
  35.313 51.3 80.813 93.8 136.5 127.5 55.688 33.7 117.188 55.8 184.5 66.5.688
@@ -316,10 +366,10 @@ c100.7 8.3 195.3 44 280 108 55.3 42 101.7 93 139 153l9 14c2.7-4 5.7-8.7 9-14
 <li><strong><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>S</mi><mi>W</mi></msub></mrow><annotation encoding="application/x-tex">SS_W</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">W</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> (Within)</strong>: 각 집단 내부에서 데이터가 얼마나 흩어져 있는가 → 개별 변동(노이즈)</li>
 </ul>
 <p>만약 집단 간 차이가 노이즈에 비해 충분히 크면, “적어도 하나의 집단 평균이 다르다”고 결론 내린다.</p>
-<h3>F-통계량</h3>
+<h3 id="f-통계량">F-통계량</h3>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><mfrac><mrow><mi>S</mi><msub><mi>S</mi><mi>B</mi></msub><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><mrow><mi>S</mi><msub><mi>S</mi><mi>W</mi></msub><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>N</mi><mo>−</mo><mi>k</mi><mo stretchy="false">)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>M</mi><msub><mi>S</mi><mi>B</mi></msub></mrow><mrow><mi>M</mi><msub><mi>S</mi><mi>W</mi></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">F = \frac{SS_B / (k - 1)}{SS_W / (N - k)} = \frac{MS_B}{MS_W}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.53em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.01em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0576em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">W</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span><span class="mord mtight">/</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.10903em;">N</span><span class="mbin mtight">−</span><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.485em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0576em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span><span class="mord mtight">/</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3339em;vertical-align:-0.4453em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8886em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0576em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">W</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.4103em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3448em;"><span style="top:-2.3567em;margin-left:-0.0576em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1433em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4453em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
 <p><span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span></span>는 집단 수, <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span></span>은 전체 표본 수다. 귀무가설(<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>=</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>=</mo><mo>⋯</mo><mo>=</mo><msub><mi>μ</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\mu_1 = \mu_2 = \cdots = \mu_k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">μ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">μ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="minner">⋯</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">μ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>) 하에서 F-통계량은 자유도 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo separator="true">,</mo><mi>N</mi><mo>−</mo><mi>k</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(k-1, N-k)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mclose">)</span></span></span></span></span>인 <a href="/stats/continuous-distributions/">F-분포</a>를 따른다. F값이 크면 집단 간 차이가 유의하다는 뜻이다.</p>
-<h3>Python 예제</h3>
+<h3 id="python-예제">Python 예제</h3>
 <p>세 가지 비료의 작물 수확량을 비교해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
 
@@ -337,7 +387,7 @@ f_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <span class="token comment"># F-통계량: 18.1532</span>
 <span class="token comment"># p-value:  0.000000</span>
 <span class="token comment"># → 적어도 하나의 비료 그룹이 유의하게 다르다</span></code></pre></div>
-<h3>사후 검정: 어디서 차이가 나는가?</h3>
+<h3 id="사후-검정-어디서-차이가-나는가">사후 검정: 어디서 차이가 나는가?</h3>
 <p>ANOVA가 유의하다고 해서 끝이 아니다. ANOVA는 “적어도 하나가 다르다”까지만 알려준다. <strong>어떤 쌍</strong>에서 차이가 나는지는 사후 검정(Post-hoc Test)으로 확인해야 한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> scipy<span class="token punctuation">.</span>stats <span class="token keyword">import</span> tukey_hsd
 
@@ -348,9 +398,9 @@ result <span class="token operator">=</span> tukey_hsd<span class="token punctua
 <span class="token comment"># A-B, A-C, B-C 중 어떤 쌍이 유의한 차이를 보이는지 확인할 수 있다</span></code></pre></div>
 <p><strong>Tukey HSD</strong>(Honestly Significant Difference)는 모든 쌍별 비교를 하면서도 전체 1종 오류율을 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span></span>로 통제한다. 다중 비교 보정이 내장된 방법이다.</p>
 <hr>
-<h2>카이제곱 검정(Chi-squared Test): 범주형 데이터의 검정</h2>
+<h2 id="카이제곱-검정chi-squared-test-범주형-데이터의-검정">카이제곱 검정(Chi-squared Test): 범주형 데이터의 검정</h2>
 <p>지금까지는 연속형 데이터, 즉 플로차트의 왼쪽 가지를 다뤘다. 한편 데이터가 범주형이라면 평균을 비교하는 것 자체가 무의미하다. 범주형 데이터에서는 <strong>빈도</strong>(frequency)가 분석의 단위가 되고, 카이제곱 검정이 그 도구다.</p>
-<h3>카이제곱 적합도 검정 (Chi-squared Goodness-of-Fit Test)</h3>
+<h3 id="카이제곱-적합도-검정-chi-squared-goodness-of-fit-test">카이제곱 적합도 검정 (Chi-squared Goodness-of-Fit Test)</h3>
 <p><strong>언제 쓰는가.</strong> 관측된 범주별 빈도가 이론적으로 <strong>기대하는 분포와 일치하는지</strong> 검정할 때 사용한다.</p>
 <ul>
 <li>주사위를 360번 던졌을 때, 각 눈이 60번씩 나왔는가?</li>
@@ -378,7 +428,7 @@ chi2_stat<span class="token punctuation">,</span> p_value <span class="token ope
 <p>카이제곱 검정은 <strong>기대 빈도가 5 이상</strong>일 때 근사가 신뢰할 수 있다. 기대 빈도가 너무 작은 범주가 있으면, 인접 범주를 합치거나 Fisher의 정확 검정을 고려해야 한다.</p>
 </div>
 <p>적합도 검정은 하나의 변수에 대한 분포를 확인한다. 그렇다면 두 범주형 변수 사이의 관계는 어떻게 검정할까?</p>
-<h3>카이제곱 독립성 검정 (Chi-squared Test of Independence)</h3>
+<h3 id="카이제곱-독립성-검정-chi-squared-test-of-independence">카이제곱 독립성 검정 (Chi-squared Test of Independence)</h3>
 <p><strong>언제 쓰는가.</strong> 두 범주형 변수 사이에 <strong>연관성</strong>(독립이 아닌 관계)이 있는지 검정할 때 사용한다.</p>
 <ul>
 <li>성별과 제품 선호도 사이에 관계가 있는가?</li>
@@ -411,7 +461,7 @@ chi2_stat<span class="token punctuation">,</span> p_value<span class="token punc
 <span class="token comment"># p-value: 0.0058</span>
 <span class="token comment"># → 성별과 음료 선호 사이에 유의한 연관성이 있다</span></code></pre></div>
 <hr>
-<h2>비모수 검정: 정규성 가정이 깨질 때</h2>
+<h2 id="비모수-검정-정규성-가정이-깨질-때">비모수 검정: 정규성 가정이 깨질 때</h2>
 <p>지금까지 다룬 t-검정과 ANOVA는 모두 데이터가 <strong>정규분포를 따른다</strong>고 가정한다. <a href="/stats/lln-and-clt/">CLT</a>에 의해 표본 크기가 충분히 크면 이 가정은 대체로 괜찮지만, 표본이 작거나 분포가 극단적으로 치우쳐 있으면 모수적 검정의 결과를 신뢰하기 어렵다.</p>
 <p>이럴 때 <strong>비모수 검정</strong>(Nonparametric Test)이 대안이 된다. 분포 형태에 대한 가정 없이, 데이터의 <strong>순위</strong>(Rank)를 기반으로 검정한다.</p>
 <table>
@@ -444,7 +494,7 @@ chi2_stat<span class="token punctuation">,</span> p_value<span class="token punc
 <p><strong>비모수 = 무조건 안전?</strong></p>
 <p>비모수 검정은 가정이 적은 대신 <strong>검정력(Power)이 낮다</strong>. 데이터가 실제로 정규분포를 따르는데 비모수 검정을 쓰면, 같은 효과를 탐지하는 데 더 많은 표본이 필요하다. 정규성이 성립하면 모수적 검정이 더 강력하다.</p>
 </div>
-<h3>Mann-Whitney U 검정</h3>
+<h3 id="mann-whitney-u-검정">Mann-Whitney U 검정</h3>
 <p>독립 두 집단의 비모수 대안이다. 치우친 분포의 데이터로 확인해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
 
@@ -459,7 +509,7 @@ u_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"U-통계량: </span><span class="token interpolation"><span class="token punctuation">{</span>u_stat<span class="token punctuation">:</span><span class="token format-spec">.1f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"p-value:  </span><span class="token interpolation"><span class="token punctuation">{</span>p_value<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># → 순위 기반으로 두 집단의 분포 차이를 검정한다</span></code></pre></div>
-<h3>Wilcoxon signed-rank 검정</h3>
+<h3 id="wilcoxon-signed-rank-검정">Wilcoxon signed-rank 검정</h3>
 <p>대응 표본의 비모수 대안이다. 차이의 부호와 순위만으로 전후 변화를 평가한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
 
@@ -473,7 +523,7 @@ w_stat<span class="token punctuation">,</span> p_value <span class="token operat
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"p-value: </span><span class="token interpolation"><span class="token punctuation">{</span>p_value<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># → 차이의 순위를 기반으로 전후 변화를 검정한다</span></code></pre></div>
 <hr>
-<h2>Python 종합 실습: 하나의 시나리오로 여러 검정</h2>
+<h2 id="python-종합-실습-하나의-시나리오로-여러-검정">Python 종합 실습: 하나의 시나리오로 여러 검정</h2>
 <p>실전에서는 하나의 데이터셋에 여러 검정을 적용하는 경우가 흔하다. 가상의 임상시험 데이터로 종합 실습을 해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> scipy <span class="token keyword">import</span> stats
@@ -521,16 +571,16 @@ u_stat<span class="token punctuation">,</span> p5 <span class="token operator">=
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"  U = </span><span class="token interpolation"><span class="token punctuation">{</span>u_stat<span class="token punctuation">:</span><span class="token format-spec">.1f</span><span class="token punctuation">}</span></span><span class="token string">, p = </span><span class="token interpolation"><span class="token punctuation">{</span>p5<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <p>이 코드 하나로 독립 표본 t-검정, ANOVA, 사후 검정, 카이제곱 독립성 검정, 비모수 검정까지 전부 시연할 수 있다. 실제 분석에서도 이렇게 여러 검정을 병행하는 것이 일반적이다.</p>
 <hr>
-<h2>흔한 실수 세 가지</h2>
-<h3>1. 정규성 확인을 건너뛴다</h3>
+<h2 id="흔한-실수-세-가지">흔한 실수 세 가지</h2>
+<h3 id="1-정규성-확인을-건너뛴다">1. 정규성 확인을 건너뛴다</h3>
 <p>t-검정과 ANOVA는 정규성 가정에 기반한다. 표본이 30개 이상이면 CLT 덕분에 대체로 괜찮지만, <strong>소표본에서는 반드시 확인</strong>해야 한다. Shapiro-Wilk 검정이나 Q-Q plot으로 정규성을 검토하고, 위반 시 비모수 대안을 쓰자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Shapiro-Wilk 정규성 검정</span>
 stat<span class="token punctuation">,</span> p <span class="token operator">=</span> stats<span class="token punctuation">.</span>shapiro<span class="token punctuation">(</span>drug_a<span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Shapiro-Wilk: W = </span><span class="token interpolation"><span class="token punctuation">{</span>stat<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">, p = </span><span class="token interpolation"><span class="token punctuation">{</span>p<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># p > 0.05면 정규성 가정 유지</span></code></pre></div>
-<h3>2. 다중 검정 보정을 하지 않는다</h3>
+<h3 id="2-다중-검정-보정을-하지-않는다">2. 다중 검정 보정을 하지 않는다</h3>
 <p>여러 쌍을 비교하면서 개별 유의수준만 보면, 전체 1종 오류율이 폭증한다. ANOVA 후 사후 검정(Tukey HSD, Bonferroni 등)을 사용하거나, 여러 검정을 수행할 때는 Bonferroni 보정(<span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>α</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup><mo>=</mo><mi>α</mi><mi mathvariant="normal">/</mi><mi>m</mi></mrow><annotation encoding="application/x-tex">\alpha' = \alpha / m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7519em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7519em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord">/</span><span class="mord mathnormal">m</span></span></span></span></span>, <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi></mrow><annotation encoding="application/x-tex">m</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">m</span></span></span></span></span>은 검정 횟수)을 적용하자.</p>
-<h3>3. 효과 크기를 무시한다</h3>
+<h3 id="3-효과-크기를-무시한다">3. 효과 크기를 무시한다</h3>
 <p>p-value는 “효과가 있느냐 없느냐”만 말해줄 뿐, “효과가 <strong>얼마나 큰가</strong>“는 알려주지 않는다. 표본이 충분히 크면 아무리 작은 차이도 유의하게 나온다. 반드시 <strong>효과 크기</strong>(Effect Size)를 함께 보고해야 한다.</p>
 <table>
 <thead>
@@ -577,11 +627,11 @@ d <span class="token operator">=</span> cohens_d<span class="token punctuation">
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Cohen's d: </span><span class="token interpolation"><span class="token punctuation">{</span>d<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># → d의 절대값이 0.8 이상이면 큰 효과</span></code></pre></div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>검정 방법 선택은 결국 세 가지 질문으로 귀결된다. <strong>데이터가 연속인가 범주인가</strong>, <strong>집단이 몇 개인가</strong>, <strong>표본이 독립인가 대응인가</strong>. 이 글의 플로차트와 요약표를 기준점 삼아, 상황에 맞는 도구를 골라 쓰면 된다.</p>
 <p>하나 더 기억할 것 — 모든 모수적 검정에는 분포 가정이 깔려 있다. 정규성, 등분산성, 독립성. 이 가정이 깨지면 비모수 검정을 쓸 수 있지만, 그마저도 “순위”라는 정보 축약에 의존한다. <strong>분포 가정 자체에서 자유로워지는 방법은 없을까?</strong> 복원 추출로 분포를 직접 근사하는 <a href="/stats/bootstrap/">부트스트랩(Bootstrap)</a>이 그 답이다. 다음 글에서 만나자.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li>Wasserman, L. (2004). <em>All of Statistics</em>. Chapter 10: Hypothesis Testing and p-values.</li>
 <li>Rice, J.A. (2006). <em>Mathematical Statistics and Data Analysis</em>. 3rd Edition. Chapters 11-12.</li>
@@ -609,6 +659,6 @@ d <span class="token operator">=</span> cohens_d<span class="token punctuation">
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

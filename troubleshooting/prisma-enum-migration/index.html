@@ -4,7 +4,7 @@
     transparent 60%
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Troubleshooting</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">Prisma P3006 에러 해결: PostgreSQL enum의 트랜잭션 제약과 Shadow DB 문제</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.03.23.</span></div></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p>사내 인증 시스템에 SSO를 붙이면서, 기존 <code class="language-text">Role</code> enum에 <code class="language-text">PENDING</code> 값을 추가하는 마이그레이션을 작성했습니다. (웬만하면 enum은 쓰지 않는게 좋습니다.) 로컬 개발 DB에는 문제없이 적용됐고, 스테이징에도 잘 올라갔습니다. 그런데 며칠 뒤 다른 스키마 변경을 하려고 <code class="language-text">prisma migrate dev</code>를 실행하는 순간, 전혀 예상하지 못한 에러가 터졌습니다.</p>
 <br>
-<h2>에러 상황: P3006 Migration failed to apply cleanly</h2>
+<h2 id="에러-상황-p3006-migration-failed-to-apply-cleanly">에러 상황: P3006 Migration failed to apply cleanly</h2>
 <p><code class="language-text">prisma migrate dev</code>를 실행하자 다음과 같은 에러가 발생했습니다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Error: P3006
 
@@ -25,8 +25,8 @@ HINT: New enum values must be committed before they can be used.
 <p>언뜻 보면 자연스러운 흐름입니다. enum에 값을 추가하고, 그 값을 기본값으로 설정하는 것이니까요. 하지만 이 두 SQL문이 <strong>하나의 트랜잭션</strong> 안에서 실행되면 PostgreSQL이 거부합니다.</p>
 <p>이미 성공적으로 적용된 마이그레이션인데 왜 갑자기 에러가 나는 걸까요? 그 답은 Prisma의 <strong>Shadow Database</strong> 메커니즘에 있습니다.</p>
 <br>
-<h2>원인 분석: PostgreSQL enum과 트랜잭션의 제약</h2>
-<h3>ALTER TYPE … ADD VALUE의 트랜잭션 제약</h3>
+<h2 id="원인-분석-postgresql-enum과-트랜잭션의-제약">원인 분석: PostgreSQL enum과 트랜잭션의 제약</h2>
+<h3 id="alter-type-add-value의-트랜잭션-제약">ALTER TYPE … ADD VALUE의 트랜잭션 제약</h3>
 <p>PostgreSQL에서 enum 타입은 시스템 카탈로그(<code class="language-text">pg_enum</code>)에 저장되는 특수한 데이터 타입입니다. 일반 테이블 데이터와 달리, enum 값의 추가는 <strong>카탈로그 수준의 DDL 변경</strong>이기 때문에 트랜잭션 처리에 특별한 제약이 따릅니다.</p>
 <p>핵심은 이겁니다: <code class="language-text">ALTER TYPE ... ADD VALUE</code>로 추가된 enum 값은 <strong>해당 트랜잭션이 커밋된 후에야 사용 가능</strong>합니다. PostgreSQL이 이런 제약을 두는 이유는 enum 값의 OID(Object Identifier) 할당과 관련이 있습니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- 트랜잭션 시작 (Prisma가 마이그레이션 파일 전체를 하나의 트랜잭션으로 실행)</span>
@@ -51,7 +51,7 @@ HINT: New enum values must be committed before they can be used.
   <strong>💡 참고: PostgreSQL 12 이후의 변화</strong><br>
   PostgreSQL 12부터 <code>ALTER TYPE ... ADD VALUE</code>를 트랜잭션 내에서 실행하는 것 자체는 허용되었습니다. 하지만 <strong>같은 트랜잭션 안에서 그 새 값을 참조하는 것</strong>은 여전히 금지됩니다. 즉, <code>ADD VALUE</code>와 그 값을 사용하는 <code>ALTER TABLE</code>을 별도의 트랜잭션(또는 별도의 마이그레이션 파일)으로 분리해야 합니다.
 </div>
-<h3>Prisma Shadow Database가 문제를 증폭시키는 구조</h3>
+<h3 id="prisma-shadow-database가-문제를-증폭시키는-구조">Prisma Shadow Database가 문제를 증폭시키는 구조</h3>
 <p>여기서 한 가지 의문이 생깁니다. “이 마이그레이션은 며칠 전에 이미 성공적으로 적용됐는데, 왜 지금 에러가 나는 거지?”</p>
 <p>답은 Prisma의 <strong>Shadow Database</strong> 메커니즘에 있습니다. <code class="language-text">prisma migrate dev</code>를 실행하면, Prisma는 단순히 새 마이그레이션만 적용하는 게 아닙니다. 내부적으로 다음과 같은 과정을 거칩니다.</p>
 <div style="text-align: center; margin: 24px 0;">
@@ -118,21 +118,21 @@ HINT: New enum values must be committed before they can be used.
 </div>
 <p>이것은 Prisma가 자동 생성하는 SQL의 알려진 한계입니다. Prisma는 enum 값 추가와 해당 값 사용을 트랜잭션 분리 없이 단일 마이그레이션 파일에 넣어버립니다. <a href="https://github.com/prisma/prisma/issues/7815" target="_blank" rel="noopener noreferrer">Prisma GitHub 이슈</a>에서도 꾸준히 보고되고 있는 문제입니다.</p>
 <br>
-<h2>해결 방법: Shadow DB를 우회하는 수동 마이그레이션</h2>
+<h2 id="해결-방법-shadow-db를-우회하는-수동-마이그레이션">해결 방법: Shadow DB를 우회하는 수동 마이그레이션</h2>
 <p><code class="language-text">prisma migrate dev</code>가 Shadow DB를 사용하기 때문에 문제가 발생하므로, Shadow DB를 거치지 않는 수동 마이그레이션 방식으로 우회할 수 있습니다. Prisma 공식 문서에서도 이런 상황에 대해 3단계 수동 적용 방식을 권장합니다.</p>
-<h3>Step 1: prisma migrate diff로 SQL 생성</h3>
+<h3 id="step-1-prisma-migrate-diff로-sql-생성">Step 1: prisma migrate diff로 SQL 생성</h3>
 <p>현재 데이터베이스 상태와 <code class="language-text">schema.prisma</code> 파일의 차이를 SQL로 생성합니다. 이 명령은 Shadow DB를 사용하지 않고, 실제 DB의 현재 스키마를 직접 읽어서 비교합니다.</p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">$ npx prisma migrate <span class="token function">diff</span> <span class="token punctuation">\</span>
     --from-schema-datasource prisma/schema.prisma <span class="token punctuation">\</span>
     --to-schema-datamodel prisma/schema.prisma <span class="token punctuation">\</span>
     <span class="token parameter variable">--script</span> <span class="token operator">></span> prisma/migrations/<span class="token operator">&lt;</span>timestamp<span class="token operator">></span>_<span class="token operator">&lt;</span>migration_name<span class="token operator">></span>/migration.sql</code></pre></div>
 <p>생성된 SQL 파일을 꼭 확인하세요. 의도한 변경 사항만 포함되어 있는지 눈으로 검증하는 것이 중요합니다.</p>
-<h3>Step 2: prisma db execute로 직접 실행</h3>
+<h3 id="step-2-prisma-db-execute로-직접-실행">Step 2: prisma db execute로 직접 실행</h3>
 <p>생성된 SQL을 데이터베이스에 직접 실행합니다. 이 과정은 Shadow DB를 거치지 않으므로, enum 트랜잭션 문제의 영향을 받지 않습니다.</p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">$ npx prisma db execute <span class="token punctuation">\</span>
     <span class="token parameter variable">--file</span> prisma/migrations/<span class="token operator">&lt;</span>timestamp<span class="token operator">></span>_<span class="token operator">&lt;</span>migration_name<span class="token operator">></span>/migration.sql <span class="token punctuation">\</span>
     <span class="token parameter variable">--schema</span> prisma/schema.prisma</code></pre></div>
-<h3>Step 3: prisma migrate resolve로 히스토리 등록</h3>
+<h3 id="step-3-prisma-migrate-resolve로-히스토리-등록">Step 3: prisma migrate resolve로 히스토리 등록</h3>
 <p>마지막으로, 방금 수동으로 적용한 마이그레이션을 Prisma의 마이그레이션 히스토리(<code class="language-text">_prisma_migrations</code> 테이블)에 “적용됨”으로 등록합니다.</p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">$ npx prisma migrate resolve <span class="token parameter variable">--applied</span> <span class="token operator">&lt;</span>migration_name<span class="token operator">></span></code></pre></div>
 <p>모든 과정이 끝나면 <code class="language-text">prisma migrate status</code>로 상태를 확인합니다.</p>
@@ -153,8 +153,8 @@ Database schema is up to date<span class="token operator">!</span></code></pre><
   이 방식은 prod/dev 히스토리를 깨뜨리지 않습니다. <code>prisma migrate resolve</code>는 마이그레이션 히스토리 테이블에 기록만 남기므로, 기존에 적용된 마이그레이션과 충돌하지 않습니다.
 </div>
 <br>
-<h2>재발 방지</h2>
-<h3>방법 1: 마이그레이션 파일 수동 분리</h3>
+<h2 id="재발-방지">재발 방지</h2>
+<h3 id="방법-1-마이그레이션-파일-수동-분리">방법 1: 마이그레이션 파일 수동 분리</h3>
 <p>Prisma가 생성한 마이그레이션 SQL에서 enum 값 추가와 사용이 같은 파일에 있다면, 수동으로 두 개의 마이그레이션으로 분리할 수 있습니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- ❌ Before: 하나의 마이그레이션 파일</span>
 <span class="token keyword">ALTER</span> <span class="token keyword">TYPE</span> <span class="token string">"Role"</span> <span class="token keyword">ADD</span> <span class="token keyword">VALUE</span> <span class="token string">'PENDING'</span><span class="token punctuation">;</span>
@@ -164,7 +164,7 @@ Database schema is up to date<span class="token operator">!</span></code></pre><
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- ✅ After: 마이그레이션 2 (set_pending_default)</span>
 <span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> <span class="token string">"user"</span> <span class="token keyword">ALTER</span> <span class="token keyword">COLUMN</span> <span class="token string">"role"</span> <span class="token keyword">SET</span> <span class="token keyword">DEFAULT</span> <span class="token string">'PENDING'</span><span class="token punctuation">;</span></code></pre></div>
 <p><code class="language-text">prisma migrate dev --create-only</code>로 마이그레이션 파일만 생성한 뒤 SQL을 직접 편집하고, 필요하다면 폴더를 분리하면 됩니다.</p>
-<h3>방법 2: enum 대신 String 타입 사용</h3>
+<h3 id="방법-2-enum-대신-string-타입-사용">방법 2: enum 대신 String 타입 사용</h3>
 <p>근본적으로, PostgreSQL의 enum은 값 추가/삭제 시 이런 종류의 제약이 계속 따라옵니다. 값이 자주 변하는 컬럼이라면 <strong>String(TEXT) 타입 + 애플리케이션 레벨 검증</strong>으로 전환하는 것이 실용적입니다.</p>
 <div class="gatsby-highlight" data-language="prisma"><pre class="language-prisma"><code class="language-prisma">// ❌ Before: Prisma enum
 enum Role {
@@ -192,11 +192,11 @@ model User {
   </ul>
 </div>
 <br>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>Prisma는 대부분의 마이그레이션을 깔끔하게 자동 생성해주지만, PostgreSQL의 enum 트랜잭션 제약과 만나면 이런 함정에 빠질 수 있습니다. 특히 Shadow DB 때문에 “이미 적용된 마이그레이션이 갑자기 실패하는” 상황은 처음 겪으면 상당히 당황스럽습니다.</p>
 <p>경험상, enum에 새 값을 추가하는 마이그레이션을 작성할 때는 <code class="language-text">--create-only</code> 옵션으로 먼저 SQL을 확인하고, 필요하다면 수동으로 분리하는 습관을 들이는 것이 좋습니다. 혹은 애초에 값 변동이 잦은 컬럼은 String 타입으로 설계하는 것도 실용적인 선택입니다.</p>
 <br>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.postgresql.org/docs/current/sql-altertype.html" target="_blank" rel="noopener noreferrer">PostgreSQL ALTER TYPE 공식 문서</a></li>
 <li><a href="https://www.prisma.io/docs/orm/prisma-migrate/workflows/production-troubleshooting" target="_blank" rel="noopener noreferrer">Prisma — Production troubleshooting</a></li>
@@ -224,6 +224,6 @@ model User {
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

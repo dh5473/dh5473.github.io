@@ -6,7 +6,7 @@
 <p>이제 핵심 질문이 남았다. <strong>이 모델들 중 어떤 게 더 좋은가?</strong> “좋다”는 걸 어떻게 측정하는가?</p>
 <p>“정확도(Accuracy) 높은 게 좋은 모델 아니야?”라고 생각할 수 있다. 맞는 것 같지만, 현실은 그렇게 단순하지 않다. 이번 글부터 Phase 6 – 모델 평가 – 를 시작한다. 첫 번째 주제는 <strong>분류 모델의 평가 지표</strong>다.</p>
 <hr>
-<h2>1. Accuracy의 함정</h2>
+<h2 id="1-accuracy의-함정">1. Accuracy의 함정</h2>
 <p>Accuracy(정확도)는 가장 직관적인 지표다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Accuracy = 정확히 맞힌 수 / 전체 수</code></pre></div>
 <p>테스트 데이터 100개 중 95개를 맞히면 Accuracy 95%. 깔끔하다. 그런데 이런 상황을 보자.</p>
@@ -40,7 +40,7 @@
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Accuracy가 유용한 경우</strong><br>클래스 비율이 대체로 균형 잡혀 있고(예: 50:50 ~ 70:30), 양성/음성 오분류의 비용이 비슷할 때는 Accuracy도 충분히 좋은 지표다. 문제는 이런 조건이 현실에서 드물다는 것이다.</div>
 <p>Accuracy만으로 부족하다면, <strong>어떤 종류의 실수를 얼마나 했는지</strong> 분해해서 봐야 한다. 그 시작점이 Confusion Matrix다.</p>
 <hr>
-<h2>2. Confusion Matrix (혼동 행렬)</h2>
+<h2 id="2-confusion-matrix-혼동-행렬">2. Confusion Matrix (혼동 행렬)</h2>
 <p>Confusion Matrix는 모델의 예측 결과를 4가지로 분류한 표다.</p>
 <table>
 <thead>
@@ -81,11 +81,11 @@ cm <span class="token operator">=</span> confusion_matrix<span class="token punc
 <span class="token comment">#  [1, 4]]   ← 실제 Positive: FN=1, TP=4</span></code></pre></div>
 <p>Confusion Matrix 자체는 숫자의 나열일 뿐이다. 여기서 <strong>의미 있는 지표</strong>를 뽑아내야 한다.</p>
 <hr>
-<h2>3. Precision (정밀도)</h2>
+<h2 id="3-precision-정밀도">3. Precision (정밀도)</h2>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Precision = TP / (TP + FP)</code></pre></div>
 <p><strong>“모델이 Positive라고 예측한 것 중에서, 실제로 Positive인 비율”</strong></p>
 <p>직관적으로 말하면: 모델이 “이건 양성이다”라고 말했을 때, <strong>그 말을 얼마나 믿을 수 있는가?</strong></p>
-<h3>Precision이 중요한 상황</h3>
+<h3 id="precision이-중요한-상황">Precision이 중요한 상황</h3>
 <p><strong>False Positive의 비용이 클 때</strong> Precision을 중시한다.</p>
 <table>
 <thead>
@@ -115,11 +115,11 @@ cm <span class="token operator">=</span> confusion_matrix<span class="token punc
 </table>
 <p>스팸 필터를 예로 들면, 중요한 업무 메일이 스팸으로 분류되면 치명적이다. 차라리 스팸을 몇 개 놓치더라도(FN 증가), 스팸이라고 판단한 것은 확실히 스팸이어야 한다(높은 Precision).</p>
 <hr>
-<h2>4. Recall (재현율, Sensitivity)</h2>
+<h2 id="4-recall-재현율-sensitivity">4. Recall (재현율, Sensitivity)</h2>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Recall = TP / (TP + FN)</code></pre></div>
 <p><strong>“실제 Positive인 것 중에서, 모델이 Positive로 잡아낸 비율”</strong></p>
 <p>직관적으로: 진짜 양성 케이스를 <strong>얼마나 빠짐없이 잡아내는가?</strong></p>
-<h3>Recall이 중요한 상황</h3>
+<h3 id="recall이-중요한-상황">Recall이 중요한 상황</h3>
 <p><strong>False Negative의 비용이 클 때</strong> Recall을 중시한다.</p>
 <table>
 <thead>
@@ -150,7 +150,7 @@ cm <span class="token operator">=</span> confusion_matrix<span class="token punc
 <p>암 검진에서 실제 암 환자 100명 중 모델이 80명만 잡아내면 Recall은 80%다. 나머지 20명은 “정상”이라는 결과를 받고 집에 간다. 이 20명에게 Accuracy 99%는 의미 없다.</p>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Specificity (특이도)</strong><br>Recall이 "실제 양성 중 양성 예측 비율"이라면, Specificity는 반대쪽이다.<br><br><code>Specificity = TN / (TN + FP)</code><br><br>"실제 음성 중 음성으로 정확히 예측한 비율." ROC 곡선에서 X축이 1 - Specificity(= FPR)다.</div>
 <hr>
-<h2>5. Precision-Recall Trade-off</h2>
+<h2 id="5-precision-recall-trade-off">5. Precision-Recall Trade-off</h2>
 <p>Precision과 Recall은 <strong>시소 관계</strong>다. 하나를 올리면 다른 하나가 내려간다.</p>
 <p><a href="/ml/logistic-regression/">로지스틱 회귀</a>를 떠올려보자. 출력은 0~1 사이의 확률값이고, 기본 threshold는 0.5다. 확률이 0.5 이상이면 Positive, 미만이면 Negative로 분류한다. 이 threshold를 조절하면 Precision-Recall 균형이 바뀐다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">threshold를 낮추면 (예: 0.3):
@@ -162,7 +162,7 @@ threshold를 높이면 (예: 0.7):
 → 확실한 것만 Positive로 분류
 → Positive라고 한 것은 거의 맞음 → Precision ↑
 → 하지만 애매한 Positive를 놓침 → Recall ↓</code></pre></div>
-<h3>PR Curve</h3>
+<h3 id="pr-curve">PR Curve</h3>
 <p>threshold를 0에서 1까지 변화시키면서 Precision과 Recall을 기록하면 <strong>PR Curve</strong>(Precision-Recall Curve)가 된다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> precision_recall_curve
 <span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
@@ -223,7 +223,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
     </span></p>
 <p>이상적인 모델은 Precision과 Recall이 모두 1인 <strong>우상단 꼭짓점</strong>에 가깝다. 곡선 아래 면적(AP, Average Precision)이 클수록 좋다.</p>
 <hr>
-<h2>6. F1-Score</h2>
+<h2 id="6-f1-score">6. F1-Score</h2>
 <p>Precision과 Recall 중 하나만 보면 전체 그림을 놓친다. 둘을 하나의 숫자로 합치고 싶다. 산술 평균을 쓰면 되지 않을까?</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">산술 평균 = (Precision + Recall) / 2
 
@@ -274,7 +274,7 @@ F1 = 2 × (1.0 × 0.01) / (1.0 + 0.01) = 0.0198</code></pre></div>
 </table>
 <p>Precision과 Recall이 비슷할 때는 두 평균이 거의 같지만, 차이가 벌어질수록 F1이 훨씬 보수적인 점수를 매기는 것을 확인할 수 있다.</p>
 <hr>
-<h2>7. F-beta Score</h2>
+<h2 id="7-f-beta-score">7. F-beta Score</h2>
 <p>F1은 Precision과 Recall에 <strong>동일한 가중치</strong>를 준다. 하지만 실무에서는 한쪽이 더 중요한 경우가 대부분이다. 이때 <strong>F-beta Score</strong>를 쓴다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">F_β = (1 + β²) × (Precision × Recall) / (β² × Precision + Recall)</code></pre></div>
 <ul>
@@ -291,8 +291,8 @@ f2 <span class="token operator">=</span> fbeta_score<span class="token punctuati
 f05 <span class="token operator">=</span> fbeta_score<span class="token punctuation">(</span>y_true<span class="token punctuation">,</span> y_pred<span class="token punctuation">,</span> beta<span class="token operator">=</span><span class="token number">0.5</span><span class="token punctuation">)</span></code></pre></div>
 <p>β의 의미를 직관적으로 풀면: <strong>“Recall이 Precision보다 β배 더 중요하다”</strong>는 뜻이다. β=2이면 Recall을 Precision보다 2배 중시한다.</p>
 <hr>
-<h2>8. ROC Curve와 AUC</h2>
-<h3>ROC Curve</h3>
+<h2 id="8-roc-curve와-auc">8. ROC Curve와 AUC</h2>
+<h3 id="roc-curve">ROC Curve</h3>
 <p><strong>ROC(Receiver Operating Characteristic) Curve</strong>는 threshold를 변화시키면서 <strong>TPR(True Positive Rate)</strong>과 <strong>FPR(False Positive Rate)</strong>의 관계를 그린 곡선이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">TPR = TP / (TP + FN)  ← Recall과 동일
 FPR = FP / (FP + TN)  ← 1 - Specificity</code></pre></div>
@@ -358,7 +358,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
           />
         </picture>
     </span></p>
-<h3>AUC (Area Under the Curve)</h3>
+<h3 id="auc-area-under-the-curve">AUC (Area Under the Curve)</h3>
 <p><strong>AUC</strong>는 ROC 곡선 아래의 면적이다. 0에서 1 사이 값을 가진다.</p>
 <table>
 <thead>
@@ -393,7 +393,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
 <p>AUC의 직관적 의미: <strong>임의의 양성 샘플이 임의의 음성 샘플보다 높은 점수를 받을 확률</strong>이다. AUC = 0.85면, 양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때 모델이 양성에 더 높은 점수를 줄 확률이 85%다.</p>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 AUC의 장점</strong><br>AUC는 threshold에 독립적이다. 특정 threshold를 정하지 않아도 모델의 전반적인 분류 능력을 하나의 숫자로 평가할 수 있다. 서로 다른 모델을 비교할 때 특히 유용하다.</div>
 <hr>
-<h2>9. ROC Curve vs PR Curve</h2>
+<h2 id="9-roc-curve-vs-pr-curve">9. ROC Curve vs PR Curve</h2>
 <p>두 곡선 모두 모델의 성능을 시각화하지만, <strong>어떤 상황에서 어떤 걸 쓸지</strong>가 중요하다.</p>
 <table>
 <thead>
@@ -446,17 +446,17 @@ pr_auc <span class="token operator">=</span> average_precision_score<span class=
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"ROC-AUC: </span><span class="token interpolation"><span class="token punctuation">{</span>roc_auc<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"PR-AUC (AP): </span><span class="token interpolation"><span class="token punctuation">{</span>pr_auc<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>10. 다중 클래스 평가: Macro, Micro, Weighted</h2>
+<h2 id="10-다중-클래스-평가-macro-micro-weighted">10. 다중 클래스 평가: Macro, Micro, Weighted</h2>
 <p>지금까지는 이진 분류를 다뤘다. <a href="/ml/decision-boundary/">결정 경계</a>를 여러 클래스로 확장할 때, 각 클래스별 Precision/Recall/F1을 어떻게 하나로 합칠까? 세 가지 평균 방식이 있다.</p>
-<h3>Macro Average</h3>
+<h3 id="macro-average">Macro Average</h3>
 <p>각 클래스의 지표를 <strong>단순 평균</strong>한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Macro F1 = (F1_class0 + F1_class1 + F1_class2) / 3</code></pre></div>
 <p>모든 클래스를 <strong>동등하게</strong> 취급한다. 소수 클래스의 성능이 전체 점수에 크게 반영된다. 클래스 불균형이 있을 때 소수 클래스 성능을 확인하기 좋다.</p>
-<h3>Micro Average</h3>
+<h3 id="micro-average">Micro Average</h3>
 <p>전체 TP, FP, FN을 <strong>합산</strong>한 후 지표를 계산한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Micro Precision = 전체 TP / (전체 TP + 전체 FP)</code></pre></div>
 <p>다수 클래스의 영향력이 크다. 전체적인 정확도와 비슷한 값이 나온다.</p>
-<h3>Weighted Average</h3>
+<h3 id="weighted-average">Weighted Average</h3>
 <p>각 클래스의 <strong>샘플 수에 비례</strong>하여 가중 평균한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Weighted F1 = Σ (n_i / N) × F1_i</code></pre></div>
 <p>클래스 불균형을 반영하면서도 각 클래스의 기여를 샘플 수에 따라 조절한다.</p>
@@ -487,7 +487,7 @@ pr_auc <span class="token operator">=</span> average_precision_score<span class=
 </tbody>
 </table>
 <hr>
-<h2>11. 실전 예제: 여러 모델 비교</h2>
+<h2 id="11-실전-예제-여러-모델-비교">11. 실전 예제: 여러 모델 비교</h2>
 <p>지금까지 배운 지표를 모두 활용해서, <a href="/ml/random-forest/">랜덤 포레스트</a>와 <a href="/ml/xgboost-vs-lightgbm/">XGBoost</a> 등 여러 모델을 비교해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> make_classification
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
@@ -558,9 +558,9 @@ weighted avg      0.954     0.957     0.955       600
 </ol>
 <p>모델 간 비교 시 <strong>어떤 지표를 기준으로 삼을지</strong>는 비즈니스 맥락에 따라 달라진다.</p>
 <hr>
-<h2>12. 지표 선택 가이드</h2>
+<h2 id="12-지표-선택-가이드">12. 지표 선택 가이드</h2>
 <p>모든 지표를 알았으니, 이제 실전에서 <strong>언제 어떤 지표를 쓸지</strong> 정리하자.</p>
-<h3>비즈니스 맥락별 선택</h3>
+<h3 id="비즈니스-맥락별-선택">비즈니스 맥락별 선택</h3>
 <table>
 <thead>
 <tr>
@@ -607,7 +607,7 @@ weighted avg      0.954     0.957     0.955       600
 </tr>
 </tbody>
 </table>
-<h3>실전 의사결정 플로우</h3>
+<h3 id="실전-의사결정-플로우">실전 의사결정 플로우</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">클래스가 균형인가?
 ├── Yes → Accuracy + F1로 충분
 └── No → 불균형 데이터
@@ -618,10 +618,10 @@ weighted avg      0.954     0.957     0.955       600
     └── 전반적 비교?
         └── PR-AUC 사용</code></pre></div>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실무 팁: 지표는 하나만 보지 마라</strong><br>보고서에는 주요 지표(primary metric) 하나를 기준으로 삼되, 보조 지표(secondary metrics)도 함께 제시해야 한다. 예를 들어 암 검진 모델이면 Recall을 primary로 삼되, Precision이 너무 낮지 않은지(false alarm이 너무 많으면 의료진이 무시하게 됨) 반드시 확인한다. 지표 하나에 올인하면 다른 쪽이 무너지는 함정에 빠진다.</div>
-<h3>지표와 <a href="/ml/decision-boundary/">결정 경계</a>의 관계</h3>
+<h3 id="지표와-결정-경계의-관계">지표와 <a href="/ml/decision-boundary/">결정 경계</a>의 관계</h3>
 <p>threshold를 조절하면 <a href="/ml/decision-boundary/">결정 경계</a>가 이동한다. threshold를 낮추면 경계가 Negative 쪽으로 밀려서 더 많은 샘플이 Positive로 분류된다. 결국 평가 지표 선택은 <strong>“결정 경계를 어디에 그을 것인가”</strong>에 대한 비즈니스 판단과 직결된다.</p>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <table>
 <thead>
 <tr>
@@ -675,7 +675,7 @@ weighted avg      0.954     0.957     0.955       600
 <li><strong>ROC-AUC로 전반적 비교, PR-AUC로 불균형 검증</strong> – 둘 다 확인하라</li>
 </ol>
 <hr>
-<h2>다음 글 미리보기</h2>
+<h2 id="다음-글-미리보기">다음 글 미리보기</h2>
 <p>분류 모델의 평가 지표를 정리했다. 하지만 <a href="/ml/linear-regression/">선형 회귀</a>나 <a href="/ml/multiple-linear-regression/">다중 선형 회귀</a>처럼 <strong>연속된 값을 예측하는 회귀 모델</strong>은 Precision이나 Recall로 평가할 수 없다. 다음 글에서는 MSE, RMSE, MAE, R² 등 <a href="/ml/regression-metrics/">회귀 모델의 평가 지표</a>를 다룬다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/neural-network-tips/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">신경망 학습 안정화: Dropout, Batch Normalization, 가중치 초기화</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/regression-metrics/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">회귀 모델 평가 지표: MSE, MAE, R², MAPE 언제 어떤 걸 쓸까</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
     window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
       'G-WSM9M8LZ1S'
@@ -698,6 +698,6 @@ weighted avg      0.954     0.957     0.955       600
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

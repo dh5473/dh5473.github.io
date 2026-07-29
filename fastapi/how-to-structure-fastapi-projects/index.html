@@ -11,7 +11,7 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 <span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>get</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">)</span>
 <span class="token keyword">def</span> <span class="token function">read_root</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token keyword">return</span> <span class="token punctuation">{</span><span class="token string">"message"</span><span class="token punctuation">:</span> <span class="token string">"Hello, FastAPI!"</span><span class="token punctuation">}</span></code></pre></div>
-<h2>왜 프로젝트 구조화가 중요할까?</h2>
+<h2 id="왜-프로젝트-구조화가-중요할까">왜 프로젝트 구조화가 중요할까?</h2>
 <p>좋은 프로젝트 구조는 단순히 파일을 정리하는 것 이상의 의미를 가지고 있습니다.</p>
 <ul>
 <li>확장성 (Scalability)</li>
@@ -19,7 +19,7 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 <li>협업 효율성 (Team Collaboration)</li>
 </ul>
 <p>위 3가지는 프로젝트 구조화가 필요한 이유들입니다. 잘 구조화된 코드는 프로젝트 크기에 맞춰 자연스럽게 확장되며, 새로운 기능을 추가하거나 기존 기능을 수정할 때, 어디에 어떻게 코드를 작성해야 할지 명확하게 정의할 수 있습니다. 또한 팀 단위로 개발할 때, 각자 담당하는 모듈이 분리되어 있으면 충돌 없이 병렬로 작업이 가능합니다.</p>
-<h2>프로젝트 구조화 핵심 원칙</h2>
+<h2 id="프로젝트-구조화-핵심-원칙">프로젝트 구조화 핵심 원칙</h2>
 <p>그렇다면 구조화를 어떻게 진행해야 효과적일까요? FastAPI의 경우 아래 4가지 원칙을 잘 고려해야 합니다.</p>
 <ul>
 <li>
@@ -39,7 +39,7 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 <p>의존성 주입과 모킹을 통해 각 컴포넌트를 독립적으로 테스트할 수 있도록 코드를 작성합니다.</p>
 </li>
 </ul>
-<h2><strong>File-Type</strong> 기반</h2>
+<h2 id="file-type-기반"><strong>File-Type</strong> 기반</h2>
 <p>FastAPI 프로젝트는 크게 두 가지 방식으로 구조화할 수 있습니다. 먼저 첫 번째 방식은 <strong>파일의 역할</strong>에 따라 구조화하는 것입니다. 라우터, 모델, 스키마 등을 각각의 디렉토리로 분리합니다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">.
 ├── app
@@ -75,7 +75,7 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 ├── .gitignore
 └── README.md</code></pre></div>
 <p>이 구조는 <strong>마이크로서비스</strong>나 <strong>상대적으로 작은 규모의 프로젝트</strong>에 적합합니다. 각 서비스가 단일 책임을 가지고, 도메인이 명확하게 구분되는 경우에 효과적입니다.</p>
-<h2><strong>Module-Functionality</strong> 기반</h2>
+<h2 id="module-functionality-기반"><strong>Module-Functionality</strong> 기반</h2>
 <p>두 번째 방식은 <strong>비즈니스 도메인에 따라</strong> 구조화하는 것입니다. 각 기능별로 필요한 모든 파일들을 하나의 패키지로 묶는 방식입니다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">fastapi-project
 ├── alembic/
@@ -130,7 +130,7 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 <p>이때 모듈 기능 기반 구조에서는 다른 패키지의 서비스나 의존성을 사용할 때, 아래와 같이 명시적인 모듈명을 사용하여 모호함을 방지하는 것이 좋습니다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> src<span class="token punctuation">.</span>auth <span class="token keyword">import</span> constants <span class="token keyword">as</span> auth_constants
 <span class="token keyword">from</span> src<span class="token punctuation">.</span>notifications <span class="token keyword">import</span> service <span class="token keyword">as</span> notification_service</code></pre></div>
-<h2>그래서 어떤 구조를 사용해야 하나요?</h2>
+<h2 id="그래서-어떤-구조를-사용해야-하나요">그래서 어떤 구조를 사용해야 하나요?</h2>
 <p>우선 위에서 살펴본 두 구조를 간단하게 정리해보겠습니다.</p>
 <div style="overflow-x: auto; margin: 24px 0;">
   <table style="width: 100%; max-width: 800px; margin: 0 auto; border-collapse: collapse; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
@@ -203,10 +203,10 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
 ├── Dockerfile             <span class="token comment"># 도커 이미지 빌드</span>
 └── README<span class="token punctuation">.</span>md              <span class="token comment"># 프로젝트 문서</span></code></pre></div>
 <p>그래도 고민 된다면 <a href="https://github.com/zhanymkanov/fastapi-best-practices#1-project-structure-consistent--predictable" target="_blank" rel="noopener noreferrer">FastAPI Best Practices</a>에서 프로젝트 구조와 관련된 더 상세한 정보를 확인할 수 있습니다.</p>
-<h2>마무리</h2>
+<h2 id="마무리">마무리</h2>
 <p>이번 글에서는 프로젝트의 확장성과 유지보수를 위해 FastAPI의 두 가지 주요 구조화 전략에 대해 알아보았습니다. 두 가지 구조 모두 각각의 장점이 있고, 상황에 따라 유연하게 구조를 변경할 수도 있기 때문에 프로젝트의 규모, 복잡성, 팀 구조 등을 고려하여 적절하게 선택하는 것이 중요합니다.</p>
 <p>다음 글에서는 프로젝트 구조와도 관련 있는 FastAPI의 의존성 주입에 대해 더 자세히 다뤄보도록 하겠습니다.</p>
-<h2>참고 자료</h2>
+<h2 id="참고-자료">참고 자료</h2>
 <ul>
 <li><a href="https://medium.com/@amirm.lavasani/how-to-structure-your-fastapi-projects-0219a6600a8f" target="_blank" rel="noopener noreferrer">How to structure your FastAPI projects</a> - FastAPI 프로젝트 구조화에 대한 실무 관점의 가이드</li>
 <li><a href="https://fastapi.tiangolo.com/tutorial/bigger-applications/" target="_blank" rel="noopener noreferrer">Bigger Applications - Multiple Files</a> - FastAPI 공식 문서의 대규모 애플리케이션 구조화 가이드</li>
@@ -233,6 +233,6 @@ app <span class="token operator">=</span> FastAPI<span class="token punctuation"
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

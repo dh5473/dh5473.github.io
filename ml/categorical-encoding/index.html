@@ -5,7 +5,7 @@
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">범주형 데이터 인코딩: One-Hot, Label, Ordinal Encoding 총정리</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.30.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">26</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/regression-metrics/">회귀 모델 평가 지표: MSE, MAE, R², MAPE 언제 어떤 걸 쓸까</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">27</span><a class="css-dizrmv e4kcwtw5" href="/ml/cross-validation/">교차 검증(Cross-Validation): K-Fold, Stratified, Time Series Split</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">28</span><a class="css-dizrmv e4kcwtw5" href="/ml/hyperparameter-tuning/">하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">29</span><a class="css-dizrmv e4kcwtw5" href="/ml/ml-practical-advice/">머신러닝 실전 가이드: 학습 곡선, 오차 분석, 다음 스텝 결정법</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">30</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">범주형 데이터 인코딩: One-Hot, Label, Ordinal Encoding 총정리</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">6<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p><a href="/ml/ml-practical-advice/">이전 글</a>에서 학습 곡선 진단, 오차 분석, 다음 스텝 결정법을 다뤘다. Phase 6까지는 모델을 선택하고, 학습하고, 평가하고, 문제를 진단하는 <strong>파이프라인 전체</strong>를 훑었다. 그런데 진단을 끝내고 “피처를 개선하라”는 결론이 나왔을 때, 구체적으로 뭘 어떻게 해야 하는가?</p>
 <p>Phase 7은 <strong>피처 엔지니어링(Feature Engineering)</strong> 이다. 모델 성능을 가장 크게 좌우하는 건 알고리즘이 아니라 데이터다. 같은 모델이라도 피처를 어떻게 가공하느냐에 따라 정확도가 5~15% 달라진다. 그 첫 번째 주제가 바로 <strong>범주형 데이터 인코딩</strong>이다.</p>
 <hr>
-<h2>1. 왜 인코딩이 필요한가</h2>
+<h2 id="1-왜-인코딩이-필요한가">1. 왜 인코딩이 필요한가</h2>
 <p>대부분의 머신러닝 모델은 <strong>숫자</strong>만 입력으로 받는다. <a href="/ml/linear-regression/">선형 회귀</a>는 가중치와 피처의 내적을 계산하고, <a href="/ml/logistic-regression/">로지스틱 회귀</a>는 그 결과를 시그모이드에 통과시킨다. “서울”, “부산”, “대구” 같은 문자열로는 내적을 계산할 수 없다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># 이건 계산이 안 된다
 y = w1 * "서울" + w2 * 25 + w3 * "남성"
@@ -14,7 +14,7 @@ y = w1 * "서울" + w2 * 25 + w3 * "남성"
 y = w1 * 0 + w2 * 25 + w3 * 1</code></pre></div>
 <p>범주형 변수를 숫자로 바꾸는 과정이 <strong>인코딩(Encoding)</strong> 이다. 단, 아무렇게나 숫자를 붙이면 모델이 엉뚱한 패턴을 학습한다. 인코딩 방법 선택이 곧 모델 성능을 결정한다.</p>
 <hr>
-<h2>2. 범주형 변수의 두 가지 유형</h2>
+<h2 id="2-범주형-변수의-두-가지-유형">2. 범주형 변수의 두 가지 유형</h2>
 <p>인코딩 방법을 고르기 전에, 변수의 성격을 먼저 구분해야 한다.</p>
 <table>
 <thead>
@@ -42,13 +42,13 @@ y = w1 * 0 + w2 * 25 + w3 * 1</code></pre></div>
 </table>
 <p>이 구분이 인코딩 방법 선택의 출발점이다. 순서가 없는 변수에 순서를 부여하면 모델이 “부산 > 서울”이라는 관계를 학습해버린다.</p>
 <hr>
-<h2>3. Label Encoding — 가장 단순한 방법</h2>
+<h2 id="3-label-encoding-가장-단순한-방법">3. Label Encoding — 가장 단순한 방법</h2>
 <p>각 카테고리에 정수를 하나씩 매핑한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">서울 → 0
 부산 → 1
 대구 → 2
 인천 → 3</code></pre></div>
-<h3>sklearn 구현</h3>
+<h3 id="sklearn-구현">sklearn 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> LabelEncoder
 
 le <span class="token operator">=</span> LabelEncoder<span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -59,7 +59,7 @@ df<span class="token punctuation">[</span><span class="token string">'city_encod
 
 <span class="token keyword">print</span><span class="token punctuation">(</span>le<span class="token punctuation">.</span>transform<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'서울'</span><span class="token punctuation">,</span> <span class="token string">'부산'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
 <span class="token comment"># [2, 1]</span></code></pre></div>
-<h3>문제: 거짓 순서</h3>
+<h3 id="문제-거짓-순서">문제: 거짓 순서</h3>
 <p>Label Encoding은 카테고리를 알파벳(또는 가나다) 순으로 정렬하고 0, 1, 2, 3을 부여한다. 모델 입장에서 이 숫자는 <strong>크기</strong>로 해석된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">대구(0) &lt; 부산(1) &lt; 서울(2) &lt; 인천(3)
 
@@ -69,11 +69,11 @@ df<span class="token punctuation">[</span><span class="token string">'city_encod
 <p>이런 관계는 도시 데이터에 전혀 성립하지 않는다. <a href="/ml/logistic-regression/">로지스틱 회귀</a>나 <a href="/ml/knn/">KNN</a>처럼 거리 계산을 하는 모델에서 이 문제가 특히 심각하다.</p>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Label Encoding은 언제 써도 되는가?</strong><br>트리 기반 모델(<a href="/ml/decision-tree/">의사결정나무</a>, <a href="/ml/random-forest/">랜덤 포레스트</a>, <a href="/ml/xgboost-vs-lightgbm/">XGBoost/LightGBM</a>)은 피처의 크기가 아니라 <strong>분할 지점(threshold)</strong>으로 학습한다. "city <= 1"이면 왼쪽, 아니면 오른쪽 — 이런 식이다. 따라서 숫자의 절대적 크기나 간격이 중요하지 않다. 트리 모델에서는 Label Encoding이 실무에서 가장 많이 쓰인다.</div>
 <hr>
-<h2>4. Ordinal Encoding — 순서가 있을 때</h2>
+<h2 id="4-ordinal-encoding-순서가-있을-때">4. Ordinal Encoding — 순서가 있을 때</h2>
 <p>순서형 변수에는 <strong>의미 있는 순서</strong>를 직접 지정해서 인코딩한다. Label Encoding과 결과가 비슷하지만, 순서를 명시적으로 제어하는 것이 핵심이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">S → 0,  M → 1,  L → 2,  XL → 3
 # 실제로 S &lt; M &lt; L &lt; XL 순서가 성립</code></pre></div>
-<h3>sklearn 구현</h3>
+<h3 id="sklearn-구현-1">sklearn 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> OrdinalEncoder
 
 <span class="token comment"># 순서를 명시적으로 지정</span>
@@ -88,14 +88,14 @@ df<span class="token punctuation">[</span><span class="token string">'size_encod
 <span class="token comment">#      M           1.0</span>
 <span class="token comment">#      L           2.0</span>
 <span class="token comment">#     XL           3.0</span></code></pre></div>
-<h3>교육 수준 예시</h3>
+<h3 id="교육-수준-예시">교육 수준 예시</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">edu_order <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'고졸'</span><span class="token punctuation">,</span> <span class="token string">'학사'</span><span class="token punctuation">,</span> <span class="token string">'석사'</span><span class="token punctuation">,</span> <span class="token string">'박사'</span><span class="token punctuation">]</span><span class="token punctuation">]</span>
 oe <span class="token operator">=</span> OrdinalEncoder<span class="token punctuation">(</span>categories<span class="token operator">=</span>edu_order<span class="token punctuation">)</span>
 df<span class="token punctuation">[</span><span class="token string">'edu_encoded'</span><span class="token punctuation">]</span> <span class="token operator">=</span> oe<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>df<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'education'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
 <p>Ordinal Encoding은 순서 정보가 모델에 <strong>도움이 될 때</strong> 쓴다. 순서가 있다고 해서 등간격이 보장되는 건 아니지만(고졸→학사와 석사→박사의 차이가 같다고 보기 어려움), 적어도 방향은 맞다.</p>
 <div style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>⚠️ Label vs Ordinal 차이</strong><br>sklearn의 <code>LabelEncoder</code>는 1D 배열(타깃 변수용), <code>OrdinalEncoder</code>는 2D 배열(피처용)을 받는다. 피처 인코딩에는 <code>OrdinalEncoder</code>를 쓰는 게 맞다. <code>LabelEncoder</code>는 원래 타깃(y) 인코딩용으로 설계되었다.</div>
 <hr>
-<h2>5. One-Hot Encoding — 가장 안전한 방법</h2>
+<h2 id="5-one-hot-encoding-가장-안전한-방법">5. One-Hot Encoding — 가장 안전한 방법</h2>
 <p>명목형 변수에 가장 널리 쓰이는 방법이다. 각 카테고리를 별도의 이진(0/1) 컬럼으로 만든다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">원본:          One-Hot:
 city           city_서울  city_부산  city_대구  city_인천
@@ -105,7 +105,7 @@ city           city_서울  city_부산  city_대구  city_인천
 인천     →       0         0         0         1
 서울     →       1         0         0         0</code></pre></div>
 <p>숫자 사이에 크기 관계가 없다. 각 카테고리가 독립된 차원으로 표현되기 때문에 <strong>거짓 순서 문제</strong>가 원천적으로 사라진다.</p>
-<h3>pandas: get_dummies</h3>
+<h3 id="pandas-get_dummies">pandas: get_dummies</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
 
 df <span class="token operator">=</span> pd<span class="token punctuation">.</span>DataFrame<span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token string">'city'</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'서울'</span><span class="token punctuation">,</span> <span class="token string">'부산'</span><span class="token punctuation">,</span> <span class="token string">'대구'</span><span class="token punctuation">,</span> <span class="token string">'인천'</span><span class="token punctuation">,</span> <span class="token string">'서울'</span><span class="token punctuation">]</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
@@ -118,7 +118,7 @@ encoded <span class="token operator">=</span> pd<span class="token punctuation">
 <span class="token comment"># 2       1       0       0       0</span>
 <span class="token comment"># 3       0       0       0       1</span>
 <span class="token comment"># 4       0       0       1       0</span></code></pre></div>
-<h3>sklearn: OneHotEncoder</h3>
+<h3 id="sklearn-onehotencoder">sklearn: OneHotEncoder</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> OneHotEncoder
 
 ohe <span class="token operator">=</span> OneHotEncoder<span class="token punctuation">(</span>sparse_output<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
@@ -128,8 +128,8 @@ encoded <span class="token operator">=</span> ohe<span class="token punctuation"
 <span class="token comment"># ['city_대구', 'city_부산', 'city_서울', 'city_인천']</span></code></pre></div>
 <p><code class="language-text">sparse_output=False</code>를 지정하면 밀집 배열(dense array)로 반환한다. 기본값은 희소 행렬(sparse matrix)인데, 카테고리 수가 많을 때 메모리를 절약하기 위함이다.</p>
 <hr>
-<h2>6. One-Hot Encoding의 함정</h2>
-<h3>함정 1: 고카디널리티 폭발</h3>
+<h2 id="6-one-hot-encoding의-함정">6. One-Hot Encoding의 함정</h2>
+<h3 id="함정-1-고카디널리티-폭발">함정 1: 고카디널리티 폭발</h3>
 <p>카테고리 수가 많으면 컬럼 수가 폭발한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># 카테고리 수 = 생성되는 컬럼 수
 도시 (4개)     → 4 컬럼    ✓ 괜찮다
@@ -162,7 +162,7 @@ encoded <span class="token operator">=</span> ohe<span class="token punctuation"
 </tr>
 </tbody>
 </table>
-<h3>함정 2: 다중공선성 (Multicollinearity)</h3>
+<h3 id="함정-2-다중공선성-multicollinearity">함정 2: 다중공선성 (Multicollinearity)</h3>
 <p>4개 카테고리를 One-Hot으로 만들면, 4개 컬럼의 합은 항상 1이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">city_서울 + city_부산 + city_대구 + city_인천 = 1 (모든 행에서)
 
@@ -180,7 +180,7 @@ encoded <span class="token operator">=</span> ohe<span class="token punctuation"
 <p>기준 카테고리(여기서는 ‘대구’)는 나머지가 모두 0일 때 자동으로 표현된다. 컬럼 수도 <code class="language-text">n-1</code>로 줄어든다.</p>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 drop_first는 항상 필요한가?</strong><br>트리 기반 모델은 다중공선성의 영향을 거의 받지 않는다. <code>drop_first</code>는 주로 선형 모델(선형 회귀, 로지스틱 회귀)에서 중요하다. 트리 모델을 쓸 때는 오히려 drop하지 않는 게 해석이 쉽다.</div>
 <hr>
-<h2>7. Binary Encoding — Label과 One-Hot의 절충</h2>
+<h2 id="7-binary-encoding-label과-one-hot의-절충">7. Binary Encoding — Label과 One-Hot의 절충</h2>
 <p>카테고리 수가 많을 때 One-Hot의 차원 폭발을 줄이면서, Label Encoding의 거짓 순서 문제도 피하는 방법이다.</p>
 <p><strong>원리</strong>: 카테고리에 정수를 부여한 뒤, 그 정수를 <strong>이진수(binary)</strong> 로 변환하고, 각 비트를 별도 컬럼으로 만든다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">카테고리   정수    이진    bit_2  bit_1  bit_0
@@ -198,7 +198,7 @@ encoded <span class="token operator">=</span> ohe<span class="token punctuation"
 
 encoder <span class="token operator">=</span> ce<span class="token punctuation">.</span>BinaryEncoder<span class="token punctuation">(</span>cols<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'city'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
 df_encoded <span class="token operator">=</span> encoder<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>df<span class="token punctuation">)</span></code></pre></div>
-<h3>One-Hot vs Binary vs Label 비교</h3>
+<h3 id="one-hot-vs-binary-vs-label-비교">One-Hot vs Binary vs Label 비교</h3>
 <table>
 <thead>
 <tr>
@@ -237,7 +237,7 @@ df_encoded <span class="token operator">=</span> encoder<span class="token punct
 </table>
 <p>카테고리 수가 커질수록 Binary Encoding의 장점이 두드러진다.</p>
 <hr>
-<h2>8. Frequency / Count Encoding — 빈도로 인코딩</h2>
+<h2 id="8-frequency-count-encoding-빈도로-인코딩">8. Frequency / Count Encoding — 빈도로 인코딩</h2>
 <p>카테고리를 <strong>등장 횟수</strong> 또는 <strong>등장 비율</strong>로 대체하는 방법이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Count Encoding: 등장 횟수</span>
 freq_map <span class="token operator">=</span> df<span class="token punctuation">[</span><span class="token string">'city'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>value_counts<span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -252,19 +252,19 @@ df<span class="token punctuation">[</span><span class="token string">'city_freq'
 대구      600    0.12
 인천      500    0.10
 ...</code></pre></div>
-<h3>장점</h3>
+<h3 id="장점">장점</h3>
 <ul>
 <li>컬럼 1개로 유지 (차원 증가 없음)</li>
 <li>고카디널리티 변수에도 적용 가능</li>
 <li>빈도 자체가 유의미한 신호일 때 효과적 (인기 도시일수록 집값이 높다 등)</li>
 </ul>
-<h3>주의점</h3>
+<h3 id="주의점">주의점</h3>
 <ul>
 <li>등장 횟수가 같은 카테고리는 같은 값으로 인코딩된다 (정보 손실)</li>
 <li>빈도가 타깃과 무관하면 노이즈만 추가한다</li>
 </ul>
 <hr>
-<h2>9. 어떤 인코딩을 어떤 모델에 쓸 것인가</h2>
+<h2 id="9-어떤-인코딩을-어떤-모델에-쓸-것인가">9. 어떤 인코딩을 어떤 모델에 쓸 것인가</h2>
 <p>이 부분이 실무에서 가장 중요하다. 모델 특성에 따라 최적의 인코딩이 다르다.</p>
 <table>
 <thead>
@@ -303,7 +303,7 @@ df<span class="token punctuation">[</span><span class="token string">'city_freq'
 </tbody>
 </table>
 <div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실무 요약</strong><br>트리 모델 → Label Encoding으로 시작.<br>선형/거리 기반 모델 → One-Hot Encoding으로 시작.<br>카디널리티가 높으면 → Binary 또는 Frequency Encoding을 검토.<br>이 세 줄이면 80% 상황을 커버한다.</div>
-<h3>LightGBM의 자체 범주형 처리</h3>
+<h3 id="lightgbm의-자체-범주형-처리">LightGBM의 자체 범주형 처리</h3>
 <p><a href="/ml/xgboost-vs-lightgbm/">LightGBM</a>은 범주형 피처를 직접 처리하는 기능이 있다. 인코딩 없이 카테고리 정보를 그대로 넘기면 내부적으로 최적 분할을 찾는다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> lightgbm <span class="token keyword">as</span> lgb
 
@@ -314,7 +314,7 @@ model <span class="token operator">=</span> lgb<span class="token punctuation">.
 model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> categorical_feature<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'city'</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
 <p>이 방식은 One-Hot보다 메모리를 절약하고, 최적 분할을 자동으로 찾기 때문에 성능도 종종 더 좋다.</p>
 <hr>
-<h2>10. sklearn Pipeline으로 인코딩 자동화</h2>
+<h2 id="10-sklearn-pipeline으로-인코딩-자동화">10. sklearn Pipeline으로 인코딩 자동화</h2>
 <p>실전에서는 숫자형 피처와 범주형 피처가 섞여 있다. <code class="language-text">ColumnTransformer</code>로 각 피처 유형에 다른 전처리를 적용하고, <code class="language-text">Pipeline</code>으로 묶으면 코드가 깔끔해지고 데이터 누수도 방지된다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>compose <span class="token keyword">import</span> ColumnTransformer
@@ -358,8 +358,8 @@ y_pred <span class="token operator">=</span> pipe<span class="token punctuation"
 <li><strong>새로운 데이터에도</strong> — 배포 시 <code class="language-text">pipe.predict(new_data)</code>만 호출하면 전처리부터 예측까지 한 번에 처리된다.</li>
 </ol>
 <hr>
-<h2>11. 자주 하는 실수들</h2>
-<h3>실수 1: 인코딩을 분할 전에 한다 (데이터 누수)</h3>
+<h2 id="11-자주-하는-실수들">11. 자주 하는 실수들</h2>
+<h3 id="실수-1-인코딩을-분할-전에-한다-데이터-누수">실수 1: 인코딩을 분할 전에 한다 (데이터 누수)</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ✗ 잘못된 순서</span>
 df_encoded <span class="token operator">=</span> pd<span class="token punctuation">.</span>get_dummies<span class="token punctuation">(</span>df<span class="token punctuation">,</span> columns<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'city'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>  <span class="token comment"># 전체 데이터로 인코딩</span>
 X_train<span class="token punctuation">,</span> X_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>df_encoded<span class="token punctuation">)</span>      <span class="token comment"># 그 다음 분할</span>
@@ -370,7 +370,7 @@ encoder<span class="token punctuation">.</span>fit<span class="token punctuation
 X_train_enc <span class="token operator">=</span> encoder<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
 X_test_enc <span class="token operator">=</span> encoder<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span></code></pre></div>
 <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>🚨 데이터 누수 (Data Leakage)</strong><br>전체 데이터로 인코딩하면, 테스트 데이터의 카테고리 분포가 인코딩에 반영된다. 모델이 테스트 데이터의 정보를 간접적으로 학습하는 것이다. 교차 검증에서 점수가 높게 나오지만 실전에서는 성능이 떨어진다. Pipeline을 쓰면 이 실수를 구조적으로 방지할 수 있다.</div>
-<h3>실수 2: 테스트에 처음 보는 카테고리가 등장</h3>
+<h3 id="실수-2-테스트에-처음-보는-카테고리가-등장">실수 2: 테스트에 처음 보는 카테고리가 등장</h3>
 <p>훈련 데이터에 없던 카테고리가 테스트 데이터에 나타나면 에러가 발생한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 해결: handle_unknown='ignore' 설정</span>
 ohe <span class="token operator">=</span> OneHotEncoder<span class="token punctuation">(</span>handle_unknown<span class="token operator">=</span><span class="token string">'ignore'</span><span class="token punctuation">,</span> sparse_output<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
@@ -379,7 +379,7 @@ ohe<span class="token punctuation">.</span>fit<span class="token punctuation">(<
 <span class="token comment"># 훈련에 없던 '세종'이 테스트에 등장해도 에러 없이 전부 0으로 처리</span>
 X_test_enc <span class="token operator">=</span> ohe<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">handle_unknown='ignore'</code>를 설정하면 모르는 카테고리는 모든 One-Hot 컬럼이 0인 벡터로 인코딩된다. 프로덕션 환경에서는 거의 필수 옵션이다.</p>
-<h3>실수 3: get_dummies의 함정</h3>
+<h3 id="실수-3-get_dummies의-함정">실수 3: get_dummies의 함정</h3>
 <p><code class="language-text">pd.get_dummies</code>는 편리하지만, <strong>훈련과 테스트의 컬럼이 다를 수 있다.</strong></p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 훈련 데이터: city = ['서울', '부산', '대구']</span>
 train_encoded <span class="token operator">=</span> pd<span class="token punctuation">.</span>get_dummies<span class="token punctuation">(</span>train_df<span class="token punctuation">)</span>  <span class="token comment"># 3개 컬럼 생성</span>
@@ -390,7 +390,7 @@ test_encoded <span class="token operator">=</span> pd<span class="token punctuat
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 불일치 해결 (get_dummies를 꼭 써야 한다면)</span>
 test_encoded <span class="token operator">=</span> test_encoded<span class="token punctuation">.</span>reindex<span class="token punctuation">(</span>columns<span class="token operator">=</span>train_encoded<span class="token punctuation">.</span>columns<span class="token punctuation">,</span> fill_value<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>12. 전체 인코딩 방법 비교 정리</h2>
+<h2 id="12-전체-인코딩-방법-비교-정리">12. 전체 인코딩 방법 비교 정리</h2>
 <table>
 <thead>
 <tr>
@@ -459,7 +459,7 @@ test_encoded <span class="token operator">=</span> test_encoded<span class="toke
            ├─ Yes → Label Encoding도 OK
            └─ No  → 위 흐름도 따르기</code></pre></div>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <p>범주형 인코딩은 “숫자로 바꾸면 끝”이 아니다. 변수의 성격(명목/순서), 카디널리티, 모델 유형에 따라 최적의 방법이 달라진다. 핵심을 요약하면:</p>
 <ol>
 <li><strong>명목형 + 선형 모델</strong> → One-Hot Encoding (drop_first)</li>
@@ -491,6 +491,6 @@ test_encoded <span class="token operator">=</span> test_encoded<span class="toke
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

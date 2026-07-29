@@ -12,12 +12,12 @@
 <li><strong>재현성 문제</strong>: 환경 간 일관된 패키지 버전 보장의 어려움</li>
 </ul>
 <p>이런 문제들을 해결하기 위해 poetry, pipenv, conda 등 다양한 도구들이 등장했지만, 기존의 문제들을 통합해서 해결하지는 못했습니다. 이때, 2024년 초 탄생한 uv는 Rust 기반의 매우 빠른 속도와 앞선 도구들의 장점을 통합하며 새로운 생태계를 이끌어가고 있습니다.</p>
-<h2>혜성처럼 등장한 uv</h2>
+<h2 id="혜성처럼-등장한-uv">혜성처럼 등장한 uv</h2>
 <p>uv의 가장 큰 장점은 <strong>편의성</strong>과 압도적인 <strong>속도</strong>입니다.</p>
 <p>꼭 필요한 파이썬 버전, 의존성, 가상환경, 패키징 관리 등을 알아서 처리합니다. 특히 패키지 간 버전 충돌을 명령어 하나로 알아서 업데이트하고 관리해주는 것이 큰 장점입니다.</p>
 <p>Rust 기반 Resolver(여러 패키지나 버전이 충돌할 때 어떤 버전을 사용할지 결정하는 규칙)으로 의존성 설치 속도가 pip나 poetry 대비 10~100배 빠릅니다. 캐싱, 최적화, 병렬 다운로드도 활용하는데, 사용해보면 차이가 눈에 보일 정도의 빠른 속도를 보여줍니다.</p>
 <p>아래에서 더 자세히 살펴보겠지만, 사용 명령어도 정말 간단한데 init, add, sync 이 3가지만으로 .venv 폴더나 버전 설정 등을 직접 신경쓰지 않아도 자동으로 생성하고 관리해줍니다.</p>
-<h3>uv 설치하기</h3>
+<h3 id="uv-설치하기">uv 설치하기</h3>
 <p>운영체제에 따라 아래 방법으로 설치하고 <code class="language-text">uv —version</code>으로 설치를 확인해볼 수 있습니다.</p>
 <p><strong>macOS / Linux</strong></p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash"><span class="token function">curl</span> <span class="token parameter variable">-LsSf</span> https://astral.sh/uv/install.sh <span class="token operator">|</span> <span class="token function">sh</span>
@@ -29,7 +29,7 @@
 <p><strong>Homebrew (macOS) 혹은 pip</strong></p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">brew <span class="token function">install</span> uv
 pip <span class="token function">install</span> uv</code></pre></div>
-<h3>프로젝트 생성</h3>
+<h3 id="프로젝트-생성">프로젝트 생성</h3>
 <p>uv를 활용하면 간단한 명령어로 프로젝트를 세팅할 수 있습니다.</p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">uv init my-project</code></pre></div>
 <p>위 명령어 하나로 python version, 패키지 의존성(pyproject.toml) 등과 관련된 기초 세팅이 완료됩니다.</p>
@@ -77,7 +77,7 @@ uv run pytest            <span class="token comment"># 테스트 실행</span>
 <span class="token comment"># 캐시 관리</span>
 uv cache clean           <span class="token comment"># 글로벌 캐시 정리</span>
 uv cache <span class="token function">dir</span>             <span class="token comment"># 캐시 디렉토리 위치 확인</span></code></pre></div>
-<h3>기존 프로젝트 마이그레이션</h3>
+<h3 id="기존-프로젝트-마이그레이션">기존 프로젝트 마이그레이션</h3>
 <p>기존 프로젝트를 uv로 마이그레이션하는 것도 간단합니다.</p>
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash"><span class="token comment"># pyproject.toml이 있는 경우</span>
 uv <span class="token function">sync</span>
@@ -87,7 +87,7 @@ uv <span class="token function">add</span> <span class="token variable"><span cl
 
 <span class="token comment"># requirements.txt에서 의존성 가져오기</span>
 uv <span class="token function">add</span> <span class="token parameter variable">-r</span> requirements.txt</code></pre></div>
-<h2>이젠 uv로 통합해야할 때</h2>
+<h2 id="이젠-uv로-통합해야할-때">이젠 uv로 통합해야할 때</h2>
 <p>기존 파이썬 생태계는 주로 다음과 같은 도구들이 각자 필요한 역할을 담당해왔습니다. 하지만 이제는 uv 하나로 해결할 수 있습니다.</p>
 <ul>
 <li><strong>pip</strong>: 패키지 설치</li>
@@ -96,7 +96,7 @@ uv <span class="token function">add</span> <span class="token parameter variable
 </ul>
 <br>
 <p>uv는 등장한지 얼마 되지 않았지만, 기존 툴들 대비 편리한 사용성과 뛰어난 성능으로 빠르게 확산 중입니다. 기존 프로젝트를 이전하는 것이 어렵다면, 작은 프로젝트라도 uv와 함께 시작해보는 것을 추천드립니다. 익숙하지 않아 처음 생기는 거부감만 넘어선다면, 세팅부터 관리, 배포까지 이전보다 훨씬 더 나은 개발 경험을 얻을 수 있습니다.</p>
-<h2>참고 자료</h2>
+<h2 id="참고-자료">참고 자료</h2>
 <ul>
 <li><a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener noreferrer">uv github</a></li>
 <li><a href="https://sigridjin.medium.com/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EA%B0%9C%EB%B0%9C%EC%9E%90%EB%9D%BC%EB%A9%B4-uv-%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%A9%EC%8B%9C%EB%8B%A4-546d523f7178" target="_blank" rel="noopener noreferrer">파이썬 개발자라면 uv를 사용합시다</a></li>
@@ -122,6 +122,6 @@ uv <span class="token function">add</span> <span class="token parameter variable
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

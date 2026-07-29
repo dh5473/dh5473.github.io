@@ -5,9 +5,9 @@
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">결측치 처리 전략: 삭제부터 다중 대체(Multiple Imputation)까지</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.02.03.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">31</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/feature-scaling/">피처 스케일링: StandardScaler, MinMaxScaler, 언제 어떤 걸 쓸까</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">32</span><a class="css-dizrmv e4kcwtw5" href="/ml/feature-selection/">피처 선택(Feature Selection): 필터, 래퍼, 임베디드 방법 비교</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">33</span><a class="css-dizrmv e4kcwtw5" href="/ml/target-encoding/">Target Encoding과 고급 인코딩 기법: 범주형 변수의 정보를 극대화하는 법</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">34</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">결측치 처리 전략: 삭제부터 다중 대체(Multiple Imputation)까지</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">35</span><a class="css-dizrmv e4kcwtw5" href="/ml/kmeans-clustering/">K-Means 클러스터링: 동작 원리부터 K 선택까지</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">7<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p><a href="/ml/target-encoding/">이전 글</a>에서 타겟 인코딩을 다뤘다. 범주형 변수를 타겟 변수와의 관계로 변환하는 강력한 기법이었다. 그런데 인코딩이든 <a href="/ml/feature-scaling/">스케일링</a>이든, 전처리의 대전제가 하나 있다 — <strong>데이터가 존재해야 한다</strong>. 현실의 데이터에는 빈칸이 있다. 센서 고장, 사용자 미입력, 시스템 오류, 병합 과정의 불일치. 결측치(Missing Data)는 피할 수 없다.</p>
 <p>결측치를 무시하면 어떻게 되는가? sklearn의 대부분의 모델은 NaN이 있으면 에러를 던진다. 그냥 삭제하면? 데이터가 절반으로 줄 수 있다. 평균으로 채우면? 분산이 과소추정된다. <strong>결측치 처리는 모델 성능을 좌우하는 전처리의 핵심이다.</strong> 이 글에서 결측치의 유형을 이해하고, 상황별 최적 전략을 정리한다.</p>
 <hr>
-<h2>1. 결측치의 세 가지 유형</h2>
+<h2 id="1-결측치의-세-가지-유형">1. 결측치의 세 가지 유형</h2>
 <p>결측치를 처리하기 전에, <strong>왜 데이터가 빠졌는가</strong>를 먼저 파악해야 한다. 통계학자 Donald Rubin이 정의한 세 가지 유형이 있다. 이걸 모르고 처리하면 편향된 결과를 얻는다.</p>
-<h3>MCAR (Missing Completely At Random)</h3>
+<h3 id="mcar-missing-completely-at-random">MCAR (Missing Completely At Random)</h3>
 <p>결측이 <strong>완전히 무작위</strong>로 발생한다. 결측 여부가 다른 어떤 변수와도 관련이 없다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">예시: 설문 응답을 입력하는 직원이 랜덤하게 타이핑 실수를 해서 값이 빠짐
      센서가 무작위로 간헐적 오작동
@@ -15,7 +15,7 @@
 특징: 결측이 있는 행과 없는 행의 분포가 동일
 처리: 삭제해도 편향이 생기지 않음 (데이터 손실만 문제)</code></pre></div>
 <p>MCAR인지 확인하려면 Little’s MCAR Test를 사용하거나, 결측 여부로 그룹을 나눠 다른 변수의 분포를 비교한다. 분포가 같으면 MCAR일 가능성이 높다.</p>
-<h3>MAR (Missing At Random)</h3>
+<h3 id="mar-missing-at-random">MAR (Missing At Random)</h3>
 <p>결측이 <strong>관측된 다른 변수</strong>에 의존한다. “At Random”이라는 이름이 오해를 불러일으키지만, 핵심은 결측 패턴이 다른 관측값으로 설명 가능하다는 것이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">예시: 고소득자일수록 소득 항목을 비워두는 경향
      → 결측 여부가 '직업' 변수와 상관 (직업은 관측됨)
@@ -25,7 +25,7 @@
 
 특징: 결측 패턴을 다른 관측 변수로 예측할 수 있음
 처리: 단순 삭제하면 편향 발생! 대체(Imputation)가 필요</code></pre></div>
-<h3>MNAR (Missing Not At Random)</h3>
+<h3 id="mnar-missing-not-at-random">MNAR (Missing Not At Random)</h3>
 <p>결측이 <strong>결측된 값 자체</strong>에 의존한다. 가장 까다로운 유형이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">예시: 체중이 많이 나가는 사람일수록 체중 항목을 비워둠
      → 결측 여부가 체중 값 자체에 의존 (체중은 관측 안 됨)
@@ -40,9 +40,9 @@
   MCAR이면 삭제해도 괜찮다. MAR이면 다른 변수 정보를 활용한 대체가 효과적이다. MNAR이면 어떤 대체법을 쓰든 편향이 남는다 — 이 경우 도메인 전문가와 협력하거나, 결측 자체를 피처로 활용하는 전략이 필요하다. <strong>처리법 선택의 출발점이 유형 판단</strong>이다.
 </div>
 <hr>
-<h2>2. 결측치 탐색: 먼저 현황을 파악하라</h2>
+<h2 id="2-결측치-탐색-먼저-현황을-파악하라">2. 결측치 탐색: 먼저 현황을 파악하라</h2>
 <p>처리 전략을 세우려면 먼저 결측의 규모와 패턴을 파악해야 한다.</p>
-<h3>기본 탐색: pandas</h3>
+<h3 id="기본-탐색-pandas">기본 탐색: pandas</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
 
 df <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'data.csv'</span><span class="token punctuation">)</span>
@@ -62,7 +62,7 @@ cabin                    687         77.1
 age                      177         19.9
 embarked                   2          0.2</code></pre></div>
 <p>Titanic 데이터를 예로 들면, <code class="language-text">cabin</code>은 77%가 결측이다. <code class="language-text">age</code>는 20%. <code class="language-text">embarked</code>는 0.2%. 각각 다른 전략이 필요하다는 게 바로 보인다.</p>
-<h3>시각적 탐색: missingno 라이브러리</h3>
+<h3 id="시각적-탐색-missingno-라이브러리">시각적 탐색: missingno 라이브러리</h3>
 <p>숫자로만 보면 <strong>패턴</strong>을 놓친다. <code class="language-text">missingno</code> 라이브러리는 결측 패턴을 시각적으로 보여준다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> missingno <span class="token keyword">as</span> msno
 <span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
@@ -80,9 +80,9 @@ msno<span class="token punctuation">.</span>bar<span class="token punctuation">(
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <p>매트릭스 플롯에서 흰색 줄무늬가 특정 컬럼들에서 <strong>같은 위치에</strong> 나타나면, 그 컬럼들의 결측이 연관되어 있다는 뜻이다. 히트맵은 이 상관관계를 수치로 보여준다. 상관계수가 1에 가까우면 “A가 결측이면 B도 결측”이라는 패턴이 있다.</p>
 <hr>
-<h2>3. 삭제 전략: 언제 써도 되고, 언제 위험한가</h2>
+<h2 id="3-삭제-전략-언제-써도-되고-언제-위험한가">3. 삭제 전략: 언제 써도 되고, 언제 위험한가</h2>
 <p>가장 단순한 전략은 결측이 있는 데이터를 버리는 것이다.</p>
-<h3>Listwise Deletion (행 삭제)</h3>
+<h3 id="listwise-deletion-행-삭제">Listwise Deletion (행 삭제)</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 결측이 하나라도 있는 행을 모두 삭제</span>
 df_clean <span class="token operator">=</span> df<span class="token punctuation">.</span>dropna<span class="token punctuation">(</span><span class="token punctuation">)</span>
 
@@ -93,7 +93,7 @@ df_clean <span class="token operator">=</span> df<span class="token punctuation"
 <span class="token comment"># 원본: 891행 → 삭제 후: 714행 (subset 사용 시)</span>
 <span class="token comment"># 원본: 891행 → 삭제 후: 183행 (전체 dropna 시)</span></code></pre></div>
 <p>전체 <code class="language-text">dropna()</code>를 하면 891행에서 183행으로 줄어든다. <code class="language-text">cabin</code>의 77% 결측 때문이다. 데이터의 80%를 버리는 셈이다.</p>
-<h3>언제 삭제가 괜찮은가</h3>
+<h3 id="언제-삭제가-괜찮은가">언제 삭제가 괜찮은가</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">삭제가 안전한 조건:
 [1] MCAR인 경우 (삭제해도 편향 없음)
 [2] 결측 비율이 매우 낮은 경우 (5% 이하)
@@ -105,7 +105,7 @@ df_clean <span class="token operator">=</span> df<span class="token punctuation"
 [2] 결측 비율이 높은 경우 → 정보 손실 과다
 [3] 데이터가 적은 경우 → 통계적 검정력 저하
 [4] 여러 컬럼에 산발적 결측 → 행 삭제 시 대부분의 행이 사라짐</code></pre></div>
-<h3>Column Deletion (열 삭제)</h3>
+<h3 id="column-deletion-열-삭제">Column Deletion (열 삭제)</h3>
 <p>결측 비율이 극단적으로 높은 <strong>컬럼 자체</strong>를 제거하는 방법이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 결측 비율 50% 이상인 컬럼 제거</span>
 threshold <span class="token operator">=</span> <span class="token number">0.5</span>
@@ -116,9 +116,9 @@ df_clean <span class="token operator">=</span> df<span class="token punctuation"
 <span class="token comment"># 제거된 컬럼: ['cabin']</span></code></pre></div>
 <p><code class="language-text">cabin</code>처럼 77%가 결측이면, 대체해도 신뢰성이 낮다. 차라리 제거하는 게 나을 수 있다. 다만 “결측 여부 자체”가 정보를 담고 있을 수 있으므로(예: cabin이 기록된 승객 = 1등석), 제거 전에 결측 지시 변수(indicator)를 먼저 만들어두는 것이 좋다.</p>
 <hr>
-<h2>4. 단순 대체: Mean, Median, Mode</h2>
+<h2 id="4-단순-대체-mean-median-mode">4. 단순 대체: Mean, Median, Mode</h2>
 <p>삭제 대신 빈칸을 채우는 가장 기본적인 방법이다.</p>
-<h3>sklearn의 SimpleImputer</h3>
+<h3 id="sklearn의-simpleimputer">sklearn의 SimpleImputer</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> SimpleImputer
 <span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -137,7 +137,7 @@ df<span class="token punctuation">[</span><span class="token string">'embarked_i
 <span class="token comment"># 상수로 대체</span>
 const_imputer <span class="token operator">=</span> SimpleImputer<span class="token punctuation">(</span>strategy<span class="token operator">=</span><span class="token string">'constant'</span><span class="token punctuation">,</span> fill_value<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
 df<span class="token punctuation">[</span><span class="token string">'cabin_imputed'</span><span class="token punctuation">]</span> <span class="token operator">=</span> const_imputer<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>df<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'cabin'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span></code></pre></div>
-<h3>각 전략의 특성</h3>
+<h3 id="각-전략의-특성">각 전략의 특성</h3>
 <table>
 <thead>
 <tr>
@@ -184,7 +184,7 @@ df<span class="token punctuation">[</span><span class="token string">'cabin_impu
   평균/중앙값 대체는 빠르고 쉽지만, 데이터의 불확실성을 무시한다. 결측값은 "30일 수도 있고 50일 수도 있는" 불확실한 상태인데, 평균 대체는 "확실히 30이다"라고 선언하는 것이다. 결측 비율이 5% 이하이고 MCAR이면 무난하지만, 그 외에는 더 정교한 방법이 필요하다.
 </div>
 <hr>
-<h2>5. 결측 지시 변수 (Missing Indicator)</h2>
+<h2 id="5-결측-지시-변수-missing-indicator">5. 결측 지시 변수 (Missing Indicator)</h2>
 <p>결측 여부 자체가 예측에 유용한 정보일 수 있다. 이 정보를 보존하는 기법이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> SimpleImputer
 <span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
@@ -203,7 +203,7 @@ indicator <span class="token operator">=</span> MissingIndicator<span class="tok
 missing_flags <span class="token operator">=</span> indicator<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>df<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'age'</span><span class="token punctuation">,</span> <span class="token string">'cabin'</span><span class="token punctuation">,</span> <span class="token string">'embarked'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
 
 <span class="token comment"># True/False 배열 → 어떤 컬럼에 결측이 있었는지 기록</span></code></pre></div>
-<h3>언제 효과적인가</h3>
+<h3 id="언제-효과적인가">언제 효과적인가</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">효과적인 경우:
 - MNAR이 의심될 때 (결측 자체가 정보)
 - 트리 기반 모델과 함께 사용할 때 (분기 조건으로 활용 가능)
@@ -213,14 +213,14 @@ missing_flags <span class="token operator">=</span> indicator<span class="token 
 - MCAR일 때 (결측이 무작위이므로 정보 없음)
 - 결측 비율이 너무 낮을 때 (변수의 분산이 거의 0)</code></pre></div>
 <hr>
-<h2>6. KNN Imputer: 유사한 샘플에서 빌려오기</h2>
+<h2 id="6-knn-imputer-유사한-샘플에서-빌려오기">6. KNN Imputer: 유사한 샘플에서 빌려오기</h2>
 <p>평균 대체는 전체 데이터의 평균을 쓴다. 하지만 30대 남성의 결측된 소득을 채우는 데 전체 평균을 쓰는 것보다, <strong>비슷한 30대 남성들의 소득 평균</strong>을 쓰는 게 더 정확하지 않겠는가? KNN Imputer는 이 아이디어를 구현한다.</p>
-<h3>작동 원리</h3>
+<h3 id="작동-원리">작동 원리</h3>
 <p><a href="/ml/knn/">KNN 알고리즘</a>을 기억하는가? 새 데이터 포인트의 레이블을 가장 가까운 K개 이웃의 다수결로 결정하는 알고리즘이었다. KNN Imputer는 같은 원리를 결측치 대체에 적용한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">결측이 있는 행 → 다른 (결측 없는) 피처들로 거리 계산
                 → 가장 가까운 K개 이웃 찾기
                 → 이웃들의 해당 피처 값 평균으로 대체</code></pre></div>
-<h3>sklearn 구현</h3>
+<h3 id="sklearn-구현">sklearn 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> KNNImputer
 
 <span class="token comment"># K=5인 KNN Imputer</span>
@@ -233,7 +233,7 @@ df_imputed <span class="token operator">=</span> pd<span class="token punctuatio
     columns<span class="token operator">=</span>numeric_cols
 <span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">weights='distance'</code>를 설정하면, 가까운 이웃일수록 더 큰 가중치를 받는다. 단순 평균보다 정확하다.</p>
-<h3>주의사항</h3>
+<h3 id="주의사항">주의사항</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">KNN Imputer 사용 시 체크리스트:
 
 [1] 스케일링 필수 — KNN은 거리 기반이다. 피처 스케일이 다르면
@@ -253,9 +253,9 @@ df_imputed <span class="token operator">=</span> pd<span class="token punctuatio
   <strong>핵심</strong>: KNN Imputer는 "비슷한 행"의 정보를 활용하므로, 단순 평균보다 현실적인 값을 채운다. 특히 피처 간 상관관계가 있을 때 효과적이다. 단, 스케일링 없이 사용하면 의미 없는 결과가 나온다 — <a href="/ml/knn/">KNN</a>에서 배운 교훈 그대로다.
 </div>
 <hr>
-<h2>7. Iterative Imputer (MICE): 다변량 대체의 끝판왕</h2>
+<h2 id="7-iterative-imputer-mice-다변량-대체의-끝판왕">7. Iterative Imputer (MICE): 다변량 대체의 끝판왕</h2>
 <p>KNN Imputer가 “이웃 기반”이라면, Iterative Imputer는 <strong>“모델 기반”</strong> 이다. 통계학에서 MICE(Multiple Imputation by Chained Equations)라고 불리는 방법의 sklearn 구현이다.</p>
-<h3>핵심 아이디어</h3>
+<h3 id="핵심-아이디어">핵심 아이디어</h3>
 <p>각 결측 변수를 다른 모든 변수의 함수로 모델링한다. 그리고 이 과정을 반복(iterate)하면서 대체값을 정교하게 만들어간다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Round 1:
   age를 [sex, fare, pclass, embarked]로 예측하는 모델 학습 → age 결측 대체
@@ -268,7 +268,7 @@ Round 2:
   ...
 
 Round N: 대체값이 수렴할 때까지 반복</code></pre></div>
-<h3>sklearn 구현</h3>
+<h3 id="sklearn-구현-1">sklearn 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>experimental <span class="token keyword">import</span> enable_iterative_imputer  <span class="token comment"># 필수!</span>
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> IterativeImputer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> BayesianRidge
@@ -285,7 +285,7 @@ df_imputed <span class="token operator">=</span> pd<span class="token punctuatio
     columns<span class="token operator">=</span>numeric_cols
 <span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">enable_iterative_imputer</code>를 먼저 import해야 한다. sklearn에서 아직 experimental 상태이기 때문이다.</p>
-<h3>추정기 선택</h3>
+<h3 id="추정기-선택">추정기 선택</h3>
 <p>기본 <code class="language-text">BayesianRidge</code>를 다른 모델로 바꿀 수 있다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestRegressor
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> BayesianRidge
@@ -300,7 +300,7 @@ imp_forest <span class="token operator">=</span> IterativeImputer<span class="to
     random_state<span class="token operator">=</span><span class="token number">42</span>
 <span class="token punctuation">)</span></code></pre></div>
 <p>RandomForest를 추정기로 쓰면 missForest라고 불리는 방법이 된다. 비선형 관계를 잡아내지만, 계산 비용이 크다.</p>
-<h3>MICE의 강점과 한계</h3>
+<h3 id="mice의-강점과-한계">MICE의 강점과 한계</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">강점:
 [1] 변수 간 관계를 보존 — 상관관계 구조가 유지됨
 [2] MAR 가정에서 이론적으로 가장 정확한 방법 중 하나
@@ -316,9 +316,9 @@ imp_forest <span class="token operator">=</span> IterativeImputer<span class="to
   <strong>실전 가이드</strong>: 결측 비율이 5% 이하면 SimpleImputer로 충분하다. 5~30%이면 KNN Imputer나 IterativeImputer를 고려한다. 30% 이상이면 해당 컬럼을 제거하거나, 결측 지시 변수와 함께 단순 대체를 쓰는 게 더 현실적이다.
 </div>
 <hr>
-<h2>8. 시계열 데이터의 결측치: 시간의 흐름을 활용하라</h2>
+<h2 id="8-시계열-데이터의-결측치-시간의-흐름을-활용하라">8. 시계열 데이터의 결측치: 시간의 흐름을 활용하라</h2>
 <p>시계열 데이터는 <strong>시간적 순서</strong>라는 추가 정보가 있다. 이걸 활용하면 더 자연스러운 대체가 가능하다.</p>
-<h3>Forward Fill / Backward Fill</h3>
+<h3 id="forward-fill-backward-fill">Forward Fill / Backward Fill</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Forward Fill: 직전 값으로 채움</span>
 df<span class="token punctuation">[</span><span class="token string">'temperature'</span><span class="token punctuation">]</span> <span class="token operator">=</span> df<span class="token punctuation">[</span><span class="token string">'temperature'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>ffill<span class="token punctuation">(</span><span class="token punctuation">)</span>
 
@@ -334,7 +334,7 @@ df<span class="token punctuation">[</span><span class="token string">'temperatur
 11:00  22.5
 12:00  NaN   → ffill: 22.5 (11:00 값)</code></pre></div>
 <p>Forward fill은 “마지막으로 관측된 값이 유지된다”는 가정이다. 주가, 센서 데이터, IoT 로그 같은 데이터에서 자연스럽다.</p>
-<h3>보간법 (Interpolation)</h3>
+<h3 id="보간법-interpolation">보간법 (Interpolation)</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 선형 보간: 두 관측값 사이를 직선으로 연결</span>
 df<span class="token punctuation">[</span><span class="token string">'temperature'</span><span class="token punctuation">]</span> <span class="token operator">=</span> df<span class="token punctuation">[</span><span class="token string">'temperature'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>interpolate<span class="token punctuation">(</span>method<span class="token operator">=</span><span class="token string">'linear'</span><span class="token punctuation">)</span>
 
@@ -349,7 +349,7 @@ df<span class="token punctuation">[</span><span class="token string">'temperatur
 10:00  NaN   → 선형 보간: 21.67
 11:00  22.5</code></pre></div>
 <p>선형 보간은 두 관측값 사이를 직선으로 잇는다. ffill보다 자연스럽지만, 급격한 변화가 있는 구간에서는 실제 패턴을 놓칠 수 있다.</p>
-<h3>시계열 결측치 처리 요약</h3>
+<h3 id="시계열-결측치-처리-요약">시계열 결측치 처리 요약</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">| 방법          | 가정                     | 적합한 상황              |
 |--------------|-------------------------|------------------------|
 | Forward Fill | 값이 변할 때까지 유지     | 주가, 재고, 상태 데이터    |
@@ -358,9 +358,9 @@ df<span class="token punctuation">[</span><span class="token string">'temperatur
 | 시간 보간     | 시간 간격 비례 변화       | 불균등 시간 간격 데이터    |
 | 이동 평균     | 주변 값의 평균            | 노이즈가 많은 시계열      |</code></pre></div>
 <hr>
-<h2>9. 트리 기반 모델과 결측치</h2>
+<h2 id="9-트리-기반-모델과-결측치">9. 트리 기반 모델과 결측치</h2>
 <p>여기까지 읽으면서 “이거 너무 복잡한데?”라고 느꼈을 수 있다. 좋은 소식이 있다. <strong>트리 기반 부스팅 모델은 결측치를 자체적으로 처리한다.</strong></p>
-<h3>XGBoost의 결측치 처리</h3>
+<h3 id="xgboost의-결측치-처리">XGBoost의 결측치 처리</h3>
 <p>XGBoost는 학습 과정에서 결측값을 만나면, 해당 샘플을 왼쪽 자식 노드로 보냈을 때와 오른쪽으로 보냈을 때의 손실을 비교해서 <strong>최적의 방향을 자동으로 결정</strong>한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> xgboost <span class="token keyword">as</span> xgb
 <span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
@@ -369,13 +369,13 @@ df<span class="token punctuation">[</span><span class="token string">'temperatur
 X_train_with_nan <span class="token operator">=</span> X_train<span class="token punctuation">.</span>copy<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment"># NaN 포함</span>
 model <span class="token operator">=</span> xgb<span class="token punctuation">.</span>XGBClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">)</span>
 model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train_with_nan<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>  <span class="token comment"># 에러 없이 작동</span></code></pre></div>
-<h3>LightGBM의 결측치 처리</h3>
+<h3 id="lightgbm의-결측치-처리">LightGBM의 결측치 처리</h3>
 <p>LightGBM도 유사한 방식으로 결측값을 처리한다. <code class="language-text">use_missing=True</code>가 기본값이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> lightgbm <span class="token keyword">as</span> lgb
 
 model <span class="token operator">=</span> lgb<span class="token punctuation">.</span>LGBMClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">)</span>
 model<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train_with_nan<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>  <span class="token comment"># NaN 그대로 학습</span></code></pre></div>
-<h3>그래도 대체하는 게 나을까?</h3>
+<h3 id="그래도-대체하는-게-나을까">그래도 대체하는 게 나을까?</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">트리 모델의 자체 처리 vs 사전 대체:
 
 실험적으로, 트리 모델에서는:
@@ -390,16 +390,16 @@ model<span class="token punctuation">.</span>fit<span class="token punctuation">
   sklearn의 대부분의 모델(로지스틱 회귀, SVM, <a href="/ml/knn/">KNN</a> 등)은 NaN을 처리하지 못한다. ValueError가 발생한다. 트리 모델의 결측치 자체 처리는 XGBoost, LightGBM, CatBoost 같은 부스팅 라이브러리의 특장점이다.
 </div>
 <hr>
-<h2>10. Pipeline 통합: 데이터 누수를 막아라</h2>
+<h2 id="10-pipeline-통합-데이터-누수를-막아라">10. Pipeline 통합: 데이터 누수를 막아라</h2>
 <p>결측치 대체에서 가장 흔한 실수가 <strong>데이터 누수(Data Leakage)</strong> 다. <a href="/ml/cross-validation/">교차 검증</a> 글에서 배운 것과 같은 원리다.</p>
-<h3>잘못된 방법</h3>
+<h3 id="잘못된-방법">잘못된 방법</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 전체 데이터로 대체 → 테스트 데이터 정보가 누수!</span>
 imputer <span class="token operator">=</span> SimpleImputer<span class="token punctuation">(</span>strategy<span class="token operator">=</span><span class="token string">'mean'</span><span class="token punctuation">)</span>
 X_imputed <span class="token operator">=</span> imputer<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X<span class="token punctuation">)</span>  <span class="token comment"># 테스트 데이터 포함 평균</span>
 
 X_train<span class="token punctuation">,</span> X_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>X_imputed<span class="token punctuation">,</span> test_size<span class="token operator">=</span><span class="token number">0.2</span><span class="token punctuation">)</span></code></pre></div>
 <p>전체 데이터의 평균을 계산하면, 테스트 데이터의 정보가 훈련 데이터에 흘러든다. 교차 검증 점수가 실제보다 높게 나온다.</p>
-<h3>올바른 방법: Pipeline</h3>
+<h3 id="올바른-방법-pipeline">올바른 방법: Pipeline</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>impute <span class="token keyword">import</span> SimpleImputer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
@@ -416,7 +416,7 @@ pipe <span class="token operator">=</span> Pipeline<span class="token punctuatio
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>pipe<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"CV Score: </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> (+/- </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">)"</span></span><span class="token punctuation">)</span></code></pre></div>
 <p>Pipeline 안에 imputer를 넣으면, <a href="/ml/cross-validation/">교차 검증</a> 시 <strong>각 fold에서 훈련 데이터만으로 fit</strong>하고 검증 데이터에는 transform만 적용한다. 누수가 원천 차단된다.</p>
-<h3>수치형 + 범주형 동시 처리</h3>
+<h3 id="수치형-범주형-동시-처리">수치형 + 범주형 동시 처리</h3>
 <p>실전에서는 수치형과 범주형을 다르게 처리해야 한다. <code class="language-text">ColumnTransformer</code>를 쓴다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>compose <span class="token keyword">import</span> ColumnTransformer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
@@ -455,7 +455,7 @@ full_pipe <span class="token operator">=</span> Pipeline<span class="token punct
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>full_pipe<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">)</span></code></pre></div>
 <p>이것이 실전에서 결측치를 처리하는 <strong>표준 패턴</strong>이다. 전처리 전체를 Pipeline으로 묶어서 데이터 누수 없이 평가한다.</p>
 <hr>
-<h2>11. 비교 실험: 전략별 성능 차이</h2>
+<h2 id="11-비교-실험-전략별-성능-차이">11. 비교 실험: 전략별 성능 차이</h2>
 <p>이론만으로는 감이 안 온다. 같은 데이터에 다른 전략을 적용해서 성능을 비교해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> fetch_openml
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
@@ -516,7 +516,7 @@ results <span class="token operator">=</span> <span class="token punctuation">{<
   <strong>실전 교훈</strong>: 결측치 처리 전략의 차이가 "모델 선택"이나 "피처 엔지니어링"만큼 극적이지는 않다. 결측 비율이 낮으면 대부분의 방법이 비슷한 결과를 낸다. 진짜 중요한 것은 <strong>(1) 데이터 누수를 막는 것</strong>과 <strong>(2) 결측 유형에 맞는 전략을 쓰는 것</strong>이다.
 </div>
 <hr>
-<h2>12. 결측치 처리 의사결정 가이드</h2>
+<h2 id="12-결측치-처리-의사결정-가이드">12. 결측치 처리 의사결정 가이드</h2>
 <p>지금까지 배운 내용을 의사결정 트리로 정리하자.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">결측 비율 확인
 │
@@ -548,7 +548,7 @@ results <span class="token operator">=</span> <span class="token punctuation">{<
 | ffill/보간       | 낮음   | 높음   | 빠름  | 시간적 연속성   |
 | 트리 모델 자체    | 없음   | 높음   | 빠름  | 없음           |</code></pre></div>
 <hr>
-<h2>Phase 7 마무리: 피처 엔지니어링의 전체 그림</h2>
+<h2 id="phase-7-마무리-피처-엔지니어링의-전체-그림">Phase 7 마무리: 피처 엔지니어링의 전체 그림</h2>
 <p>Phase 7 (Feature Engineering)에서 배운 것들을 정리하자.</p>
 <table>
 <thead>
@@ -624,6 +624,6 @@ results <span class="token operator">=</span> <span class="token punctuation">{<
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

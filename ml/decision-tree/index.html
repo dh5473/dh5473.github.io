@@ -11,7 +11,7 @@
          → No: virginica</code></pre></div>
 <p>사람이 의사결정을 내리는 방식과 같다. 단계적으로 질문을 던져서 점점 범위를 좁혀나간다. 이 글에서는 결정 트리가 어떻게 최적의 질문을 선택하는지, 과적합은 어떻게 막는지, 시각화와 코드로 완전히 이해한다.</p>
 <hr>
-<h2>결정 트리란?</h2>
+<h2 id="결정-트리란">결정 트리란?</h2>
 <p>결정 트리(Decision Tree)는 데이터를 <strong>트리(tree) 구조의 질문들</strong>로 반복적으로 쪼개어 분류 또는 예측을 수행하는 알고리즘이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">                    [루트 노드: Root Node]
                     꽃잎 길이 ≤ 2.5?
@@ -103,11 +103,11 @@
     </span></p>
 <p>실제 sklearn으로 학습한 Iris 결정 트리다. 각 노드에는 분할 조건(feature ≤ threshold), Gini 불순도, 샘플 수, 클래스 분포가 표시된다. 파란색일수록 setosa, 주황색은 versicolor, 초록색은 virginica에 가깝다.</p>
 <hr>
-<h2>어떻게 분할할까? — 분할 기준</h2>
+<h2 id="어떻게-분할할까-분할-기준">어떻게 분할할까? — 분할 기준</h2>
 <p>결정 트리가 가장 중요하게 해결해야 할 문제는 <strong>“어떤 특성의 어떤 임계값으로 쪼갤 것인가?”</strong> 다. 가능한 모든 특성과 임계값 조합을 시도해보고, <strong>가장 좋은 분할</strong>을 선택한다.</p>
 <p>“좋은 분할”이란? 분할 후 각 그룹이 <strong>더 순수(pure)</strong> 해지는 것이다. 즉, 한 그룹 안에 최대한 같은 클래스끼리 모이게 만드는 분할이 좋은 분할이다. 이 순수도를 측정하는 기준이 <strong>Gini 불순도</strong>와 <strong>정보 이득</strong>이다.</p>
 <hr>
-<h3>Gini 불순도 (Gini Impurity)</h3>
+<h3 id="gini-불순도-gini-impurity">Gini 불순도 (Gini Impurity)</h3>
 <p>Gini 불순도는 노드의 <strong>혼잡도</strong>를 측정한다. 한 노드에서 임의로 샘플을 뽑고, <strong>그 노드의 클래스 비율에 따라</strong> 무작위로 레이블을 붙였을 때 틀릴 확률이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Gini(t) = 1 - Σᵢ pᵢ²
 
@@ -158,7 +158,7 @@ Gini 감소량: 0.3333</code></pre></div>
   </ul>
 </div>
 <hr>
-<h3>정보 이득 (Information Gain) &#x26; 엔트로피 (Entropy)</h3>
+<h3 id="정보-이득-information-gain-엔트로피-entropy">정보 이득 (Information Gain) &#x26; 엔트로피 (Entropy)</h3>
 <p>또 다른 분할 기준은 정보 이론에서 가져온 <strong>엔트로피(Entropy)</strong> 다. 엔트로피는 노드의 <strong>무질서도(불확실성)</strong> 를 나타낸다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Entropy(t) = -Σᵢ pᵢ × log₂(pᵢ)
 
@@ -244,7 +244,7 @@ ig <span class="token operator">=</span> e_root <span class="token operator">-</
     </span></p>
 <p>두 지표 모두 p=0.5 (가장 불순한 상태)에서 최대가 되고, p=0 또는 p=1 (완전히 순수)에서 0이 된다. 곡선의 형태는 다르지만, 어떤 분할이 “좋은가”에 대해 두 기준은 거의 항상 같은 결론을 내린다.</p>
 <hr>
-<h3>두 기준의 비교</h3>
+<h3 id="두-기준의-비교">두 기준의 비교</h3>
 <table>
 <thead>
 <tr>
@@ -271,7 +271,7 @@ ig <span class="token operator">=</span> e_root <span class="token operator">-</
 </table>
 <p>실무에서는 두 기준의 성능 차이가 거의 없다. <strong>기본값인 Gini를 사용하면 무난하다.</strong> 계산 속도가 약간 빠르기 때문이다.</p>
 <hr>
-<h2>NumPy로 Gini 구현해보기</h2>
+<h2 id="numpy로-gini-구현해보기">NumPy로 Gini 구현해보기</h2>
 <p>실제로 결정 트리가 분할 기준을 탐색하는 과정을 직접 구현해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -330,7 +330,7 @@ Gini 감소량:    0.3333</code></pre></div>
   특성이 m개, 각 특성의 고유값이 평균 n개라면 한 노드당 <strong>O(m × n)</strong>번의 Gini 계산이 필요하다. sklearn은 이를 최적화해서 정렬 후 순차 탐색으로 빠르게 처리한다. 특성 수가 많아지면 <code>max_features</code> 파라미터로 후보 특성 수를 제한할 수 있다 (랜덤 포레스트에서 핵심).
 </div>
 <hr>
-<h2>sklearn으로 결정 트리 학습</h2>
+<h2 id="sklearn으로-결정-트리-학습">sklearn으로 결정 트리 학습</h2>
 <p>직접 구현을 이해했으면, 실전에서는 sklearn을 사용한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_iris
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>tree <span class="token keyword">import</span> DecisionTreeClassifier<span class="token punctuation">,</span> plot_tree
@@ -351,7 +351,7 @@ clf<span class="token punctuation">.</span>fit<span class="token punctuation">(<
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"테스트 정확도: </span><span class="token interpolation"><span class="token punctuation">{</span>clf<span class="token punctuation">.</span>score<span class="token punctuation">(</span>X_test<span class="token punctuation">,</span> y_test<span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">훈련 정확도: 0.9524
 테스트 정확도: 1.0000</code></pre></div>
-<h3><code class="language-text">plot_tree</code>로 트리 시각화</h3>
+<h3 id="plot_tree로-트리-시각화"><code class="language-text">plot_tree</code>로 트리 시각화</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">fig<span class="token punctuation">,</span> ax <span class="token operator">=</span> plt<span class="token punctuation">.</span>subplots<span class="token punctuation">(</span>figsize<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
 plot_tree<span class="token punctuation">(</span>clf<span class="token punctuation">,</span>
           feature_names<span class="token operator">=</span>iris<span class="token punctuation">.</span>feature_names<span class="token punctuation">,</span>
@@ -418,7 +418,7 @@ gini = 0.667                ← 현재 노드의 Gini 불순도
 samples = 105               ← 이 노드에 도달한 훈련 샘플 수
 value = [36, 31, 38]        ← [setosa, versicolor, virginica] 수
 class = virginica            ← 현재 다수 클래스 (예측값)</code></pre></div>
-<h3>결정 경계 시각화</h3>
+<h3 id="결정-경계-시각화">결정 경계 시각화</h3>
 <p>2개 특성(꽃잎 길이, 꽃잎 너비)만 사용해서 결정 경계를 그려보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -496,7 +496,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
     </span></p>
 <p>결정 트리의 경계는 항상 <strong>수직선과 수평선의 조합</strong>이다. 각 분할이 “특성 ≤ 임계값”이라는 축에 평행한 조건이기 때문이다. max_depth가 깊어질수록 경계가 세분화되고, 결국 훈련 데이터의 모든 점을 정확히 맞추는 매우 복잡한 경계가 만들어진다.</p>
 <hr>
-<h2>과적합 문제와 제어</h2>
+<h2 id="과적합-문제와-제어">과적합 문제와 제어</h2>
 <p>결정 트리는 <strong>max_depth 제한이 없으면 훈련 데이터를 완벽하게 암기</strong>한다. 리프 노드 하나에 샘플이 1개가 될 때까지 쪼개기 때문이다. 이게 바로 과적합(Overfitting)이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 깊이 무제한 → 훈련 100%, 하지만 새 데이터에는?</span>
 clf_full <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
@@ -511,7 +511,7 @@ clf_full<span class="token punctuation">.</span>fit<span class="token punctuatio
 리프 노드 수: 10</code></pre></div>
 <p>Iris는 비교적 단순한 데이터라 과적합이 심하지 않다. 노이즈가 많은 실제 데이터에서는 테스트 정확도가 훈련 정확도보다 훨씬 낮아진다.</p>
 <hr>
-<h3>규제 파라미터</h3>
+<h3 id="규제-파라미터">규제 파라미터</h3>
 <p>sklearn의 <code class="language-text">DecisionTreeClassifier</code>는 다양한 규제 파라미터를 제공한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">clf <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>
     max_depth<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span>           <span class="token comment"># 최대 깊이. 가장 중요한 파라미터</span>
@@ -558,7 +558,7 @@ clf_full<span class="token punctuation">.</span>fit<span class="token punctuatio
 </tbody>
 </table>
 <hr>
-<h3>깊이에 따른 훈련/테스트 정확도 비교</h3>
+<h3 id="깊이에-따른-훈련테스트-정확도-비교">깊이에 따른 훈련/테스트 정확도 비교</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
 
 X_train<span class="token punctuation">,</span> X_test<span class="token punctuation">,</span> y_train<span class="token punctuation">,</span> y_test <span class="token operator">=</span> train_test_split<span class="token punctuation">(</span>
@@ -648,7 +648,7 @@ depth=5: CV 평균=0.9533 (±0.0340)</code></pre></div>
   결정 트리는 훈련 데이터의 작은 변화에도 트리 구조가 크게 달라질 수 있다 — <strong>고분산(high variance)</strong> 모델이다. <a href="/ml/bias-variance/">이전 글</a>에서 배운 편향-분산 분해를 떠올려보면, 결정 트리는 편향은 낮지만 분산이 높은 전형적인 케이스다. 이 약점을 극복하기 위해 여러 트리를 앙상블하는 <strong>랜덤 포레스트</strong>나 <strong>그래디언트 부스팅</strong>이 등장했다.
 </div>
 <hr>
-<h2>특성 중요도 (Feature Importance)</h2>
+<h2 id="특성-중요도-feature-importance">특성 중요도 (Feature Importance)</h2>
 <p>결정 트리의 큰 장점 중 하나는 <strong>각 특성이 예측에 얼마나 기여하는지</strong> 자동으로 계산해준다는 점이다.</p>
 <p>특성 중요도는 해당 특성이 트리 전체에서 Gini 불순도를 <strong>총 얼마나 감소시켰는지</strong>를 정규화한 값이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">특성 j의 중요도 = Σ (노드 샘플 비율 × Gini 감소량) / 총합
@@ -721,8 +721,8 @@ petal width (cm)         : 0.0749  ██</code></pre></div>
 </div>
 <p>특성 중요도는 어떤 변수가 예측에 핵심적인지 파악하는 <strong>탐색적 데이터 분석(EDA)</strong> 에 유용하다. 중요도가 0인 특성은 제거 후보로 볼 수 있다.</p>
 <hr>
-<h2>흔한 실수</h2>
-<h3>1. 스케일링을 한다</h3>
+<h2 id="흔한-실수">흔한 실수</h2>
+<h3 id="1-스케일링을-한다">1. 스케일링을 한다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 결정 트리에 StandardScaler 적용 — 불필요</span>
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
@@ -736,7 +736,7 @@ pipe <span class="token operator">=</span> Pipeline<span class="token punctuatio
 clf <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span><span class="token punctuation">)</span>
 clf<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span></code></pre></div>
 <p>결정 트리는 <strong>“특성 값 ≤ 임계값”</strong> 형태의 비교만 한다. 스케일을 바꿔도 순서가 바뀌지 않으므로 결과가 동일하다. 로지스틱 회귀, SVM과 달리 결정 트리(와 랜덤 포레스트, 부스팅 계열)에는 스케일링이 필요 없다.</p>
-<h3>2. 깊이 제한 없이 학습한다</h3>
+<h3 id="2-깊이-제한-없이-학습한다">2. 깊이 제한 없이 학습한다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ max_depth 제한 없음 → 훈련 데이터 암기</span>
 clf <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span>random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
 clf<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">,</span> y_train<span class="token punctuation">)</span>
@@ -755,7 +755,7 @@ grid<span class="token punctuation">.</span>fit<span class="token punctuation">(
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">최적 depth: 3
 CV 정확도: 0.9333</code></pre></div>
 <p><a href="/ml/regularization/">규제 글</a>에서 배운 것과 동일한 원리다. 과적합을 막으려면 반드시 모델 복잡도를 제어해야 한다.</p>
-<h3>3. 불균형 클래스를 무시한다</h3>
+<h3 id="3-불균형-클래스를-무시한다">3. 불균형 클래스를 무시한다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 클래스 불균형 데이터 (예: 사기 탐지 1% vs 정상 99%)</span>
 <span class="token comment"># 기본 결정 트리는 다수 클래스를 맞추는 쪽으로 편향된다</span>
 clf <span class="token operator">=</span> DecisionTreeClassifier<span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -767,7 +767,7 @@ clf_balanced <span class="token operator">=</span> DecisionTreeClassifier<span c
 <span class="token punctuation">)</span></code></pre></div>
 <p>클래스 불균형이 있으면 Gini 계산 시 소수 클래스의 기여가 작아진다. <code class="language-text">class_weight='balanced'</code>를 설정하면 소수 클래스에 더 높은 가중치를 부여해 균형 잡힌 트리를 만든다.</p>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>결정 트리는 머신러닝의 핵심 알고리즘 중 하나다. 해석이 쉽고, 데이터 전처리(스케일링, 결측값 처리 등)에 덜 민감하며, 시각화가 가능하다. 수식보다 “질문”이라는 직관적인 방식으로 예측한다.</p>
 <p>하지만 단일 결정 트리의 핵심 문제는 <strong>고분산</strong>이다. 훈련 데이터가 조금만 달라져도 트리 구조가 크게 변한다. 이 약점을 극복하는 방법이 바로 다음에 다룰 내용이다.</p>
 <p>핵심을 다시 정리하면:</p>
@@ -780,7 +780,7 @@ clf_balanced <span class="token operator">=</span> DecisionTreeClassifier<span c
 </ul>
 <p>다음 글에서는 결정 트리의 고분산 문제를 정면으로 해결하는 <strong>앙상블 학습과 배깅(Bagging)</strong> 을 다룬다. 여러 트리의 예측을 합쳐서 분산을 줄이는 원리와, 부트스트랩 샘플링의 수학적 근거를 파헤친다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html" target="_blank" rel="noopener noreferrer">Scikit-learn — DecisionTreeClassifier Documentation</a></li>
 <li><a href="https://scikit-learn.org/stable/modules/tree.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Decision Trees User Guide</a></li>
@@ -821,6 +821,6 @@ clf_balanced <span class="token operator">=</span> DecisionTreeClassifier<span c
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

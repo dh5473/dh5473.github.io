@@ -10,7 +10,7 @@
 <p>npm에서 해당 버전이 삭제되기까지 걸린 시간은 약 3시간. 하지만 그 사이에 GitHub에서 <strong>41,500회 이상 fork</strong>되며 “GitHub 역사상 가장 빠르게 성장한 레포”라는 타이틀까지 얻었습니다. 소스코드는 이미 인터넷에 영구히 남게 되었습니다.</p>
 <p>이 글에서는 유출된 코드에서 발견된 7가지 핵심 항목을 분석합니다. 각각이 왜 논란이 되었는지, 기술적으로 어떻게 작동하는지를 하나씩 살펴보겠습니다.</p>
 <hr>
-<h2>어떻게 유출됐나: .npmignore 하나의 부재</h2>
+<h2 id="어떻게-유출됐나-npmignore-하나의-부재">어떻게 유출됐나: .npmignore 하나의 부재</h2>
 <p>유출의 직접적 원인은 놀라울 정도로 단순합니다. <code class="language-text">.npmignore</code>에 소스맵 파일을 제외하는 설정이 빠져 있었습니다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># .npmignore에 이 한 줄이 없었다
 *.map</code></pre></div>
@@ -25,7 +25,7 @@
 </blockquote>
 <p>고객 데이터, 인증 정보, 모델 가중치는 노출되지 않았다고 강조했지만, 코드 안에 담긴 <strong>설계 철학과 미공개 기능</strong>은 이미 공개된 뒤였습니다.</p>
 <hr>
-<h2>발견 1: Anti-Distillation — 가짜 도구로 경쟁사 학습 방해</h2>
+<h2 id="발견-1-anti-distillation-가짜-도구로-경쟁사-학습-방해">발견 1: Anti-Distillation — 가짜 도구로 경쟁사 학습 방해</h2>
 <p>유출된 코드에서 가장 먼저 눈에 띈 것은 <code class="language-text">claude.ts</code>에 있는 <code class="language-text">ANTI_DISTILLATION_CC</code> 플래그입니다.</p>
 <div class="gatsby-highlight" data-language="typescript"><pre class="language-typescript"><code class="language-typescript"><span class="token comment">// claude.ts (pseudo-code based on leaked source)</span>
 <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token constant">ANTI_DISTILLATION_CC</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -44,7 +44,7 @@ betas<span class="token punctuation">.</span><span class="token function">push</
 </div>
 <p>AI 모델 도난(model theft)이 업계의 심각한 위협이라는 점에서, Anthropic이 이런 방어 메커니즘을 구현한 것 자체는 충분히 이해할 만합니다. 다만 <strong>클라이언트 측에서 구현된 방어가 얼마나 실효성이 있는지</strong>는 별개의 문제입니다.</p>
 <hr>
-<h2>발견 2: Undercover Mode — AI임을 숨기는 위장 모드</h2>
+<h2 id="발견-2-undercover-mode-ai임을-숨기는-위장-모드">발견 2: Undercover Mode — AI임을 숨기는 위장 모드</h2>
 <p>유출 코드 중 가장 큰 논란을 일으킨 것은 <code class="language-text">undercover.ts</code>입니다.</p>
 <p>이 모듈은 Claude Code가 <strong>비내부(non-internal) 레포지토리</strong>에서 작업할 때, AI임을 드러내지 않도록 강제하는 기능을 구현합니다. 구체적으로는:</p>
 <ul>
@@ -64,7 +64,7 @@ betas<span class="token punctuation">.</span><span class="token function">push</
 <p>이게 왜 논란이 됐을까요? Anthropic 직원이 Claude Code를 사용해서 오픈소스 프로젝트에 기여할 때, 해당 코드가 AI가 작성한 것인지 사람이 작성한 것인지 구분할 수 없게 된다는 뜻입니다. 오픈소스 커뮤니티에서 <strong>AI 투명성</strong>이 뜨거운 이슈인 상황에서, “AI Safety”를 표방하는 기업이 AI 기여를 의도적으로 숨기는 기능을 탑재하고 있었다는 사실은 적지 않은 충격을 줬습니다.</p>
 <p>물론 반론도 있습니다. 내부 코드명이나 Slack 채널 같은 정보가 외부 코드에 실수로 노출되는 것을 방지하는 보안 목적일 수 있죠. 하지만 “AI임을 밝히지 말라”는 지시까지 포함된 것은 단순한 보안 목적을 넘어섭니다.</p>
 <hr>
-<h2>발견 3: Native Client Attestation — API 접근에 DRM을 건 이유</h2>
+<h2 id="발견-3-native-client-attestation-api-접근에-drm을-건-이유">발견 3: Native Client Attestation — API 접근에 DRM을 건 이유</h2>
 <p>유출 코드에서는 API 요청의 무결성을 검증하는 <strong>네이티브 수준의 인증 메커니즘</strong>도 발견됐습니다.</p>
 <div class="gatsby-highlight" data-language="typescript"><pre class="language-typescript"><code class="language-typescript"><span class="token comment">// API request header</span>
 headers<span class="token punctuation">[</span><span class="token string">'cch'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">'155e8'</span><span class="token punctuation">;</span>  <span class="token comment">// placeholder</span>
@@ -92,7 +92,7 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
 └─────────────────────────────────────┘</code></pre></div>
 <p>다만, 코드 주석에 “forgiving”이라는 단어가 발견됐습니다. 서버 측 검증이 엄격하지 않다는 뜻으로, 현재는 <strong>완전한 차단보다는 모니터링 목적</strong>에 가까운 것으로 보입니다.</p>
 <hr>
-<h2>발견 4: Frustration Detection — LLM 회사가 정규식으로 욕설을 감지하는 이유</h2>
+<h2 id="발견-4-frustration-detection-llm-회사가-정규식으로-욕설을-감지하는-이유">발견 4: Frustration Detection — LLM 회사가 정규식으로 욕설을 감지하는 이유</h2>
 <p>유출 코드에서 발견된 욕설 감지 로직은 많은 사람들을 웃기게도, 놀라게도 만들었습니다.</p>
 <div class="gatsby-highlight" data-language="typescript"><pre class="language-typescript"><code class="language-typescript"><span class="token comment">// frustration detection (pseudo-code)</span>
 <span class="token keyword">const</span> frustrationRegex <span class="token operator">=</span> <span class="token regex"><span class="token regex-delimiter">/</span><span class="token regex-source language-regex">\b(wtf|wth|ffs|omfg|shit(ty|tiest)?|dumbass|...)\b</span><span class="token regex-delimiter">/</span><span class="token regex-flags">i</span></span><span class="token punctuation">;</span>
@@ -128,7 +128,7 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
 <p><strong>모든 메시지마다</strong> 감성 분석을 위해 추가 API 호출을 하는 것은 비용과 지연 측면에서 현실적이지 않습니다. “사용자가 명시적으로 욕을 하는 상황”만 빠르게 감지하려면 정규식이면 충분합니다. 완벽할 필요 없이, 빠르기만 하면 되니까요.</p>
 <p>Hacker News에서는 “Cursor에 욕하면 실제로 버그 수정 성능이 올라간다”는 농담 섞인 댓글이 인기를 끌기도 했습니다. frustration이 감지되면 모델이 더 신중하게 응답하도록 행동을 조정하는 용도로 추정되는데, 실제로 그런 효과가 있다면 꽤 영리한 설계입니다.</p>
 <hr>
-<h2>발견 5: KAIROS — 미공개 자율 에이전트 모드</h2>
+<h2 id="발견-5-kairos-미공개-자율-에이전트-모드">발견 5: KAIROS — 미공개 자율 에이전트 모드</h2>
 <p>유출된 44개의 피처 플래그 중 가장 주목받은 것은 <strong>KAIROS</strong>입니다. 그리스어로 “적절한 시간(the right moment)“을 뜻하는 이 기능은 Claude Code를 <strong>항시 실행되는 백그라운드 데몬</strong>으로 전환하는 자율 에이전트 모드입니다.</p>
 <p>발견된 주요 구성 요소는 다음과 같습니다:</p>
 <div class="gatsby-highlight" data-language="typescript"><pre class="language-typescript"><code class="language-typescript"><span class="token comment">// KAIROS feature flag</span>
@@ -178,7 +178,7 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
 <span class="token punctuation">}</span></code></pre></div>
 <p>KAIROS가 실현되면, Claude Code는 “요청할 때만 응답하는 도구”에서 <strong>“프로젝트를 상시 관찰하며 능동적으로 행동하는 동료”</strong>로 전환됩니다. 현재는 피처 플래그 뒤에 숨겨진 미공개 기능이지만, AI 코딩 에이전트의 미래 방향을 보여주는 가장 명확한 신호라고 할 수 있습니다.</p>
 <hr>
-<h2>발견 6: BUDDY — 터미널 속 타마고치</h2>
+<h2 id="발견-6-buddy-터미널-속-타마고치">발견 6: BUDDY — 터미널 속 타마고치</h2>
 <p>코드에서 발견된 <code class="language-text">BUDDY</code> 피처 플래그는 성격이 전혀 다릅니다. <strong>터미널 펫 시스템</strong>입니다.</p>
 <table>
 <thead>
@@ -216,7 +216,7 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
   재미있는 기능처럼 보이지만, 이런 요소는 도구에 대한 애착과 사용 지속률에 실질적 영향을 미칩니다. GitHub의 contribution graph, Duolingo의 연속 학습 기록 같은 게이미피케이션 요소와 같은 맥락입니다.
 </div>
 <hr>
-<h2>발견 7: 25만 API 호출의 조용한 낭비</h2>
+<h2 id="발견-7-25만-api-호출의-조용한-낭비">발견 7: 25만 API 호출의 조용한 낭비</h2>
 <p>코드 주석에서 발견된 성능 이슈는 Anthropic의 규모에서 생각하면 상당히 의미 있는 숫자입니다.</p>
 <div class="gatsby-highlight" data-language="typescript"><pre class="language-typescript"><code class="language-typescript"><span class="token comment">// 코드 주석에서 발견 (원문)</span>
 <span class="token comment">// NOTE: 1,279 sessions experienced 50+ consecutive</span>
@@ -225,10 +225,10 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
 <p>Claude Code는 대화가 길어지면 이전 메시지를 자동으로 압축(compaction)하는 기능이 있습니다. 그런데 <strong>1,279개 세션에서 50회 이상 연속으로 압축이 실패</strong>하고 있었고, 이로 인해 전 세계적으로 매일 약 <strong>25만 건의 API 호출이 낭비</strong>되고 있었습니다.</p>
 <p>개발자가 이 사실을 코드 주석으로 기록해둔 것을 보면, 팀 내부에서 인지는 하고 있었지만 아직 수정되지 않은 상태였던 것으로 보입니다. AI 제품에서 이런 “조용한 비효율”이 얼마나 쉽게 쌓일 수 있는지를 보여주는 사례입니다.</p>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p><code class="language-text">.npmignore</code> 한 줄의 부재가 51만줄의 소스코드를 세상에 드러냈습니다. 그 안에는 경쟁사로부터의 방어(Anti-Distillation), 논란이 될 수밖에 없는 결정(Undercover Mode), 영리한 엔지니어링(Frustration Detection), 미래의 제품 비전(KAIROS), 그리고 어디서나 존재하는 현실적 문제(25만 API 낭비)까지 — AI 에이전트를 만드는 팀이 실제로 어떤 고민을 하고 있는지가 고스란히 담겨 있었습니다.</p>
 <p><a href="/issue/claude-code-architecture/">다음 글</a>에서는 유출된 코드에서 드러난 <strong>AI 에이전트 아키텍처</strong>를 분석합니다 — 40+개 도구 시스템, 다계층 권한 모델, 프롬프트 캐시 최적화, Coordinator Mode 등 Claude Code가 어떻게 설계되었는지를 기술적으로 파헤쳐 보겠습니다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://alex000kim.com/posts/2026-03-31-claude-code-source-leak/" target="_blank" rel="noopener noreferrer">Alex Kim — Claude Code Source Leak Analysis</a></li>
 <li><a href="https://venturebeat.com/technology/claude-codes-source-code-appears-to-have-leaked-heres-what-we-know" target="_blank" rel="noopener noreferrer">VentureBeat — Claude Code’s Source Code Appears to Have Leaked</a></li>
@@ -257,6 +257,6 @@ headers<span class="token punctuation">[</span><span class="token string">'cch'<
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

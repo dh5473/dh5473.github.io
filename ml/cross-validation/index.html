@@ -6,7 +6,7 @@
 <p>데이터를 한 번 나눠서 테스트 점수를 구했다. 0.87이 나왔다. 그런데 데이터를 다르게 나누면? 0.92가 나올 수도, 0.79가 나올 수도 있다. 운 좋게 쉬운 샘플이 테스트셋에 몰렸을 수도 있고, 반대로 어려운 이상치만 잔뜩 걸렸을 수도 있다. 한 번의 split으로 얻은 점수에 모델의 운명을 걸어도 될까?</p>
 <p>교차 검증(Cross-Validation)은 이 문제에 대한 답이다. 데이터를 여러 번, 다른 방식으로 나눠서 모델을 반복 평가한다. 한 번의 lucky split이나 unlucky split에 흔들리지 않는, <strong>신뢰할 수 있는 성능 추정치</strong>를 얻는 게 목표다.</p>
 <hr>
-<h2>Hold-out: 단순하지만 불안정하다</h2>
+<h2 id="hold-out-단순하지만-불안정하다">Hold-out: 단순하지만 불안정하다</h2>
 <p>가장 기본적인 모델 평가 방법은 Hold-out이다. 데이터를 훈련셋과 테스트셋으로 한 번 나누고, 훈련셋으로 학습한 뒤 테스트셋으로 점수를 구한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier
@@ -32,9 +32,9 @@ accuracy <span class="token operator">=</span> accuracy_score<span class="token 
 <p>데이터가 수십만 건이면 편차가 작겠지만, 수백<del>수천 건일 때는 split에 따라 점수가 5</del>10%p까지 흔들린다. <a href="/ml/bias-variance/">편향-분산 트레이드오프</a>에서 배운 것처럼, 분산이 높은 추정치는 믿을 수 없다.</p>
 <p>Hold-out의 또 다른 문제: 데이터를 80/20으로 나누면, 모델은 전체 데이터의 80%만 학습에 사용한다. 데이터가 귀한 상황에서는 20%를 평가용으로 “버리는” 게 아깝다.</p>
 <hr>
-<h2>K-Fold Cross-Validation</h2>
+<h2 id="k-fold-cross-validation">K-Fold Cross-Validation</h2>
 <p>K-Fold는 Hold-out의 두 가지 문제를 동시에 해결한다.</p>
-<h3>작동 방식</h3>
+<h3 id="작동-방식">작동 방식</h3>
 <ol>
 <li>전체 데이터를 K개의 동일한 크기의 조각(fold)으로 나눈다</li>
 <li>첫 번째 fold를 검증셋으로, 나머지 K-1개를 훈련셋으로 사용한다</li>
@@ -52,10 +52,10 @@ Fold 4: [훈련] [훈련] [훈련] [검증] [훈련]  → Score₄
 Fold 5: [훈련] [훈련] [훈련] [훈련] [검증]  → Score₅
 
 최종 점수 = (Score₁ + Score₂ + ... + Score₅) / 5</code></pre></div>
-<h3>왜 분산이 줄어드는가?</h3>
+<h3 id="왜-분산이-줄어드는가">왜 분산이 줄어드는가?</h3>
 <p>Hold-out은 하나의 split에서 하나의 점수를 얻는다. K-Fold는 K개의 서로 다른 split에서 K개의 점수를 얻는다. 평균을 내면 하나의 운 좋은(또는 나쁜) split에 의한 변동이 상쇄된다.</p>
 <p>동시에, 각 반복에서 전체 데이터의 (K-1)/K를 훈련에 사용한다. K=5이면 80%, K=10이면 90%. 모든 데이터 포인트가 훈련에도, 검증에도 참여하므로 <strong>데이터 활용 효율</strong>도 높다.</p>
-<h3>K는 얼마로?</h3>
+<h3 id="k는-얼마로">K는 얼마로?</h3>
 <p>실무에서는 <strong>K=5 또는 K=10</strong>이 표준이다.</p>
 <table>
 <thead>
@@ -104,7 +104,7 @@ Fold 5: [훈련] [훈련] [훈련] [훈련] [검증]  → Score₅
   확신이 없으면 <strong>K=5</strong>로 시작하자. 데이터가 수만 건 이상이면 K=5로 충분하고, 수백 건 이하로 적으면 K=10이나 Repeated K-Fold를 고려한다. 시간이 넉넉하면 Repeated 5-Fold(5회 반복)가 가장 안정적인 추정치를 준다.
 </div>
 <hr>
-<h2>Stratified K-Fold</h2>
+<h2 id="stratified-k-fold">Stratified K-Fold</h2>
 <p>기본 K-Fold에는 숨겨진 위험이 있다. <strong>클래스 비율이 불균형한 데이터</strong>에서 문제가 된다.</p>
 <p>전체 데이터에서 양성 클래스가 10%라고 하자. 운이 나쁘면 어떤 fold에는 양성이 2%만 들어가고, 다른 fold에는 18%가 몰릴 수 있다. 각 fold의 데이터 분포가 전체와 다르면, 점수의 편차가 커지고 추정치가 왜곡된다.</p>
 <p><strong>Stratified K-Fold</strong>는 각 fold에서 클래스 비율이 전체 데이터와 동일하도록 보장한다.</p>
@@ -129,14 +129,14 @@ skf <span class="token operator">=</span> StratifiedKFold<span class="token punc
   회귀 문제에는 클래스 레이블이 없으므로 Stratified K-Fold를 직접 쓸 수 없다. 타깃 값을 구간(bin)으로 나눈 뒤 해당 bin을 기준으로 층화하거나, 단순 K-Fold를 쓰되 shuffle=True로 무작위 섞는 것이 일반적이다.
 </div>
 <hr>
-<h2>Leave-One-Out (LOO)</h2>
+<h2 id="leave-one-out-loo">Leave-One-Out (LOO)</h2>
 <p>K-Fold에서 K를 데이터 개수 N과 같게 설정하면, 매번 1개의 샘플만 검증에 사용하고 나머지 N-1개로 훈련한다. 이것이 <strong>Leave-One-Out Cross-Validation(LOOCV)</strong> 이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> LeaveOneOut<span class="token punctuation">,</span> cross_val_score
 
 loo <span class="token operator">=</span> LeaveOneOut<span class="token punctuation">(</span><span class="token punctuation">)</span>
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>model<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span>loo<span class="token punctuation">,</span> scoring<span class="token operator">=</span><span class="token string">'accuracy'</span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"LOO 평균 정확도: </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
-<h3>장점과 단점</h3>
+<h3 id="장점과-단점">장점과 단점</h3>
 <p><strong>장점:</strong></p>
 <ul>
 <li>훈련 데이터를 최대한 사용한다 (N-1개). 편향이 매우 낮다</li>
@@ -156,7 +156,7 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
 </ul>
 <p>일반적으로 K=5~10의 K-Fold가 편향-분산 균형에서 LOO보다 낫다. LOO는 특수한 상황에서만 쓰인다.</p>
 <hr>
-<h2>Repeated K-Fold</h2>
+<h2 id="repeated-k-fold">Repeated K-Fold</h2>
 <p>K-Fold의 결과는 데이터를 어떻게 나누는지에 따라 달라진다. <code class="language-text">shuffle=True</code>에서 <code class="language-text">random_state</code>가 다르면 fold 구성이 달라지고, 점수도 약간 변한다.</p>
 <p><strong>Repeated K-Fold</strong>는 서로 다른 랜덤 시드로 K-Fold를 여러 번 반복한 뒤 전체 평균을 구한다. 5-Fold를 10번 반복하면 총 50개의 점수를 평균낸다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> RepeatedStratifiedKFold
@@ -166,7 +166,7 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Repeated 5-Fold (10회): </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> (+/- </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">)"</span></span><span class="token punctuation">)</span></code></pre></div>
 <p>계산 비용이 K x n_repeats 배가 되지만, 성능 추정치의 안정성이 크게 올라간다. 모델 비교에서 0.01 차이가 의미 있는지 판단할 때 특히 유용하다.</p>
 <hr>
-<h2>Time Series Split: 시계열은 다르다</h2>
+<h2 id="time-series-split-시계열은-다르다">Time Series Split: 시계열은 다르다</h2>
 <p>주가, 센서 데이터, 로그 데이터 같은 <strong>시계열 데이터</strong>에서 K-Fold를 쓰면 <strong>미래 데이터로 과거를 예측하는</strong> 상황이 발생한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">일반 K-Fold의 문제 (시계열에서):
 
@@ -196,7 +196,7 @@ tscv <span class="token operator">=</span> TimeSeriesSplit<span class="token pun
   <code>shuffle=True</code>를 넣고 일반 K-Fold를 돌리는 것. 시간 순서를 무시하면, 모델이 실전에서 절대 볼 수 없는 미래 정보로 학습한다. 평가 결과가 좋아 보이지만 실전 배포 후 성능이 급락한다.
 </div>
 <hr>
-<h2>Validation Set vs Test Set: 3-way Split</h2>
+<h2 id="validation-set-vs-test-set-3-way-split">Validation Set vs Test Set: 3-way Split</h2>
 <p>여기서 흔히 혼동되는 개념을 정리하자. <strong>검증셋(Validation Set)</strong> 과 <strong>테스트셋(Test Set)</strong> 은 다르다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">전체 데이터
 ├── 훈련셋(Training Set)     → 모델 학습
@@ -219,9 +219,9 @@ best_model<span class="token punctuation">.</span>fit<span class="token punctuat
 test_score <span class="token operator">=</span> f1_score<span class="token punctuation">(</span>y_test<span class="token punctuation">,</span> best_model<span class="token punctuation">.</span>predict<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Test F1: </span><span class="token interpolation"><span class="token punctuation">{</span>test_score<span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>교차 검증에서의 데이터 누수</h2>
+<h2 id="교차-검증에서의-데이터-누수">교차 검증에서의 데이터 누수</h2>
 <p>교차 검증에서 가장 흔한, 그리고 가장 위험한 실수 — <strong>전처리를 fold 밖에서 하는 것</strong>이다.</p>
-<h3>잘못된 방법</h3>
+<h3 id="잘못된-방법">잘못된 방법</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
 
 <span class="token comment"># 전체 데이터로 스케일링 (누수!)</span>
@@ -231,7 +231,7 @@ X_scaled <span class="token operator">=</span> scaler<span class="token punctuat
 <span class="token comment"># 스케일링된 데이터로 교차 검증</span>
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>model<span class="token punctuation">,</span> X_scaled<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span></code></pre></div>
 <p>이 코드에서 <code class="language-text">scaler.fit_transform(X)</code>이 전체 데이터의 평균과 표준편차를 계산한다. 검증 fold의 정보가 훈련 fold로 흘러들어간다 — 데이터 누수(Data Leakage)다. 실전에서는 테스트 데이터의 통계량을 모르므로, 이 점수는 과도하게 낙관적이다.</p>
-<h3>올바른 방법: Pipeline 사용</h3>
+<h3 id="올바른-방법-pipeline-사용">올바른 방법: Pipeline 사용</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>pipeline <span class="token keyword">import</span> Pipeline
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LogisticRegression
@@ -258,8 +258,8 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
   누수가 있으면 CV 점수가 실전보다 높게 나온다. 모델 선택 단계에서 잘못된 선택을 하게 되고, 배포 후에 성능이 예상보다 낮아지는 원인이 된다. "CV에서 0.95였는데 실전에서 0.82밖에 안 나와요" — 십중팔구 데이터 누수다.
 </div>
 <hr>
-<h2>sklearn 구현: cross_val_score와 cross_validate</h2>
-<h3>cross_val_score: 간편하게 점수 하나</h3>
+<h2 id="sklearn-구현-cross_val_score와-cross_validate">sklearn 구현: cross_val_score와 cross_validate</h2>
+<h3 id="cross_val_score-간편하게-점수-하나">cross_val_score: 간편하게 점수 하나</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_val_score
 
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>
@@ -271,7 +271,7 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
 <span class="token punctuation">)</span>
 
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Accuracy: </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string"> (+/- </span><span class="token interpolation"><span class="token punctuation">{</span>scores<span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">)"</span></span><span class="token punctuation">)</span></code></pre></div>
-<h3>cross_validate: 더 풍부한 결과</h3>
+<h3 id="cross_validate-더-풍부한-결과">cross_validate: 더 풍부한 결과</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> cross_validate
 
 results <span class="token operator">=</span> cross_validate<span class="token punctuation">(</span>
@@ -288,7 +288,7 @@ results <span class="token operator">=</span> cross_validate<span class="token p
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Test F1:        </span><span class="token interpolation"><span class="token punctuation">{</span>results<span class="token punctuation">[</span><span class="token string">'test_f1'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.4f</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Fit time:       </span><span class="token interpolation"><span class="token punctuation">{</span>results<span class="token punctuation">[</span><span class="token string">'fit_time'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">s"</span></span><span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">return_train_score=True</code>를 넣으면 훈련 점수와 테스트 점수를 동시에 볼 수 있다. 훈련 점수는 높은데 테스트 점수가 낮으면? <a href="/ml/bias-variance/">편향-분산</a>에서 배운 과적합 신호다.</p>
-<h3>CV splitter 직접 전달</h3>
+<h3 id="cv-splitter-직접-전달">CV splitter 직접 전달</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> StratifiedKFold<span class="token punctuation">,</span> RepeatedStratifiedKFold
 
 <span class="token comment"># 기본 Stratified K-Fold</span>
@@ -304,7 +304,7 @@ tscv <span class="token operator">=</span> TimeSeriesSplit<span class="token pun
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>model<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span>tscv<span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">cv</code> 파라미터에 정수를 넣으면 기본값을 쓰고, splitter 객체를 직접 넣으면 전략을 세밀하게 제어할 수 있다.</p>
 <hr>
-<h2>모델 비교: CV로 공정하게 겨루기</h2>
+<h2 id="모델-비교-cv로-공정하게-겨루기">모델 비교: CV로 공정하게 겨루기</h2>
 <p>교차 검증의 핵심 용도 중 하나는 <strong>여러 모델을 공정하게 비교</strong>하는 것이다. 같은 fold 구성을 사용해야 비교가 의미 있다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LogisticRegression
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> RandomForestClassifier<span class="token punctuation">,</span> GradientBoostingClassifier
@@ -350,7 +350,7 @@ df <span class="token operator">=</span> pd<span class="token punctuation">.</sp
 <p>핵심은 모든 모델에 <strong>동일한 <code class="language-text">cv</code> 객체</strong>를 전달하는 것이다. 같은 fold 구성에서 평가해야 점수 차이가 모델 자체의 차이를 반영한다.</p>
 <p><a href="/ml/random-forest/">랜덤 포레스트</a>가 좋은지, Logistic Regression이 좋은지 — Hold-out 한 번으로는 결론 내릴 수 없다. 5-Fold CV로 5개의 점수를 비교하면, 모델 A가 일관되게 B보다 높은지, 아니면 fold에 따라 엎치락뒤치락하는지 보인다. 표준편차까지 보면 점수의 신뢰 구간을 감잡을 수 있다.</p>
 <hr>
-<h2>어떤 CV 전략을 쓸 것인가?</h2>
+<h2 id="어떤-cv-전략을-쓸-것인가">어떤 CV 전략을 쓸 것인가?</h2>
 <table>
 <thead>
 <tr>
@@ -409,7 +409,7 @@ groups <span class="token operator">=</span> patient_ids  <span class="token com
 gkf <span class="token operator">=</span> GroupKFold<span class="token punctuation">(</span>n_splits<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
 scores <span class="token operator">=</span> cross_val_score<span class="token punctuation">(</span>model<span class="token punctuation">,</span> X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> cv<span class="token operator">=</span>gkf<span class="token punctuation">,</span> groups<span class="token operator">=</span>groups<span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <table>
 <thead>
 <tr>
@@ -454,7 +454,7 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
 </table>
 <p>교차 검증은 “모델 점수가 이 정도입니다”라는 주장에 <strong>신뢰도</strong>를 부여한다. Hold-out 한 번으로 0.87을 얻었다고 말하는 것과, 5-Fold CV에서 0.85 +/- 0.02를 얻었다고 말하는 건 정보량이 다르다. 후자가 훨씬 더 믿을 만한 근거다.</p>
 <hr>
-<h2>다음 글 미리보기</h2>
+<h2 id="다음-글-미리보기">다음 글 미리보기</h2>
 <p>CV로 모델의 성능을 안정적으로 측정할 수 있게 됐다. 그런데 모델에는 학습 전에 사람이 정해줘야 하는 값들이 있다 — 학습률, 트리 깊이, 정규화 강도 같은 <strong>하이퍼파라미터</strong>. 이 값을 어떻게 찾을까? 무작위로 찍을까, 격자 위를 훑을까, 더 똑똑한 방법이 있을까?</p>
 <p><a href="/ml/hyperparameter-tuning/">다음 글</a>에서는 Grid Search, Random Search, 그리고 Bayesian Optimization까지 — 교차 검증 위에서 동작하는 하이퍼파라미터 튜닝 전략을 다룬다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/regression-metrics/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">회귀 모델 평가 지표: MSE, MAE, R², MAPE 언제 어떤 걸 쓸까</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/hyperparameter-tuning/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">하이퍼파라미터 튜닝: Grid Search, Random Search, Bayesian Optimization</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
     window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
@@ -478,6 +478,6 @@ scores <span class="token operator">=</span> cross_val_score<span class="token p
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

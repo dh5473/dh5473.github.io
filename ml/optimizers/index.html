@@ -6,7 +6,7 @@
 <p>ImageNet은 120만 장이다. ResNet의 파라미터는 2,500만 개다. 전체 120만 장을 한 번 훑어서 기울기를 구하고, 파라미터를 딱 한 번 업데이트한다? 그러면 하루에 몇 번 업데이트도 못 한다. 이래서는 학습이 불가능하다.</p>
 <p>이 문제를 해결하기 위해 옵티마이저(Optimizer)가 진화했다. 데이터를 어떻게 나눠서 쓸 것인가(Batch vs SGD), 기울기를 어떻게 가공할 것인가(Momentum, RMSprop), 두 아이디어를 합칠 수 있는가(Adam). 이번 글에서 이 전체 흐름을 따라간다.</p>
 <hr>
-<h2>Batch GD vs Mini-batch GD vs SGD</h2>
+<h2 id="batch-gd-vs-mini-batch-gd-vs-sgd">Batch GD vs Mini-batch GD vs SGD</h2>
 <p><a href="/ml/gradient-descent/">경사하강법 글</a>에서 구현한 방식은 <strong>Batch Gradient Descent</strong>다. 전체 데이터셋으로 기울기를 계산하고, 한 번 업데이트한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># Batch GD: 전체 데이터 m개로 기울기 계산
 ∂J/∂w = (1/m) × Σᵢ₌₁ᵐ (ŷᵢ - yᵢ) × xᵢ
@@ -63,18 +63,18 @@ w := w - α × ∂J/∂w</code></pre></div>
   참고로, 현대 딥러닝에서 "SGD"라고 하면 대부분 mini-batch GD를 의미한다. 순수한 1-sample SGD는 거의 사용하지 않는다.
 </div>
 <hr>
-<h2>Vanilla SGD의 문제점</h2>
+<h2 id="vanilla-sgd의-문제점">Vanilla SGD의 문제점</h2>
 <p>Mini-batch로 속도 문제는 해결했다. 하지만 업데이트 규칙 자체 — <code class="language-text">w := w - α × ∇J</code> — 에는 여전히 근본적인 한계가 있다.</p>
-<h3>문제 1: 차원별 기울기 크기가 다르다</h3>
+<h3 id="문제-1-차원별-기울기-크기가-다르다">문제 1: 차원별 기울기 크기가 다르다</h3>
 <p><a href="/ml/cost-function/">비용 함수</a>의 등고선을 생각해보자. 어떤 방향은 가파르고(기울기가 크고), 어떤 방향은 완만하다(기울기가 작다). Vanilla SGD는 모든 파라미터에 같은 학습률을 적용하니까, 가파른 방향에서는 오버슈팅하고 완만한 방향에서는 기어간다.</p>
 <p>결과? 지그재그로 진동하면서 비효율적으로 수렴한다. 가파른 방향에서 튕기고, 완만한 방향에서 느리게 전진하는 걸 반복한다.</p>
-<h3>문제 2: 안장점(Saddle Point)</h3>
+<h3 id="문제-2-안장점saddle-point">문제 2: 안장점(Saddle Point)</h3>
 <p>고차원 공간에서는 local minimum보다 <strong>안장점(saddle point)</strong>이 훨씬 많다. 안장점은 어떤 방향으로는 극솟값이고, 다른 방향으로는 극댓값인 지점이다. 기울기가 0에 가까워지면서 학습이 정체된다.</p>
-<h3>문제 3: 학습률 선택이 어렵다</h3>
+<h3 id="문제-3-학습률-선택이-어렵다">문제 3: 학습률 선택이 어렵다</h3>
 <p>너무 크면 발산하고, 너무 작으면 느리다. <a href="/ml/gradient-descent/">경사하강법 글</a>에서 이미 확인한 문제다. 게다가 최적의 학습률은 학습이 진행되면서 바뀐다. 처음엔 크게, 나중엔 작게 가야 하는데 고정 학습률로는 이게 안 된다.</p>
 <p>이 세 문제를 해결하기 위해 옵티마이저가 진화했다.</p>
 <hr>
-<h2>Momentum: 관성을 더하다</h2>
+<h2 id="momentum-관성을-더하다">Momentum: 관성을 더하다</h2>
 <p>첫 번째 돌파구는 <strong>물리학에서 빌려온 아이디어</strong>다. 공이 언덕을 굴러 내려가면 속도가 점점 붙는다. 작은 언덕은 관성으로 넘어가고, 평탄한 구간도 이전 속도 덕에 빠르게 지나간다.</p>
 <p>이걸 수식으로 표현하면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">v = β × v + (1 - β) × ∇J(w)     ← 속도 업데이트 (지수 가중 이동 평균)
@@ -85,13 +85,13 @@ w = w - α × v                    ← 파라미터 업데이트</code></pre></d
 <li><strong>∇J(w)</strong>: 현재 기울기</li>
 </ul>
 <p>β = 0.9이면, 현재 기울기의 기여는 10%뿐이고 나머지 90%는 과거 방향에서 온다. 이게 <strong>지수 가중 이동 평균(Exponentially Weighted Moving Average, EWMA)</strong>이다. 최근 기울기에 더 큰 가중치를 주되, 과거 기울기의 영향도 부드럽게 감쇠시킨다.</p>
-<h3>왜 효과적인가?</h3>
+<h3 id="왜-효과적인가">왜 효과적인가?</h3>
 <ul>
 <li><strong>진동 감소</strong>: 위아래로 진동하는 기울기는 서로 상쇄된다. 평균을 내면 진동 방향의 속도는 줄어든다.</li>
 <li><strong>일관된 방향 가속</strong>: 같은 방향으로 계속 내려가고 있다면 속도가 누적된다. 완만한 구간에서도 빠르게 전진한다.</li>
 <li><strong>안장점 탈출</strong>: 기울기가 0에 가까워져도 이전에 누적된 속도가 남아있어 멈추지 않고 지나간다.</li>
 </ul>
-<h3>NumPy 구현</h3>
+<h3 id="numpy-구현">NumPy 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
 <span class="token keyword">def</span> <span class="token function">sgd_momentum</span><span class="token punctuation">(</span>params<span class="token punctuation">,</span> grads<span class="token punctuation">,</span> velocities<span class="token punctuation">,</span> lr<span class="token operator">=</span><span class="token number">0.01</span><span class="token punctuation">,</span> beta<span class="token operator">=</span><span class="token number">0.9</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
@@ -132,14 +132,14 @@ v_b <span class="token operator">=</span> <span class="token number">0.0</span>
   이 글에서는 EWMA 형태인 <code>v = β × v + (1-β) × ∇J(w)</code>를 사용했지만, 대부분의 딥러닝 교과서(Goodfellow et al.)와 PyTorch(<code>torch.optim.SGD(momentum=0.9)</code>)에서는 <code>v = β × v + ∇J(w)</code> (1-β 없이)가 표준이다. 두 형태의 본질은 같지만 학습률의 실질적 크기가 달라지니, 프레임워크 문서를 확인하는 습관이 중요하다.
 </div>
 <hr>
-<h2>Nesterov Accelerated Gradient (NAG)</h2>
+<h2 id="nesterov-accelerated-gradient-nag">Nesterov Accelerated Gradient (NAG)</h2>
 <p>Momentum의 개선 버전이다. 일반 Momentum은 <strong>현재 위치</strong>에서 기울기를 구한다. NAG는 <strong>한 발 앞서 간 위치</strong>에서 기울기를 구한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">v = β × v + (1 - β) × ∇J(w - β × v)         ← "미리 가본 곳"의 기울기
 w = w - α × v</code></pre></div>
 <p>비유하자면, Momentum은 “공을 굴리면서 바닥의 경사를 느끼는 것”이고, NAG는 “공이 갈 방향을 미리 내다보고 경사를 느끼는 것”이다. 실제로 NAG는 오버슈팅을 줄이는 데 효과적이다. 앞으로 갈 곳의 기울기가 이미 반대 방향이라면, 미리 브레이크를 걸 수 있기 때문이다.</p>
 <p>실전에서 Momentum과의 차이가 극적이진 않지만, 수렴 속도가 약간 더 빠르고 안정적인 경우가 많다. PyTorch에서는 <code class="language-text">SGD(momentum=0.9, nesterov=True)</code>로 간단히 활성화할 수 있다.</p>
 <hr>
-<h2>RMSprop: 파라미터마다 학습률을 다르게</h2>
+<h2 id="rmsprop-파라미터마다-학습률을-다르게">RMSprop: 파라미터마다 학습률을 다르게</h2>
 <p>Momentum은 기울기의 <strong>방향</strong>을 개선했다. RMSprop은 다른 접근을 한다 — 기울기의 <strong>크기</strong>에 따라 학습률을 조절한다.</p>
 <p>핵심 아이디어: 기울기가 큰 파라미터는 이미 빠르게 변하고 있으니 학습률을 줄이고, 기울기가 작은 파라미터는 변화가 느리니 학습률을 키운다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">s = β × s + (1 - β) × (∇J)²     ← 기울기 제곱의 이동 평균
@@ -151,7 +151,7 @@ w = w - α × ∇J / √(s + ε)       ← 적응적 업데이트</code></pre></
 <li><strong>√s가 작을수록</strong> → 스텝이 커진다 → 작은 기울기의 파라미터는 큰 보폭으로</li>
 </ul>
 <p>이것이 <strong>적응적 학습률(Adaptive Learning Rate)</strong>의 핵심이다. 모든 파라미터에 같은 α를 쓰되, 각 파라미터의 역사에 따라 실질적인 학습률이 자동 조절된다.</p>
-<h3>효과</h3>
+<h3 id="효과">효과</h3>
 <p>등고선이 심하게 찌그러진(elongated) 비용 함수를 생각해보자. Vanilla SGD는 좁은 방향으로 진동하면서 넓은 방향으로 느리게 전진한다. RMSprop은 좁은 방향(기울기 큰 쪽)의 학습률을 줄이고, 넓은 방향(기울기 작은 쪽)의 학습률을 키워서 균형 잡힌 수렴을 만든다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">rmsprop</span><span class="token punctuation">(</span>params<span class="token punctuation">,</span> grads<span class="token punctuation">,</span> cache<span class="token punctuation">,</span> lr<span class="token operator">=</span><span class="token number">0.001</span><span class="token punctuation">,</span> beta<span class="token operator">=</span><span class="token number">0.9</span><span class="token punctuation">,</span> eps<span class="token operator">=</span><span class="token number">1e-8</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token triple-quoted-string string">"""RMSprop 업데이트"""</span>
@@ -170,7 +170,7 @@ w = w - α × ∇J / √(s + ε)       ← 적응적 업데이트</code></pre></
   RMSprop은 Geoffrey Hinton이 2012년 Coursera 강의에서 슬라이드로 제안한 것이다. 논문이 아니라 강의 슬라이드에서 나왔다. 그래서 인용할 때 "Hinton, unpublished"라고 쓴다. 정식 논문 없이 사실상 표준이 된 드문 사례다.
 </div>
 <hr>
-<h2>Adam: Momentum + RMSprop의 결합</h2>
+<h2 id="adam-momentum-rmsprop의-결합">Adam: Momentum + RMSprop의 결합</h2>
 <p><strong>Adam(Adaptive Moment Estimation)</strong>은 이름 그대로 Momentum과 RMSprop을 합친 것이다. 2014년 Kingma와 Ba의 논문에서 제안됐고, 현재 가장 널리 쓰이는 옵티마이저다.</p>
 <p>두 가지 이동 평균을 동시에 관리한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># 1차 모멘트 (기울기의 평균 → Momentum 역할)
@@ -178,12 +178,12 @@ m = β₁ × m + (1 - β₁) × ∇J
 
 # 2차 모멘트 (기울기 제곱의 평균 → RMSprop 역할)
 v = β₂ × v + (1 - β₂) × (∇J)²</code></pre></div>
-<h3>편향 보정 (Bias Correction)</h3>
+<h3 id="편향-보정-bias-correction">편향 보정 (Bias Correction)</h3>
 <p>여기서 Adam만의 특별한 처리가 들어간다. m과 v는 초기에 0으로 시작하기 때문에, 학습 초반에는 실제 평균보다 작은 값을 가진다. 이걸 보정한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">m̂ = m / (1 - β₁ᵗ)    ← t는 현재 스텝 번호
 v̂ = v / (1 - β₂ᵗ)</code></pre></div>
 <p>왜 보정이 필요한가? β₁ = 0.9라고 하자. 첫 번째 스텝에서 m = 0.1 × ∇J다. 실제 기울기 평균의 10%밖에 안 된다. <code class="language-text">1 - β₁¹ = 0.1</code>로 나누면 <code class="language-text">m̂ = ∇J</code>가 되어 보정된다. 스텝이 많아지면 β₁ᵗ → 0이 되므로 보정의 영향은 자연스럽게 사라진다.</p>
-<h3>전체 알고리즘</h3>
+<h3 id="전체-알고리즘">전체 알고리즘</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">초기화: m = 0, v = 0, t = 0
 
 매 스텝:
@@ -197,7 +197,7 @@ v̂ = v / (1 - β₂ᵗ)</code></pre></div>
   v̂ = v / (1 - β₂ᵗ)                      ← 편향 보정
 
   w = w - α × m̂ / (√v̂ + ε)              ← 파라미터 업데이트</code></pre></div>
-<h3>기본 하이퍼파라미터</h3>
+<h3 id="기본-하이퍼파라미터">기본 하이퍼파라미터</h3>
 <table>
 <thead>
 <tr>
@@ -230,7 +230,7 @@ v̂ = v / (1 - β₂ᵗ)</code></pre></div>
 </tbody>
 </table>
 <p>대부분의 경우 β₁, β₂, ε는 기본값을 그대로 쓴다. 튜닝하는 건 학습률 α 하나면 충분하다.</p>
-<h3>NumPy 구현</h3>
+<h3 id="numpy-구현-1">NumPy 구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
 <span class="token keyword">class</span> <span class="token class-name">Adam</span><span class="token punctuation">:</span>
@@ -285,7 +285,7 @@ Step 100 | x=0.0077, y=0.0001 | f=0.0001
 Step 150 | x=0.0000, y=0.0000 | f=0.0000</code></pre></div>
 <p>x와 y의 기울기 크기가 10배 차이나지만, Adam은 둘 다 비슷한 속도로 0에 수렴시킨다. 이게 적응적 학습률의 힘이다.</p>
 <hr>
-<h2>AdamW: Weight Decay를 올바르게</h2>
+<h2 id="adamw-weight-decay를-올바르게">AdamW: Weight Decay를 올바르게</h2>
 <p>Adam이 만능처럼 보이지만, 2017년 Loshchilov와 Hutter가 문제를 발견했다. <strong>Adam에서 L2 규제가 제대로 작동하지 않는다</strong>는 것이다. 규제 항 <code class="language-text">λ × w</code>가 기울기에 섞인 채로 Adam의 적응적 스케일링(<code class="language-text">√v</code>로 나누기)을 거치면서, 큰 기울기를 가진 파라미터일수록 규제 효과가 약해지기 때문이다.</p>
 <p><a href="/ml/regularization/">규제(Regularization)</a> 글에서 L2 규제를 다뤘다. L2 규제는 비용 함수에 <code class="language-text">(λ/2) × ||w||²</code>를 추가하는 것이다. 이 항의 기울기는 <code class="language-text">λ × w</code>이므로, 업데이트 규칙에 <code class="language-text">λ × w</code>가 추가된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text"># SGD에서의 L2 규제 = Weight Decay와 동일
@@ -304,9 +304,9 @@ m, v 업데이트 (g 사용)
 w = w - α × m̂ / √v̂ - α × λ × w  ← weight decay를 별도로 적용</code></pre></div>
 <p>차이는 미묘해 보이지만, 실험적으로 AdamW가 일반화 성능에서 일관되게 더 좋다. 특히 Transformer 계열 모델에서는 AdamW가 사실상 표준이다.</p>
 <hr>
-<h2>학습률 스케줄링</h2>
+<h2 id="학습률-스케줄링">학습률 스케줄링</h2>
 <p>어떤 옵티마이저를 쓰든, 학습률을 처음부터 끝까지 고정하는 건 비효율적이다. 초반에는 빠르게 탐색하고, 후반에는 세밀하게 조정해야 한다. 이걸 <strong>학습률 스케줄링(Learning Rate Scheduling)</strong>이라 한다.</p>
-<h3>Step Decay</h3>
+<h3 id="step-decay">Step Decay</h3>
 <p>가장 단순한 방법. 일정 에폭마다 학습률을 일정 비율로 줄인다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 매 30 에폭마다 학습률을 1/10로 줄임</span>
 <span class="token keyword">def</span> <span class="token function">step_decay</span><span class="token punctuation">(</span>epoch<span class="token punctuation">,</span> initial_lr<span class="token operator">=</span><span class="token number">0.1</span><span class="token punctuation">,</span> drop_rate<span class="token operator">=</span><span class="token number">0.1</span><span class="token punctuation">,</span> drop_every<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
@@ -315,13 +315,13 @@ w = w - α × m̂ / √v̂ - α × λ × w  ← weight decay를 별도로 적용
 <span class="token comment"># epoch  0~29: lr = 0.1</span>
 <span class="token comment"># epoch 30~59: lr = 0.01</span>
 <span class="token comment"># epoch 60~89: lr = 0.001</span></code></pre></div>
-<h3>Cosine Annealing</h3>
+<h3 id="cosine-annealing">Cosine Annealing</h3>
 <p>학습률을 코사인 곡선을 따라 부드럽게 줄인다. 급격한 변화 없이 자연스러운 감쇠.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> math
 
 <span class="token keyword">def</span> <span class="token function">cosine_annealing</span><span class="token punctuation">(</span>epoch<span class="token punctuation">,</span> total_epochs<span class="token punctuation">,</span> initial_lr<span class="token operator">=</span><span class="token number">0.1</span><span class="token punctuation">,</span> min_lr<span class="token operator">=</span><span class="token number">0.0</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
     <span class="token keyword">return</span> min_lr <span class="token operator">+</span> <span class="token number">0.5</span> <span class="token operator">*</span> <span class="token punctuation">(</span>initial_lr <span class="token operator">-</span> min_lr<span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">+</span> math<span class="token punctuation">.</span>cos<span class="token punctuation">(</span>math<span class="token punctuation">.</span>pi <span class="token operator">*</span> epoch <span class="token operator">/</span> total_epochs<span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre></div>
-<h3>Warmup</h3>
+<h3 id="warmup">Warmup</h3>
 <p>학습 초반에 학습률을 0에서 점진적으로 올리는 기법이다. 왜 필요한가?</p>
 <p>학습 초기에는 파라미터가 랜덤으로 초기화되어 있다. 이 상태에서 큰 학습률로 바로 시작하면, 잘못된 방향으로 크게 이동해서 학습이 불안정해질 수 있다. 특히 Transformer처럼 LayerNorm, Attention 등 복잡한 구조에서 이 문제가 심하다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">warmup_cosine</span><span class="token punctuation">(</span>step<span class="token punctuation">,</span> total_steps<span class="token punctuation">,</span> warmup_steps<span class="token punctuation">,</span> max_lr<span class="token operator">=</span><span class="token number">0.001</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
@@ -337,7 +337,7 @@ w = w - α × m̂ / √v̂ - α × λ × w  ← weight decay를 별도로 적용
   Transformer 모델의 사실상 표준 스케줄이다. BERT, GPT, ViT 등 거의 모든 대형 모델이 이 조합을 사용한다. 보통 전체 학습의 5~10%를 warmup에 할당한다.
 </div>
 <hr>
-<h2>전체 비교</h2>
+<h2 id="전체-비교">전체 비교</h2>
 <table>
 <thead>
 <tr>
@@ -394,12 +394,12 @@ w = w - α × m̂ / √v̂ - α × λ × w  ← weight decay를 별도로 적용
 </tbody>
 </table>
 <hr>
-<h2>실전 가이드라인</h2>
-<h3>기본 선택: Adam 또는 AdamW</h3>
+<h2 id="실전-가이드라인">실전 가이드라인</h2>
+<h3 id="기본-선택-adam-또는-adamw">기본 선택: Adam 또는 AdamW</h3>
 <p>확신이 없으면 Adam(lr=0.001)으로 시작한다. <a href="/ml/regularization/">규제</a>가 필요하다면 AdamW를 쓴다. 대부분의 문제에서 합리적인 성능을 보여준다.</p>
-<h3>Computer Vision: SGD + Momentum</h3>
+<h3 id="computer-vision-sgd-momentum">Computer Vision: SGD + Momentum</h3>
 <p>의외일 수 있지만, CNN 기반 이미지 분류에서는 SGD + Momentum(lr=0.1, momentum=0.9) + step decay가 Adam보다 더 좋은 일반화 성능을 보이는 경우가 많다. ResNet, VGG 등 고전적인 비전 모델의 논문들이 대부분 SGD를 사용한다. 다만 학습률 스케줄을 신중하게 설계해야 한다.</p>
-<h3>NLP / Transformers: AdamW + Warmup + Cosine</h3>
+<h3 id="nlp-transformers-adamw-warmup-cosine">NLP / Transformers: AdamW + Warmup + Cosine</h3>
 <p>BERT, GPT 계열의 사실상 표준이다. 일반적인 설정:</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># PyTorch 예시</span>
 optimizer <span class="token operator">=</span> torch<span class="token punctuation">.</span>optim<span class="token punctuation">.</span>AdamW<span class="token punctuation">(</span>
@@ -418,7 +418,7 @@ scheduler <span class="token operator">=</span> torch<span class="token punctuat
     anneal_strategy<span class="token operator">=</span><span class="token string">'cos'</span>
 <span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>PyTorch로 비교 실험</h2>
+<h2 id="pytorch로-비교-실험">PyTorch로 비교 실험</h2>
 <p>실제로 옵티마이저별 차이를 확인해보자. 간단한 분류 문제에서 SGD, SGD+Momentum, Adam을 비교한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> torch
 <span class="token keyword">import</span> torch<span class="token punctuation">.</span>nn <span class="token keyword">as</span> nn
@@ -485,7 +485,7 @@ Adam (lr=0.001)      | 최종 loss: 0.1553 | 테스트 정확도: 95.50%</code><
   이 실험은 작은 데이터셋과 작은 모델에서의 비교다. 실제 대규모 프로젝트에서는 학습률, 스케줄, 에폭 수 등을 각 옵티마이저에 맞게 튜닝해야 공정한 비교가 된다. "Adam이 항상 최고"라는 결론은 아니다.
 </div>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <p><a href="/ml/gradient-descent/">경사하강법</a>의 <code class="language-text">w := w - α × ∇J</code>에서 시작해서, 우리는 세 가지 축으로 개선했다.</p>
 <ol>
 <li><strong>데이터 사용 방식</strong>: Batch → Mini-batch (속도와 안정성의 균형)</li>
@@ -495,7 +495,7 @@ Adam (lr=0.001)      | 최종 loss: 0.1553 | 테스트 정확도: 95.50%</code><
 <p>그리고 Adam이 2번과 3번을 합쳤다. AdamW가 <a href="/ml/regularization/">규제</a>와의 궁합 문제를 해결했다. 학습률 스케줄링이 “언제 크게, 언제 작게”의 문제를 풀었다.</p>
 <p>옵티마이저는 <a href="/ml/backpropagation/">역전파</a>가 계산한 기울기를 <strong>어떻게 쓸 것인가</strong>의 문제다. 기울기를 그대로 쓸 수도 있고, 평균을 낼 수도 있고, 스케일을 조절할 수도 있다. 이 선택이 학습의 속도와 안정성을 결정한다.</p>
 <hr>
-<h2>다음 글 미리보기</h2>
+<h2 id="다음-글-미리보기">다음 글 미리보기</h2>
 <p>옵티마이저를 골랐다. 학습률도 정했다. 그러면 신경망이 잘 학습될까? 아직 함정이 남아있다. 가중치 초기화를 잘못하면 기울기가 폭발하거나 소실된다. Batch Normalization 없이는 깊은 네트워크가 불안정하다. Dropout은 언제 써야 하는가?</p>
 <p>다음 글 <a href="/ml/neural-network-tips/">신경망 학습 안정화</a>에서 신경망이 실제로 잘 학습되도록 만드는 실전 기법들을 다룬다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/activation-functions/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">활성화 함수(Activation Functions): ReLU는 어떻게 딥러닝을 살렸나</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/neural-network-tips/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">신경망 학습 안정화: Dropout, Batch Normalization, 가중치 초기화</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
     window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
@@ -519,6 +519,6 @@ Adam (lr=0.001)      | 최종 loss: 0.1553 | 테스트 정확도: 95.50%</code><
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

@@ -5,7 +5,7 @@
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">활성화 함수(Activation Functions): ReLU는 어떻게 딥러닝을 살렸나</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.22.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">21</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/backpropagation/">역전파(Backpropagation): 신경망이 학습하는 원리</a></li><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">22</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">활성화 함수(Activation Functions): ReLU는 어떻게 딥러닝을 살렸나</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">23</span><a class="css-dizrmv e4kcwtw5" href="/ml/optimizers/">옵티마이저(Optimizers): SGD에서 Adam까지, 경사하강법의 진화</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">24</span><a class="css-dizrmv e4kcwtw5" href="/ml/neural-network-tips/">신경망 학습 안정화: Dropout, Batch Normalization, 가중치 초기화</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">25</span><a class="css-dizrmv e4kcwtw5" href="/ml/classification-metrics/">분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">5<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p><a href="/ml/backpropagation/">이전 글</a>에서 역전파를 배웠다. 연쇄 법칙으로 기울기를 전파할 때, 각 층의 활성화 함수의 도함수 g’(z)가 곱해진다는 걸 봤다. 이 g’(z)가 너무 작으면 기울기가 사라지고(기울기 소실), 너무 크면 폭발한다. <strong>활성화 함수 선택이 신경망의 학습 성패를 좌우하는 이유</strong>가 여기에 있다.</p>
 <p>이 글에서는 Sigmoid부터 GELU까지, 주요 활성화 함수의 수학적 특성을 파헤치고 “언제, 어디서, 왜” 사용하는지를 정리한다.</p>
 <hr>
-<h2>활성화 함수가 없으면 딥러닝은 의미가 없다</h2>
+<h2 id="활성화-함수가-없으면-딥러닝은-의미가-없다">활성화 함수가 없으면 딥러닝은 의미가 없다</h2>
 <p><a href="/ml/neural-network-basics/">신경망 기초</a>에서 뉴런 하나의 연산을 봤다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">z = w·x + b        (선형 변환)
 a = g(z)            (활성화 함수 적용)</code></pre></div>
@@ -24,22 +24,22 @@ a = g(z)            (활성화 함수 적용)</code></pre></div>
 </blockquote>
 <p>그렇다면 어떤 비선형 함수를 써야 할까? 딥러닝 역사는 이 질문에 대한 답을 찾아가는 과정이기도 하다.</p>
 <hr>
-<h2>Sigmoid: 시작점이자 교훈</h2>
+<h2 id="sigmoid-시작점이자-교훈">Sigmoid: 시작점이자 교훈</h2>
 <p><a href="/ml/logistic-regression/">로지스틱 회귀</a>에서 이미 만난 함수다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">σ(z) = 1 / (1 + e^(-z))</code></pre></div>
-<h3>특성</h3>
+<h3 id="특성">특성</h3>
 <ul>
 <li><strong>출력 범위</strong>: (0, 1) — 확률로 해석 가능</li>
 <li><strong>단조 증가</strong>: z가 커지면 출력도 커진다</li>
 <li><strong>미분 가능</strong>: 어디서든 매끄럽게 미분된다</li>
 </ul>
-<h3>도함수</h3>
+<h3 id="도함수">도함수</h3>
 <p>Sigmoid의 도함수는 놀라울 정도로 깔끔하다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">σ'(z) = σ(z) · (1 - σ(z))</code></pre></div>
 <p>이 도함수의 최댓값은 z = 0일 때 발생한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">σ'(0) = 0.5 × 0.5 = 0.25</code></pre></div>
 <p><strong>최대가 0.25.</strong> 이것이 문제의 핵심이다.</p>
-<h3>기울기 소실 문제</h3>
+<h3 id="기울기-소실-문제">기울기 소실 문제</h3>
 <p><a href="/ml/backpropagation/">역전파</a>에서 봤듯이, 기울기는 각 층의 도함수를 연쇄적으로 곱해서 전파된다. Sigmoid의 도함수 최댓값이 0.25이니까:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">5층 역전파: 0.25 × 0.25 × 0.25 × 0.25 × 0.25 = 0.00098
 10층:      0.25^10 ≈ 0.0000001</code></pre></div>
@@ -90,7 +90,7 @@ a = g(z)            (활성화 함수 적용)</code></pre></div>
           />
         </picture>
     </span></p>
-<h3>Sigmoid의 추가 문제들</h3>
+<h3 id="sigmoid의-추가-문제들">Sigmoid의 추가 문제들</h3>
 <p><strong>1. 출력이 zero-centered가 아니다</strong></p>
 <p>Sigmoid의 출력은 항상 양수(0~1)다. 다음 층의 입력이 항상 양수라는 뜻이다. 가중치 업데이트 시 기울기가 모두 같은 부호를 갖게 되어, 최적화 경로가 지그재그로 비효율적이 된다.</p>
 <p><strong>2. exp() 연산 비용</strong></p>
@@ -99,22 +99,22 @@ a = g(z)            (활성화 함수 적용)</code></pre></div>
 <p><strong>결론</strong>: 은닉층에 Sigmoid를 쓸 이유가 없다. <strong>이진 분류의 출력층</strong>에서만 사용한다.</p>
 </blockquote>
 <hr>
-<h2>Tanh: Sigmoid의 개선판</h2>
+<h2 id="tanh-sigmoid의-개선판">Tanh: Sigmoid의 개선판</h2>
 <p>Tanh(쌍곡탄젠트)는 Sigmoid를 zero-centered로 변환한 것이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">tanh(z) = (e^z - e^(-z)) / (e^z + e^(-z))</code></pre></div>
 <p>사실 Sigmoid와의 관계는 간단하다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">tanh(z) = 2σ(2z) - 1</code></pre></div>
-<h3>특성</h3>
+<h3 id="특성-1">특성</h3>
 <ul>
 <li><strong>출력 범위</strong>: (-1, 1) — zero-centered</li>
 <li><strong>대칭</strong>: 원점 대칭 함수</li>
 </ul>
-<h3>도함수</h3>
+<h3 id="도함수-1">도함수</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">tanh'(z) = 1 - tanh²(z)</code></pre></div>
 <p>z = 0일 때 최댓값:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">tanh'(0) = 1 - 0² = 1</code></pre></div>
 <p>Sigmoid의 최대 도함수가 0.25였던 것에 비해 <strong>4배나 크다.</strong> 기울기 소실이 상대적으로 덜하다.</p>
-<h3>그래도 소실은 소실</h3>
+<h3 id="그래도-소실은-소실">그래도 소실은 소실</h3>
 <p>|z|가 커지면 tanh(z)는 ±1에 수렴하고, 도함수는 0에 수렴한다. 결국 깊은 네트워크에서는 Sigmoid와 같은 문제에 부딪힌다. 다만 Sigmoid보다는 확실히 낫기 때문에, ReLU 등장 이전에는 은닉층의 기본 선택이었다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">비교 (z = 0 기준):
 Sigmoid 도함수 최대: 0.25
@@ -123,15 +123,15 @@ Tanh 도함수 최대:    1.0   ← 4배</code></pre></div>
 <p><strong>Sigmoid vs Tanh</strong>: 은닉층에서는 Tanh가 거의 항상 Sigmoid보다 낫다. zero-centered 출력 + 더 큰 도함수. 그러나 둘 다 <strong>포화(saturation)</strong> 문제에서 자유롭지 못하다.</p>
 </blockquote>
 <hr>
-<h2>ReLU: 딥러닝을 살린 함수</h2>
+<h2 id="relu-딥러닝을-살린-함수">ReLU: 딥러닝을 살린 함수</h2>
 <p>2012년, AlexNet이 ImageNet 대회에서 압도적인 성능으로 우승하면서 딥러닝 시대가 열렸다. 그 성공의 숨은 주역 중 하나가 바로 <strong>ReLU(Rectified Linear Unit)</strong> 다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ReLU(z) = max(0, z)</code></pre></div>
 <p>놀라울 정도로 단순하다. z가 양수면 그대로 통과, 음수면 0.</p>
-<h3>도함수</h3>
+<h3 id="도함수-2">도함수</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ReLU'(z) = 1  (z > 0)
 ReLU'(z) = 0  (z &lt; 0)
 (z = 0에서는 미분 불가능하지만, 실전에서는 0 또는 1로 처리)</code></pre></div>
-<h3>왜 ReLU가 게임 체인저인가</h3>
+<h3 id="왜-relu가-게임-체인저인가">왜 ReLU가 게임 체인저인가</h3>
 <p><strong>1. 기울기 소실이 없다 (z > 0 영역)</strong></p>
 <p>도함수가 1이다. 아무리 깊은 네트워크라도 양의 영역에서는 기울기가 줄지 않고 그대로 전파된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Sigmoid 10층: 0.25^10 ≈ 0.0000001
@@ -140,7 +140,7 @@ ReLU 10층:    1^10   = 1            ← 기울기 보존</code></pre></div>
 <p>exp(), 나눗셈 같은 연산이 필요 없다. 단순 비교와 선택만으로 끝난다. GPU에서 병렬 처리하기에도 최적이다.</p>
 <p><strong>3. 희소 활성화(Sparse Activation)</strong></p>
 <p>입력의 상당 부분에서 출력이 0이 되므로, 네트워크가 자연스럽게 <strong>희소한 표현</strong>을 학습한다. 이는 생물학적 뉴런의 동작과도 유사하고, 과적합 방지에도 도움이 된다.</p>
-<h3>Dying ReLU 문제</h3>
+<h3 id="dying-relu-문제">Dying ReLU 문제</h3>
 <p>ReLU의 유일한 약점이다. z &#x3C; 0인 영역에서 도함수가 0이므로, 한 번 음의 영역에 빠진 뉴런은 기울기를 받지 못해 <strong>영원히 죽을 수 있다.</strong></p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">학습 과정:
 1. 큰 음의 가중치 업데이트 발생
@@ -153,18 +153,18 @@ ReLU 10층:    1^10   = 1            ← 기울기 보존</code></pre></div>
 <p><strong>ReLU가 기본인 이유</strong>: 단순함, 빠른 계산, 기울기 보존. 이 세 가지가 깊은 네트워크 학습을 가능하게 만들었다. 은닉층의 기본 활성화 함수로 <strong>가장 먼저 시도해야 할 선택</strong>이다.</p>
 </blockquote>
 <hr>
-<h2>Leaky ReLU: 죽은 뉴런 살리기</h2>
+<h2 id="leaky-relu-죽은-뉴런-살리기">Leaky ReLU: 죽은 뉴런 살리기</h2>
 <p>Dying ReLU를 해결하는 가장 직관적인 방법이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">LeakyReLU(z) = z      (z > 0)
 LeakyReLU(z) = αz     (z ≤ 0)
 
 α = 0.01 (보통)</code></pre></div>
 <p>z &#x3C; 0일 때 완전히 0으로 만드는 대신, <strong>아주 작은 기울기 α를 허용</strong>한다.</p>
-<h3>도함수</h3>
+<h3 id="도함수-3">도함수</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">LeakyReLU'(z) = 1     (z > 0)
 LeakyReLU'(z) = α     (z ≤ 0)</code></pre></div>
 <p>음의 영역에서도 기울기가 α(= 0.01)이므로, 뉴런이 완전히 죽지 않는다. 작은 기울기지만 가중치 업데이트가 일어나기 때문에 살아날 가능성이 있다.</p>
-<h3>Parametric ReLU (PReLU)</h3>
+<h3 id="parametric-relu-prelu">Parametric ReLU (PReLU)</h3>
 <p>α를 0.01로 고정하지 않고, <strong>학습 가능한 파라미터</strong>로 만든 것이 PReLU다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">PReLU(z) = z      (z > 0)
 PReLU(z) = αz     (z ≤ 0)    ← α를 역전파로 학습</code></pre></div>
@@ -173,26 +173,26 @@ PReLU(z) = αz     (z ≤ 0)    ← α를 역전파로 학습</code></pre></div>
 <p><strong>실전 팁</strong>: ReLU를 써봤는데 dying neuron 문제가 의심되면, Leaky ReLU로 바꿔보자. 코드 변경은 한 줄이면 된다.</p>
 </blockquote>
 <hr>
-<h2>ELU와 SELU: 부드러운 음의 영역</h2>
-<h3>ELU (Exponential Linear Unit)</h3>
+<h2 id="elu와-selu-부드러운-음의-영역">ELU와 SELU: 부드러운 음의 영역</h2>
+<h3 id="elu-exponential-linear-unit">ELU (Exponential Linear Unit)</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ELU(z) = z                (z > 0)
 ELU(z) = α(e^z - 1)       (z ≤ 0)</code></pre></div>
 <p>Leaky ReLU와 달리 음의 영역이 <strong>지수적으로 부드럽게</strong> -α에 수렴한다. 출력의 평균이 0에 가까워지는 효과가 있어, 배치 정규화 없이도 학습이 안정적이다.</p>
 <p>단점은 exp() 연산이 필요하다는 것. ReLU의 계산 효율성을 일부 포기하는 셈이다.</p>
-<h3>SELU (Scaled ELU)</h3>
+<h3 id="selu-scaled-elu">SELU (Scaled ELU)</h3>
 <p>ELU에 특수한 상수(λ ≈ 1.0507, α ≈ 1.6733)를 곱한 것으로, 이론적으로 <strong>자기 정규화(self-normalizing)</strong> 특성을 가진다. 조건이 맞으면 배치 정규화 없이도 각 층의 출력 분포가 자동으로 정규화된다.</p>
 <p>다만 조건이 까다롭고(완전 연결 네트워크, Lecun 초기화 필수), CNN이나 Transformer에서는 쓰이지 않아 실용적 영향은 제한적이다.</p>
 <hr>
-<h2>GELU: 트랜스포머 시대의 활성화 함수</h2>
+<h2 id="gelu-트랜스포머-시대의-활성화-함수">GELU: 트랜스포머 시대의 활성화 함수</h2>
 <p><strong>GELU(Gaussian Error Linear Unit)</strong> 는 현재 가장 주목받는 활성화 함수다. BERT, GPT, Vision Transformer 등 거의 모든 트랜스포머 아키텍처에서 사용된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">GELU(z) = z · Φ(z)
 
 Φ(z) = 정규분포의 누적분포함수(CDF)</code></pre></div>
 <p>직관적으로 해석하면: 입력값 z에 <strong>“z가 다른 입력들보다 클 확률”</strong> 을 곱한다. z가 충분히 크면 거의 그대로 통과하고, 충분히 작으면 거의 0이 된다. ReLU처럼 이분법적으로 자르지 않고 <strong>확률적으로 부드럽게 게이팅</strong>한다.</p>
-<h3>근사식</h3>
+<h3 id="근사식">근사식</h3>
 <p>정규분포 CDF를 직접 계산하면 비용이 크므로, 실전에서는 근사식을 사용한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">GELU(z) ≈ 0.5 · z · (1 + tanh(√(2/π) · (z + 0.044715 · z³)))</code></pre></div>
-<h3>왜 트랜스포머에서 GELU를 쓸까?</h3>
+<h3 id="왜-트랜스포머에서-gelu를-쓸까">왜 트랜스포머에서 GELU를 쓸까?</h3>
 <ol>
 <li><strong>부드러움</strong>: z = 0 근처에서 연속적인 곡선이므로, 미세한 차이를 포착해야 하는 자연어 처리에 유리하다</li>
 <li><strong>비단조(non-monotonic)</strong>: 아주 작은 음의 z에서 살짝 음의 출력을 가진다. 이 특성이 표현력을 높인다</li>
@@ -202,7 +202,7 @@ ELU(z) = α(e^z - 1)       (z ≤ 0)</code></pre></div>
 <p><strong>현재 트렌드</strong>: 트랜스포머 기반 모델에서는 GELU가 사실상 표준이다. 새로운 모델 아키텍처 논문에서 “we use GELU activation”이라는 문장은 거의 관례처럼 등장한다.</p>
 </blockquote>
 <hr>
-<h2>Swish: 자기 게이팅</h2>
+<h2 id="swish-자기-게이팅">Swish: 자기 게이팅</h2>
 <p>Google Brain이 제안한 함수로, 구조가 매우 직관적이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Swish(z) = z · σ(z)</code></pre></div>
 <p>입력 z에 자기 자신의 sigmoid 값을 곱한다. GELU와 비슷한 형태인데, 정규분포 CDF 대신 sigmoid를 사용한 것이다.</p>
@@ -211,7 +211,7 @@ z가 매우 작음: σ(z) ≈ 0  → Swish(z) ≈ 0     (차단)
 z가 약간 음수: 살짝 음의 출력 가능            (비단조)</code></pre></div>
 <p>EfficientNet 등 일부 컴퓨터 비전 모델에서 ReLU 대신 사용되어 성능 향상을 보였다. 다만 sigmoid 연산이 포함되어 있어 ReLU보다 계산 비용이 높다.</p>
 <hr>
-<h2>활성화 함수 비교 총정리</h2>
+<h2 id="활성화-함수-비교-총정리">활성화 함수 비교 총정리</h2>
 <p><span
       class="gatsby-resp-image-wrapper"
       style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 768px; "
@@ -340,7 +340,7 @@ z가 약간 음수: 살짝 음의 출력 가능            (비단조)</code></p
 </tbody>
 </table>
 <hr>
-<h2>Softmax: 다중 클래스의 출력층</h2>
+<h2 id="softmax-다중-클래스의-출력층">Softmax: 다중 클래스의 출력층</h2>
 <p>Softmax는 은닉층이 아닌 <strong>출력층 전용</strong> 활성화 함수다. <a href="/ml/decision-boundary/">결정 경계</a> 글에서 다중 클래스 분류를 다루며 처음 소개했다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Softmax(zᵢ) = e^(zᵢ) / Σⱼ e^(zⱼ)</code></pre></div>
 <p>K개의 클래스에 대해 각각의 확률을 출력하되, <strong>모든 출력의 합이 1</strong>이 되도록 정규화한다.</p>
@@ -353,7 +353,7 @@ Softmax = [7.389/11.212, 2.718/11.212, 1.105/11.212]
         = [0.659, 0.242, 0.099]
 
 → 클래스 0일 확률 65.9%, 클래스 1일 확률 24.2%, 클래스 2일 확률 9.9%</code></pre></div>
-<h3>Cross-Entropy와의 짝</h3>
+<h3 id="cross-entropy와의-짝">Cross-Entropy와의 짝</h3>
 <p>Softmax 출력층에는 <strong>교차 엔트로피(Cross-Entropy) 손실 함수</strong>가 짝을 이룬다. 이 조합의 기울기가 매우 깔끔하게 정리되기 때문이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Loss = -Σ yᵢ · log(Softmax(zᵢ))
 
@@ -363,8 +363,8 @@ Softmax = [7.389/11.212, 2.718/11.212, 1.105/11.212]
 <p><strong>출력층 정리</strong>: 이진 분류 → Sigmoid, 다중 클래스 → Softmax, 회귀 → 활성화 함수 없음(선형 출력)</p>
 </blockquote>
 <hr>
-<h2>실전 선택 가이드</h2>
-<h3>은닉층</h3>
+<h2 id="실전-선택-가이드">실전 선택 가이드</h2>
+<h3 id="은닉층">은닉층</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">1순위: ReLU
   → 대부분의 경우 충분하다. 가장 먼저 시도.
 
@@ -376,16 +376,16 @@ Softmax = [7.389/11.212, 2.718/11.212, 1.105/11.212]
 
 피해야 할 것: Sigmoid, Tanh
   → 은닉층에서는 사용하지 않는다. 기울기 소실.</code></pre></div>
-<h3>출력층</h3>
+<h3 id="출력층">출력층</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">이진 분류:   Sigmoid (출력 1개, 확률)
 다중 분류:   Softmax (출력 K개, 확률 합 = 1)
 회귀:        없음 (선형 출력, 즉 항등 함수)</code></pre></div>
-<h3>프레임워크별 기본값</h3>
+<h3 id="프레임워크별-기본값">프레임워크별 기본값</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">PyTorch nn.Linear:     활성화 없음 (직접 추가해야 함)
 TensorFlow Dense:      activation=None (기본)
 → 어느 프레임워크든 명시적으로 활성화 함수를 지정해야 한다.</code></pre></div>
 <hr>
-<h2>NumPy로 직접 구현하기</h2>
+<h2 id="numpy로-직접-구현하기">NumPy로 직접 구현하기</h2>
 <p>모든 활성화 함수를 NumPy로 구현하고 시각화해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
@@ -462,7 +462,7 @@ plt<span class="token punctuation">.</span>tight_layout<span class="token punctu
 plt<span class="token punctuation">.</span>savefig<span class="token punctuation">(</span><span class="token string">'activation_functions.png'</span><span class="token punctuation">,</span> dpi<span class="token operator">=</span><span class="token number">150</span><span class="token punctuation">)</span>
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <p>이 코드를 실행하면 6개 활성화 함수의 형태와 도함수를 한눈에 비교할 수 있다.</p>
-<h3>기울기 소실 실험</h3>
+<h3 id="기울기-소실-실험">기울기 소실 실험</h3>
 <p>Sigmoid와 ReLU의 기울기 소실 차이를 직접 확인해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 10층 네트워크에서 기울기 크기 비교</span>
 np<span class="token punctuation">.</span>random<span class="token punctuation">.</span>seed<span class="token punctuation">(</span><span class="token number">42</span><span class="token punctuation">)</span>
@@ -497,7 +497,7 @@ tanh_grads <span class="token operator">=</span> gradient_flow<span class="token
  10   0.00000008   0.00340000   0.00000000</code></pre></div>
 <p>Sigmoid는 10층만에 기울기가 사실상 0이 된다. Tanh도 크게 줄어든다. ReLU는 양의 영역에서는 기울기를 완벽히 보존하지만, 한 번 음의 z에 걸리면 기울기가 0이 되는 dying 현상이 관찰된다.</p>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <p>활성화 함수의 역사는 곧 <strong>기울기 소실 문제를 극복하는 역사</strong>다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Sigmoid (1980s)  → 기울기 소실로 깊은 네트워크 학습 불가
     ↓
@@ -515,7 +515,7 @@ GELU (2016~)     → 트랜스포머 시대의 부드러운 게이팅</code></pr
 <li><strong>은닉층은 ReLU(또는 GELU), 출력층은 문제 유형에 따라 선택한다.</strong> 이 원칙만 지켜도 대부분의 상황에서 합리적인 선택을 할 수 있다.</li>
 </ol>
 <hr>
-<h2>다음 글 미리보기</h2>
+<h2 id="다음-글-미리보기">다음 글 미리보기</h2>
 <p>활성화 함수를 골랐으니, 이제 <strong>어떻게</strong> 학습할지를 결정해야 한다. <a href="/ml/gradient-descent/">경사하강법</a>은 기울기 방향으로 한 걸음씩 내려가는 기본 방법이었다. 하지만 학습률은 얼마로 설정할까? 모든 파라미터에 같은 학습률을 써야 할까? 지역 최솟값에 빠지면?</p>
 <p><a href="/ml/optimizers/">다음 글</a>에서는 SGD, Momentum, Adam까지 — 신경망 학습을 가속하고 안정화하는 <strong>옵티마이저(Optimizer)</strong> 들을 비교한다.</p></div><style data-emotion="css 11v9ps1">.css-11v9ps1{width:768px;margin:0 auto;padding:0 0 40px 0;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;gap:16px;}@media (max-width: 768px){.css-11v9ps1{width:100%;padding:0 20px 40px 20px;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;}}</style><nav aria-label="시리즈 탐색" class="css-11v9ps1 e7uutwh5"><style data-emotion="css 3vmqhu">.css-3vmqhu{-webkit-flex:1;-ms-flex:1;flex:1;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;gap:6px;padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--bg);-webkit-text-decoration:none;text-decoration:none;color:inherit;-webkit-transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;transition:background 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;-webkit-align-items:flex-start;-webkit-box-align:flex-start;-ms-flex-align:flex-start;align-items:flex-start;text-align:left;}.css-3vmqhu:hover{background:var(--bg-subtle);border-color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06);}</style><a direction="prev" class="css-3vmqhu e7uutwh4" href="/ml/backpropagation/"><style data-emotion="css 1azo4pk">.css-1azo4pk{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:500;}</style><span class="css-1azo4pk e7uutwh2"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg>이전 글</span><style data-emotion="css 1or7poe">.css-1or7poe{display:-webkit-inline-box;display:-webkit-inline-flex;display:-ms-inline-flexbox;display:inline-flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500;}.css-1or7poe::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><style data-emotion="css 6h5i4f">.css-6h5i4f{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}@media (max-width: 768px){.css-6h5i4f{font-size:14px;}}</style><span class="css-6h5i4f e7uutwh0">역전파(Backpropagation): 신경망이 학습하는 원리</span></a><a direction="next" class="css-3vmqhu e7uutwh4" href="/ml/optimizers/"><span class="css-1azo4pk e7uutwh2">다음 글<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></span><span color="#ff7f0e" class="css-1or7poe e7uutwh1">ML 기초</span><span class="css-6h5i4f e7uutwh0">옵티마이저(Optimizers): SGD에서 Adam까지, 경사하강법의 진화</span></a></nav><style data-emotion="css hx9xpc">@media (max-width: 768px){.css-hx9xpc{padding:0 20px;}}</style><div class="css-hx9xpc e1gqsjds0"></div><style data-emotion="css e9qudg">.css-e9qudg{display:grid;place-items:center;margin-top:auto;padding:48px 0;font-size:14px;text-align:center;line-height:1.6;color:var(--text-muted);border-top:1px solid var(--border-muted);}@media (max-width: 768px){.css-e9qudg{font-size:13px;padding:36px 0;}}</style><footer class="css-e9qudg e1oae0v80">Thank You for Visiting My Blog, Have a Good Day 😆</footer></main></div><div id="gatsby-announcer" style="position:absolute;top:0;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border:0" aria-live="assertive" aria-atomic="true"></div></div><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WSM9M8LZ1S"></script><script>
     window.GATSBY_GTAG_PLUGIN_GA_TRACKING_ID = (
@@ -539,6 +539,6 @@ GELU (2016~)     → 트랜스포머 시대의 부드러운 게이팅</code></pr
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

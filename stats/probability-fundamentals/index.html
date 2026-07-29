@@ -6,7 +6,7 @@
 <p>머신러닝을 공부하다 보면 이런 생각이 드는 순간이 온다. 동전 던지기, 주사위 확률 — 별거 아닌 것 같다. 그런데 손실 함수에 로그가 붙는 이유를 설명하라고 하면 막히고, 베이즈 분류기에서 사전확률과 사후확률이 뒤섞이면 헷갈리기 시작한다. 정규분포 가정이 왜 필요한지, MLE가 뭔지 물어보면 “대충은 아는데…” 수준에 머문다.</p>
 <p>결국 확률론의 기초가 부실하면, <a href="/ml/overview/">머신러닝</a>의 수학적 직관이 통째로 흔들린다. 이 시리즈는 그 기반을 처음부터 제대로 쌓기 위해 시작한다. 첫 번째 글에서는 표본공간, 사건, 확률 공리, 셈 원리(순열·조합)까지 — 확률론의 언어와 문법을 Python 시뮬레이션과 함께 잡아간다.</p>
 <hr>
-<h2>왜 확률을 “제대로” 배워야 하는가</h2>
+<h2 id="왜-확률을-제대로-배워야-하는가">왜 확률을 “제대로” 배워야 하는가</h2>
 <p>머신러닝에서 확률은 장식이 아니다. 모델의 거의 모든 구성 요소에 확률이 녹아 있다.</p>
 <table>
 <thead>
@@ -48,7 +48,7 @@
 <p>이 시리즈는 <strong>확률과 정보이론</strong>을 다루며, ML 시리즈와 병행해서 읽으면 좋다. 특히 <a href="/ml/naive-bayes/">나이브 베이즈</a>나 MLE 관련 글에서 여기의 개념이 직접 사용된다.</p>
 </div>
 <hr>
-<h2>실험, 표본공간, 사건</h2>
+<h2 id="실험-표본공간-사건">실험, 표본공간, 사건</h2>
 <p>확률론의 출발점은 세 가지 개념이다.</p>
 <p><strong>실험(Experiment)</strong> — 결과가 불확실한 과정. 동전을 던지거나, 주사위를 굴리거나, 서버 응답 시간을 측정하는 것 모두 실험이다.</p>
 <p><strong>표본공간(Sample Space, Ω)</strong> — 실험에서 나올 수 있는 모든 결과의 집합. “가능한 세계의 전체 목록”이라고 생각하면 된다.</p>
@@ -103,19 +103,19 @@ event_at_least_one_head <span class="token operator">=</span> <span class="token
 </table>
 <p>여기서 하나 짚고 넘어갈 점이 있다. 표본공간이 유한하지 않을 수도 있다는 것이다. 예를 들어 “다트를 던져서 과녁 위의 점을 맞히는” 실험에서 표본공간은 원판 위의 모든 점, 즉 연속적인 무한 집합이다. 이런 경우에도 확률을 정의할 수 있게 해주는 것이 바로 다음에 나올 공리적 접근이다.</p>
 <hr>
-<h2>확률의 세 가지 관점</h2>
+<h2 id="확률의-세-가지-관점">확률의 세 가지 관점</h2>
 <p>같은 “확률”이라는 단어를 쓰지만, 사실 해석이 세 가지로 나뉜다. 이걸 모르면 나중에 빈도론 vs 베이지안 논쟁에서 길을 잃는다.</p>
-<h3>고전적 확률 (Classical)</h3>
+<h3 id="고전적-확률-classical">고전적 확률 (Classical)</h3>
 <blockquote>
 <p>P(A) = |A| / |Ω| (모든 결과가 동등하게 가능할 때)</p>
 </blockquote>
 <p>“동전의 앞면이 나올 확률은 1/2” — 이게 고전적 확률이다. 각 결과가 <strong>equally likely</strong>하다는 가정이 전제된다. 주사위, 동전, 카드 문제에서 쓰기 편하지만, “내일 비가 올 확률”처럼 결과가 동등하지 않은 경우에는 적용이 안 된다.</p>
-<h3>빈도론적 확률 (Frequentist)</h3>
+<h3 id="빈도론적-확률-frequentist">빈도론적 확률 (Frequentist)</h3>
 <blockquote>
 <p>P(A) = lim(n→∞) nₐ / n (실험을 무한히 반복했을 때의 상대 빈도)</p>
 </blockquote>
 <p>실험을 반복할수록 상대 빈도가 특정 값에 수렴한다는 관점이다. 물론 실제로 무한 번 실험할 수는 없으니, 충분히 많이 반복해서 근사하는 것이다. Monte Carlo 시뮬레이션이 바로 이 철학 위에 서 있다.</p>
-<h3>주관적 확률 (Bayesian)</h3>
+<h3 id="주관적-확률-bayesian">주관적 확률 (Bayesian)</h3>
 <blockquote>
 <p>P(A)는 A에 대한 믿음의 정도</p>
 </blockquote>
@@ -124,7 +124,7 @@ event_at_least_one_head <span class="token operator">=</span> <span class="token
 <p><strong>✅ 실전 팁</strong></p>
 <p>ML에서는 세 관점이 모두 쓰인다. MLE(최대 우도 추정)는 빈도론적, MAP/베이지안 최적화는 주관적 확률 관점이다. 어느 하나가 “맞다”는 게 아니라 문제에 따라 적절한 관점을 선택하는 것이다.</p>
 </div>
-<h3>Python Monte Carlo로 빈도론 확인하기</h3>
+<h3 id="python-monte-carlo로-빈도론-확인하기">Python Monte Carlo로 빈도론 확인하기</h3>
 <p>주사위 두 개를 던져서 합이 7이 되는 확률을 이론과 시뮬레이션으로 비교해보자. 이론적으로 합이 7이 되는 경우는 (1,6), (2,5), (3,4), (4,3), (5,2), (6,1)로 6가지, 전체 경우는 36가지이므로 P = 6/36 = 1/6 ≈ 0.1667이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> random
 
@@ -199,20 +199,20 @@ theoretical_prob <span class="token operator">=</span> <span class="token number
 <p align="center" style="color: #888; font-size: 13px;"><em>주사위 두 개 합의 확률: 보라색(이론값)과 청록색(시뮬레이션)이 거의 정확히 일치한다</em></p>
 <p>합이 7인 경우가 가장 높은 확률을 가지고, 양 끝(2, 12)으로 갈수록 확률이 줄어드는 삼각형 분포가 보인다. 이건 당연한 건데, 합이 7을 만드는 조합이 6가지로 가장 많기 때문이다.</p>
 <hr>
-<h2>콜모고로프 공리</h2>
+<h2 id="콜모고로프-공리">콜모고로프 공리</h2>
 <p>1933년, 러시아 수학자 안드레이 콜모고로프(Andrey Kolmogorov)는 확률을 세 가지 공리만으로 정의했다. “확률이란 무엇인가?”라는 철학적 논쟁을 공리적 체계로 깔끔하게 정리한 것이다.</p>
 <p>확률은 사건을 실수에 대응시키는 함수 P: Events → [0, 1]이고, 다음 세 가지를 만족해야 한다.</p>
-<h3>공리 1: 비음성 (Non-negativity)</h3>
+<h3 id="공리-1-비음성-non-negativity">공리 1: 비음성 (Non-negativity)</h3>
 <blockquote>
 <p>모든 사건 A에 대해 <strong>P(A) ≥ 0</strong></p>
 </blockquote>
 <p>확률은 음수가 될 수 없다. 직관적으로 당연하다. “무언가가 일어날 가능성이 마이너스”라는 건 말이 안 된다.</p>
-<h3>공리 2: 정규성 (Normalization)</h3>
+<h3 id="공리-2-정규성-normalization">공리 2: 정규성 (Normalization)</h3>
 <blockquote>
 <p><strong>P(Ω) = 1</strong></p>
 </blockquote>
 <p>표본공간 전체의 확률은 1이다. “가능한 모든 결과 중 하나는 반드시 일어난다”는 뜻이다.</p>
-<h3>공리 3: 가산 가법성 (Countable Additivity)</h3>
+<h3 id="공리-3-가산-가법성-countable-additivity">공리 3: 가산 가법성 (Countable Additivity)</h3>
 <blockquote>
 <p>서로 배반인 사건 A₁, A₂, A₃, … 에 대해 <strong>P(A₁ ∪ A₂ ∪ A₃ ∪ …) = P(A₁) + P(A₂) + P(A₃) + …</strong></p>
 </blockquote>
@@ -244,7 +244,7 @@ P_AuB <span class="token operator">=</span> <span class="token builtin">sum</spa
 <span class="token comment"># P(짝수) = 0.5000</span>
 <span class="token comment"># P(홀수 ∪ 짝수) = 1.0000</span></code></pre></div>
 <p>고작 세 줄짜리 공리인데, 여기서 확률의 모든 성질이 파생된다. 몇 가지 중요한 것들을 뽑아보자.</p>
-<h3>파생 성질들</h3>
+<h3 id="파생-성질들">파생 성질들</h3>
 <p><strong>여사건(Complement):</strong></p>
 <blockquote>
 <p>P(Aᶜ) = 1 - P(A)</p>
@@ -327,9 +327,9 @@ P_A_or_B <span class="token operator">=</span> P_A <span class="token operator">
 </blockquote>
 <p>작은 사건은 큰 사건보다 확률이 낮다. “6이 나오는 사건”은 “짝수가 나오는 사건”의 부분집합이므로 확률도 작거나 같다.</p>
 <hr>
-<h2>셈 원리 (Counting)</h2>
+<h2 id="셈-원리-counting">셈 원리 (Counting)</h2>
 <p>표본공간의 크기를 셀 수 있으면 고전적 확률을 바로 계산할 수 있다. 문제는 “세는 게 쉽지 않다”는 것이다. 52장 카드에서 5장을 뽑는 경우의 수는? 직접 나열하면 날이 샌다. 체계적으로 세는 방법이 필요하다.</p>
-<h3>곱의 법칙 (Multiplication Principle)</h3>
+<h3 id="곱의-법칙-multiplication-principle">곱의 법칙 (Multiplication Principle)</h3>
 <blockquote>
 <p>첫 번째 단계에서 n₁가지, 두 번째 단계에서 n₂가지 선택이 가능하면, 전체 경우의 수는 n₁ × n₂</p>
 </blockquote>
@@ -341,7 +341,7 @@ total <span class="token operator">=</span> <span class="token punctuation">(</s
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"가능한 비밀번호 수: </span><span class="token interpolation"><span class="token punctuation">{</span>total<span class="token punctuation">:</span><span class="token format-spec">,</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># 가능한 비밀번호 수: 6,760,000</span></code></pre></div>
 <p>676만 가지나 되지만, 초당 100만 개를 시도하는 공격자에게는 7초도 안 걸린다. 비밀번호 보안이 왜 중요한지 셈 원리로 바로 느낄 수 있는 대목이다.</p>
-<h3>순열 (Permutation)</h3>
+<h3 id="순열-permutation">순열 (Permutation)</h3>
 <blockquote>
 <p>n개에서 k개를 <strong>순서를 고려하여</strong> 뽑는 경우의 수: P(n, k) = n! / (n-k)!</p>
 </blockquote>
@@ -358,7 +358,7 @@ result <span class="token operator">=</span> perm<span class="token punctuation"
 manual <span class="token operator">=</span> factorial<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span> <span class="token operator">//</span> factorial<span class="token punctuation">(</span><span class="token number">10</span> <span class="token operator">-</span> <span class="token number">3</span><span class="token punctuation">)</span>
 <span class="token keyword">assert</span> result <span class="token operator">==</span> manual</code></pre></div>
 <p>회장·부회장·총무는 역할이 다르니까 순서가 중요하다. A가 회장이고 B가 부회장인 것과, B가 회장이고 A가 부회장인 건 다른 경우다.</p>
-<h3>조합 (Combination)</h3>
+<h3 id="조합-combination">조합 (Combination)</h3>
 <blockquote>
 <p>n개에서 k개를 <strong>순서 없이</strong> 뽑는 경우의 수: C(n, k) = n! / (k! × (n-k)!)</p>
 </blockquote>
@@ -377,7 +377,7 @@ lotto <span class="token operator">=</span> comb<span class="token punctuation">
 <span class="token comment"># 로또 경우의 수: 8,145,060</span>
 <span class="token comment"># 로또 1등 확률: 1/8,145,060 ≈ 0.00000012</span></code></pre></div>
 <p>로또 1등에 당첨될 확률이 약 814만 분의 1이라는 걸 조합 하나로 바로 계산할 수 있다. 개인적으로 이 숫자를 볼 때마다 “그냥 인덱스 펀드를 사자”라는 생각이 든다.</p>
-<h3>조합의 유용한 성질</h3>
+<h3 id="조합의-유용한-성질">조합의 유용한 성질</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 대칭성: C(n, k) = C(n, n-k)</span>
 <span class="token keyword">assert</span> comb<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span> <span class="token operator">==</span> comb<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">7</span><span class="token punctuation">)</span>
 
@@ -391,7 +391,7 @@ total <span class="token operator">=</span> <span class="token builtin">sum</spa
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"C(10,0) + C(10,1) + ... + C(10,10) = </span><span class="token interpolation"><span class="token punctuation">{</span>total<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
 <span class="token comment"># C(10,0) + C(10,1) + ... + C(10,10) = 1024</span></code></pre></div>
 <p>마지막 성질이 재미있다. n개 원소의 부분집합 총 개수가 2ⁿ이라는 뜻인데, 각 원소를 “포함하거나/안 하거나” 2가지 선택이 있으므로 곱의 법칙으로도 자연스럽게 나온다.</p>
-<h3>다항 계수 (Multinomial Coefficient)</h3>
+<h3 id="다항-계수-multinomial-coefficient">다항 계수 (Multinomial Coefficient)</h3>
 <p>조합의 일반화 버전이다. n개를 k₁, k₂, …, kₘ개씩 여러 그룹으로 나누는 경우의 수다.</p>
 <blockquote>
 <p>n! / (k₁! × k₂! × … × kₘ!)  (단, k₁ + k₂ + … + kₘ = n)</p>
@@ -428,13 +428,13 @@ result <span class="token operator">=</span> multinomial<span class="token punct
 </ul>
 </div>
 <hr>
-<h2>Birthday Problem: 조합론의 반직관</h2>
+<h2 id="birthday-problem-조합론의-반직관">Birthday Problem: 조합론의 반직관</h2>
 <p>Birthday Problem(생일 문제)은 확률론에서 가장 유명한 반직관적 결과 중 하나다. 문제는 간단하다.</p>
 <blockquote>
 <p><strong>n명이 모인 방에서, 적어도 두 명의 생일이 같을 확률은?</strong></p>
 </blockquote>
 <p>직감적으로 “365일이나 되는데, 50명은 있어야 하지 않을까?”라고 생각하기 쉽다. 그런데 실제로는 <strong>23명</strong>만 모여도 확률이 50%를 넘는다.</p>
-<h3>이론적 풀이</h3>
+<h3 id="이론적-풀이">이론적 풀이</h3>
 <p>여사건을 활용한다. “적어도 두 명의 생일이 같을 확률”을 직접 구하는 건 복잡하니, “모든 사람의 생일이 다를 확률”을 구해서 1에서 빼자.</p>
 <p>n명이 모두 다른 생일을 가질 확률:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">P(모두 다름) = 365/365 × 364/365 × 363/365 × ... × (365-n+1)/365
@@ -462,7 +462,7 @@ result <span class="token operator">=</span> multinomial<span class="token punct
 <span class="token comment"># n=70: P = 0.9992</span></code></pre></div>
 <p>23명에서 이미 50.7%다. 50명이면 97%, 70명이면 99.9%. 왜 이렇게 빠르게 올라갈까?</p>
 <p>비결은 <strong>쌍(pair)의 개수</strong>에 있다. n명에서 만들 수 있는 쌍은 C(n, 2) = n(n-1)/2개다. 23명이면 C(23, 2) = 253쌍이나 된다. 각 쌍이 같은 생일을 가질 확률은 1/365로 낮지만, 253번의 기회가 있으면 적어도 하나가 맞을 확률이 급격히 올라가는 것이다.</p>
-<h3>Monte Carlo 검증</h3>
+<h3 id="monte-carlo-검증">Monte Carlo 검증</h3>
 <p>생일을 무작위로 부여하는 Monte Carlo 시뮬레이션(10만 회)으로 검증해 보면, <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>23</mn></mrow><annotation encoding="application/x-tex">n = 23</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">23</span></span></span></span></span>에서 이론값 0.5073 vs 시뮬레이션 0.5081처럼 모든 <span class="math math-inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></span>에서 오차가 0.001 이내로 일치한다. 아래 그래프가 이 결과를 시각적으로 보여준다.</p>
 <p><span
       class="gatsby-resp-image-wrapper"
@@ -517,18 +517,18 @@ result <span class="token operator">=</span> multinomial<span class="token punct
 <p>이 문제는 단순한 수학 퀴즈가 아니다. 해시 충돌(Hash Collision) 분석에 직접 적용된다. 해시 함수의 출력 크기가 n비트라면, 약 2^(n/2)개의 입력만으로 충돌이 발생할 확률이 50%를 넘는다. 이것이 “Birthday Attack”이고, 암호학에서 해시 크기를 결정할 때 핵심 근거가 된다.</p>
 </div>
 <hr>
-<h2>확률의 직관을 망치는 함정들</h2>
+<h2 id="확률의-직관을-망치는-함정들">확률의 직관을 망치는 함정들</h2>
 <p>셈 원리와 확률 공리를 배웠으면, 자주 빠지는 함정도 알아두어야 한다.</p>
-<h3>함정 1: 등확률 가정의 오용</h3>
+<h3 id="함정-1-등확률-가정의-오용">함정 1: 등확률 가정의 오용</h3>
 <p>“일어나거나 안 일어나거나, 둘 중 하나니까 확률은 50%“라는 논리는 위험하다. 내일 소행성이 지구에 충돌할 확률은 50%가 아니다. 등확률 가정은 대칭성이 보장될 때만 성립한다.</p>
-<h3>함정 2: 곱하기 vs 더하기 혼동</h3>
+<h3 id="함정-2-곱하기-vs-더하기-혼동">함정 2: 곱하기 vs 더하기 혼동</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 동전 3번 던져서 모두 앞면일 확률</span>
 <span class="token comment"># 맞는 풀이: 독립이므로 곱하기</span>
 p_all_heads <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span><span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">3</span>  <span class="token comment"># = 0.125</span>
 
 <span class="token comment"># 틀린 풀이: "3번 중 1번은 앞면이니까 1/2 + 1/2 + 1/2 = 3/2?"</span>
 <span class="token comment"># 확률이 1을 넘으면 뭔가 잘못된 것!</span></code></pre></div>
-<h3>함정 3: “적어도 하나” 문제에서 직접 세기</h3>
+<h3 id="함정-3-적어도-하나-문제에서-직접-세기">함정 3: “적어도 하나” 문제에서 직접 세기</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 주사위 4번 던져서 적어도 하나가 6일 확률</span>
 <span class="token comment"># 방법 1 (복잡): 정확히 1개 + 정확히 2개 + 정확히 3개 + 정확히 4개</span>
 <span class="token comment"># 방법 2 (여사건): 1 - P(6이 하나도 안 나옴)</span>
@@ -543,7 +543,7 @@ p_at_least_one_six <span class="token operator">=</span> <span class="token numb
 <p>“적어도 하나”가 나오면 <strong>여사건</strong>부터 떠올리자. 직접 경우를 나누면 거의 항상 더 복잡해지고 실수할 확률(!)도 높아진다.</p>
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>이 글에서 다룬 내용을 정리하면 다음과 같다.</p>
 <div class="callout callout-summary">
 <p><strong>📌 핵심 요약</strong></p>
@@ -558,7 +558,7 @@ p_at_least_one_six <span class="token operator">=</span> <span class="token numb
 <p>여기까지가 확률론의 “알파벳”이다. 표본공간과 사건으로 상황을 정의하고, 공리로 확률을 계산하고, 셈 원리로 경우의 수를 세는 것. 이 기본기가 있어야 다음 단계로 넘어갈 수 있다.</p>
 <p><a href="/stats/conditional-probability-bayes/">다음 글</a>에서는 <strong>조건부 확률(Conditional Probability)</strong> 과 <strong>베이즈 정리(Bayes’ Theorem)</strong> 를 다룬다. “A가 일어났을 때 B의 확률은?” — 이 질문이 머신러닝의 핵심 추론 방식이 되는 과정을 따라가 볼 것이다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><strong>Blitzstein, J. K., &#x26; Hwang, J.</strong> (2019). <em>Introduction to Probability</em> (2nd ed.). CRC Press. — Harvard Stat 110 교재. 직관적 설명과 엄밀한 수학의 균형이 좋다.</li>
 <li><strong>Bertsekas, D. P., &#x26; Tsitsiklis, J. N.</strong> (2008). <em>Introduction to Probability</em> (2nd ed.). Athena Scientific. — MIT 6.041 교재. 공학적 관점에서 확률을 다룬다.</li>
@@ -587,6 +587,6 @@ p_at_least_one_six <span class="token operator">=</span> <span class="token numb
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

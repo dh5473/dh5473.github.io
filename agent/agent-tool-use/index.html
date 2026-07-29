@@ -6,15 +6,15 @@
 <p>정답은 도구의 이름, 설명, 파라미터 스키마에 있습니다. <code class="language-text">Grep</code>이라는 이름은 “텍스트 패턴 검색”이라는 의도를 정확히 전달하고, 도구 설명에는 언제 이 도구를 써야 하는지가 명시되어 있습니다. 모델이 올바른 도구를 “알아서” 고르는 것처럼 보이지만, 실제로는 도구 설계가 그 선택을 유도한 것입니다.</p>
 <p>프롬프트 체이닝이든 라우팅이든 오케스트레이터든, 어떤 워크플로우 패턴을 쓰더라도 결국 도구 설계가 잘못되면 성능이 나오지 않습니다. 이 글에서는 Anthropic이 제안하는 <strong>ACI(Agent-Computer Interface)</strong> 설계 원칙과, 프로덕션 에이전트의 실제 도구 스키마를 분석합니다.</p>
 <hr>
-<h2>ACI, 에이전트의 사용자 인터페이스</h2>
-<h3>HCI에서 ACI로</h3>
+<h2 id="aci-에이전트의-사용자-인터페이스">ACI, 에이전트의 사용자 인터페이스</h2>
+<h3 id="hci에서-aci로">HCI에서 ACI로</h3>
 <p>사람이 소프트웨어를 쓸 때 UI가 중요한 것처럼, 모델이 도구를 쓸 때도 인터페이스가 중요합니다. Anthropic은 “Building Effective Agents”에서 이 개념에 이름을 붙였습니다.</p>
 <blockquote>
 <p>“Think about how much effort goes into human-computer interfaces (HCI), and plan to invest just as much effort in creating good agent-computer interfaces (ACI).”</p>
 </blockquote>
 <p><strong>ACI(Agent-Computer Interface)</strong>는 모델이 도구와 상호작용하는 인터페이스입니다. HCI가 사람을 위한 버튼, 메뉴, 레이아웃을 설계하듯, ACI는 모델을 위한 도구 이름, 설명, 파라미터 스키마, 에러 메시지를 설계합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
+<svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
   <defs>
     <marker id="aciArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
@@ -65,7 +65,7 @@
 <li>에러 메시지만 보고 다음에 무엇을 해야 하는지 결정할 수 있는가?</li>
 </ol>
 </div>
-<h3>프로덕션에서의 ACI</h3>
+<h3 id="프로덕션에서의-aci">프로덕션에서의 ACI</h3>
 <p>Claude Code 블로그 “Seeing Like an Agent”에서 공개한 <code class="language-text">AskUserQuestion</code> 도구의 진화 과정이 이 원칙을 잘 보여줍니다.</p>
 <ul>
 <li><strong>1차 시도</strong>: 기존 <code class="language-text">ExitPlanTool</code>에 질문 파라미터를 추가. 결과: 모델이 도구의 원래 용도(플래닝 종료)와 새 용도(질문)를 혼동</li>
@@ -75,11 +75,11 @@
 <p>세 번의 반복이 필요했습니다. HCI에서 UI를 사용자 테스트로 개선하듯, ACI에서 도구를 모델 테스트로 개선하는 것입니다. Claude Code 블로그에서는 이를 이렇게 표현합니다. “The bar to add a new tool is high, because this gives the model one more option to think about.” 도구를 추가할수록 모델이 고려해야 할 선택지가 늘어나기 때문에, 높은 기준을 적용해야 하는 것입니다.</p>
 <p>OpenAI도 같은 결론에 도달합니다. “A Practical Guide to Building Agents”에서 “문제는 도구의 수가 아니라 유사성과 중복”이라고 말합니다. 15개 이상의 명확히 구분되는 도구는 잘 동작하지만, 10개 미만이라도 기능이 겹치면 모델이 혼동합니다. ACI의 핵심은 도구의 수가 아니라, 각 도구의 목적이 얼마나 명확한가입니다.</p>
 <hr>
-<h2>도구 설계 5원칙</h2>
+<h2 id="도구-설계-5원칙">도구 설계 5원칙</h2>
 <p>Anthropic의 “Writing Effective Tools for AI Agents”와 “Building Effective Agents”에서 제시한 원칙들을 재구성하여 다섯 가지로 정리합니다. 추상적인 가이드라인이 아니라, Claude Code와 SWE-bench 같은 평가 환경에서 도구를 반복 개선하면서 추출한 실전 원칙입니다.</p>
 <p>다섯 원칙은 도구 정의의 서로 다른 부분에 하나씩 대응합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
+<svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
   <defs>
     <marker id="tpArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
@@ -127,7 +127,7 @@
   <text x="200" y="346" class="tp-desc">실행 가능한 에러, 실수 차단</text>
 </svg>
 </div>
-<h3>원칙 1. 적을수록 좋다</h3>
+<h3 id="원칙-1-적을수록-좋다">원칙 1. 적을수록 좋다</h3>
 <p>Anthropic의 첫 번째 원칙은 직관에 반합니다.</p>
 <blockquote>
 <p>“More tools don’t always lead to better outcomes.”</p>
@@ -154,7 +154,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 <span class="token punctuation">}</span><span class="token punctuation">]</span></code></pre></div>
 <p><code class="language-text">search_contacts</code> 하나가 네 도구의 기능을 모두 포함합니다. 쿼리 없이 호출하면 전체 목록, <code class="language-text">tag</code>를 주면 필터링, <code class="language-text">sort_by: "recent"</code>를 주면 최근 순 정렬. 모델의 선택지가 4개에서 1개로 줄어들면서, 잘못된 도구를 고를 확률 자체가 사라지게 됩니다.</p>
 <p>Claude Code는 이 원칙을 철저히 따릅니다. 상시 활성화되는 도구는 19개이고, 기능 플래그와 사용자 유형에 따라 최대 35개가 추가로 활성화되어 총 54개까지 늘어날 수 있습니다. 하지만 Claude Code 블로그에서는 “roughly 20 tools”라고 표현하며, 핵심 도구 세트를 작게 유지하는 데 집중하고 있음을 강조합니다.</p>
-<h3>원칙 2. 네이밍과 네임스페이싱</h3>
+<h3 id="원칙-2-네이밍과-네임스페이싱">원칙 2. 네이밍과 네임스페이싱</h3>
 <p>도구 이름은 모델이 가장 먼저 읽는 정보입니다. 이름만으로 어떤 도구인지 판단이 안 되면, 모델은 설명까지 읽어야 하고, 그만큼 추론에 쓸 토큰이 줄어들게 됩니다.</p>
 <p>Anthropic은 관련 도구를 접두사로 그룹화하는 <strong>네임스페이싱</strong>을 권장합니다. <code class="language-text">asana_search</code>, <code class="language-text">asana_create</code>, <code class="language-text">jira_search</code>, <code class="language-text">jira_create</code>처럼 접두사만으로 어떤 시스템의 도구인지 알 수 있게 하는 것입니다. Anthropic에 따르면 “접두사/접미사 기반 네임스페이싱이 평가 성능에 무시할 수 없는 영향을 미친다”고 합니다.</p>
 <p>Claude Code의 내장 도구는 다른 전략을 씁니다. 단일 시스템의 도구이므로 네임스페이싱 대신 <strong>동사 단일어</strong> 패턴을 사용합니다.</p>
@@ -165,7 +165,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 
 <span class="token comment"># ✅ 의도가 명확한 네이밍</span>
 tools <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">"run_sql_query"</span><span class="token punctuation">,</span> <span class="token string">"execute_bash_command"</span><span class="token punctuation">,</span> <span class="token string">"process_payment"</span><span class="token punctuation">]</span></code></pre></div>
-<h3>원칙 3. 설명은 프롬프트다</h3>
+<h3 id="원칙-3-설명은-프롬프트다">원칙 3. 설명은 프롬프트다</h3>
 <p>도구 설명은 단순한 문서가 아닙니다. 모델에게 보내지는 프롬프트의 일부입니다. Anthropic은 이렇게 표현합니다.</p>
 <blockquote>
 <p>“Describe as you would to a new hire on your team.”</p>
@@ -195,7 +195,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 <p><strong>참고</strong></p>
 <p>Anthropic은 “도구에도 프롬프트 엔지니어링만큼의 주의를 기울여라”고 말합니다. 도구 설명의 품질은 시스템 프롬프트의 품질만큼 에이전트 성능에 직접적인 영향을 미칩니다.</p>
 </div>
-<h3>원칙 4. 의미 있는 컨텍스트, 최소한의 토큰</h3>
+<h3 id="원칙-4-의미-있는-컨텍스트-최소한의-토큰">원칙 4. 의미 있는 컨텍스트, 최소한의 토큰</h3>
 <p>도구가 반환하는 값은 모델의 컨텍스트 윈도우에 그대로 들어갑니다. 반환값이 클수록 모델이 추론에 쓸 수 있는 공간이 줄어들게 됩니다.</p>
 <p>Anthropic은 반환값 설계에서 두 가지를 강조합니다. 첫째, <strong>의미 있는 컨텍스트를 반환하라</strong>. UUID 같은 내부 식별자 대신, 사람과 모델이 모두 이해할 수 있는 이름을 포함해야 합니다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 모델이 활용하기 어려운 반환값</span>
@@ -216,7 +216,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
         <span class="token string">"suggestion"</span><span class="token punctuation">:</span> <span class="token string">"Output truncated. Use a more specific query or grep for relevant sections."</span>
     <span class="token punctuation">}</span></code></pre></div>
 <p><code class="language-text">truncated: True</code>와 <code class="language-text">suggestion</code> 필드가 핵심입니다. 단순히 자르는 것이 아니라, “잘렸으니 더 구체적인 쿼리를 써라”고 모델에게 다음 행동을 안내하는 것입니다.</p>
-<h3>원칙 5. 에러 시그널과 Poka-yoke</h3>
+<h3 id="원칙-5-에러-시그널과-poka-yoke">원칙 5. 에러 시그널과 Poka-yoke</h3>
 <p>도구 실행이 실패했을 때 모델이 받는 에러 메시지는, 다음 행동을 결정하는 유일한 정보입니다. “Error occurred”만 반환하면 모델은 같은 실수를 반복할 수밖에 없습니다.</p>
 <p>그래서 Anthropic은 <strong>실행 가능한(actionable) 에러 메시지</strong>를 강조합니다. 무엇이 잘못되었는지, 어떻게 고쳐야 하는지를 에러 자체에 포함시켜야 합니다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 실행 불가능한 에러</span>
@@ -235,7 +235,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
     <span class="token keyword">return</span> path</code></pre></div>
 <p>에러 메시지에 올바른 절대 경로를 포함시키면, 모델은 즉시 수정된 경로로 재시도할 수 있습니다. 실수를 방지하고, 실수가 발생해도 복구 경로를 제공하는 이중 안전장치인 셈입니다.</p>
 <hr>
-<h2>멱등성과 재시도 안전성</h2>
+<h2 id="멱등성과-재시도-안전성">멱등성과 재시도 안전성</h2>
 <p>에이전트는 재시도합니다. 네트워크 오류, 타임아웃, 모델의 판단 변경 등으로 같은 도구가 두 번 호출될 수 있습니다. 이때 도구가 <strong>멱등(idempotent)</strong>하지 않으면 문제가 생깁니다.</p>
 <p>멱등성이란, 같은 입력으로 여러 번 호출해도 결과가 동일한 성질입니다. 도구를 세 가지로 분류할 수 있습니다.</p>
 <ul>
@@ -246,7 +246,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 <p>Claude Code의 도구 설계에서 이 구분이 선명하게 드러납니다. <code class="language-text">Write</code> 도구는 파일 전체를 덮어씁니다. 같은 내용으로 두 번 호출해도 결과는 동일합니다. <code class="language-text">Edit</code> 도구는 diff 기반으로 동작하는데, 매칭되는 문자열을 찾아 교체합니다. 이미 교체된 상태에서 다시 호출하면 원본 문자열을 찾지 못해 “no changes made”를 반환하게 됩니다. 파일이 중복 수정되는 것을 구조적으로 방지하는 설계입니다.</p>
 <p>같은 호출이 두 번 들어갔을 때 세 도구가 어떻게 갈리는지 보면 차이가 분명해집니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 480px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
+<svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
   <defs>
     <marker id="idemArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
@@ -327,7 +327,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 <p>append, increment, send 류의 비멱등 도구는 에이전트 환경에서 반드시 확인 게이트를 두거나, 멱등한 대안(upsert, set)으로 교체해야 합니다.</p>
 </div>
 <hr>
-<h2>프로덕션 도구 설계 비교</h2>
+<h2 id="프로덕션-도구-설계-비교">프로덕션 도구 설계 비교</h2>
 <p>그렇다면 프로덕션에서는 이 원칙들이 어떻게 다르게 적용될까요?</p>
 <table>
 <thead>
@@ -379,7 +379,7 @@ tools <span class="token operator">=</span> <span class="token punctuation">[</s
 <p>첫째, 파일 편집에서 두 시스템 모두 <strong>diff 기반 접근</strong>을 채택합니다. 줄 번호로 삽입하는 방식은 멱등성이 보장되지 않기 때문입니다. 줄 번호는 편집 후 바뀌므로, 같은 호출을 반복하면 엉뚱한 위치에 텍스트가 삽입됩니다. diff 기반이면 내용 자체를 매칭하므로 이 문제가 없습니다.</p>
 <p>둘째, 안전성 확보의 철학이 다릅니다. Claude Code는 <strong>도구 수준에서 분류</strong>(<code class="language-text">partitionToolCalls()</code>가 도구 호출을 safe와 exclusive로 나눕니다)하여, 읽기 전용 도구는 병렬 실행하고 쓰기 도구는 순차 실행합니다. Codex는 <strong>환경 수준에서 격리</strong>하여, 모든 도구를 OS 네이티브 샌드박스(macOS Seatbelt / Linux bwrap+seccomp) 안에서 실행합니다. 기본적으로 네트워크가 차단되고 파일 쓰기가 작업 디렉터리로 제한되므로, 개별 도구의 안전성을 분류할 필요가 줄어드는 셈입니다. 같은 목표를 서로 다른 레이어에서 해결하는 것입니다.</p>
 <hr>
-<h2>5원칙을 적용한 코드 검색 도구</h2>
+<h2 id="5원칙을-적용한-코드-검색-도구">5원칙을 적용한 코드 검색 도구</h2>
 <p>지금까지 다룬 원칙을 하나의 도구에 모두 적용해 보겠습니다. 에이전트가 코드베이스에서 텍스트 패턴을 검색하는 도구입니다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> re
 <span class="token keyword">from</span> pathlib <span class="token keyword">import</span> Path
@@ -486,19 +486,19 @@ SEARCH_CODEBASE_TOOL <span class="token operator">=</span> <span class="token pu
 </table>
 <p>이 도구는 자연적으로 멱등합니다. 읽기 전용이므로 몇 번을 호출해도 코드베이스에 영향을 주지 않습니다.</p>
 <hr>
-<h2>한계와 열린 문제</h2>
-<h3>도구 폭발 문제</h3>
+<h2 id="한계와-열린-문제">한계와 열린 문제</h2>
+<h3 id="도구-폭발-문제">도구 폭발 문제</h3>
 <p>에이전트가 MCP를 통해 외부 서비스를 연결하기 시작하면, 도구 수가 급격히 늘어납니다. Anthropic의 예시를 보면, GitHub, Slack, Sentry, Grafana, Splunk 등 5개 MCP 서버를 연결했을 때 58개 도구의 정의만으로 약 55,000 토큰을 소비합니다. 대화가 시작되기도 전에 컨텍스트의 상당 부분이 도구 설명으로 채워지는 셈입니다. Anthropic의 Tool Search 기능은 모든 도구 정의를 미리 싣는 대신 필요한 시점에 동적으로 로드하는 방식으로 이 문제에 접근합니다.</p>
-<h3>설명과 평가의 순환</h3>
+<h3 id="설명과-평가의-순환">설명과 평가의 순환</h3>
 <p>도구 설명이 프롬프트라면, 프롬프트 엔지니어링과 같은 반복 개선 과정이 필요합니다. 하지만 도구 선택을 평가하는 것은 텍스트 생성을 평가하는 것보다 어렵습니다. “모델이 올바른 도구를 선택했는가?”를 자동으로 판정하려면 별도의 평가 파이프라인이 필요합니다. Anthropic이 제안하는 3단계 개발 프로세스(프로토타입 → 평가 → 에이전트와 협업)는 이 문제에 대한 체계적 접근입니다.</p>
-<h3>비멱등 연산의 현실</h3>
+<h3 id="비멱등-연산의-현실">비멱등 연산의 현실</h3>
 <p>이메일 전송, 결제 처리, 외부 API 호출 같은 연산은 본질적으로 비멱등합니다. “취소하고 다시 보내기”가 불가능한 작업에서 에이전트의 재시도는 실제 피해를 만들 수 있습니다. Claude Code가 이런 도구에 확인 게이트(사용자 승인)를 필수로 두는 것은 기술적 한계에 대한 현실적 해법입니다. 도구를 실행하기 전에 위험도를 판정하고 승인을 요구할지 결정하는 퍼미션 계층이 그 역할을 맡습니다.</p>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>도구 설계는 API 설계나 UX 설계에 가깝습니다. 모델이 사용자이고, 도구 스키마가 인터페이스입니다. 잘 설계된 도구는 모델의 행동을 자연스럽게 올바른 방향으로 유도하고, 잘못 설계된 도구는 어떤 프롬프트 엔지니어링으로도 보완하기 어렵습니다. 결국 ACI에 투자하는 시간이 프롬프트를 다듬는 시간보다 훨씬 높은 수익을 가져다 줍니다.</p>
 <p>다음 글에서는 도구가 반환한 결과가 쌓이는 공간, 즉 컨텍스트를 다룹니다. 유한한 토큰 윈도우 안에서 모델이 올바른 정보를 올바른 시점에 볼 수 있도록 설계하는 컨텍스트 엔지니어링을 살펴보겠습니다.</p>
 <br>
-<h2>함께 보면 좋은 글</h2>
+<h2 id="함께-보면-좋은-글">함께 보면 좋은 글</h2>
 <ul>
 <li><a href="/agent/what-is-ai-agent/">AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템</a></li>
 <li><a href="/agent/agent-workflow-patterns/">AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지</a></li>
@@ -507,7 +507,7 @@ SEARCH_CODEBASE_TOOL <span class="token operator">=</span> <span class="token pu
 <li><a href="/agent/agent-permission-safety/">AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단</a></li>
 </ul>
 <br>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener noreferrer">Writing Effective Tools for AI Agents (Anthropic)</a></li>
 <li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener noreferrer">Building Effective Agents (Anthropic)</a></li>
@@ -537,6 +537,6 @@ SEARCH_CODEBASE_TOOL <span class="token operator">=</span> <span class="token pu
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

@@ -5,7 +5,7 @@
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.02.05.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">36</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">이상 탐지(Anomaly Detection): 가우시안 모델과 실전 적용</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">37</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/pca/">PCA(주성분 분석): 차원 축소의 수학적 원리와 실전 활용</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">38</span><a class="css-dizrmv e4kcwtw5" href="/ml/dbscan-and-gmm/">DBSCAN과 GMM: 밀도·확률 기반 클러스터링 비교</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">39</span><a class="css-dizrmv e4kcwtw5" href="/ml/tsne-and-umap/">t-SNE와 UMAP: 고차원 데이터 시각화 기법 비교</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">8<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><style data-emotion="css qht250">.css-qht250{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:11px;cursor:default;opacity:0.35;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-qht250:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button disabled="" class="css-qht250 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p><a href="/ml/kmeans-clustering/">이전 글</a>에서 K-Means 클러스터링을 다뤘다. 라벨 없이 데이터의 구조를 찾는 비지도 학습의 첫걸음이었다. K-Means는 데이터를 K개 그룹으로 묶었다 – “정상적인” 데이터끼리 뭉치는 패턴을 발견한 셈이다.</p>
 <p>그런데 실무에서는 정반대 질문이 더 자주 나온다. <strong>“이 데이터는 정상인가, 비정상인가?”</strong> 서버 로그에서 침입 시도를 잡아내고, 신용카드 거래에서 사기를 탐지하고, 제조 라인에서 불량품을 걸러낸다. 이것이 <strong>이상 탐지(Anomaly Detection)</strong> 다.</p>
 <hr>
-<h2>1. 이상 탐지 vs 분류: 왜 다른가</h2>
+<h2 id="1-이상-탐지-vs-분류-왜-다른가">1. 이상 탐지 vs 분류: 왜 다른가</h2>
 <p>“사기 탐지면 이진 분류 아닌가? <a href="/ml/logistic-regression/">로지스틱 회귀</a>로 정상/사기를 분류하면 되지 않나?”</p>
 <p>직관적으로 맞는 것 같지만, 현실은 세 가지 이유로 분류가 어렵다.</p>
 <p><strong>1) 극단적 클래스 불균형</strong>: 신용카드 사기 비율은 전체 거래의 0.1~0.2%다. 정상 거래 99.8%, 사기 0.2%. <a href="/ml/classification-metrics/">분류 평가 지표 글</a>에서 다뤘듯이, 이런 데이터에서 “전부 정상”이라고 찍어도 Accuracy가 99.8%다. 분류 모델이 소수 클래스를 학습할 데이터가 절대적으로 부족하다.</p>
@@ -18,23 +18,23 @@
   정상 데이터의 분포를 모델링한 뒤, 그 분포에서 확률이 매우 낮은 데이터를 이상으로 판단하는 것이다.
 </div>
 <hr>
-<h2>2. 이상의 세 가지 유형</h2>
+<h2 id="2-이상의-세-가지-유형">2. 이상의 세 가지 유형</h2>
 <p>이상(Anomaly)은 형태에 따라 세 가지로 분류된다.</p>
-<h3>Point Anomaly (점 이상)</h3>
+<h3 id="point-anomaly-점-이상">Point Anomaly (점 이상)</h3>
 <p>개별 데이터 포인트가 전체 분포에서 극단적으로 벗어난 경우다. 가장 흔한 유형이다.</p>
 <ul>
 <li>평균 거래 금액이 5만 원인 카드에서 갑자기 500만 원 결제</li>
 <li>서버 CPU 사용률이 평소 30%인데 갑자기 99%로 급등</li>
 <li>체온이 37도인 환자군에서 41도가 관측됨</li>
 </ul>
-<h3>Contextual Anomaly (맥락 이상)</h3>
+<h3 id="contextual-anomaly-맥락-이상">Contextual Anomaly (맥락 이상)</h3>
 <p>값 자체는 정상 범위지만, <strong>맥락을 고려하면</strong> 이상인 경우다.</p>
 <ul>
 <li>여름에 에어컨 전기 사용량 200kWh는 정상이지만, 겨울에 200kWh는 이상</li>
 <li>주말 새벽 3시에 회사 서버 접근 → 평일 오전이었으면 정상</li>
 <li>서울에서 결제 후 10분 뒤 부산에서 결제 → 각각은 정상이지만 시간적 맥락에서 이상</li>
 </ul>
-<h3>Collective Anomaly (집합 이상)</h3>
+<h3 id="collective-anomaly-집합-이상">Collective Anomaly (집합 이상)</h3>
 <p>개별 데이터는 정상이지만, <strong>여러 데이터가 모이면</strong> 이상 패턴을 형성하는 경우다.</p>
 <ul>
 <li>심전도에서 개별 심박은 정상 범위지만, 특정 패턴이 연속되면 부정맥</li>
@@ -42,15 +42,15 @@
 </ul>
 <p>이번 글에서는 <strong>Point Anomaly</strong>에 집중한다. 가장 기본적이면서도 가장 널리 쓰이는 유형이다.</p>
 <hr>
-<h2>3. 가우시안 모델 (Univariate)</h2>
+<h2 id="3-가우시안-모델-univariate">3. 가우시안 모델 (Univariate)</h2>
 <p>가장 간단한 이상 탐지 방법은 데이터가 <strong>정규분포(가우시안 분포)</strong> 를 따른다고 가정하는 것이다. <a href="/ml/naive-bayes/">나이브 베이즈</a>에서 Gaussian NB를 다룰 때 본 것과 같은 분포다.</p>
-<h3>기본 아이디어</h3>
+<h3 id="기본-아이디어">기본 아이디어</h3>
 <p>정상 데이터로부터 평균(mu)과 분산(sigma^2)을 구한다. 그리고 새로운 데이터 x에 대해 확률 밀도 p(x)를 계산한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) = (1 / sqrt(2 * pi * sigma^2)) * exp(-(x - mu)^2 / (2 * sigma^2))</code></pre></div>
 <p>p(x)가 특정 임계값(epsilon) 미만이면 이상으로 판단한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) &lt; epsilon  →  이상(Anomaly)
 p(x) >= epsilon →  정상(Normal)</code></pre></div>
-<h3>구현</h3>
+<h3 id="구현">구현</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
 
@@ -89,7 +89,7 @@ detected <span class="token operator">=</span> all_data<span class="token punctu
 <span class="token comment"># 탐지된 이상치: [15. 20. 80. 85. 90.]</span>
 <span class="token comment"># 이상치 수: 5</span></code></pre></div>
 <p>5개의 이상 데이터를 모두 잡아냈다. 정상 데이터의 분포를 학습한 뒤, 그 분포에서 확률이 극히 낮은 데이터를 탐지한 것이다.</p>
-<h3>다변량으로의 확장 필요성</h3>
+<h3 id="다변량으로의-확장-필요성">다변량으로의 확장 필요성</h3>
 <p>위 예시는 특성이 1개뿐인 단변량(univariate) 경우다. 현실 데이터는 특성이 수십~수백 개다. 각 특성을 독립적으로 보면 정상인데, <strong>특성들의 조합</strong>이 이상인 경우를 놓친다.</p>
 <p>예를 들어, 서버 모니터링에서:</p>
 <ul>
@@ -99,8 +99,8 @@ detected <span class="token operator">=</span> all_data<span class="token punctu
 </ul>
 <p>각 특성을 독립적으로 평가하면 놓치지만, <strong>특성 간 상관관계</strong>를 고려하면 잡아낼 수 있다. 이것이 다변량 가우시안이 필요한 이유다.</p>
 <hr>
-<h2>4. 다변량 가우시안 모델</h2>
-<h3>공분산 행렬과 마할라노비스 거리</h3>
+<h2 id="4-다변량-가우시안-모델">4. 다변량 가우시안 모델</h2>
+<h3 id="공분산-행렬과-마할라노비스-거리">공분산 행렬과 마할라노비스 거리</h3>
 <p>다변량 가우시안(Multivariate Gaussian)은 여러 특성의 <strong>결합 분포</strong>를 모델링한다. 핵심은 <strong>공분산 행렬(Covariance Matrix)</strong> Sigma다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">p(x) = (1 / ((2*pi)^(d/2) * |Sigma|^(1/2))) * exp(-0.5 * (x - mu)^T * Sigma^(-1) * (x - mu))</code></pre></div>
 <p>여기서 d는 특성 수, mu는 평균 벡터, Sigma는 d x d 공분산 행렬이다.</p>
@@ -150,10 +150,10 @@ Point [70, 130] → 마할라노비스 거리: 4.52, p(x): 0.000000</code></pre>
   실무에서는 특성 수가 적고 상관관계가 중요하면 다변량, 특성이 많으면 단변량이나 다른 방법을 쓴다.
 </div>
 <hr>
-<h2>5. 임계값(epsilon) 선택: F1 스코어 활용</h2>
+<h2 id="5-임계값epsilon-선택-f1-스코어-활용">5. 임계값(epsilon) 선택: F1 스코어 활용</h2>
 <p>가우시안 모델에서 가장 중요한 하이퍼파라미터는 임계값 epsilon이다. epsilon이 너무 크면 정상도 이상으로 판단(FP 증가)하고, 너무 작으면 이상을 놓친다(FN 증가).</p>
 <p><a href="/ml/classification-metrics/">분류 평가 지표 글</a>에서 다뤘던 <strong>F1 스코어</strong>가 여기서 다시 등장한다.</p>
-<h3>검증 세트 활용</h3>
+<h3 id="검증-세트-활용">검증 세트 활용</h3>
 <p>핵심은 <strong>소량의 라벨된 검증 세트</strong>를 활용하는 것이다.</p>
 <ol>
 <li><strong>학습</strong>: 정상 데이터만으로 가우시안 파라미터(mu, sigma)를 추정한다</li>
@@ -210,16 +210,16 @@ Recall:    0.9091</code></pre></div>
   이상 탐지의 <strong>학습 단계</strong>는 비지도(라벨 없이 정상 데이터만 사용)다. 하지만 <strong>임계값 선택</strong>에는 소량의 라벨 데이터가 있으면 훨씬 좋다. 라벨이 전혀 없으면 "상위 1% 확률 밀도"처럼 도메인 지식 기반으로 epsilon을 정하거나, 3-시그마 규칙(정규분포에서 평균 ±3 표준편차 밖은 약 0.27%)을 사용한다. 완전히 비지도로 가는 것도 가능하지만, 소량의 라벨이 성능을 크게 올린다.
 </div>
 <hr>
-<h2>6. Isolation Forest: 분리의 난이도로 이상을 잡다</h2>
+<h2 id="6-isolation-forest-분리의-난이도로-이상을-잡다">6. Isolation Forest: 분리의 난이도로 이상을 잡다</h2>
 <p>가우시안 모델은 데이터가 정규분포를 따른다는 강한 가정이 필요하다. 현실 데이터는 그렇지 않은 경우가 많다. <strong>Isolation Forest</strong>는 분포 가정 없이 작동하는 트리 기반 이상 탐지 알고리즘이다.</p>
-<h3>핵심 아이디어</h3>
+<h3 id="핵심-아이디어">핵심 아이디어</h3>
 <p>랜덤하게 특성 하나를 고르고, 그 특성의 범위 안에서 랜덤한 분할 값을 정한다. 이 과정을 반복해서 데이터 포인트를 고립(isolate)시킨다.</p>
 <p><strong>이상치는 적은 분할로 고립된다.</strong> 왜? 이상치는 정상 데이터와 떨어져 있으니까, 한두 번만 분할해도 혼자 남는다. 반면 정상 데이터는 밀집 지역에 있어서 여러 번 분할해야 고립된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">정상 데이터: 분할 12번 만에 고립 → 경로 길이 = 12
 이상 데이터: 분할 3번 만에 고립 → 경로 길이 = 3
 → 경로가 짧을수록 이상!</code></pre></div>
 <p>여러 개의 랜덤 트리(Isolation Tree)를 만들어 <strong>평균 경로 길이</strong>를 구하고, 이를 정규화한 <strong>이상 점수(anomaly score)</strong> 를 계산한다.</p>
-<h3>장점</h3>
+<h3 id="장점">장점</h3>
 <ul>
 <li><strong>분포 가정이 필요 없다</strong>: 가우시안이든 균등분포든 상관없다</li>
 <li><strong>고차원 데이터에 효과적</strong>: 랜덤 특성 선택으로 차원의 저주를 완화</li>
@@ -258,9 +258,9 @@ scores <span class="token operator">=</span> iso_forest<span class="token punctu
 이상 데이터 평균 점수: -0.1245</code></pre></div>
 <p><code class="language-text">contamination</code> 파라미터는 데이터에서 이상의 비율을 사전에 지정한다. 실무에서는 도메인 지식으로 대략적인 이상 비율을 추정해서 넣는다.</p>
 <hr>
-<h2>7. Local Outlier Factor (LOF): 밀도 기반 탐지</h2>
+<h2 id="7-local-outlier-factor-lof-밀도-기반-탐지">7. Local Outlier Factor (LOF): 밀도 기반 탐지</h2>
 <p>Isolation Forest가 “고립의 난이도”로 이상을 판단한다면, <strong>LOF(Local Outlier Factor)</strong> 는 <strong>주변 밀도</strong>로 판단한다.</p>
-<h3>핵심 아이디어</h3>
+<h3 id="핵심-아이디어-1">핵심 아이디어</h3>
 <p>데이터 포인트 주변의 밀도를 이웃들의 밀도와 비교한다. 자기 주변 밀도가 이웃들보다 <strong>현저히 낮으면</strong> 이상이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">LOF(x) ≈ 이웃들의 평균 밀도 / x의 밀도</code></pre></div>
 <ul>
@@ -292,7 +292,7 @@ lof_scores <span class="token operator">=</span> lof<span class="token punctuati
 이상 데이터 평균 LOF 점수: -2.3156</code></pre></div>
 <p><code class="language-text">n_neighbors</code>는 밀도를 계산할 때 참조하는 이웃 수다. 너무 작으면 노이즈에 민감하고, 너무 크면 지역적 특성을 놓친다.</p>
 <hr>
-<h2>8. One-Class SVM</h2>
+<h2 id="8-one-class-svm">8. One-Class SVM</h2>
 <p><a href="/ml/svm/">SVM 글</a>에서 다뤘던 서포트 벡터 머신을 이상 탐지에 적용한 것이다. <strong>정상 데이터를 원점에서 최대한 떨어뜨리는 초평면</strong>을 찾고, 그 초평면 안쪽이면 정상, 바깥이면 이상으로 판단한다.</p>
 <p>커널 트릭을 사용하면 비선형 경계도 학습할 수 있어서 복잡한 형태의 정상 영역을 모델링할 수 있다. 다만 대규모 데이터에서는 학습 시간이 길어지는 것이 단점이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>svm <span class="token keyword">import</span> OneClassSVM
@@ -305,7 +305,7 @@ n_detected_svm <span class="token operator">=</span> <span class="token punctuat
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"One-Class SVM 탐지된 이상치 수: </span><span class="token interpolation"><span class="token punctuation">{</span>n_detected_svm<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <p><code class="language-text">nu</code> 파라미터는 학습 데이터 중 이상으로 분류될 비율의 상한이다. <code class="language-text">contamination</code>과 비슷한 역할을 한다.</p>
 <hr>
-<h2>9. 알고리즘 비교</h2>
+<h2 id="9-알고리즘-비교">9. 알고리즘 비교</h2>
 <table>
 <thead>
 <tr>
@@ -380,7 +380,7 @@ n_detected_svm <span class="token operator">=</span> <span class="token punctuat
   처음 시작한다면 <strong>Isolation Forest</strong>를 먼저 시도하라. 분포 가정이 필요 없고, 빠르고, 대부분의 상황에서 합리적인 성능을 낸다. 밀도가 불균일한 데이터에서 성능이 부족하면 LOF를, 데이터가 정규분포에 가깝고 특성이 적으면 가우시안 모델을 고려하라.
 </div>
 <hr>
-<h2>10. 실전 예제: 신용카드 사기 탐지</h2>
+<h2 id="10-실전-예제-신용카드-사기-탐지">10. 실전 예제: 신용카드 사기 탐지</h2>
 <p>전체 파이프라인을 실전 시나리오로 구성해보자. 합성 데이터로 신용카드 사기 탐지를 구현한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> IsolationForest
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> LocalOutlierFactor
@@ -465,9 +465,9 @@ LOF                      0.6400     0.6400     0.6400
 Gaussian                 0.6800     0.6800     0.6800</code></pre></div>
 <p>세 알고리즘 모두 사기 탐지 능력을 보여준다. Isolation Forest가 이 시나리오에서 가장 좋은 성능을 냈다. 하지만 실전에서는 데이터의 특성에 따라 결과가 달라진다 – 하나만 믿지 말고, 여러 알고리즘을 비교하는 것이 원칙이다.</p>
 <hr>
-<h2>11. 평가: 이상 탐지에서의 Precision/Recall</h2>
+<h2 id="11-평가-이상-탐지에서의-precisionrecall">11. 평가: 이상 탐지에서의 Precision/Recall</h2>
 <p>이상 탐지의 평가는 일반 분류와 미묘하게 다르다. <a href="/ml/classification-metrics/">분류 평가 지표</a>에서 배운 개념을 이상 탐지 맥락에서 다시 짚어보자.</p>
-<h3>Precision vs Recall의 의미</h3>
+<h3 id="precision-vs-recall의-의미">Precision vs Recall의 의미</h3>
 <table>
 <thead>
 <tr>
@@ -489,7 +489,7 @@ Gaussian                 0.6800     0.6800     0.6800</code></pre></div>
 </tr>
 </tbody>
 </table>
-<h3>실무에서의 균형</h3>
+<h3 id="실무에서의-균형">실무에서의 균형</h3>
 <p>사기 탐지 시스템이 Recall 100%를 달성했다고 하자. 모든 사기를 잡았다. 하지만 Precision이 1%라면? 100건의 경고 중 99건이 거짓 경보다. 담당자는 경고를 무시하기 시작하고, 결국 진짜 사기도 놓친다. 이것이 <strong>“경보 피로(Alert Fatigue)”</strong> 다.</p>
 <p>반대로 Precision 100%에 Recall 10%라면? 경고가 나오면 확실히 사기지만, 사기 10건 중 9건을 놓친다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Precision-Recall 트레이드오프 시각화</span>
@@ -517,7 +517,7 @@ ap <span class="token operator">=</span> average_precision_score<span class="tok
   </ul>
 </div>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <table>
 <thead>
 <tr>
@@ -566,9 +566,9 @@ ap <span class="token operator">=</span> average_precision_score<span class="tok
 </table>
 <p>이상 탐지의 성패를 가르는 건 결국 세 가지 판단이다. 첫째, “정상”을 얼마나 정확하게 정의했는가 – 이상은 정상의 여집합이니, 정상 분포의 품질이 곧 탐지 성능이다. 둘째, 하나의 알고리즘만 믿지 않았는가 – 데이터 특성에 따라 최적 알고리즘이 다르고, Isolation Forest로 시작하되 LOF나 가우시안도 반드시 비교해봐야 한다. 셋째, Accuracy를 평가 지표로 쓰지 않았는가 – 99% 정상인 데이터에서 Accuracy는 거짓말한다. PR-AUC와 F1이 진실을 말해준다.</p>
 <hr>
-<h2>다음 글 미리보기</h2>
+<h2 id="다음-글-미리보기">다음 글 미리보기</h2>
 <p>이상 탐지는 “정상 분포에서 벗어난 것”을 찾는 작업이었다. 그런데 고차원 데이터에서는 분포를 파악하는 것 자체가 어렵다 – 특성이 100개인 데이터의 구조를 어떻게 이해할까? 다음 글에서는 고차원 데이터를 저차원으로 압축하면서 핵심 정보를 보존하는 <strong>PCA(주성분 분석)</strong> 를 다룬다. 차원 축소는 이상 탐지의 전처리로도 자주 쓰이니, 자연스러운 연결이다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Anomaly Detection (Coursera)</a></li>
 <li><a href="https://scikit-learn.org/stable/modules/outlier_detection.html" target="_blank" rel="noopener noreferrer">Scikit-learn — Novelty and Outlier Detection</a></li>
@@ -597,6 +597,6 @@ ap <span class="token operator">=</span> average_precision_score<span class="tok
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

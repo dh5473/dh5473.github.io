@@ -6,12 +6,12 @@
 <p>PostgreSQL이라면 B-tree 인덱스가 정확한 행 위치를 가리킵니다. 1억 행이면 인덱스 엔트리도 1억 개입니다. ClickHouse는 다릅니다. 수십 KB짜리 파일 하나로 같은 일을 합니다. 그 파일이 <code class="language-text">primary.idx</code>이고, 이것이 MergeTree 스토리지 엔진의 핵심입니다.</p>
 <br>
 <p>이 글에서는 MergeTree의 내부로 들어갑니다. Part 디렉토리 안의 파일들, Granule-Mark-희소 인덱스의 연결 구조, 그리고 쿼리가 도착했을 때 필요한 데이터만 골라 읽는 과정을 실험으로 확인합니다.</p>
-<h2>Part: MergeTree의 저장 단위</h2>
-<h3>Part는 어떻게 만들어지는가</h3>
+<h2 id="part-mergetree의-저장-단위">Part: MergeTree의 저장 단위</h2>
+<h3 id="part는-어떻게-만들어지는가">Part는 어떻게 만들어지는가</h3>
 <p>INSERT가 실행되면 ClickHouse는 데이터를 <code class="language-text">ORDER BY</code> 순서로 정렬한 뒤 <strong>불변(immutable) Part</strong>로 디스크에 씁니다. 한번 쓰인 Part는 절대 수정되지 않습니다. 새로운 INSERT가 오면 또 다른 Part가 생기고, 시간이 지나면 백그라운드 머지가 작은 Part들을 큰 Part로 합칩니다.</p>
 <p>Part 이름에는 이력이 담겨 있습니다. 1,000만 행을 한 번에 INSERT하면 <code class="language-text">all_1_1_0</code>이라는 Part 하나가 만들어집니다. 이 이름을 분해해봅시다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 348" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Part 이름 all_1_1_0을 partition_id, min_block, max_block, level 네 부분으로 분해한 그림">
@@ -70,7 +70,7 @@
 </svg>
 </div>
 <p><code class="language-text">all</code>은 파티션 키를 지정하지 않았기 때문에 모든 데이터가 하나의 파티션에 들어갔다는 뜻이고, <code class="language-text">1_1</code>은 첫 번째 INSERT 블록이며, <code class="language-text">0</code>은 아직 머지되지 않은 원본 Part라는 뜻입니다. INSERT를 세 번 나눠서 실행했다면 <code class="language-text">all_1_1_0</code>, <code class="language-text">all_2_2_0</code>, <code class="language-text">all_3_3_0</code> 세 개의 Part가 생기고, 머지 후에는 <code class="language-text">all_1_3_1</code>처럼 블록 범위가 합쳐지면서 level이 1로 올라갑니다. 머지의 상세한 동작은 다음 글에서 다룹니다.</p>
-<h3>Part 디렉토리 안을 열어보면</h3>
+<h3 id="part-디렉토리-안을-열어보면">Part 디렉토리 안을 열어보면</h3>
 <p>Part는 디스크에 하나의 디렉토리로 존재합니다.</p>
 <table>
 <thead>
@@ -116,30 +116,30 @@
 </table>
 <p>핵심은 <strong><code class="language-text">primary.idx</code></strong>(희소 인덱스), <strong><code class="language-text">.bin</code></strong>(컬럼 데이터), <strong><code class="language-text">.mrk2</code></strong>(Mark) 세 파일입니다. 나머지는 메타데이터이거나 무결성 검증용입니다.</p>
 <p><code class="language-text">orders</code> 테이블은 5개 컬럼이므로, Part 디렉토리 안에는 <code class="language-text">order_id.bin</code>, <code class="language-text">order_id.mrk2</code>, <code class="language-text">user_id.bin</code>, <code class="language-text">user_id.mrk2</code>, <code class="language-text">price.bin</code>, <code class="language-text">price.mrk2</code>, <code class="language-text">category.bin</code>, <code class="language-text">category.mrk2</code>, <code class="language-text">created_at.bin</code>, <code class="language-text">created_at.mrk2</code>. 컬럼당 <code class="language-text">.bin</code> + <code class="language-text">.mrk2</code> 한 쌍씩, 총 10개의 데이터 파일이 생깁니다. 여기에 <code class="language-text">primary.idx</code>와 메타데이터 파일들이 더해지는 구조입니다.</p>
-<h3>Wide 포맷 vs Compact 포맷</h3>
+<h3 id="wide-포맷-vs-compact-포맷">Wide 포맷 vs Compact 포맷</h3>
 <p>위에서 설명한 “컬럼마다 <code class="language-text">.bin</code> + <code class="language-text">.mrk2</code> 한 쌍”이 <strong>Wide 포맷</strong>입니다. 대부분의 프로덕션 Part는 Wide 포맷이고, 이 글의 모든 설명도 Wide 기준입니다.</p>
 <p>작은 Part(기본 10MB 미만)에서는 <strong>Compact 포맷</strong>이 사용됩니다. 모든 컬럼 데이터가 하나의 <code class="language-text">.bin</code> 파일에 합쳐지고, Mark 파일은 <code class="language-text">.mrk3</code> 확장자를 씁니다. 수십 개의 작은 파일 대신 하나의 파일로 합쳐서 파일 시스템 오버헤드를 줄이려는 설계입니다. 빈번한 INSERT로 작은 Part가 많이 생길 때 의미가 있지만, 결국 백그라운드 머지로 큰 Part가 되면 Wide로 전환됩니다.</p>
 <p><code class="language-text">system.parts</code>의 <code class="language-text">part_type</code> 컬럼에서 현재 포맷을 확인할 수 있습니다. 기준값은 <code class="language-text">min_bytes_for_wide_part</code>(기본 10MB)입니다.</p>
-<h2>Granule: 데이터를 읽는 최소 단위</h2>
-<h3>Granule이란</h3>
+<h2 id="granule-데이터를-읽는-최소-단위">Granule: 데이터를 읽는 최소 단위</h2>
+<h3 id="granule이란">Granule이란</h3>
 <p>Granule은 ClickHouse가 쿼리 시 데이터를 읽는 <strong>최소 논리적 단위</strong>입니다. 기본값은 <strong>8,192행</strong>(설정: <code class="language-text">index_granularity</code>).</p>
 <p>Granule은 디스크에 별도 파일로 존재하지 않습니다. 컬럼 데이터는 <code class="language-text">.bin</code> 파일 안에 연속으로 저장되어 있고, “여기서부터 8,192행이 하나의 granule이다”라는 경계만 Mark 파일에 기록됩니다. 쿼리가 특정 granule을 읽어야 할 때, ClickHouse는 그 granule 전체(8,192행)를 읽습니다. 절반만 필요해도 전체를 읽습니다.</p>
 <p>1,000만 행 테이블이라면 granule 수는 10,000,000 / 8,192 = <strong>1,221개</strong>입니다(마지막 granule은 8,192행 미만).</p>
-<h3>왜 8,192행인가</h3>
+<h3 id="왜-8192행인가">왜 8,192행인가</h3>
 <p>Granule 크기는 인덱스 크기와 읽기 정밀도 사이의 트레이드오프입니다.</p>
 <ul>
-<li><strong>Granule이 작으면</strong>: 인덱스 엔트리가 많아져서 메모리를 더 쓰지만, 불필요한 행을 덜 읽는다</li>
-<li><strong>Granule이 크면</strong>: 인덱스가 작아서 메모리 효율이 좋지만, 필요 없는 행까지 더 많이 읽는다</li>
+<li><strong>Granule이 작으면</strong>: 인덱스 엔트리가 많아져서 메모리를 더 쓰지만, 불필요한 행을 덜 읽습니다</li>
+<li><strong>Granule이 크면</strong>: 인덱스가 작아서 메모리 효율이 좋지만, 필요 없는 행까지 더 많이 읽습니다</li>
 </ul>
 <p>8,192행은 이 트레이드오프의 균형점입니다. 10억 행 테이블이라도 인덱스 엔트리가 약 122,000개밖에 되지 않아 수 MB 수준으로 메모리에 전부 올립니다. 같은 10억 행에 대해 PostgreSQL의 B-tree는 10억 개의 엔트리를 수 GB 규모로 유지해야 합니다.</p>
 <div class="callout callout-info">
 <p><strong>적응형 Granularity</strong></p>
 <p><code class="language-text">index_granularity_bytes</code>(기본 10MB)가 활성화되어 있으면, 행 수뿐 아니라 데이터 크기도 granule 경계의 기준이 됩니다. 가변 길이 컬럼(String, Array 등)이 많아서 행마다 크기 차이가 클 때, 고정 행 수 대신 바이트 기준으로 granule을 나누면 각 granule의 메모리 사용량이 균일해집니다. 이 경우 Mark 파일에 granule당 실제 행 수(<code class="language-text">rows_count</code>)가 추가로 기록됩니다.</p>
 </div>
-<h3>Granule과 컬럼 파일의 관계</h3>
+<h3 id="granule과-컬럼-파일의-관계">Granule과 컬럼 파일의 관계</h3>
 <p>Granule 경계는 <strong>모든 컬럼에 동일하게 적용</strong>됩니다. Granule 0은 모든 컬럼 파일에서 행 0~8,191을 의미합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 268" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 268" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="네 개의 컬럼 bin 파일에 granule 경계가 동일하게 적용되어 같은 granule 번호가 모든 컬럼에서 같은 행 범위를 가리키는 그림">
@@ -202,11 +202,11 @@
 </svg>
 </div>
 <p>이 정렬 덕분에 <code class="language-text">SELECT avg(price) FROM orders WHERE category = '전자제품'</code>은 <code class="language-text">price.bin</code>과 <code class="language-text">category.bin</code>만 열면 됩니다. 나머지 컬럼 파일은 건드리지 않으면서도 행 정합성은 보장됩니다. Granule 0의 price 값과 category 값은 같은 행들의 데이터입니다.</p>
-<h2>압축 블록과 Column 파일</h2>
+<h2 id="압축-블록과-column-파일">압축 블록과 Column 파일</h2>
 <p><code class="language-text">.bin</code> 파일은 그 안에서 다시 <strong>압축 블록(compressed block)</strong> 단위로 나뉩니다. 각 블록은 비압축 기준 64KB~1MB 크기이며, LZ4나 ZSTD로 압축된 상태로 저장됩니다.</p>
 <p>하나의 압축 블록 안에 여러 granule이 들어갈 수 있습니다. UInt32 컬럼의 경우 한 granule이 8,192 × 4바이트 = 약 32KB이므로, 두 granule 정도가 하나의 64KB 블록에 패킹됩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="price.bin 파일 안의 압축 블록 두 개가 각각 granule 두 개씩을 담고 있는 구조를 보여주는 그림">
@@ -241,8 +241,8 @@
 </div>
 <p>granule마다 따로 압축하지 않는 이유는 간단합니다. 압축 알고리즘은 데이터가 클수록 패턴을 더 잘 찾기 때문입니다. 32KB 단위로 쪼개면 압축률이 크게 떨어집니다. 대신 여러 granule을 묶어서 압축하면, 특정 granule 하나만 읽으려 해도 블록 전체를 해제해야 합니다(<strong>read amplification</strong>). OLAP 쿼리는 대부분 연속된 granule을 대량으로 읽기 때문에, 실무에서 이 비용이 문제가 되는 경우는 드뭅니다.</p>
 <p>각 압축 블록에는 헤더(압축 전 크기, 압축 후 크기, 체크섬)가 붙어서 ClickHouse가 블록 단위로 점프하며 해제할 수 있게 합니다.</p>
-<h2>Mark 파일: Granule과 물리적 위치를 잇는 다리</h2>
-<h3>Mark의 구조</h3>
+<h2 id="mark-파일-granule과-물리적-위치를-잇는-다리">Mark 파일: Granule과 물리적 위치를 잇는 다리</h2>
+<h3 id="mark의-구조">Mark의 구조</h3>
 <p>“Granule N을 읽고 싶다”를 ”<code class="language-text">.bin</code> 파일의 몇 번째 바이트부터 읽어라”로 변환하는 것이 <strong>Mark 파일(<code class="language-text">.mrk2</code>)</strong>입니다.</p>
 <p><code class="language-text">.mrk2</code> 파일은 비압축 flat 배열입니다. Granule 하나당 엔트리 하나. 각 엔트리에는 세 개의 필드가 기록됩니다.</p>
 <ol>
@@ -288,13 +288,13 @@
 </tbody>
 </table>
 <p>Granule 0과 1은 같은 압축 블록(오프셋 0)에 들어 있습니다. Granule 0은 그 블록의 처음부터, Granule 1은 32,768바이트(= 8,192행 × 4바이트) 지점부터 시작합니다. Granule 2는 새로운 압축 블록(오프셋 24,576)의 처음부터 시작합니다.</p>
-<h3>왜 Mark 파일이 필요한가</h3>
+<h3 id="왜-mark-파일이-필요한가">왜 Mark 파일이 필요한가</h3>
 <p>Mark가 없다면 granule N의 데이터를 읽으려면 <code class="language-text">.bin</code> 파일의 처음부터 모든 압축 블록을 순서대로 해제하면서 N번째 granule 위치를 찾아야 합니다. Mark가 있으면 <strong>랜덤 액세스</strong>가 가능합니다. Mark N의 오프셋을 읽고, <code class="language-text">.bin</code> 파일의 정확한 위치로 점프해서 해당 블록만 해제하면 됩니다.</p>
 <p>각 컬럼은 별도의 <code class="language-text">.mrk2</code> 파일을 갖습니다. 같은 granule이라도 컬럼마다 데이터 타입과 크기가 다르기 때문에, 물리적 위치(바이트 오프셋)가 다릅니다. <code class="language-text">price</code>(UInt32)와 <code class="language-text">category</code>(LowCardinality(String))의 granule 0이 각각의 <code class="language-text">.bin</code> 파일에서 다른 위치에 있는 것은 당연합니다.</p>
-<h3>전체 연결: primary.idx → Mark → Column 파일</h3>
+<h3 id="전체-연결-primaryidx-mark-column-파일">전체 연결: primary.idx → Mark → Column 파일</h3>
 <p>세 파일의 연결을 한눈에 보면 이렇습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 646" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 646" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="primary.idx가 granule 번호를 내놓고, price.mrk2가 그 번호를 바이트 오프셋으로 바꾸고, price.bin의 압축 블록을 읽는 3단계 읽기 경로를 위에서 아래로 보여주는 그림">
@@ -383,8 +383,8 @@
 <li><code class="language-text">.bin</code>에서 해당 압축 블록을 읽어 해제합니다</li>
 </ol>
 <p>이 3단계가 MergeTree의 읽기 경로 전체입니다.</p>
-<h2>희소 인덱스</h2>
-<h3>primary.idx의 구조</h3>
+<h2 id="희소-인덱스">희소 인덱스</h2>
+<h3 id="primaryidx의-구조">primary.idx의 구조</h3>
 <p><code class="language-text">primary.idx</code>는 비압축 flat 배열입니다. Granule 하나당 엔트리 하나, 각 엔트리에는 <strong>해당 granule 첫 번째 행의 PRIMARY KEY 컬럼 값</strong>이 기록됩니다.</p>
 <p><code class="language-text">orders</code> 테이블의 <code class="language-text">ORDER BY (category, created_at)</code>의 경우, primary.idx의 각 엔트리는 <code class="language-text">[category값, created_at값]</code> 쌍입니다. 데이터가 이 순서로 정렬되어 있으므로, 엔트리들도 사전순으로 정렬된 상태입니다.</p>
 <p>1,221개 엔트리가 이런 식으로 늘어섭니다.</p>
@@ -455,7 +455,7 @@
 </tbody>
 </table>
 <p>이 인덱스는 메모리에 전부 상주합니다. 1,221개 엔트리에 불과하기 때문입니다. 10억 행이라도 약 122,000개 엔트리이니 수 MB면 충분합니다.</p>
-<h3>B-tree와의 차이</h3>
+<h3 id="b-tree와의-차이">B-tree와의 차이</h3>
 <table>
 <thead>
 <tr>
@@ -498,17 +498,17 @@
 </tbody>
 </table>
 <p>정확도를 8,192행 단위로 낮추는 대신 인덱스 크기를 수만 배 줄입니다. <code class="language-text">WHERE id = 42</code>로 정확히 한 행을 찾아야 하는 OLTP에서는 치명적인 단점이지만, 수백만 행을 한꺼번에 집계하는 OLAP에서는 이 손해가 사실상 드러나지 않습니다.</p>
-<h3>Granule Pruning: 쿼리가 인덱스를 사용하는 과정</h3>
+<h3 id="granule-pruning-쿼리가-인덱스를-사용하는-과정">Granule Pruning: 쿼리가 인덱스를 사용하는 과정</h3>
 <p><code class="language-text">WHERE category = '전자제품'</code>이 들어오면 ClickHouse는 다음 순서로 동작합니다.</p>
 <ol>
-<li>WHERE 조건에서 PRIMARY KEY 컬럼(<code class="language-text">category</code>)에 대한 조건을 추출한다</li>
-<li><code class="language-text">primary.idx</code>를 이진 탐색하여 <code class="language-text">category = '전자제품'</code>에 해당하는 granule 범위를 찾는다</li>
-<li>해당 범위 밖의 granule은 전부 <strong>skip</strong>(pruning)한다</li>
-<li>선택된 granule만 Mark → Column 파일 경로로 읽는다</li>
+<li>WHERE 조건에서 PRIMARY KEY 컬럼(<code class="language-text">category</code>)에 대한 조건을 추출합니다</li>
+<li><code class="language-text">primary.idx</code>를 이진 탐색하여 <code class="language-text">category = '전자제품'</code>에 해당하는 granule 범위를 찾습니다</li>
+<li>해당 범위 밖의 granule은 전부 <strong>skip</strong>(pruning)합니다</li>
+<li>선택된 granule만 Mark → Column 파일 경로로 읽습니다</li>
 </ol>
 <p>데이터가 <code class="language-text">ORDER BY (category, created_at)</code> 순으로 정렬되어 있으므로, 같은 category의 행들은 연속된 granule에 모여 있습니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 244" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="전체 1221개 granule 중 전자제품에 해당하는 916번부터 1068번까지 153개만 선택되고 나머지 1068개는 건너뛰는 것을 막대로 보여주는 그림">
@@ -544,10 +544,10 @@
 </div>
 <p>1,221개 granule 중 <code class="language-text">전자제품</code>에 해당하는 약 153개만 읽고 나머지 1,068개는 건드리지 않습니다. 디스크 I/O가 약 1/8로 줄어드는 것입니다.</p>
 <p>반면 <code class="language-text">WHERE user_id = 42</code>를 쿼리하면 어떨까요? <code class="language-text">user_id</code>는 <code class="language-text">ORDER BY</code>에 포함되어 있지 않으므로 <code class="language-text">primary.idx</code>에 기록되어 있지 않습니다. Pruning이 불가능하고 모든 granule을 읽어야 합니다. 어떤 컬럼을 <code class="language-text">ORDER BY</code> 앞에 놓느냐에 따라 pruning 효과가 완전히 달라집니다.</p>
-<h2>쿼리 실행 흐름: 처음부터 끝까지</h2>
+<h2 id="쿼리-실행-흐름-처음부터-끝까지">쿼리 실행 흐름: 처음부터 끝까지</h2>
 <p><code class="language-text">SELECT avg(price) FROM orders WHERE category = '전자제품'</code>이 실행되는 전체 경로를 따라가 봅시다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 620" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="쿼리가 primary.idx 이진 탐색, mark 오프셋 조회, 압축 블록 해제, WHERE 필터와 집계, 결과 반환의 다섯 단계를 거치는 흐름과 열지 않는 파일 목록을 보여주는 그림">
@@ -616,9 +616,9 @@
 </div>
 <p>핵심은 <strong>읽지 않는 것</strong>입니다. <code class="language-text">order_id.bin</code>, <code class="language-text">user_id.bin</code>, <code class="language-text">created_at.bin</code>은 열지도 않습니다. 전체 1,221개 granule 중 약 153개만, 전체 5개 컬럼 중 2개만 읽으니 원본 데이터의 극히 일부만 디스크에서 가져옵니다.</p>
 <p>4단계에서 WHERE 필터를 다시 적용하는 이유는 이렇습니다. 희소 인덱스는 granule 단위로 선택하기 때문에, granule 경계에 다른 category의 행이 섞일 수 있습니다. 선택된 첫 번째 granule의 앞쪽 행에 이전 카테고리(<code class="language-text">의류</code>)가 남아있거나, 마지막 granule의 뒤쪽 행에 다음 카테고리(<code class="language-text">화장품</code>)가 포함될 수 있습니다. 그래서 granule을 읽은 뒤 행 단위 필터링이 한 번 더 필요합니다.</p>
-<h2>실험: Docker로 직접 확인하기</h2>
+<h2 id="실험-docker로-직접-확인하기">실험: Docker로 직접 확인하기</h2>
 <p><a href="/clickhouse/why-clickhouse/">지난 글</a>의 Docker 환경(<code class="language-text">ch-test</code> 컨테이너)과 <code class="language-text">orders</code> 테이블을 그대로 사용합니다. 컨테이너가 없다면 지난 글의 “환경 준비” 섹션을 먼저 실행하세요.</p>
-<h3>Part 디렉토리 탐색</h3>
+<h3 id="part-디렉토리-탐색">Part 디렉토리 탐색</h3>
 <p>Part의 물리적 위치와 메타데이터를 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
     name<span class="token punctuation">,</span>
@@ -650,7 +650,7 @@ created_at.mrk2                user_id.bin
 default_compression_codec.txt  user_id.mrk2
 metadata_version.txt</code></pre></div>
 <p>컬럼 5개 × (<code class="language-text">.bin</code> + <code class="language-text">.mrk2</code>) = 10개 데이터 파일, <code class="language-text">primary.idx</code>, 그리고 메타데이터 파일들. <code class="language-text">count.txt</code>를 열어보면 <code class="language-text">10000000</code>이 적혀 있습니다.</p>
-<h3>Granule 수 검증</h3>
+<h3 id="granule-수-검증">Granule 수 검증</h3>
 <p>Granule 수와 행 수의 관계를 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
     name<span class="token punctuation">,</span>
@@ -663,7 +663,7 @@ metadata_version.txt</code></pre></div>
 │ all_1_1_0 │ 10000000 │  1221 │                    8190 │
 └───────────┴──────────┴───────┴─────────────────────────┘</code></pre></div>
 <p>granule당 약 8,190행. 마지막 granule이 8,192행에 못 미치기 때문에 평균이 살짝 낮습니다.</p>
-<h3>Granule Pruning 실험</h3>
+<h3 id="granule-pruning-실험">Granule Pruning 실험</h3>
 <p><code class="language-text">EXPLAIN indexes = 1</code>로 pruning 효과를 직접 확인합니다. <code class="language-text">category</code>는 <code class="language-text">ORDER BY</code>의 첫 번째 컬럼이므로 pruning이 강하게 작동해야 합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">EXPLAIN</span> indexes <span class="token operator">=</span> <span class="token number">1</span>
 <span class="token keyword">SELECT</span> <span class="token function">avg</span><span class="token punctuation">(</span>price<span class="token punctuation">)</span> <span class="token keyword">FROM</span> orders <span class="token keyword">WHERE</span> category <span class="token operator">=</span> <span class="token string">'전자제품'</span><span class="token punctuation">;</span></code></pre></div>
@@ -698,7 +698,7 @@ metadata_version.txt</code></pre></div>
 └───────────────────────────────────────────────────────────────┘</code></pre></div>
 <p><strong><code class="language-text">Granules: 1221/1221</code></strong>: pruning이 전혀 작동하지 않아 모든 granule을 읽습니다. <code class="language-text">Condition: true</code>가 이를 명확히 보여줍니다. 인덱스에서 <code class="language-text">user_id</code>를 필터링할 방법이 없기 때문입니다.</p>
 <p>같은 테이블, 같은 데이터인데 WHERE 조건의 컬럼이 ORDER BY에 있느냐 없느냐에 따라 읽는 데이터 양이 <strong>8배</strong> 차이납니다.</p>
-<h3>Mark 파일 크기 확인</h3>
+<h3 id="mark-파일-크기-확인">Mark 파일 크기 확인</h3>
 <p>컬럼별 Mark 파일 크기를 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
     <span class="token keyword">column</span><span class="token punctuation">,</span>
@@ -717,7 +717,7 @@ metadata_version.txt</code></pre></div>
 │ category   │ LowCardinality(String)│ 1.53 MiB   │ 9.54 MiB     │ 28.61 KiB  │
 └────────────┴───────────────────────┴────────────┴──────────────┴────────────┘</code></pre></div>
 <p><code class="language-text">marks_size</code>가 모든 컬럼에서 동일하게 <strong>28.61 KiB</strong>입니다. 1,221개 mark × 24바이트(오프셋 2개 + <code class="language-text">rows_count</code>, 각 8바이트) = 29,304바이트 ≈ 28.61 KiB. 컬럼의 데이터 크기나 타입과 무관하게, granule 수가 같으면 Mark 파일 크기도 같습니다.</p>
-<h3>ORDER BY가 Pruning에 미치는 영향 (맛보기)</h3>
+<h3 id="order-by가-pruning에-미치는-영향-맛보기">ORDER BY가 Pruning에 미치는 영향 (맛보기)</h3>
 <p>같은 데이터를 다른 ORDER BY로 저장하면 pruning 결과가 어떻게 달라지는지 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> orders_by_user <span class="token keyword">AS</span> orders
 <span class="token keyword">ENGINE</span> <span class="token operator">=</span> MergeTree<span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -749,7 +749,7 @@ metadata_version.txt</code></pre></div>
 └───────────────────────────────────────────────────────────────┘</code></pre></div>
 <p><strong><code class="language-text">Granules: 2/1221</code></strong>: <code class="language-text">user_id</code>가 ORDER BY 첫 번째 컬럼이므로 극도로 정밀한 pruning이 작동합니다. 1,221개 중 2개만 읽습니다.</p>
 <p>같은 데이터, 같은 쿼리인데 ORDER BY만 바꿨을 뿐입니다. ORDER BY 선택이 곧 인덱스 설계이고, 이것이 쿼리 성능을 결정합니다.</p>
-<h2>실전에서는</h2>
+<h2 id="실전에서는">실전에서는</h2>
 <p>MergeTree 내부 구조를 알면 운영에서 바로 쓸 수 있는 진단 포인트가 생깁니다.</p>
 <p><strong>Part 수 모니터링</strong>: <code class="language-text">system.parts</code>에서 active Part 수를 추적합니다. Part가 수백 개 이상 쌓이면 “Too many parts” 에러의 전조입니다. INSERT 빈도가 높은 테이블에서 특히 주의가 필요합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token keyword">table</span><span class="token punctuation">,</span> <span class="token function">count</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> active_parts
@@ -765,11 +765,11 @@ metadata_version.txt</code></pre></div>
 <li>카디널리티가 극도로 높은 컬럼(예: UUID)이 ORDER BY 앞에 올 때 (granule마다 값이 고유해서 pruning 의미 없음)</li>
 </ul>
 <p>이 패턴들을 피하려면 ORDER BY 키 설계가 중요합니다.</p>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>Part 디렉토리 안의 파일 구조, <code class="language-text">primary.idx</code> → <code class="language-text">.mrk2</code> → <code class="language-text">.bin</code>으로 이어지는 읽기 경로, 그리고 ORDER BY가 곧 인덱스 설계라는 점을 실험으로 확인했습니다.</p>
 <p>Part가 INSERT마다 계속 쌓이기만 하면 어떻게 될까요? 불변인 Part에서 UPDATE나 DELETE는? 다음 글에서는 백그라운드 머지가 Part들을 합치는 과정과, 뮤테이션(Mutation)이 불변 Part 위에서 변경을 구현하는 메커니즘을 다룹니다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/mergetree" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: MergeTree Table Engine</a></li>
 <li><a href="https://clickhouse.com/docs/guides/best-practices/sparse-primary-indexes" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: A Practical Introduction to Primary Indexes</a></li>
@@ -796,6 +796,6 @@ metadata_version.txt</code></pre></div>
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

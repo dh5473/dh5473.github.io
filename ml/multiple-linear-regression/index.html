@@ -5,7 +5,7 @@
   );}</style><div class="css-5injyz e1opi4mu0"></div><style data-emotion="css 1mhf11t">.css-1mhf11t{position:relative;z-index:2;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;height:100%;margin:0 auto;padding:60px 0;color:#ffffff;}@media (max-width: 768px){.css-1mhf11t{width:100%;padding:40px 20px;}}</style><div class="css-1mhf11t e1st1jau4"><style data-emotion="css 7wc0k2">.css-7wc0k2{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:rgba(255, 255, 255, 0.9);color:#1c1917;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0, 0, 0, 0.25);-webkit-transition:background 0.2s ease;transition:background 0.2s ease;}.css-7wc0k2:hover{background:#ffffff;}@media (max-width: 768px){.css-7wc0k2{width:32px;height:32px;font-size:14px;}}</style><div class="css-7wc0k2 e1st1jau3"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-left" class="svg-inline--fa fa-arrow-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"></path></svg></div><style data-emotion="css 13fnaq7">.css-13fnaq7{display:inline-block;margin-top:auto;margin-bottom:12px;padding:4px 10px;background:rgba(13, 148, 136, 0.8);color:#ffffff;font-size:12px;font-weight:600;border-radius:20px;letter-spacing:0.04em;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;}</style><span class="css-13fnaq7 e1st1jau2">Machine Learning</span><style data-emotion="css 1txjixu">.css-1txjixu{display:-webkit-box;overflow:hidden;overflow-wrap:break-word;text-overflow:ellipsis;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:42px;font-weight:800;margin:0 0 12px 0;line-height:1.25;}@media (max-width: 768px){.css-1txjixu{font-size:28px;}}</style><h1 class="css-1txjixu e1st1jau1">다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들</h1><style data-emotion="css 10xt9s2">.css-10xt9s2{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:start;-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:12px;font-size:15px;font-weight:400;opacity:0.75;}@media (max-width: 768px){.css-10xt9s2{font-size:13px;}}</style><div class="css-10xt9s2 e1st1jau0"><span>2026.01.06.</span></div></div></div><style data-emotion="css c9012n">.css-c9012n{width:768px;margin:40px auto 40px auto;border:1px solid var(--border);border-radius:14px;overflow:hidden;}@media (max-width: 768px){.css-c9012n{width:calc(100% - 40px);margin:28px 20px 32px 20px;}}</style><div class="css-c9012n e4kcwtw13"><style data-emotion="css z35ha5">.css-z35ha5{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;gap:8px;padding:14px 20px;background:var(--bg-subtle);border-bottom:1px solid var(--border);}</style><div class="css-z35ha5 e4kcwtw12"><style data-emotion="css 165olei">.css-165olei{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff7f0e;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;}</style><span color="#ff7f0e" class="css-165olei e4kcwtw11"></span><style data-emotion="css 9h16es">.css-9h16es{font-size:13px;font-weight:700;color:var(--text);}</style><span class="css-9h16es e4kcwtw10">ML 기초</span><style data-emotion="css at90x">.css-at90x{font-size:12px;color:var(--text-muted);margin-left:auto;}</style><span class="css-at90x e4kcwtw9">39<!-- -->편</span></div><style data-emotion="css 10qqpwk">.css-10qqpwk{list-style:none;margin:0;padding:8px 0;}</style><ol class="css-10qqpwk e4kcwtw8"><style data-emotion="css 18z6x9c">.css-18z6x9c{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:var(--bg-subtle);border-left:3px solid var(--primary);-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-18z6x9c:hover{background:var(--bg-subtle);}</style><li class="css-18z6x9c e4kcwtw7"><style data-emotion="css 1pal4l">.css-1pal4l{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:700;color:var(--primary);text-align:right;}</style><span class="css-1pal4l e4kcwtw6">6</span><style data-emotion="css 81ffau">.css-81ffau{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}</style><span class="css-81ffau e4kcwtw4">다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들</span><style data-emotion="css ndma13">.css-ndma13{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}@media (max-width: 768px){.css-ndma13{display:none;}}</style><span class="css-ndma13 e4kcwtw3">읽는 중</span></li><style data-emotion="css zk1145">.css-zk1145{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-webkit-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;gap:12px;padding:8px 20px;background:transparent;border-left:3px solid transparent;-webkit-transition:background 0.15s ease;transition:background 0.15s ease;}.css-zk1145:hover{background:var(--bg-subtle);}</style><li class="css-zk1145 e4kcwtw7"><style data-emotion="css dhxsuu">.css-dhxsuu{-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;width:22px;font-size:12px;font-weight:400;color:var(--text-muted);text-align:right;}</style><span class="css-dhxsuu e4kcwtw6">7</span><style data-emotion="css dizrmv">.css-dizrmv{font-size:13px;font-weight:400;color:var(--text-muted);-webkit-text-decoration:none;text-decoration:none;line-height:1.5;}.css-dizrmv:hover{color:var(--text);-webkit-text-decoration:underline;text-decoration:underline;}</style><a class="css-dizrmv e4kcwtw5" href="/ml/logistic-regression/">로지스틱 회귀(Logistic Regression): 분류 문제의 시작점</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">8</span><a class="css-dizrmv e4kcwtw5" href="/ml/decision-boundary/">결정 경계(Decision Boundary): 모델이 데이터를 가르는 선</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">9</span><a class="css-dizrmv e4kcwtw5" href="/ml/regularization/">규제(Regularization): 과적합을 막는 Ridge, Lasso, ElasticNet</a></li><li class="css-zk1145 e4kcwtw7"><span class="css-dhxsuu e4kcwtw6">10</span><a class="css-dizrmv e4kcwtw5" href="/ml/naive-bayes/">나이브 베이즈(Naive Bayes): 베이즈 정리로 분류하는 확률적 접근</a></li></ol><style data-emotion="css 6juz21">.css-6juz21{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;gap:4px;padding:8px 14px;border-top:1px solid var(--border);background:var(--bg-subtle);}</style><div class="css-6juz21 e4kcwtw2"><style data-emotion="css c0b44w">.css-c0b44w{font-size:12px;color:var(--text-muted);margin-right:8px;}</style><span class="css-c0b44w e4kcwtw1">2<!-- --> / <!-- -->8</span><style data-emotion="css x3bg76">.css-x3bg76{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer;opacity:1;-webkit-transition:background 0.15s ease,border-color 0.15s ease;transition:background 0.15s ease,border-color 0.15s ease;}.css-x3bg76:hover:not([disabled]){background:var(--bg-muted);border-color:var(--primary);color:var(--primary);}</style><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-left" class="svg-inline--fa fa-chevron-left " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"></path></svg></button><button class="css-x3bg76 e4kcwtw0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></button></div></div><style data-emotion="css wsh68y">.css-wsh68y{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-direction:column;-ms-flex-direction:column;flex-direction:column;width:768px;margin:0 auto;padding:100px 0;word-break:break-all;color:var(--text);line-height:1.8;font-size:18px;font-weight:400;}.css-wsh68y p{padding:3px 0;margin-bottom:10px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{font-weight:800;margin-bottom:10px;color:var(--text);}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:60px;}.css-wsh68y hr+h1,.css-wsh68y hr+h2,.css-wsh68y hr+h3{margin-top:0;}.css-wsh68y h1{font-size:34px;}.css-wsh68y h2{font-size:28px;}.css-wsh68y h3{font-size:22px;}.css-wsh68y blockquote{margin:20px 0;padding:8px 16px;border-left:3px solid var(--primary);background:var(--bg-subtle);border-radius:0 6px 6px 0;color:var(--text);}.css-wsh68y ol,.css-wsh68y ul{margin-left:20px;padding:20px 0;}.css-wsh68y li{margin-bottom:6px;line-height:1.7;}.css-wsh68y hr{border:none;border-top:1px solid var(--border);margin:60px 0;}.css-wsh68y a{color:var(--primary);-webkit-text-decoration:underline;text-decoration:underline;text-underline-offset:2px;}.css-wsh68y a:hover{color:var(--primary-hov);}.css-wsh68y pre[class*='language-']{margin:20px 0;padding:0;font-size:16px;background:var(--code-bg)!important;border-radius:8px;overflow-x:auto;position:relative;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar{height:6px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-thumb{background:rgba(255, 255, 255, 0.25);border-radius:3px;}.css-wsh68y pre[class*='language-']::-webkit-scrollbar-track{background:transparent;}.css-wsh68y pre[class*='language-']:before{content:'';display:block;height:35px;background:#2a2623;position:relative;}.css-wsh68y pre[class*='language-']:after{content:'';position:absolute;top:14px;left:15px;width:10px;height:10px;background:#ff5f56;border-radius:50%;box-shadow:16px 0 0 #ffbd2e,32px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-'] code{display:block;padding:15px 20px;background:transparent!important;}.css-wsh68y .copy-button{position:absolute;top:8px;right:12px;background:rgba(255, 255, 255, 0.1);border:1px solid rgba(255, 255, 255, 0.2);border-radius:4px;color:rgba(255, 255, 255, 0.7);padding:4px 8px;font-size:12px;cursor:pointer;opacity:0;-webkit-transition:all 0.2s ease;transition:all 0.2s ease;z-index:10;}.css-wsh68y pre[class*='language-']:hover .copy-button{opacity:1;}.css-wsh68y .copy-button:hover{background:rgba(255, 255, 255, 0.2);color:#ffffff;}.css-wsh68y .copy-button.copied{background:#0d9488;border-color:#0d9488;color:#ffffff;opacity:1;}.css-wsh68y code[class*='language-'],.css-wsh68y pre[class*='language-']{tab-size:2;}.css-wsh68y img{max-width:100%;border-radius:8px;}.css-wsh68y table{width:100%;border-collapse:collapse;margin:20px 0;font-size:15px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}.css-wsh68y th,.css-wsh68y td{padding:10px 14px;border:1px solid var(--border);text-align:left;word-break:keep-all;}.css-wsh68y th{background:var(--bg-subtle);font-weight:600;}.css-wsh68y tr:nth-of-type(even) td{background:var(--bg-subtle);}@media (max-width: 768px){.css-wsh68y{width:100%;padding:80px 20px;line-height:1.6;font-size:16px;}.css-wsh68y *+h1,.css-wsh68y *+h2,.css-wsh68y *+h3{margin-top:40px;}.css-wsh68y h1,.css-wsh68y h2,.css-wsh68y h3{margin-bottom:16px;}.css-wsh68y h1{font-size:26px;}.css-wsh68y h2{font-size:23px;}.css-wsh68y h3{font-size:19px;}.css-wsh68y blockquote{font-size:15px;margin:16px 0;}.css-wsh68y pre[class*='language-']{font-size:14px;margin:16px 0;border-radius:6px;}.css-wsh68y pre[class*='language-']:after{top:9px;left:10px;width:6px;height:6px;box-shadow:12px 0 0 #ffbd2e,24px 0 0 #27ca3f;}.css-wsh68y pre[class*='language-']:before{height:25px;}.css-wsh68y pre[class*='language-'] code{padding:12px 16px;font-size:13px;}.css-wsh68y .copy-button{top:4px;right:8px;padding:3px 6px;font-size:11px;}.css-wsh68y img{width:100%;}.css-wsh68y hr{margin:40px 0;}.css-wsh68y table{font-size:13px;}.css-wsh68y th,.css-wsh68y td{padding:8px 10px;}}</style><div class="css-wsh68y e1ijh0y10"><p><a href="/ml/gradient-descent/">이전 글</a>에서 경사하강법으로 면적 → 가격 예측 모델을 만들었다. 잘 동작했지만, 한 가지 찜찜한 점이 있었다 — <strong>b가 수렴을 안 한다는 것</strong>. 5,000번 반복해도 b는 최적값(-0.08)에 한참 못 미치는 -0.0003에 머물렀다. 원인은 입력값의 <strong>스케일 차이</strong>였다.</p>
 <p>현실은 이보다 더 복잡하다. 집값은 면적 하나로 정해지지 않는다. 방 개수, 층수, 역까지 거리, 건축 연도… 변수가 수십 개일 수도 있다. 변수가 늘어나면 모델은 어떻게 바뀌고, 스케일 문제는 얼마나 심각해질까?</p>
 <hr>
-<h2>단일 변수에서 다중 변수로</h2>
+<h2 id="단일-변수에서-다중-변수로">단일 변수에서 다중 변수로</h2>
 <p><a href="/ml/linear-regression/">선형 회귀 글</a>에서 다룬 모델은 변수가 하나였다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">ŷ = wx + b</code></pre></div>
 <p>변수가 여러 개면 각각에 가중치를 붙인다.</p>
@@ -13,7 +13,7 @@
 <p>예를 들어 면적(x₁), 방 수(x₂), 층수(x₃)로 집값을 예측한다면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">가격 = w₁ × 면적 + w₂ × 방수 + w₃ × 층수 + b</code></pre></div>
 <p>각 wᵢ의 의미는 <strong>“다른 변수를 고정했을 때, xᵢ가 1 증가하면 ŷ가 wᵢ만큼 변한다”</strong> 는 것이다. 면적이 1평 늘어날 때 가격이 얼마나 오르는지, 방이 하나 추가될 때 가격이 얼마나 오르는지를 각각 독립적으로 파악할 수 있다.</p>
-<h3>벡터화 표기</h3>
+<h3 id="벡터화-표기">벡터화 표기</h3>
 <p>변수가 많아지면 수식을 일일이 쓰기 어렵다. 행렬로 한 번에 표현하면 깔끔하다.</p>
 <p>데이터 하나를 벡터로 쓰면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">x = [x₁, x₂, x₃]    (특성 벡터)
@@ -29,7 +29,7 @@ w = [w₁, w₂, w₃]    (가중치 벡터)</code></pre></div>
   X는 (m × n) 행렬 — 행이 데이터, 열이 특성. w는 (n,) 벡터. 이 표기가 scikit-learn, PyTorch 등 거의 모든 ML 라이브러리의 표준이다.
 </div>
 <hr>
-<h2>다중 선형 회귀 구현</h2>
+<h2 id="다중-선형-회귀-구현">다중 선형 회귀 구현</h2>
 <p>실제 데이터로 구현해보자. 아파트 가격 예측 — 면적(평), 방 수, 층수를 특성으로 사용한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -75,7 +75,7 @@ Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]</code></pre></div>
 <p>5,000번 반복 후에도 cost가 0.64에서 크게 줄지 않는다. sklearn의 정답(cost ≈ 0.07)과 비교하면 한참 멀다. w₂(방 수)는 0.13인데 정답은 0.49 — 수렴이 안 된 것이다.</p>
 <p><strong>왜?</strong> 면적은 42~156, 방 수는 1~5, 층수는 2~23. 값의 범위가 전혀 다르다.</p>
 <hr>
-<h2>Feature Scaling이 필요한 이유</h2>
+<h2 id="feature-scaling이-필요한-이유">Feature Scaling이 필요한 이유</h2>
 <p>면적의 범위가 42~156이고 방 수는 1~5다. 기울기(gradient) 계산에서 <code class="language-text">X.T @ error</code>를 하면, 면적 열은 값이 크니 기울기도 크고, 방 수 열은 값이 작으니 기울기도 작다.</p>
 <p>결과적으로 <strong>하나의 학습률로 모든 변수를 동시에 적절히 업데이트하는 게 불가능</strong>해진다.</p>
 <ul>
@@ -89,7 +89,7 @@ Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]</code></pre></div>
 </div>
 <p>해결책은 간단하다. <strong>모든 변수를 비슷한 범위로 맞춰준다.</strong> 이게 Feature Scaling이다.</p>
 <hr>
-<h2>Feature Scaling 방법 비교</h2>
+<h2 id="feature-scaling-방법-비교">Feature Scaling 방법 비교</h2>
 <table>
 <thead>
 <tr>
@@ -120,7 +120,7 @@ Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]</code></pre></div>
 </tr>
 </tbody>
 </table>
-<h3>Min-Max Normalization</h3>
+<h3 id="min-max-normalization">Min-Max Normalization</h3>
 <p>모든 값을 0~1 사이로 압축한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_min <span class="token operator">=</span> X<span class="token punctuation">.</span><span class="token builtin">min</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
 X_max <span class="token operator">=</span> X<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
@@ -128,14 +128,14 @@ X_minmax <span class="token operator">=</span> <span class="token punctuation">(
 <span class="token comment"># 면적 42 → 0.0, 면적 156 → 1.0</span></code></pre></div>
 <p><strong>장점</strong>: 결과가 [0, 1]로 직관적. 이미지 처리 등 범위가 중요한 경우 적합.
 <strong>단점</strong>: 이상치(outlier)가 하나라도 있으면 나머지 데이터가 좁은 범위로 몰린다.</p>
-<h3>Standardization (Z-score)</h3>
+<h3 id="standardization-z-score">Standardization (Z-score)</h3>
 <p>평균을 0, 표준편차를 1로 맞춘다. 실무에서 <strong>가장 많이 쓰는 방법</strong>이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_mean <span class="token operator">=</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>  <span class="token comment"># [109.25, 3.15, 12.7]</span>
 X_std <span class="token operator">=</span> X<span class="token punctuation">.</span>std<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>    <span class="token comment"># [34.58, 1.31, 6.79]</span>
 X_scaled <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X_mean<span class="token punctuation">)</span> <span class="token operator">/</span> X_std</code></pre></div>
 <p><strong>장점</strong>: 이상치의 영향이 상대적으로 작다. 대부분의 ML 알고리즘에서 기본 선택.
 <strong>단점</strong>: 결과가 특정 범위로 제한되지 않는다 (보통 -3~3 정도).</p>
-<h3>Mean Normalization</h3>
+<h3 id="mean-normalization">Mean Normalization</h3>
 <p>평균을 빼고 범위로 나눈다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python">X_mean_norm <span class="token operator">=</span> <span class="token punctuation">(</span>X <span class="token operator">-</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token punctuation">(</span>X<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">-</span> X<span class="token punctuation">.</span><span class="token builtin">min</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre></div>
 <p>Min-Max와 Standardization 사이의 절충안. Andrew Ng 강의에서 자주 등장하지만, 실무에서는 Standardization이 더 일반적이다.</p>
@@ -144,7 +144,7 @@ X_scaled <span class="token operator">=</span> <span class="token punctuation">(
   확신이 없으면 <strong>Standardization</strong>을 쓴다. 선형 회귀, 로지스틱 회귀, SVM, 신경망 등 경사하강법 기반 알고리즘에서 거의 항상 잘 동작한다. 트리 기반 모델(Decision Tree, Random Forest, XGBoost)은 분할 기준이 크기 비교라서 스케일링이 필요 없다.
 </div>
 <hr>
-<h2>Before/After: 스케일링의 효과</h2>
+<h2 id="beforeafter-스케일링의-효과">Before/After: 스케일링의 효과</h2>
 <p>같은 데이터, 같은 경사하강법인데 스케일링 여부만 다르다. 차이가 극적이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Standardization 적용</span>
 X_mean <span class="token operator">=</span> X<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span>
@@ -205,7 +205,7 @@ Epoch  1000 | Cost: 0.0693</code></pre></div>
 </tbody>
 </table>
 <p>학습률을 <strong>1,000배</strong> 키울 수 있고, 수백 epoch 만에 수렴한다. 스케일링 없이는 5,000번을 돌려도 못 닿는 cost(0.069)에 말이다.</p>
-<h3>스케일링 후 가중치 해석</h3>
+<h3 id="스케일링-후-가중치-해석">스케일링 후 가중치 해석</h3>
 <p>스케일링 후의 가중치 <code class="language-text">[0.856, 0.645, 0.178]</code>은 원래 단위가 아니라 <strong>표준화된 단위</strong>다. 원래 스케일로 되돌리려면:</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 스케일링된 가중치 → 원래 스케일</span>
 w_original <span class="token operator">=</span> w <span class="token operator">/</span> X_std
@@ -226,7 +226,7 @@ b_original <span class="token operator">=</span> b <span class="token operator">
   스케일링 <strong>전</strong>의 가중치로 변수 중요도를 비교하면 안 된다. 면적(42~156)은 값이 크기 때문에 가중치가 작게 나오고, 방 수(1~5)는 값이 작기 때문에 가중치가 크게 나온다. 변수의 상대적 중요도를 비교하려면 반드시 스케일링 후의 가중치를 봐야 한다.
 </div>
 <hr>
-<h2>sklearn으로 한 번에</h2>
+<h2 id="sklearn으로-한-번에">sklearn으로 한 번에</h2>
 <p>위에서 직접 구현한 건 원리를 이해하기 위해서였다. 실전에서는 sklearn의 <code class="language-text">Pipeline</code>으로 스케일링과 학습을 한 번에 처리한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LinearRegression
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
@@ -257,8 +257,8 @@ pred <span class="token operator">=</span> pipe<span class="token punctuation">.
   스케일링과 모델을 따로 관리하면, 새 데이터를 예측할 때 스케일링을 잊는 실수가 생긴다. Pipeline은 <code>fit</code>, <code>predict</code>, <code>score</code>를 호출하면 전처리와 모델을 자동으로 순서대로 적용한다. 코드가 깔끔해지고 실수가 줄어든다.
 </div>
 <hr>
-<h2>흔한 실수</h2>
-<h3>1. Test 데이터에 Train의 스케일러를 적용하지 않는다</h3>
+<h2 id="흔한-실수">흔한 실수</h2>
+<h3 id="1-test-데이터에-train의-스케일러를-적용하지-않는다">1. Test 데이터에 Train의 스케일러를 적용하지 않는다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 잘못된 방법: test 데이터를 따로 스케일링</span>
 scaler_train <span class="token operator">=</span> StandardScaler<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
 X_train_scaled <span class="token operator">=</span> scaler_train<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
@@ -270,21 +270,21 @@ scaler <span class="token operator">=</span> StandardScaler<span class="token pu
 X_train_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
 X_test_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span>  <span class="token comment"># 같은 scaler로 transform만</span></code></pre></div>
 <p>Train 데이터의 평균과 표준편차로 test 데이터를 변환해야 한다. Test 데이터로 별도로 fit하면 기준이 달라져서 모델이 엉뚱한 예측을 한다. Pipeline을 쓰면 이 실수를 구조적으로 방지할 수 있다.</p>
-<h3>2. 범주형 변수에 스케일링을 적용한다</h3>
+<h3 id="2-범주형-변수에-스케일링을-적용한다">2. 범주형 변수에 스케일링을 적용한다</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ❌ 원-핫 인코딩된 변수까지 스케일링</span>
 <span class="token comment"># gender: [0, 1], type: [0, 0, 1] → 이미 범위가 정해져 있다</span></code></pre></div>
 <p>원-핫 인코딩이나 0/1 이진 변수는 스케일링할 필요가 없다. 오히려 스케일링하면 의미가 왜곡된다. 수치형 연속 변수만 스케일링한다.</p>
-<h3>3. 타겟(y)까지 스케일링한다</h3>
+<h3 id="3-타겟y까지-스케일링한다">3. 타겟(y)까지 스케일링한다</h3>
 <p>일반적인 선형 회귀에서 y는 스케일링하지 않는다. y를 스케일링하면 예측값도 스케일링된 단위로 나오기 때문에 다시 역변환해야 하고, 해석이 복잡해진다. 단, 신경망에서 y의 범위가 극단적으로 크면 학습 안정성을 위해 스케일링하기도 한다 — 이건 특수한 경우다.</p>
 <div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>⚠️ 데이터 누수(Data Leakage) 주의</strong><br>
   Train/Test 분할 <strong>전에</strong> 전체 데이터로 스케일링하면, test 데이터의 통계가 train에 섞여 들어간다. 반드시 분할 <strong>후</strong> train 데이터만으로 fit하고, 그 기준으로 test를 transform해야 한다.
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>변수가 여러 개가 되면 모델 자체보다 <strong>전처리</strong>가 결과를 좌우한다. 같은 경사하강법, 같은 데이터인데 Feature Scaling 하나로 5,000번 돌려도 안 되던 수렴이 268번 만에 끝난다. 이건 이론적 차이가 아니라 실전에서 매번 마주하는 차이다.</p>
 <p>여기까지가 <strong>회귀(Regression)</strong> 의 이야기다. 다음 글에서는 연속값 예측이 아닌, “Yes 또는 No”를 판단하는 <strong>분류(Classification)</strong> 문제로 넘어간다. 선형 회귀에 시그모이드 함수 하나를 얹어 확률을 출력하는 <strong>로지스틱 회귀(Logistic Regression)</strong> 를 다룬다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Multiple Features (Coursera)</a></li>
 <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html" target="_blank" rel="noopener noreferrer">Scikit-learn — StandardScaler Documentation</a></li>
@@ -312,6 +312,6 @@ X_test_scaled <span class="token operator">=</span> scaler<span class="token pun
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

@@ -13,9 +13,9 @@
 </ul>
 <p>감으로 선택하면 시간을 낭비한다. 데이터가 부족한 게 아닌데 데이터를 더 모으고, 모델이 이미 과적합인데 더 복잡한 모델을 시도하고, 피처가 노이즈인데 피처를 추가한다. 이번 글에서 다루는 건 <strong>진단(Diagnosis)</strong> 이다. 학습 곡선과 오차 분석으로 문제를 정확히 짚고, 다음 스텝을 체계적으로 결정하는 방법을 정리한다.</p>
 <hr>
-<h2>1. 학습 곡선 (Learning Curves)</h2>
+<h2 id="1-학습-곡선-learning-curves">1. 학습 곡선 (Learning Curves)</h2>
 <p>학습 곡선은 <strong>훈련 데이터의 양</strong>에 따라 훈련 에러와 검증 에러가 어떻게 변하는지를 시각화한 그래프다. <a href="/ml/bias-variance/">편향-분산 트레이드오프</a>에서 배운 개념을 실전에서 진단하는 도구가 바로 이것이다.</p>
-<h3>학습 곡선을 그리는 방법</h3>
+<h3 id="학습-곡선을-그리는-방법">학습 곡선을 그리는 방법</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> learning_curve
 <span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -29,7 +29,7 @@ train_sizes<span class="token punctuation">,</span> train_scores<span class="tok
 train_mean <span class="token operator">=</span> train_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
 val_mean <span class="token operator">=</span> val_scores<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span></code></pre></div>
 <p>x축은 훈련 데이터 수, y축은 성능(또는 에러). 훈련 데이터를 10%, 20%, … 100%로 늘려가면서 모델을 학습하고, 각 단계에서 훈련 점수와 검증 점수를 기록한다.</p>
-<h3>패턴 1: 높은 편향 (과소적합)</h3>
+<h3 id="패턴-1-높은-편향-과소적합">패턴 1: 높은 편향 (과소적합)</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">에러
 │
 │  ──────────────── 훈련 에러 (높음)
@@ -38,7 +38,7 @@ val_mean <span class="token operator">=</span> val_scores<span class="token punc
 └──────────────────── 데이터 수</code></pre></div>
 <p>두 곡선이 모두 높은 에러에서 수렴하고, 서로 가까이 붙어 있다. 데이터를 아무리 늘려도 두 에러가 함께 높은 상태로 머문다.</p>
 <p><strong>진단</strong>: 모델이 데이터의 패턴을 충분히 표현하지 못한다. <a href="/ml/bias-variance/">편향-분산</a> 관점에서 <strong>편향이 높다</strong>. 이건 모델의 용량(capacity) 문제다.</p>
-<h3>패턴 2: 높은 분산 (과적합)</h3>
+<h3 id="패턴-2-높은-분산-과적합">패턴 2: 높은 분산 (과적합)</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">에러
 │
 │  ──────────────── 검증 에러 (높음)
@@ -50,35 +50,35 @@ val_mean <span class="token operator">=</span> val_scores<span class="token punc
 └──────────────────── 데이터 수</code></pre></div>
 <p>훈련 에러는 낮은데 검증 에러가 높다. 두 곡선 사이에 큰 갭이 있다. 데이터를 더 넣으면 갭이 서서히 줄어드는 경향을 보인다.</p>
 <p><strong>진단</strong>: 모델이 훈련 데이터를 외우고 있다. 분산이 높다. 데이터를 더 모으면 도움이 될 수 있다.</p>
-<h3>패턴 3: 이상적인 학습 곡선</h3>
+<h3 id="패턴-3-이상적인-학습-곡선">패턴 3: 이상적인 학습 곡선</h3>
 <p>훈련 에러와 검증 에러가 낮은 수준에서 수렴하고, 갭이 작다. 이 상태면 모델이 적절히 학습된 것이다.</p>
 <div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
   <strong>핵심</strong>: 학습 곡선은 "데이터를 더 모아야 하는가?"라는 질문에 직접 답을 준다. 과소적합이면 데이터를 더 모아도 소용없다. 과적합이면 데이터가 해결책이 될 수 있다.
 </div>
 <hr>
-<h2>2. 과소적합일 때: 어떻게 편향을 줄이는가</h2>
+<h2 id="2-과소적합일-때-어떻게-편향을-줄이는가">2. 과소적합일 때: 어떻게 편향을 줄이는가</h2>
 <p>학습 곡선에서 높은 편향(과소적합) 패턴이 나왔다면, 다음 전략들을 시도한다.</p>
-<h3>더 복잡한 모델 사용</h3>
+<h3 id="더-복잡한-모델-사용">더 복잡한 모델 사용</h3>
 <p>선형 회귀로 비선형 데이터를 피팅하고 있다면, 당연히 한계가 있다. 결정 트리, 랜덤 포레스트, XGBoost 같은 비선형 모델로 전환한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 선형 모델이 과소적합이면</span>
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>ensemble <span class="token keyword">import</span> GradientBoostingClassifier
 
 <span class="token comment"># 비선형 모델로 교체</span>
 model <span class="token operator">=</span> GradientBoostingClassifier<span class="token punctuation">(</span>n_estimators<span class="token operator">=</span><span class="token number">100</span><span class="token punctuation">)</span></code></pre></div>
-<h3>피처 추가 / 다항 피처</h3>
+<h3 id="피처-추가-다항-피처">피처 추가 / 다항 피처</h3>
 <p>모델이 단순해서가 아니라 <strong>피처가 부족해서</strong> 패턴을 못 잡는 경우도 있다. 기존 피처의 다항 조합을 추가하거나, 도메인 지식으로 새 피처를 만든다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> PolynomialFeatures
 
 poly <span class="token operator">=</span> PolynomialFeatures<span class="token punctuation">(</span>degree<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">,</span> interaction_only<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
 X_poly <span class="token operator">=</span> poly<span class="token punctuation">.</span>fit_transform<span class="token punctuation">(</span>X<span class="token punctuation">)</span></code></pre></div>
-<h3>정규화 강도 줄이기</h3>
+<h3 id="정규화-강도-줄이기">정규화 강도 줄이기</h3>
 <p><a href="/ml/regularization/">정규화</a>를 너무 강하게 걸면 모델이 과도하게 제약받아 과소적합이 된다. <code class="language-text">alpha</code>(또는 <code class="language-text">C</code>의 역수)를 줄여본다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 정규화가 너무 강하면 과소적합</span>
 LogisticRegression<span class="token punctuation">(</span>C<span class="token operator">=</span><span class="token number">0.001</span><span class="token punctuation">)</span>  <span class="token comment"># C가 작으면 정규화가 강함</span>
 
 <span class="token comment"># 정규화를 줄여서 모델에 자유도 부여</span>
 LogisticRegression<span class="token punctuation">(</span>C<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">)</span></code></pre></div>
-<h3>신경망이라면: 더 깊거나, 더 오래</h3>
+<h3 id="신경망이라면-더-깊거나-더-오래">신경망이라면: 더 깊거나, 더 오래</h3>
 <p>신경망에서 과소적합은 보통 두 가지 원인이다.</p>
 <ol>
 <li><strong>네트워크가 작다</strong>: 층이나 뉴런 수를 늘린다.</li>
@@ -91,19 +91,19 @@ LogisticRegression<span class="token punctuation">(</span>C<span class="token op
 [4] 학습 시간 늘리기 (에포크↑, 신경망)
 [5] 데이터 더 모으기? → 보통 도움 안 됨 ✗</code></pre></div>
 <hr>
-<h2>3. 과적합일 때: 어떻게 분산을 줄이는가</h2>
+<h2 id="3-과적합일-때-어떻게-분산을-줄이는가">3. 과적합일 때: 어떻게 분산을 줄이는가</h2>
 <p>학습 곡선에서 훈련-검증 갭이 크다면, 과적합이다. 이건 <a href="/ml/bias-variance/">편향-분산</a>에서 배운 분산이 높은 상태다.</p>
-<h3>데이터를 더 모은다</h3>
+<h3 id="데이터를-더-모은다">데이터를 더 모은다</h3>
 <p>과적합의 가장 직접적인 해결책이다. 학습 곡선에서 데이터가 늘수록 검증 에러가 내려가는 추세라면, 더 모을 가치가 있다.</p>
-<h3>정규화 강화</h3>
+<h3 id="정규화-강화">정규화 강화</h3>
 <ul>
 <li><strong>L1/L2 정규화</strong>: <a href="/ml/regularization/">정규화 글</a>에서 배운 Ridge, Lasso. 가중치의 크기를 제한한다.</li>
 <li><strong>Dropout</strong>: <a href="/ml/neural-network-tips/">신경망 팁</a>에서 배운 기법. 학습 중 무작위로 뉴런을 끈다.</li>
 <li><strong>Early Stopping</strong>: 검증 에러가 올라가기 시작하면 학습을 멈춘다.</li>
 </ul>
-<h3>더 단순한 모델</h3>
+<h3 id="더-단순한-모델">더 단순한 모델</h3>
 <p>결정 트리의 <code class="language-text">max_depth</code>를 줄이거나, 신경망의 층수를 줄이거나, 앙상블 대신 단일 모델을 쓴다.</p>
-<h3>피처 선택</h3>
+<h3 id="피처-선택">피처 선택</h3>
 <p>불필요한 피처가 노이즈를 추가한다. 피처 중요도를 보고 기여도가 낮은 피처를 제거한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">과적합 해결 체크리스트:
 [1] 데이터 더 모으기 → 가장 효과적 ✓
@@ -117,9 +117,9 @@ LogisticRegression<span class="token punctuation">(</span>C<span class="token op
   과소적합 해결책(모델 복잡도↑, 정규화↓)과 과적합 해결책(모델 복잡도↓, 정규화↑)은 정확히 반대다. 그래서 <strong>진단이 먼저</strong>다. 학습 곡선 없이 감으로 튜닝하면, 과소적합에 정규화를 강화하거나 과적합에 피처를 추가하는 삽질을 한다.
 </div>
 <hr>
-<h2>4. 오차 분석 (Error Analysis)</h2>
+<h2 id="4-오차-분석-error-analysis">4. 오차 분석 (Error Analysis)</h2>
 <p>학습 곡선이 “전체적인 방향”을 알려준다면, 오차 분석은 <strong>구체적으로 어디서 틀리는지</strong>를 파고든다. Andrew Ng이 강조하는 데이터 중심 AI(Data-Centric AI)의 핵심 도구이기도 하다.</p>
-<h3>오차 분석이란</h3>
+<h3 id="오차-분석이란">오차 분석이란</h3>
 <p>모델이 틀린 예시들을 직접 눈으로 살펴보고, 패턴을 찾는 것이다. 자동화된 메트릭으로는 보이지 않는 문제가 여기서 드러난다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 분류 모델의 오분류 사례 추출</span>
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>metrics <span class="token keyword">import</span> confusion_matrix
@@ -129,7 +129,7 @@ errors <span class="token operator">=</span> X_val<span class="token punctuation
 
 <span class="token comment"># 어떤 클래스를 어떤 클래스로 잘못 예측하는가?</span>
 cm <span class="token operator">=</span> confusion_matrix<span class="token punctuation">(</span>y_val<span class="token punctuation">,</span> y_pred<span class="token punctuation">)</span></code></pre></div>
-<h3>오차 분석의 구체적 절차</h3>
+<h3 id="오차-분석의-구체적-절차">오차 분석의 구체적 절차</h3>
 <p><strong>1단계: 오분류 사례 수집</strong> — 검증 세트에서 모델이 틀린 사례를 모두 모은다.</p>
 <p><strong>2단계: 카테고리 분류</strong> — 틀린 사례들을 유형별로 분류한다. 예를 들어 이메일 스팸 분류기라면:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">오분류 사례 100개 분석:
@@ -143,7 +143,7 @@ cm <span class="token operator">=</span> confusion_matrix<span class="token punc
 | 기타             | 5    | 5%   |</code></pre></div>
 <p><strong>3단계: 우선순위 결정</strong> — 가장 큰 비율을 차지하는 유형부터 해결한다. 위 예시에서 “약물 광고 스팸”이 35%니까, 약물 관련 키워드 피처를 추가하면 전체 에러의 35%를 잠재적으로 줄일 수 있다.</p>
 <p><strong>4단계: 개선 후 재평가</strong> — 개선을 적용하고, 다시 오차 분석을 돌린다. 반복이다.</p>
-<h3>오차 분석에서 찾아야 할 것들</h3>
+<h3 id="오차-분석에서-찾아야-할-것들">오차 분석에서 찾아야 할 것들</h3>
 <table>
 <thead>
 <tr>
@@ -179,9 +179,9 @@ cm <span class="token operator">=</span> confusion_matrix<span class="token punc
   전통적인 ML 워크플로우는 데이터를 고정하고 모델을 개선한다 (모델 중심). Andrew Ng이 제안한 데이터 중심 접근은 반대다 — 모델(또는 코드)을 고정하고 <strong>데이터의 품질을 체계적으로 개선</strong>한다. 오차 분석은 이 철학의 핵심 도구다. 실무에서 성능 향상의 가장 큰 레버는 대부분 모델이 아니라 데이터에 있다.
 </div>
 <hr>
-<h2>5. 베이스라인 설정: 시작점을 정하라</h2>
+<h2 id="5-베이스라인-설정-시작점을-정하라">5. 베이스라인 설정: 시작점을 정하라</h2>
 <p>성능이 “좋다”와 “나쁘다”를 판단하려면 <strong>기준점</strong>이 필요하다. 정확도 75%가 좋은 건지 나쁜 건지는 문제에 따라 다르다.</p>
-<h3>베이스라인의 종류</h3>
+<h3 id="베이스라인의-종류">베이스라인의 종류</h3>
 <p><strong>1. 인간 수준 성능 (Human-Level Performance)</strong></p>
 <p>사람이 이 작업을 하면 몇 %나 맞추는가? 의료 이미지 판독이라면 전문의의 정확도가 기준이 된다. 모델이 인간 수준에 한참 못 미치면 개선 여지가 크다. 인간 수준에 근접하면 남은 에러는 대부분 irreducible noise다.</p>
 <p><strong>2. 단순 모델 베이스라인</strong></p>
@@ -195,7 +195,7 @@ baseline <span class="token operator">=</span> DummyRegressor<span class="token 
 <p>불균형 데이터에서 정확도 95%라고 좋아했는데, DummyClassifier도 95%면 모델이 아무것도 배우지 않은 것이다. <a href="/ml/classification-metrics/">분류 메트릭</a>에서 배운 교훈과 정확히 연결된다.</p>
 <p><strong>3. 기존 시스템/논문의 성능</strong></p>
 <p>이미 배포된 모델이 있다면 그것이 베이스라인이다. 논문의 벤치마크 결과도 참고점이 된다.</p>
-<h3>에러 갭 분석</h3>
+<h3 id="에러-갭-분석">에러 갭 분석</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">인간 수준 에러:     1%
 훈련 에러:          5%
 검증 에러:          10%
@@ -214,9 +214,9 @@ baseline <span class="token operator">=</span> DummyRegressor<span class="token 
 편향이 압도적으로 크므로 모델 복잡도를 높여야 한다.</code></pre></div>
 <p>이 프레임워크를 쓰면 “다음에 뭘 해야 하는가?”에 대한 답이 명확해진다.</p>
 <hr>
-<h2>6. 반복적 개발 프로세스</h2>
+<h2 id="6-반복적-개발-프로세스">6. 반복적 개발 프로세스</h2>
 <p>실전에서 가장 중요한 원칙: <strong>처음부터 복잡한 모델을 쓰지 마라.</strong></p>
-<h3>ML 프로젝트의 올바른 순서</h3>
+<h3 id="ml-프로젝트의-올바른-순서">ML 프로젝트의 올바른 순서</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">[1단계] 빠르게 시작
    └→ 단순한 모델 (로지스틱 회귀, 결정 트리)
    └→ 기본 피처만 사용
@@ -243,14 +243,14 @@ baseline <span class="token operator">=</span> DummyRegressor<span class="token 
   <strong>실전 팁</strong>: 첫 모델의 목표는 "좋은 성능"이 아니라 "작동하는 파이프라인"이다. End-to-end 파이프라인(데이터 로드 → 전처리 → 학습 → 평가)을 빠르게 세우고, 거기서부터 개선한다. 파이프라인 없이 모델만 고민하는 건 기초공사 없이 인테리어하는 것과 같다.
 </div>
 <hr>
-<h2>7. 데이터 증강과 수집 전략</h2>
+<h2 id="7-데이터-증강과-수집-전략">7. 데이터 증강과 수집 전략</h2>
 <p>학습 곡선이 “데이터가 더 필요하다”고 말할 때, 두 가지 선택지가 있다.</p>
-<h3>데이터 수집</h3>
+<h3 id="데이터-수집">데이터 수집</h3>
 <p>가장 직접적이지만 가장 비용이 크다. 오차 분석과 결합하면 효율적이다 — 전체 데이터를 무작위로 모으는 대신, <strong>모델이 가장 많이 틀리는 유형</strong>의 데이터를 집중 수집한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">오차 분석 결과: "비영어 스팸"에서 15% 에러
 → 비영어 스팸 이메일 데이터를 집중 수집
 → 전체 데이터를 10% 늘리는 것보다 효과적</code></pre></div>
-<h3>데이터 증강 (Data Augmentation)</h3>
+<h3 id="데이터-증강-data-augmentation">데이터 증강 (Data Augmentation)</h3>
 <p>기존 데이터를 변형해서 새 데이터를 만든다.</p>
 <p><strong>이미지</strong>: 회전, 반전, 크롭, 색상 변환, 노이즈 추가</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> torchvision <span class="token keyword">import</span> transforms
@@ -263,7 +263,7 @@ augment <span class="token operator">=</span> transforms<span class="token punct
 <p><strong>텍스트</strong>: 동의어 대체, 역번역(한→영→한), 랜덤 삭제</p>
 <p><strong>정형 데이터</strong>: SMOTE(오버샘플링), 노이즈 주입. 단, 정형 데이터에서 증강은 이미지/텍스트만큼 효과적이지 않은 경우가 많다.</p>
 <hr>
-<h2>8. 모델 선택 의사결정 트리</h2>
+<h2 id="8-모델-선택-의사결정-트리">8. 모델 선택 의사결정 트리</h2>
 <p>“어떤 모델을 써야 하는가?”에 대한 실용적 가이드.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">데이터 유형은?
 │
@@ -285,9 +285,9 @@ augment <span class="token operator">=</span> transforms<span class="token punct
   정형 데이터 대회에서 상위권 솔루션의 압도적 다수가 트리 기반 앙상블을 사용한다. 딥러닝이 우위를 보이는 건 이미지, 텍스트, 음성 같은 비정형 데이터다. "딥러닝 = 항상 최고"가 아니다. 문제에 맞는 도구를 고르는 게 실력이다.
 </div>
 <hr>
-<h2>9. 흔한 실수 체크리스트</h2>
+<h2 id="9-흔한-실수-체크리스트">9. 흔한 실수 체크리스트</h2>
 <p>실전에서 모델 성능이 안 나오는 원인이 모델이 아니라 <strong>파이프라인 버그</strong>인 경우가 놀라울 정도로 많다.</p>
-<h3>데이터 누수 (Data Leakage)</h3>
+<h3 id="데이터-누수-data-leakage">데이터 누수 (Data Leakage)</h3>
 <p><strong>문제</strong>: 모델이 학습 시점에 “미래 정보”를 보는 것.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 잘못된 예: 전체 데이터로 스케일링 후 분할</span>
 scaler<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">)</span>          <span class="token comment"># 테스트 데이터 정보가 스케일링에 포함됨</span>
@@ -300,9 +300,9 @@ scaler<span class="token punctuation">.</span>fit<span class="token punctuation"
 X_train_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_train<span class="token punctuation">)</span>
 X_test_scaled <span class="token operator">=</span> scaler<span class="token punctuation">.</span>transform<span class="token punctuation">(</span>X_test<span class="token punctuation">)</span></code></pre></div>
 <p><a href="/ml/cross-validation/">교차 검증</a>에서 배운 것처럼, 전처리도 반드시 훈련 데이터 기준으로 해야 한다. <code class="language-text">Pipeline</code>을 쓰면 이 실수를 자동으로 방지할 수 있다.</p>
-<h3>타겟 누수 (Target Leakage)</h3>
+<h3 id="타겟-누수-target-leakage">타겟 누수 (Target Leakage)</h3>
 <p>피처 중에 타겟 변수로부터 파생된 정보가 포함된 경우다. 예를 들어 “환자가 퇴원했는가?”를 예측하는데 피처에 “퇴원일”이 포함되어 있으면, 모델은 100%에 가까운 정확도를 보이지만 실전에서는 쓸모가 없다.</p>
-<h3>시계열 데이터에서 랜덤 분할</h3>
+<h3 id="시계열-데이터에서-랜덤-분할">시계열 데이터에서 랜덤 분할</h3>
 <p>시계열 데이터는 시간 순서를 유지해야 한다. 랜덤으로 섞으면 미래 데이터가 훈련에 포함된다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># 잘못: 시계열인데 랜덤 분할</span>
 train_test_split<span class="token punctuation">(</span>X<span class="token punctuation">,</span> y<span class="token punctuation">,</span> random_state<span class="token operator">=</span><span class="token number">42</span><span class="token punctuation">)</span>
@@ -310,9 +310,9 @@ train_test_split<span class="token punctuation">(</span>X<span class="token punc
 <span class="token comment"># 올바른: 시간 기준 분할</span>
 X_train <span class="token operator">=</span> X<span class="token punctuation">[</span>X<span class="token punctuation">[</span><span class="token string">'date'</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span> <span class="token string">'2024-01-01'</span><span class="token punctuation">]</span>
 X_test <span class="token operator">=</span> X<span class="token punctuation">[</span>X<span class="token punctuation">[</span><span class="token string">'date'</span><span class="token punctuation">]</span> <span class="token operator">>=</span> <span class="token string">'2024-01-01'</span><span class="token punctuation">]</span></code></pre></div>
-<h3>잘못된 평가 지표</h3>
+<h3 id="잘못된-평가-지표">잘못된 평가 지표</h3>
 <p>불균형 데이터에서 accuracy를 쓰거나, 비즈니스 목표와 맞지 않는 메트릭을 최적화하는 실수. <a href="/ml/classification-metrics/">분류 메트릭</a>에서 배운 것처럼, 문제에 맞는 메트릭을 선택하는 것이 첫 번째다.</p>
-<h3>전체 체크리스트</h3>
+<h3 id="전체-체크리스트">전체 체크리스트</h3>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">실전 디버깅 체크리스트:
 
 [ ] 데이터 누수 확인 (전처리가 테스트 데이터를 오염시키지 않는가?)
@@ -324,12 +324,12 @@ X_test <span class="token operator">=</span> X<span class="token punctuation">[<
 [ ] 피처 스케일링 (거리 기반 모델에 스케일링을 했는가?)
 [ ] 결측값 처리 (NaN이 모델에 영향을 주고 있지 않은가?)</code></pre></div>
 <hr>
-<h2>10. 피처 엔지니어링 맛보기: Phase 7 예고</h2>
+<h2 id="10-피처-엔지니어링-맛보기-phase-7-예고">10. 피처 엔지니어링 맛보기: Phase 7 예고</h2>
 <p>지금까지의 개선 전략에서 반복적으로 등장한 키워드가 있다: <strong>피처</strong>. 과소적합일 때 “피처를 추가하라”, 오차 분석에서 “이 패턴을 잡을 피처가 없다”, 데이터 중심 접근에서 “데이터 품질을 개선하라” — 모두 결국 <strong>입력 데이터를 어떻게 가공하느냐</strong>의 문제다.</p>
 <p>피처 엔지니어링은 모델에 “무엇을 볼지”를 알려주는 작업이다. 같은 모델이라도 피처에 따라 성능이 극적으로 달라진다. 특히 정형 데이터에서는 피처 엔지니어링이 모델 선택보다 더 큰 영향을 미치는 경우가 많다.</p>
 <p>다음 글인 Phase 7에서는 이 피처 엔지니어링을 본격적으로 다룬다. 범주형 변수를 숫자로 변환하는 <a href="/ml/categorical-encoding/">카테고리컬 인코딩</a>부터 시작해서, 수치형 피처 변환, 피처 선택, 피처 생성까지 체계적으로 정리할 예정이다.</p>
 <hr>
-<h2>Phase 6 마무리: 평가와 진단의 전체 그림</h2>
+<h2 id="phase-6-마무리-평가와-진단의-전체-그림">Phase 6 마무리: 평가와 진단의 전체 그림</h2>
 <p>Phase 6 (Applied ML)에서 배운 것들을 정리하자.</p>
 <table>
 <thead>
@@ -389,6 +389,6 @@ X_test <span class="token operator">=</span> X<span class="token punctuation">[<
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

@@ -6,11 +6,11 @@
 <p>한 가지 더. Part는 불변(immutable)입니다. 한번 디스크에 쓰이면 절대 수정되지 않습니다. 그렇다면 <code class="language-text">ALTER TABLE orders UPDATE price = 0 WHERE order_id = 42</code>는 어떻게 동작할까요? 불변인 데이터를 어떻게 “수정”하는 걸까요?</p>
 <br>
 <p>이 글에서는 불변 Part를 관리하는 두 가지 메커니즘을 다룹니다. Part를 합치는 <strong>백그라운드 머지</strong>와, 불변 Part 위에서 변경을 구현하는 <strong>뮤테이션(Mutation)</strong>입니다.</p>
-<h2>왜 불변 Part인가: 설계 동기</h2>
+<h2 id="왜-불변-part인가-설계-동기">왜 불변 Part인가: 설계 동기</h2>
 <p>PostgreSQL은 8KB 페이지 안에서 행을 직접 수정합니다(in-place update). UPDATE 하나에도 WAL 기록, 행 잠금, MVCC 버전 관리가 따라옵니다. 단건 트랜잭션 위주의 OLTP에서는 합리적인 설계지만, 초당 수십만 행을 쏟아붓는 OLAP 쓰기 패턴에서는 이 오버헤드가 심각한 병목이 됩니다.</p>
 <p>MergeTree는 정반대의 선택을 합니다. INSERT가 들어오면 데이터를 <code class="language-text">ORDER BY</code> 순서로 정렬해서 새로운 Part를 디스크에 <strong>순차 쓰기(sequential write)</strong>합니다. 기존 Part는 건드리지 않습니다. 락도 없고, 랜덤 I/O도 없습니다. 쓰기 처리량이 디스크 순차 대역폭에 비례해서 선형으로 스케일합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 500" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 RDB의 in-place update로 페이지 안에서 행을 직접 수정하며 락과 WAL, 랜덤 I/O가 따르는 구조. 아래쪽은 MergeTree의 append 방식으로 INSERT마다 불변 Part가 새로 생기고 백그라운드 머지가 이들을 하나로 합치는 구조.">
@@ -47,12 +47,12 @@
 </div>
 <p>대신 읽기 비용이 생깁니다. Part가 여러 개 있으면 쿼리가 모든 Part를 확인해야 합니다. Part 10개에서 같은 <code class="language-text">WHERE</code> 조건을 검색하려면, 각 Part의 <code class="language-text">primary.idx</code>를 10번 탐색하고 해당 granule을 10번 읽어야 합니다.</p>
 <p>이 읽기 비용을 줄이는 메커니즘이 <strong>백그라운드 머지</strong>입니다. 작은 Part 여러 개를 큰 Part 하나로 합쳐서, 쿼리가 확인해야 할 Part 수를 줄입니다. 쓰기 속도를 극대화하고, 읽기 비용은 머지로 점진적으로 상환하는 구조입니다. 이것이 MergeTree라는 이름의 핵심입니다.</p>
-<h2>백그라운드 머지</h2>
-<h3>머지는 어떻게 동작하는가</h3>
+<h2 id="백그라운드-머지">백그라운드 머지</h2>
+<h3 id="머지는-어떻게-동작하는가">머지는 어떻게 동작하는가</h3>
 <p>ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확인하고, 합칠 Part를 선택합니다. 선택된 Part들의 데이터를 <code class="language-text">ORDER BY</code> 순서로 merge-sort하여 하나의 새 Part를 생성합니다.</p>
 <p><a href="/clickhouse/mergetree-internals/">Part 이름</a> <code class="language-text">all_1_1_0</code>은 <code class="language-text">{파티션}_{min_block}_{max_block}_{level}</code> 형식입니다. 머지가 일어나면 이 이름이 어떻게 바뀌는지 봅시다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 464" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="머지 전 all_1_1_0, all_2_2_0, all_3_3_0 세 개의 level 0 Part가 백그라운드 머지를 거쳐 block 범위 1부터 3까지를 담은 level 1 Part인 all_1_3_1 하나로 합쳐지는 과정.">
@@ -90,7 +90,7 @@
 <p><code class="language-text">level</code>은 원본들의 최댓값에 1을 더한 값이므로, level 0짜리 Part 세 개를 합치면 level 1이 됩니다. Part 이름만 봐도 “이 Part는 block 1부터 3까지를 한 번 머지한 결과”라는 이력을 읽을 수 있습니다.</p>
 <p>머지가 완료되면 원본 Part 세 개는 <strong>inactive</strong> 상태로 전환됩니다. 새 Part가 이후의 모든 쿼리를 서빙하고, 원본은 일정 시간이 지나면 디스크에서 물리적으로 삭제됩니다.</p>
 <p>핵심은 이 과정 전체가 <strong>비차단(non-blocking)</strong>이라는 점입니다. 머지가 진행되는 동안에도 원본 Part들은 쿼리에 정상적으로 응답합니다. 새 Part가 완성되면 메타데이터를 atomic하게 교체하여, 쿼리가 끊김 없이 새 Part로 전환됩니다.</p>
-<h3>파티션 경계와 머지 규칙</h3>
+<h3 id="파티션-경계와-머지-규칙">파티션 경계와 머지 규칙</h3>
 <p>머지에는 절대적인 규칙이 하나 있습니다. <strong>같은 파티션 안의 Part만 머지됩니다.</strong> 서로 다른 파티션의 Part는 절대 합쳐지지 않습니다.</p>
 <p>이 규칙 때문에 파티셔닝이 머지 효율에 직접적인 영향을 줍니다. 파티션을 너무 세밀하게 나누면 (예를 들어 일별 파티션에 INSERT가 시간당 한 번뿐이라면) 각 파티션에 Part가 하나씩만 존재해서 머지할 대상 자체가 없습니다. Part 수가 줄어들지 않고 계속 쌓이기만 합니다.</p>
 <div class="callout callout-warning">
@@ -98,13 +98,13 @@
 <p>파티션 수가 많을수록 머지 효율이 떨어집니다. 파티셔닝은 “오래된 데이터를 통째로 DROP하기 위한 도구”이지, 쿼리 성능을 위한 도구가 아닙니다.</p>
 </div>
 <p>머지 스케줄러가 어떤 Part를 선택하는가도 중요합니다. ClickHouse의 머지 알고리즘은 Part 크기, 개수, 총 재작성 비용 등을 종합적으로 고려하여 최적의 Part 조합을 선택합니다. 일반적으로 작은 Part가 먼저 머지되는 경향이 있는데, 비용 대비 Part 수 감소 효과가 크기 때문입니다. 이미 큰 Part는 머지 비용이 높아 나중에 처리됩니다.</p>
-<h3>Part 생명주기</h3>
+<h3 id="part-생명주기">Part 생명주기</h3>
 <p>Part는 생성부터 삭제까지 세 단계를 거칩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제된다.">
+     role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제됩니다.">
 <style>.ch3c-n{font-size:21px;font-weight:700}.ch3c-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3c-l{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3cArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -140,21 +140,21 @@
 <p><strong>Inactive</strong>: 머지가 완료되어 새 Part로 대체된 상태입니다. <code class="language-text">active = 0</code>이지만 디스크에는 남아 있습니다. 왜 바로 삭제하지 않을까요? 가장 큰 이유는 장애 복구입니다. 머지 직후 서버가 비정상 종료되어 새 Part가 손상되면, inactive 상태의 원본 Part로 복원할 수 있습니다. 또한 머지 직전에 시작된 쿼리가 아직 원본을 읽고 있을 수도 있습니다.</p>
 <p><strong>물리 삭제</strong>: <code class="language-text">old_parts_lifetime</code>(기본 480초, 8분)이 지나면 inactive Part가 디스크에서 완전히 제거됩니다. <code class="language-text">system.parts</code>에서도 사라집니다.</p>
 <p><code class="language-text">system.parts</code>의 <code class="language-text">modification_time</code>은 Part가 생성된 시각, <code class="language-text">remove_time</code>은 inactive로 전환된 시각입니다. 두 시각의 차이가 Part의 active 수명입니다.</p>
-<h3>머지가 디스크에 미치는 영향</h3>
+<h3 id="머지가-디스크에-미치는-영향">머지가 디스크에 미치는 영향</h3>
 <p>머지가 진행되는 동안 원본 Part와 새 Part가 동시에 디스크에 존재합니다. 10GB Part 세 개를 머지하면, 완료 시점에 원본 30GB + 신규 30GB = 총 60GB가 디스크를 차지합니다. 원본이 삭제되기까지 8분간 이 상태가 유지됩니다.</p>
 <p>대규모 테이블에서 여러 머지가 동시에 진행되면 디스크 사용량이 급증할 수 있습니다. 디스크 여유 공간이 부족하면 머지가 실패하고, Part 수가 줄지 않아 읽기 성능이 저하되는 악순환에 빠집니다. <code class="language-text">system.merges</code>에서 진행 중인 머지를 모니터링하는 것이 중요한 이유입니다.</p>
-<h2>뮤테이션: 불변 Part 위의 변경</h2>
-<h3>ALTER TABLE UPDATE / DELETE</h3>
+<h2 id="뮤테이션-불변-part-위의-변경">뮤테이션: 불변 Part 위의 변경</h2>
+<h3 id="alter-table-update-delete">ALTER TABLE UPDATE / DELETE</h3>
 <p>RDB에서 <code class="language-text">UPDATE</code>와 <code class="language-text">DELETE</code>는 가장 기본적인 연산이지만, ClickHouse에서는 <strong>뮤테이션(Mutation)</strong>이라는 특별한 메커니즘으로 처리됩니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- 뮤테이션: Part를 통째로 재작성</span>
 <span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> orders <span class="token keyword">UPDATE</span> price <span class="token operator">=</span> <span class="token number">0</span> <span class="token keyword">WHERE</span> category <span class="token operator">=</span> <span class="token string">'전자제품'</span><span class="token punctuation">;</span>
 <span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> orders <span class="token keyword">DELETE</span> <span class="token keyword">WHERE</span> order_id <span class="token operator">&lt;</span> <span class="token number">100</span><span class="token punctuation">;</span></code></pre></div>
 <p>이 명령이 실행되면 ClickHouse는 조건에 매칭될 수 있는 <strong>모든 Part를 통째로 재작성</strong>합니다. Part 안의 데이터를 처음부터 끝까지 읽으면서 조건에 맞는 행을 수정(또는 제거)한 새 Part를 생성하고, 원본 Part를 inactive로 전환합니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 470" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 428" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환된다.">
+     role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환됩니다.">
 <style>.ch3d-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-n{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-t{font-size:19px;fill:var(--text, #1c1917)}.ch3d-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3d-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3dArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -182,8 +182,6 @@
 <rect x="68" y="348" width="344" height="52" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
 <text x="88" y="381" class="ch3d-n">all_1_3_1</text>
 <text x="392" y="381" text-anchor="end" class="ch3d-s">inactive 전환</text>
-<!-- 캡션 -->
-<text x="240" y="446" text-anchor="middle" class="ch3d-s">1행만 바꿔도 Part 전체가 재작성됩니다</text>
 </svg>
 </div>
 <p>1행만 수정해도 Part 전체(수백만 행)를 재작성합니다. 이것이 ClickHouse에서 뮤테이션이 “무거운 연산”인 이유입니다. 불변 Part를 “수정”하는 유일한 방법이 새 복사본을 만드는 것이기 때문입니다.</p>
@@ -200,7 +198,7 @@
 <span class="token keyword">UPDATE</span> price <span class="token operator">=</span> <span class="token number">0</span>
 <span class="token keyword">WHERE</span> category <span class="token operator">=</span> <span class="token string">'전자제품'</span>
 SETTINGS mutations_sync <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>  <span class="token comment">-- 완료까지 대기</span></code></pre></div>
-<h3>Lightweight DELETE: 더 가벼운 삭제</h3>
+<h3 id="lightweight-delete-더-가벼운-삭제">Lightweight DELETE: 더 가벼운 삭제</h3>
 <p>ALTER TABLE DELETE가 Part를 통째로 재작성한다면, <code class="language-text">DELETE FROM</code>은 훨씬 가볍습니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token comment">-- Lightweight DELETE</span>
 <span class="token keyword">DELETE</span> <span class="token keyword">FROM</span> orders <span class="token keyword">WHERE</span> order_id <span class="token operator">&lt;</span> <span class="token number">100</span><span class="token punctuation">;</span></code></pre></div>
@@ -252,13 +250,13 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 <p>Lightweight DELETE도 내부적으로는 뮤테이션의 일종이고, 새 Part를 생성합니다. 다만 Wide Part에서는 <code class="language-text">_row_exists</code> 컬럼만 실제로 쓰고 나머지는 hardlink이므로 I/O가 최소화됩니다. Compact Part(기본 10MiB 미만)에서는 모든 컬럼이 하나의 파일에 있어서 전체 재작성이 발생합니다.</p>
 </div>
 <p>대량 삭제가 필요한 경우에는 두 방법 모두 비효율적입니다. 오래된 데이터를 주기적으로 정리하는 패턴이라면, 파티션 단위로 <code class="language-text">ALTER TABLE DROP PARTITION</code>을 사용하는 것이 가장 빠릅니다.</p>
-<h3>뮤테이션의 한계와 올바른 사용법</h3>
+<h3 id="뮤테이션의-한계와-올바른-사용법">뮤테이션의 한계와 올바른 사용법</h3>
 <p>RDB에서 UPDATE는 일상적인 연산입니다. 주문 상태를 변경하고, 사용자 프로필을 수정하고, 재고를 차감합니다. ClickHouse에서 뮤테이션은 그런 용도가 아닙니다. <strong>잘못 들어간 데이터를 일괄 수정하거나, 규정 준수를 위해 개인정보를 삭제하는 등 비상 조치에 가깝습니다.</strong></p>
 <p>만약 “사용자가 주문을 취소하면 상태를 변경해야 한다”거나 “같은 키의 데이터가 중복으로 들어올 수 있다”는 요구사항이 있다면, 뮤테이션으로 해결하려 하면 안 됩니다. 이것은 스키마 설계의 문제입니다.</p>
 <p>기본 MergeTree는 머지할 때 Part의 데이터를 그대로 합칩니다. 중복을 제거하지도, 값을 집계하지도 않습니다. 이 한계를 해결하기 위해 설계된 것이 <strong>MergeTree 계열 엔진</strong>들입니다. ReplacingMergeTree는 같은 키의 중복을 머지 시점에 제거하고, CollapsingMergeTree는 상태 변경을 +1/-1 쌍으로 상쇄합니다. 다음 글에서 이 엔진들이 머지 과정에서 어떤 추가 로직을 수행하는지 다룹니다.</p>
-<h2>실험: Docker로 직접 확인하기</h2>
+<h2 id="실험-docker로-직접-확인하기">실험: Docker로 직접 확인하기</h2>
 <p><a href="/clickhouse/mergetree-internals/">이전 글</a>의 Docker 환경(<code class="language-text">ch-test</code> 컨테이너)을 그대로 사용합니다. 컨테이너가 없다면 <a href="/clickhouse/why-clickhouse/">첫 번째 글</a>의 Docker 실험 섹션을 참고하세요.</p>
-<h3>머지 과정 관찰</h3>
+<h3 id="머지-과정-관찰">머지 과정 관찰</h3>
 <p>머지를 직접 관찰하려면 Part가 여러 개 존재해야 합니다. 기존 <code class="language-text">orders</code> 테이블을 삭제하고, 세 번 나눠서 INSERT합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> <span class="token keyword">IF</span> <span class="token keyword">EXISTS</span> orders<span class="token punctuation">;</span>
 
@@ -336,7 +334,7 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 │ orders │ all_1_3_1        │     0.45 │    1.23 │         3 │ 111.23 MiB │           0 │
 └────────┴──────────────────┴──────────┴─────────┴───────────┴────────────┴─────────────┘</code></pre></div>
 <p><code class="language-text">progress</code>는 0~1 사이의 값(여기서는 45% 진행), <code class="language-text">num_parts</code>는 머지에 참여하는 Part 수, <code class="language-text">is_mutation</code>은 뮤테이션 여부(0이면 일반 머지)입니다. 머지가 빠르게 완료되면 이 쿼리가 빈 결과를 반환할 수도 있습니다.</p>
-<h3>ALTER TABLE 뮤테이션 실험</h3>
+<h3 id="alter-table-뮤테이션-실험">ALTER TABLE 뮤테이션 실험</h3>
 <p>머지가 완료된 상태에서 뮤테이션을 실행해봅시다. <code class="language-text">전자제품</code> 카테고리의 price를 전부 0으로 변경합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> orders
 <span class="token keyword">UPDATE</span> price <span class="token operator">=</span> <span class="token number">0</span>
@@ -373,7 +371,7 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 │ 1250000 │         0 │
 └─────────┴───────────┘</code></pre></div>
 <p><code class="language-text">avg_price</code>가 0입니다. 1,000만 행 전체 Part를 재작성해서 <code class="language-text">전자제품</code> 행의 price만 0으로 바꾼 것입니다.</p>
-<h3>Lightweight DELETE 실험</h3>
+<h3 id="lightweight-delete-실험">Lightweight DELETE 실험</h3>
 <p>이번에는 Lightweight DELETE를 사용해봅시다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">DELETE</span> <span class="token keyword">FROM</span> orders <span class="token keyword">WHERE</span> order_id <span class="token operator">&lt;</span> <span class="token number">100</span><span class="token punctuation">;</span></code></pre></div>
 <p>이 명령은 거의 즉시 반환됩니다. 전체 컬럼 파일을 재작성하지 않기 때문입니다. <code class="language-text">system.mutations</code>를 확인하면 내부적으로 어떤 연산이 실행되었는지 볼 수 있습니다.</p>
@@ -416,8 +414,8 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 └───────────────┴──────────┴────────────┘</code></pre></div>
 <p><code class="language-text">rows</code>가 9,999,900으로 100만큼 줄었고, Part 크기도 소폭 감소했습니다. 삭제된 행의 데이터가 머지를 통해 물리적으로 정리된 것입니다.</p>
 <p>핵심 차이를 정리하면: 앞서 실행한 ALTER TABLE UPDATE는 Part 재작성까지 수 초가 걸렸지만, DELETE FROM은 즉시 반환되었습니다. ALTER TABLE DELETE는 뮤테이션이 완료되면 물리적으로 깨끗한 Part를 남기고, Lightweight DELETE는 다음 머지까지 마스킹 상태로 남깁니다. 용도에 맞게 선택해야 합니다.</p>
-<h2>실전에서는</h2>
-<h3>머지 모니터링</h3>
+<h2 id="실전에서는">실전에서는</h2>
+<h3 id="머지-모니터링">머지 모니터링</h3>
 <p><code class="language-text">system.merges</code>에서 현재 진행 중인 머지를 추적합니다. <code class="language-text">progress</code>가 장시간 변하지 않는다면 디스크 I/O 병목이나 리소스 경합을 의심해야 합니다.</p>
 <p>Part 수는 테이블 건강도의 핵심 지표입니다. active Part가 지속적으로 증가한다면, INSERT 빈도에 비해 머지가 따라가지 못하는 상황입니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
@@ -429,7 +427,7 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 <span class="token keyword">HAVING</span> active_parts <span class="token operator">></span> <span class="token number">50</span>
 <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> active_parts <span class="token keyword">DESC</span><span class="token punctuation">;</span></code></pre></div>
 <p>Part가 수백 개 이상 쌓이면 결국 “Too many parts” 에러가 발생합니다.</p>
-<h3>뮤테이션 모니터링</h3>
+<h3 id="뮤테이션-모니터링">뮤테이션 모니터링</h3>
 <p>실행 중이거나 실패한 뮤테이션을 확인합니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
     <span class="token keyword">table</span><span class="token punctuation">,</span>
@@ -444,10 +442,10 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 <p><code class="language-text">latest_fail_reason</code>이 비어 있지 않다면 뮤테이션이 실패한 것입니다. 멈춘 뮤테이션은 <code class="language-text">KILL MUTATION</code>으로 중단할 수 있습니다.</p>
 <div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">KILL</span> MUTATION <span class="token keyword">WHERE</span> mutation_id <span class="token operator">=</span> <span class="token string">'mutation_4.txt'</span><span class="token punctuation">;</span></code></pre></div>
 <p>뮤테이션은 제출된 순서대로 실행됩니다. 앞선 뮤테이션이 멈추면 뒤의 뮤테이션도 전부 대기합니다. 운영 환경에서 뮤테이션을 실행했다면 반드시 <code class="language-text">system.mutations</code>를 확인해야 합니다.</p>
-<h3>OPTIMIZE TABLE의 함정</h3>
+<h3 id="optimize-table의-함정">OPTIMIZE TABLE의 함정</h3>
 <p><code class="language-text">OPTIMIZE TABLE orders FINAL</code>은 각 파티션 내의 모든 Part를 하나로 강제 머지합니다. 실험에서는 유용하지만, <strong>프로덕션에서 정기적으로 실행하면 안 됩니다</strong>. 수백 GB 테이블에서 FINAL을 실행하면 전체 데이터를 재작성하는 것과 같습니다. 디스크 I/O와 CPU를 장시간 점유하고, 머지가 진행되는 동안 디스크 사용량이 2배로 뛰어오릅니다.</p>
 <p>백그라운드 머지 스케줄러를 신뢰하세요. ClickHouse는 자체적으로 최적의 시점에 최적의 Part를 선택해서 머지합니다. <code class="language-text">OPTIMIZE TABLE</code>(FINAL 없이)을 실행하면 스케줄러에 “지금 머지를 시도해봐”라는 힌트를 줄 수 있지만, 이마저도 일상적으로 쓸 필요는 없습니다.</p>
-<h3>DELETE 전략 선택 가이드</h3>
+<h3 id="delete-전략-선택-가이드">DELETE 전략 선택 가이드</h3>
 <table>
 <thead>
 <tr>
@@ -485,11 +483,11 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
 </tbody>
 </table>
 <p>가장 빠른 것은 파티션 단위 DROP이고, 가장 무거운 것은 뮤테이션입니다. 삭제/수정 요구사항이 있다면, 먼저 파티셔닝이나 테이블 엔진으로 해결할 수 있는지 검토하는 것이 올바른 순서입니다.</p>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>불변 Part는 MergeTree의 쓰기 성능을 보장하는 핵심 설계이고, 그로 인한 읽기 비용은 백그라운드 머지가 상환합니다. 뮤테이션은 불변성 위에서 변경을 구현하는 비상 도구이지, RDB의 UPDATE처럼 일상적으로 쓸 연산이 아닙니다.</p>
 <p>기본 MergeTree의 머지는 Part를 합칠 뿐, 중복을 제거하거나 값을 집계하지 않습니다. 다음 글에서는 머지 과정에 추가 로직을 끼워 넣는 네 가지 엔진(ReplacingMergeTree, SummingMergeTree, AggregatingMergeTree, CollapsingMergeTree)이 각각 어떤 문제를 해결하는지 다룹니다.</p>
 <hr>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/mergetree" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: MergeTree Table Engine</a></li>
 <li><a href="https://clickhouse.com/docs/sql-reference/statements/alter/update" target="_blank" rel="noopener noreferrer">ClickHouse 공식 문서: ALTER TABLE UPDATE</a></li>
@@ -517,6 +515,6 @@ SETTINGS mutations_sync <span class="token operator">=</span> <span class="token
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

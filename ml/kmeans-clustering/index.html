@@ -15,7 +15,7 @@
 </ul>
 <p>이 중에서 가장 직관적이고 널리 쓰이는 알고리즘이 <strong>K-Means 클러스터링</strong>이다. Phase 8의 첫 번째 주제로 시작한다.</p>
 <hr>
-<h2>클러스터링이란?</h2>
+<h2 id="클러스터링이란">클러스터링이란?</h2>
 <p>클러스터링(Clustering)은 <strong>비슷한 데이터끼리 그룹으로 묶는 작업</strong>이다. 여기서 “비슷하다”의 기준은 보통 거리(distance)다.</p>
 <p><a href="/ml/knn/">KNN</a>을 기억하는가? KNN도 거리를 기반으로 가까운 이웃을 찾았다. 하지만 KNN은 지도학습이다 — 이웃의 <strong>레이블</strong>을 보고 다수결로 분류했다. 클러스터링은 레이블이 없다. 순수하게 데이터 포인트 간의 거리만 보고, 가까운 것끼리 같은 그룹에 넣는다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">지도학습 (KNN):
@@ -59,9 +59,9 @@
 </table>
 <p>이 글에서는 K-Means를 깊이 다룬다. 가장 기본이면서, 실무에서도 가장 자주 쓰인다.</p>
 <hr>
-<h2>K-Means 알고리즘: 단계별 동작 원리</h2>
+<h2 id="k-means-알고리즘-단계별-동작-원리">K-Means 알고리즘: 단계별 동작 원리</h2>
 <p>K-Means의 아이디어는 놀라울 정도로 단순하다. 데이터를 <strong>K개의 클러스터</strong>로 나누되, 각 클러스터의 <strong>중심점(centroid)</strong> 과 소속 데이터 간의 거리를 최소화한다.</p>
-<h3>Step 1: 초기화 — K개의 중심점 배치</h3>
+<h3 id="step-1-초기화-k개의-중심점-배치">Step 1: 초기화 — K개의 중심점 배치</h3>
 <p>K개의 초기 중심점을 선택한다. 가장 단순한 방법은 데이터 포인트 중에서 K개를 랜덤으로 고르는 것이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K = 3으로 설정
 데이터 중에서 랜덤으로 3개를 초기 중심점으로 선택
@@ -75,7 +75,7 @@
               ●  ●
                  ■
               ●</code></pre></div>
-<h3>Step 2: 할당 — 각 데이터를 가장 가까운 중심점에 배정</h3>
+<h3 id="step-2-할당-각-데이터를-가장-가까운-중심점에-배정">Step 2: 할당 — 각 데이터를 가장 가까운 중심점에 배정</h3>
 <p>모든 데이터 포인트에 대해 K개 중심점과의 거리를 계산한다. 가장 가까운 중심점의 클러스터에 해당 데이터를 할당한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">각 데이터를 가장 가까운 중심점에 할당
 
@@ -88,7 +88,7 @@
               ◆  ◆
                  ■
               ◆</code></pre></div>
-<h3>Step 3: 업데이트 — 중심점을 클러스터의 평균 위치로 이동</h3>
+<h3 id="step-3-업데이트-중심점을-클러스터의-평균-위치로-이동">Step 3: 업데이트 — 중심점을 클러스터의 평균 위치로 이동</h3>
 <p>각 클러스터에 속한 데이터들의 평균 좌표를 계산해서, 중심점을 그 위치로 옮긴다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">중심점을 각 클러스터 평균 위치로 이동
 
@@ -101,7 +101,7 @@
               ◆  ◆
             ■  ← 클러스터 C 소속 데이터들의 평균 좌표
               ◆</code></pre></div>
-<h3>Step 4: 반복 — 할당과 업데이트를 수렴할 때까지</h3>
+<h3 id="step-4-반복-할당과-업데이트를-수렴할-때까지">Step 4: 반복 — 할당과 업데이트를 수렴할 때까지</h3>
 <p>Step 2(할당)와 Step 3(업데이트)를 반복한다. 중심점이 더 이상 움직이지 않거나, 할당이 변하지 않으면 수렴한 것이다. 알고리즘이 종료된다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">전체 흐름:
 
@@ -121,7 +121,7 @@
   └─── 종료 (수렴)</code></pre></div>
 <p>보통 10~300회 반복이면 수렴한다. 데이터가 아주 크지 않다면 매우 빠르다.</p>
 <hr>
-<h2>목적 함수: WCSS (Inertia)</h2>
+<h2 id="목적-함수-wcss-inertia">목적 함수: WCSS (Inertia)</h2>
 <p>K-Means가 최소화하려는 것은 <strong>Within-Cluster Sum of Squares(WCSS)</strong>, sklearn에서는 <strong>inertia</strong>라고 부르는 값이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">WCSS = Σₖ₌₁ᴷ Σ(xᵢ ∈ Cₖ) ‖xᵢ - μₖ‖²
 
@@ -131,7 +131,7 @@ Cₖ: k번째 클러스터
 <p>직관적으로 이해하면: 각 클러스터 안에서 데이터들이 중심점으로부터 <strong>얼마나 퍼져 있는지</strong>를 합산한 것이다. WCSS가 작을수록 클러스터 내부가 촘촘하다 — 좋은 클러스터링이다.</p>
 <p>K-Means는 이 WCSS를 줄이는 방향으로 중심점을 반복 이동한다. 하지만 주의할 점이 있다. K-Means는 <strong>전역 최적해(global optimum)를 보장하지 않는다</strong>. 지역 최적해(local optimum)에 빠질 수 있다. 이것이 초기화가 중요한 이유다.</p>
 <hr>
-<h2>K-Means++ 초기화: 똑똑한 시작점 선택</h2>
+<h2 id="k-means-초기화-똑똑한-시작점-선택">K-Means++ 초기화: 똑똑한 시작점 선택</h2>
 <p>순수 랜덤 초기화의 문제를 보자.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">나쁜 초기화 예시:
   ■ ■ ■ ← 세 중심점이 모두 왼쪽에 몰려 있음
@@ -143,7 +143,7 @@ Cₖ: k번째 클러스터
   → 오른쪽 클러스터를 제대로 분리하지 못함
   → 지역 최적해에 빠져서 나쁜 결과</code></pre></div>
 <p>운이 나쁘면 초기 중심점이 한쪽에 몰려서, 수렴해도 품질이 나쁜 클러스터가 만들어진다. K-Means++는 이 문제를 해결하기 위해 2007년 Arthur와 Vassilvitskii가 제안한 초기화 방법이다.</p>
-<h3>K-Means++ 알고리즘</h3>
+<h3 id="k-means-알고리즘">K-Means++ 알고리즘</h3>
 <ol>
 <li>첫 번째 중심점: 데이터에서 랜덤으로 하나 선택</li>
 <li>두 번째 중심점부터: <strong>이미 선택된 중심점과의 거리에 비례하는 확률</strong>로 선택</li>
@@ -171,9 +171,9 @@ Step 4: 세 번째도 같은 방식으로
 <p>핵심은 <strong>중심점끼리 서로 멀리 떨어지도록 유도</strong>한다는 것이다. 이렇게 하면 각 중심점이 서로 다른 클러스터를 대표할 가능성이 높아진다.</p>
 <p>sklearn의 <code class="language-text">KMeans</code>는 기본적으로 K-Means++ 초기화를 사용한다 (<code class="language-text">init='k-means++'</code>). 또한 <code class="language-text">n_init=10</code>이 기본값이어서, 10번 다른 초기화로 실행한 뒤 WCSS가 가장 낮은 결과를 반환한다. 지역 최적해 문제를 통계적으로 완화하는 전략이다.</p>
 <hr>
-<h2>K는 어떻게 정할까?</h2>
+<h2 id="k는-어떻게-정할까">K는 어떻게 정할까?</h2>
 <p>K-Means의 가장 큰 약점은 <strong>K를 사전에 지정해야 한다</strong>는 것이다. 데이터에 몇 개의 군집이 있는지 모르는 상황에서, K를 어떻게 결정할까?</p>
-<h3>방법 1: Elbow Method</h3>
+<h3 id="방법-1-elbow-method">방법 1: Elbow Method</h3>
 <p>K를 1부터 늘려가면서 WCSS(inertia)를 계산한다. K가 커질수록 WCSS는 당연히 줄어든다 — 극단적으로 K = 데이터 수라면 WCSS = 0이 된다. 핵심은 <strong>WCSS가 급격히 감소하다가 완만해지는 지점</strong>을 찾는 것이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">WCSS
  │
@@ -207,7 +207,7 @@ plt<span class="token punctuation">.</span>title<span class="token punctuation">
 plt<span class="token punctuation">.</span>grid<span class="token punctuation">(</span><span class="token boolean">True</span><span class="token punctuation">,</span> alpha<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">)</span>
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <p>Elbow Method의 한계는 <strong>팔꿈치가 뚜렷하지 않을 때가 있다</strong>는 것이다. WCSS가 서서히 감소하면 어디가 “꺾이는 점”인지 주관적 판단이 된다.</p>
-<h3>방법 2: Silhouette Score</h3>
+<h3 id="방법-2-silhouette-score">방법 2: Silhouette Score</h3>
 <p>실루엣 점수는 Elbow보다 더 정량적인 기준을 제공한다. 각 데이터 포인트에 대해 두 가지를 계산한다:</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">a(i) = 같은 클러스터 내 다른 데이터들과의 평균 거리 (응집도)
 b(i) = 가장 가까운 다른 클러스터의 데이터들과의 평균 거리 (분리도)
@@ -255,7 +255,7 @@ plt<span class="token punctuation">.</span>title<span class="token punctuation">
 plt<span class="token punctuation">.</span>grid<span class="token punctuation">(</span><span class="token boolean">True</span><span class="token punctuation">,</span> alpha<span class="token operator">=</span><span class="token number">0.3</span><span class="token punctuation">)</span>
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>실루엣 다이어그램: 클러스터 품질을 한눈에</h2>
+<h2 id="실루엣-다이어그램-클러스터-품질을-한눈에">실루엣 다이어그램: 클러스터 품질을 한눈에</h2>
 <p>평균 Silhouette Score는 전체적인 경향만 보여준다. <strong>실루엣 다이어그램</strong>은 각 클러스터의 품질을 개별적으로 시각화한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">Silhouette Diagram (K=3)
 
@@ -311,9 +311,9 @@ plt<span class="token punctuation">.</span>title<span class="token punctuation">
 plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre></div>
 <p>실루엣 다이어그램은 Elbow Method보다 풍부한 정보를 준다. K=3일 때 평균 점수가 높더라도, 특정 클러스터 하나가 심하게 나쁘면 K=4로 쪼개는 게 나을 수 있다. 다이어그램을 보면 이런 판단이 가능하다.</p>
 <hr>
-<h2>K-Means의 한계</h2>
+<h2 id="k-means의-한계">K-Means의 한계</h2>
 <p>K-Means는 빠르고 직관적이지만, 명확한 한계가 있다.</p>
-<h3>1. 구형(Spherical) 클러스터만 잘 잡는다</h3>
+<h3 id="1-구형spherical-클러스터만-잘-잡는다">1. 구형(Spherical) 클러스터만 잘 잡는다</h3>
 <p>K-Means는 중심점과의 유클리드 거리를 기준으로 할당하기 때문에, 본질적으로 <strong>구형(등방적)</strong> 클러스터를 가정한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">K-Means가 잘 작동하는 경우:        K-Means가 실패하는 경우:
 
@@ -327,9 +327,9 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
 
   (구형 클러스터 → OK)              (초승달/고리 형태 → 실패)</code></pre></div>
 <p>비구형 클러스터에는 DBSCAN이나 Spectral Clustering 같은 알고리즘이 더 적합하다.</p>
-<h3>2. K를 미리 지정해야 한다</h3>
+<h3 id="2-k를-미리-지정해야-한다">2. K를 미리 지정해야 한다</h3>
 <p>클러스터 수를 모르는 상태에서 K를 정해야 한다. Elbow와 Silhouette가 가이드를 주지만, 결국 사람의 판단이 개입한다. DBSCAN처럼 K가 필요 없는 알고리즘도 있다.</p>
-<h3>3. 이상치에 민감하다</h3>
+<h3 id="3-이상치에-민감하다">3. 이상치에 민감하다</h3>
 <p>이상치(outlier)가 하나라도 있으면 중심점이 크게 끌려간다. 평균(mean)을 사용하기 때문이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">정상적인 상황:           이상치가 있는 상황:
 
@@ -339,12 +339,12 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
   (중심점 정확)                              ● ← 이상치
                              ■ ← 중심점이 끌려감</code></pre></div>
 <p>이상치에 강건한 변형으로는 K-Medoids(PAM) 알고리즘이 있다. 중심점 대신 <strong>실제 데이터 포인트(medoid)</strong> 를 중심으로 사용해서, 이상치에 덜 민감하다.</p>
-<h3>4. 클러스터 크기와 밀도가 다르면 어렵다</h3>
+<h3 id="4-클러스터-크기와-밀도가-다르면-어렵다">4. 클러스터 크기와 밀도가 다르면 어렵다</h3>
 <p>K-Means는 각 데이터를 가장 가까운 중심점에 할당하기 때문에, 크기나 밀도가 크게 다른 클러스터를 잘 분리하지 못한다. 큰 클러스터의 중심점이 작은 클러스터 쪽 데이터까지 “빨아들이는” 현상이 생긴다.</p>
-<h3>5. 피처 스케일링이 필수다</h3>
+<h3 id="5-피처-스케일링이-필수다">5. 피처 스케일링이 필수다</h3>
 <p>K-Means는 유클리드 거리를 사용한다. <a href="/ml/feature-scaling/">피처 스케일링 글</a>에서 배웠듯이, 스케일이 다른 피처가 섞이면 큰 스케일의 피처가 거리 계산을 지배한다. K-Means 전에 반드시 StandardScaler나 MinMaxScaler를 적용해야 한다.</p>
 <hr>
-<h2>Mini-Batch K-Means: 대규모 데이터를 위한 변형</h2>
+<h2 id="mini-batch-k-means-대규모-데이터를-위한-변형">Mini-Batch K-Means: 대규모 데이터를 위한 변형</h2>
 <p>데이터가 수십만~수백만 건이면 전체 데이터에 대해 매 반복마다 거리를 계산하는 것은 비용이 크다. Mini-Batch K-Means는 <strong>매 반복에서 전체가 아닌 랜덤 미니 배치(일부 샘플)만 사용</strong>해서 중심점을 업데이트한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">일반 K-Means:
   매 반복: 전체 N개 데이터로 중심점 업데이트
@@ -364,7 +364,7 @@ mbkm <span class="token operator">=</span> MiniBatchKMeans<span class="token pun
 <span class="token punctuation">)</span>
 mbkm<span class="token punctuation">.</span>fit<span class="token punctuation">(</span>X<span class="token punctuation">)</span></code></pre></div>
 <hr>
-<h2>sklearn으로 K-Means 전체 파이프라인</h2>
+<h2 id="sklearn으로-k-means-전체-파이프라인">sklearn으로 K-Means 전체 파이프라인</h2>
 <p>이론을 코드로 엮어 보자. 인공 데이터를 생성하고, K를 선택하고, 클러스터링 결과를 시각화하는 전체 과정이다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
@@ -483,7 +483,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
 </tbody>
 </table>
 <hr>
-<h2>실전 예제: 고객 세분화 (Customer Segmentation)</h2>
+<h2 id="실전-예제-고객-세분화-customer-segmentation">실전 예제: 고객 세분화 (Customer Segmentation)</h2>
 <p>실무에서 K-Means가 가장 많이 쓰이는 분야 중 하나가 고객 세분화다. 구매 데이터를 기반으로 비슷한 행동 패턴의 고객끼리 묶어서, 그룹별 맞춤 전략을 수립한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>cluster <span class="token keyword">import</span> KMeans
@@ -583,7 +583,7 @@ cluster
 </table>
 <p>이것이 RFM(Recency, Frequency, Monetary) 분석이다. 실무에서 마케팅 데이터 분석의 가장 기본적인 프레임워크 중 하나이고, K-Means가 그 핵심 엔진이다.</p>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <table>
 <thead>
 <tr>
@@ -645,6 +645,6 @@ cluster
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

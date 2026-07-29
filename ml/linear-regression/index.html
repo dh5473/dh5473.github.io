@@ -6,7 +6,7 @@
 <p><a href="/ml/overview/">지난 글에서 살펴봤듯이</a> 이 문제는 지도학습(Supervised Learning) 중 <strong>회귀(Regression)</strong> 문제다. 정답이 있는 데이터로 모델을 학습시켜, 새로운 입력에 대한 연속적인 출력값을 예측한다.</p>
 <p>이 문제에 대한 가장 단순하고 직관적인 답이 <strong>선형 회귀(Linear Regression)</strong> 다. 단순하다고 얕볼 수 없다. 선형 회귀 안에는 ML의 핵심 개념들 — 가설 함수, 파라미터 학습, 오차 측정, 최적화 — 이 모두 녹아 있다. 복잡한 신경망도 결국 이 원리 위에서 동작한다.</p>
 <hr>
-<h2>선형 회귀란 무엇인가</h2>
+<h2 id="선형-회귀란-무엇인가">선형 회귀란 무엇인가</h2>
 <p>선형 회귀의 아이디어는 단순하다. <strong>데이터에 가장 잘 맞는 직선(line)을 찾는 것</strong>이다.</p>
 <p>면적(x)과 집값(y) 데이터가 있을 때, 이 점들 사이를 가장 잘 관통하는 직선을 그으면 새로운 면적에 대한 가격을 예측할 수 있다.</p>
 <p><span
@@ -69,7 +69,7 @@
 <p>ML에서는 이 수식을 <strong>가설 함수(Hypothesis Function)</strong> 라고 부른다. 처음에는 낯선 용어인데, 결국 “데이터를 이 수식으로 설명할 수 있다”는 가설이라는 뜻이다.</p>
 <p>그럼 <strong>학습(Learning)</strong> 이란 무엇인가? w와 b를 데이터에 맞게 조정하는 과정이다. 처음에는 아무 직선이나 그어놓고, 데이터를 보며 점점 더 잘 맞는 직선으로 수정해나간다. 이게 모델이 “학습”한다는 말의 실제 의미다.</p>
 <hr>
-<h2>가설 함수를 코드로 표현하면</h2>
+<h2 id="가설-함수를-코드로-표현하면">가설 함수를 코드로 표현하면</h2>
 <p>scikit-learn으로 선형 회귀를 학습시키는 건 단 몇 줄이면 된다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LinearRegression
@@ -90,7 +90,7 @@ predicted <span class="token operator">=</span> model<span class="token punctuat
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"100m² 예측 가격: </span><span class="token interpolation"><span class="token punctuation">{</span>predicted<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">억"</span></span><span class="token punctuation">)</span>  <span class="token comment"># 3.72억</span></code></pre></div>
 <p><code class="language-text">predict()</code>가 내부적으로 하는 일은 단순하다. <code class="language-text">y = 0.0380 × 100 + (-0.0818) = 3.72</code>를 계산하는 것이다.</p>
 <hr>
-<h2>좋은 직선을 어떻게 고를까 — 잔차(Residual)</h2>
+<h2 id="좋은-직선을-어떻게-고를까-잔차residual">좋은 직선을 어떻게 고를까 — 잔차(Residual)</h2>
 <p>잠깐, 생각해보면 직선을 “데이터에 가장 잘 맞게” 그린다는 게 정확히 무슨 기준일까? 어떤 직선이 더 좋은 직선인가?</p>
 <p>기준은 <strong>잔차(Residual)</strong> 다. 잔차는 실제값과 예측값의 차이다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">잔차 = 실제값(y) - 예측값(ŷ)</code></pre></div>
@@ -167,7 +167,7 @@ residuals <span class="token operator">=</span> price <span class="token operato
   잔차를 단순히 합치면 양수와 음수가 상쇄되어 오차가 없는 것처럼 보일 수 있다. 그래서 실제로는 잔차를 <strong>제곱</strong>해서 더하는 잔차 제곱합(RSS)을 최소화한다. 이게 바로 다음 글에서 다룰 <strong>비용 함수(Cost Function)</strong>다.
 </div>
 <hr>
-<h2>최적 파라미터 찾기 — 정규 방정식</h2>
+<h2 id="최적-파라미터-찾기-정규-방정식">최적 파라미터 찾기 — 정규 방정식</h2>
 <p>잔차를 최소화하는 w와 b를 어떻게 구할까?</p>
 <p>수학적으로 이 문제의 해(解)가 존재한다. <strong>정규 방정식(Normal Equation)</strong> 이라 불리는 공식인데, 주어진 데이터에 대해 잔차 제곱합을 가장 작게 만드는 w를 직접 계산한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">w = (XᵀX)⁻¹ Xᵀy</code></pre></div>
@@ -186,7 +186,7 @@ w <span class="token operator">=</span> np<span class="token punctuation">.</spa
   정규 방정식은 특성 수(p)가 많아질수록 행렬 역행렬 계산이 O(p³)으로 느려진다. 특성이 수만 개 이상이면 정규 방정식보다 <strong>경사하강법(Gradient Descent)</strong>이 훨씬 효율적이다. 이후 글에서 자세히 다룬다.
 </div>
 <hr>
-<h2>실전 예제: California Housing 데이터</h2>
+<h2 id="실전-예제-california-housing-데이터">실전 예제: California Housing 데이터</h2>
 <p>간단한 예제를 넘어서, sklearn에 내장된 캘리포니아 주택 데이터로 end-to-end 예제를 만들어보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> fetch_california_housing
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split
@@ -228,7 +228,7 @@ y_pred <span class="token operator">=</span> model<span class="token punctuation
   </ul>
 </div>
 <hr>
-<h2>선형 회귀의 4가지 가정</h2>
+<h2 id="선형-회귀의-4가지-가정">선형 회귀의 4가지 가정</h2>
 <p>선형 회귀는 강력하지만, 데이터가 특정 조건을 만족할 때 잘 동작한다. 이 조건을 모르고 쓰다가 황당한 결과를 얻는 경우가 많다.</p>
 <table>
 <thead>
@@ -281,11 +281,11 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
   실전에서는 가정을 완벽히 만족하는 데이터가 거의 없다. 가정 위반이 심하면 변수 변환(로그 변환 등)이나 다른 모델을 고려해야 한다. 하지만 가정 위반 여부를 <strong>확인하는 습관</strong> 자체가 중요하다. 잔차 플롯은 항상 그려보자.
 </div>
 <hr>
-<h2>흔한 실수와 한계</h2>
-<h3>비선형 데이터에 억지로 직선 끼워 맞추기</h3>
+<h2 id="흔한-실수와-한계">흔한 실수와 한계</h2>
+<h3 id="비선형-데이터에-억지로-직선-끼워-맞추기">비선형 데이터에 억지로 직선 끼워 맞추기</h3>
 <p>가장 많이 하는 실수다. 실제 데이터가 곡선 패턴을 보이는데 선형 회귀를 적용하면, 아무리 학습해도 잘 맞지 않는다. 잔차 플롯에서 U자 또는 역U자 패턴이 보이면 선형 가정이 맞지 않는다는 신호다.</p>
 <p>이 경우 다항 회귀(Polynomial Regression)를 쓰거나 변수를 로그 변환하는 방법을 고려한다.</p>
-<h3>이상치(Outlier) 1개가 직선을 망친다</h3>
+<h3 id="이상치outlier-1개가-직선을-망친다">이상치(Outlier) 1개가 직선을 망친다</h3>
 <p>선형 회귀는 이상치에 매우 민감하다. 잔차를 제곱해서 최소화하기 때문에, 극단적인 값 하나가 전체 직선을 그쪽으로 끌어당긴다.</p>
 <p><span
       class="gatsby-resp-image-wrapper"
@@ -335,13 +335,13 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
     </span></p>
 <p align="center" style="color: #888; font-size: 13px;"><em>빨간 별이 이상치 1개. 이상치 하나만으로 회귀 직선 전체가 크게 왜곡된다.</em></p>
 <p><a href="/ml/workflow/">머신러닝 프로젝트 워크플로우</a>에서 EDA를 강조하는 이유 중 하나가 바로 이것이다. 데이터를 먼저 시각화해서 이상치를 파악하는 게 모델을 학습하기 전에 꼭 거쳐야 하는 단계다.</p>
-<h3>훈련 데이터 성능만 보는 착각</h3>
+<h3 id="훈련-데이터-성능만-보는-착각">훈련 데이터 성능만 보는 착각</h3>
 <p><code class="language-text">model.fit(X_train, y_train)</code> 후 <code class="language-text">model.score(X_train, y_train)</code>을 보면 실제보다 좋게 나올 수 있다. 반드시 테스트 데이터(<code class="language-text">X_test, y_test</code>)로 성능을 검증해야 한다. 항상 <code class="language-text">train_test_split()</code>을 사용하고, <strong>테스트 성능 기준</strong>으로 모델을 평가하자.</p>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>선형 회귀는 단순하지만, 그 단순함이 강점이다. 어떤 특성이 예측에 얼마나 기여하는지 w 값만 봐도 직관적으로 파악할 수 있다. 블랙박스인 복잡한 모델들과 달리, 해석 가능성(interpretability)이 높다.</p>
 <p>다음 글에서는 “잔차를 최소화한다”는 말을 수학적으로 정확하게 정의하는 <strong><a href="/ml/cost-function/">비용 함수(Cost Function)</a></strong> 를 다룬다. 왜 잔차를 제곱하는지, 왜 평균을 취하는지, 이 이유를 이해하고 나면 이후 경사하강법과 신경망으로 이어지는 흐름이 자연스럽게 보이기 시작한다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html" target="_blank" rel="noopener noreferrer">Scikit-learn LinearRegression Documentation</a></li>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization (Coursera)</a></li>
@@ -369,6 +369,6 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

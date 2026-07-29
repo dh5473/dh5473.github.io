@@ -6,7 +6,7 @@
 <br>
 <p>이 “도로의 폭”을 <strong>마진(Margin)</strong> 이라 부르고, 마진이 최대인 경계를 찾는 것이 SVM의 핵심이다. 직관적으로도 도로가 넓을수록 새 데이터가 들어왔을 때 올바른 쪽에 떨어질 가능성이 높다. 이 글에서는 최대 마진의 기하학적 의미부터 시작해, 소프트 마진(C 파라미터), 커널 트릭(RBF), 그리고 sklearn 실전 파이프라인까지 다룬다.</p>
 <hr>
-<h2>최대 마진 분류기</h2>
+<h2 id="최대-마진-분류기">최대 마진 분류기</h2>
 <p>두 클래스를 분리하는 직선(2차원) 또는 초평면(고차원)은 무수히 많다. 아래 그림에서 A, B, C 모두 두 클래스를 완벽히 구분한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">        클래스 +              클래스 -
         ●  ●                  ○  ○
@@ -74,7 +74,7 @@
   마진이 넓다는 건, 결정 경계가 양쪽 클래스로부터 충분히 떨어져 있다는 뜻이다. 새 데이터에 약간의 노이즈가 섞여 있어도 올바른 쪽에 떨어질 여유가 있다. 통계 학습 이론에서는 이를 <strong>구조적 위험 최소화(Structural Risk Minimization)</strong>라고 부른다 — 마진을 최대화하면 VC 차원이 제한되어 일반화 오차의 상한이 낮아진다.
 </div>
 <hr>
-<h2>소프트 마진: 현실의 데이터는 깔끔하지 않다</h2>
+<h2 id="소프트-마진-현실의-데이터는-깔끔하지-않다">소프트 마진: 현실의 데이터는 깔끔하지 않다</h2>
 <p>위의 설명은 <strong>하드 마진(Hard Margin)</strong> — 두 클래스가 완벽히 분리 가능한 경우에만 성립한다. 현실 데이터에서는 클래스가 겹치거나, 이상치가 섞여 있어서 깔끔한 분리가 불가능한 경우가 대부분이다.</p>
 <p>하드 마진 SVM을 이런 데이터에 적용하면 두 가지 중 하나가 발생한다:</p>
 <ul>
@@ -82,7 +82,7 @@
 <li>이상치 하나에 경계가 극단적으로 왜곡된다</li>
 </ul>
 <p><strong>소프트 마진(Soft Margin)</strong> SVM은 일부 데이터가 마진 안에 들어오거나, 심지어 반대쪽으로 넘어가는 것을 허용한다. 대신 그 위반에 대해 <strong>벌점(penalty)</strong> 을 부과한다.</p>
-<h3>C 파라미터</h3>
+<h3 id="c-파라미터">C 파라미터</h3>
 <p>이 벌점의 강도를 조절하는 것이 <strong>C 파라미터</strong>다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">C가 큰 경우 (예: C=100)              C가 작은 경우 (예: C=0.01)
 ┌─────────────────────┐              ┌─────────────────────┐
@@ -170,9 +170,9 @@ C= 10.00 | 정확도: 0.895 (±0.037)
 C=100.00 | 정확도: 0.890 (±0.040)</code></pre></div>
 <p>C=1 근처에서 최적 성능을 보인다. C를 100으로 올려도 정확도가 개선되지 않는다 — 오히려 미세하게 떨어진다. 과적합의 신호다.</p>
 <hr>
-<h2>커널 트릭: 비선형 분류</h2>
+<h2 id="커널-트릭-비선형-분류">커널 트릭: 비선형 분류</h2>
 <p>여기까지의 SVM은 직선(또는 초평면)으로 분류했다. 그런데 데이터가 원형으로 분포하거나, XOR 패턴처럼 직선으로는 절대 분리할 수 없는 경우가 있다.</p>
-<h3>고차원 매핑의 아이디어</h3>
+<h3 id="고차원-매핑의-아이디어">고차원 매핑의 아이디어</h3>
 <p>핵심 아이디어는 놀랍도록 단순하다: <strong>차원을 올리면 선형 분리가 가능해진다.</strong></p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">2차원에서 분리 불가능:              3차원으로 올리면 분리 가능:
 
@@ -183,7 +183,7 @@ C=100.00 | 정확도: 0.890 (±0.040)</code></pre></div>
                                  ○   ○   ○</code></pre></div>
 <p>2차원에서 원 안에 있는 클래스(●)와 밖에 있는 클래스(○)는 직선으로 분리할 수 없다. 하지만 φ(x₁, x₂) = (x₁, x₂, x₁² + x₂²)처럼 <strong>새 차원을 추가</strong>하면, 3차원에서 평면 하나로 깔끔하게 분리된다.</p>
 <p>문제는 고차원 변환의 비용이다. 변수가 d개이고 2차 다항식으로 변환하면 O(d²)개의 새 변수가 생기고, 고차로 갈수록 기하급수적으로 늘어난다.</p>
-<h3>커널 트릭이란</h3>
+<h3 id="커널-트릭이란">커널 트릭이란</h3>
 <p><strong>커널 트릭(Kernel Trick)</strong> 은 이 문제를 우회한다. SVM의 최적화 문제를 자세히 보면, 데이터 포인트 간의 <strong>내적(dot product)</strong> 만으로 계산이 가능하다. 커널 함수 K(xᵢ, xⱼ)는 <strong>고차원에서의 내적을 저차원에서 직접 계산</strong>한다 — 실제로 변환할 필요가 없다.</p>
 <table>
 <thead>
@@ -216,7 +216,7 @@ C=100.00 | 정확도: 0.890 (±0.040)</code></pre></div>
   <strong>⚠️ 흔한 오해: "커널 트릭이 실제로 고차원 변환을 수행한다"</strong><br>
   커널 트릭의 핵심은 변환을 <strong>실제로 하지 않는다</strong>는 것이다. K(xᵢ, xⱼ)는 "만약 변환했다면 내적이 이 값이 되었을 것"을 직접 계산한다. RBF 커널의 경우 무한 차원 변환에 해당하므로, 실제 변환은 물리적으로 불가능하다. 커널 함수 덕분에 변환 없이도 같은 결과를 얻는 것이다.
 </div>
-<h3>gamma 파라미터</h3>
+<h3 id="gamma-파라미터">gamma 파라미터</h3>
 <p>RBF 커널의 <strong>gamma(γ)</strong> 는 각 데이터 포인트의 영향 범위를 결정한다.</p>
 <ul>
 <li><strong>gamma가 작으면</strong>: 영향 범위가 넓다 → 부드러운 결정 경계 → 과소적합 경향</li>
@@ -302,7 +302,7 @@ RBF (gamma=10)       | 정확도: 0.890 (±0.035)</code></pre></div>
   C는 오분류 허용 정도를, gamma는 결정 경계의 복잡도를 제어한다. 둘 다 높으면 극단적 과적합, 둘 다 낮으면 과소적합이 된다. GridSearchCV로 두 파라미터를 동시에 탐색하는 것이 핵심이다.
 </div>
 <hr>
-<h2>sklearn 실전 코드</h2>
+<h2 id="sklearn-실전-코드">sklearn 실전 코드</h2>
 <p>Breast Cancer 데이터셋으로 SVM 파이프라인을 구성해보자. 전처리(스케일링), 모델 훈련, 하이퍼파라미터 튜닝까지 한 번에 진행한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
@@ -345,7 +345,7 @@ CV 정확도: 0.9780
   <strong>✅ SVM에는 반드시 스케일링이 필요하다</strong><br>
   SVM은 데이터 포인트 간 거리를 기반으로 작동한다. 변수의 스케일이 다르면 거리 계산이 왜곡된다. <code>Pipeline</code>에 <code>StandardScaler</code>를 넣는 건 선택이 아니라 필수다.
 </div>
-<h3>로지스틱 회귀, KNN과 비교</h3>
+<h3 id="로지스틱-회귀-knn과-비교">로지스틱 회귀, KNN과 비교</h3>
 <p>같은 데이터에서 세 모델의 성능을 비교해보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>linear_model <span class="token keyword">import</span> LogisticRegression
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>neighbors <span class="token keyword">import</span> KNeighborsClassifier
@@ -375,8 +375,8 @@ KNN (k=5)                 | 훈련: 0.9736 | 테스트: 0.9649
 SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div>
 <p>이 데이터셋에서는 SVM이 가장 높은 테스트 정확도를 보인다. 물론 데이터에 따라 결과는 달라진다 — 핵심은 모델마다 강점이 다르다는 것이다.</p>
 <hr>
-<h2>SVM의 장단점과 선택 기준</h2>
-<h3>분류 모델 비교</h3>
+<h2 id="svm의-장단점과-선택-기준">SVM의 장단점과 선택 기준</h2>
+<h3 id="분류-모델-비교">분류 모델 비교</h3>
 <table>
 <thead>
 <tr>
@@ -431,7 +431,7 @@ SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div
 </tr>
 </tbody>
 </table>
-<h3>장점</h3>
+<h3 id="장점">장점</h3>
 <p>SVM이 빛나는 순간들이 있다:</p>
 <ul>
 <li><strong>고차원 데이터에 강하다</strong>: 텍스트 분류처럼 변수가 수천~수만 개인 경우, SVM은 마진 최대화 덕분에 차원의 저주에 상대적으로 강하다</li>
@@ -439,7 +439,7 @@ SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div
 <li><strong>커널로 비선형 처리</strong>: 커널만 바꾸면 복잡한 결정 경계도 만들 수 있다</li>
 <li><strong>서포트 벡터만 저장</strong>: 예측 시 전체 데이터가 아닌 서포트 벡터만 참조하므로 메모리 효율적이다</li>
 </ul>
-<h3>단점</h3>
+<h3 id="단점">단점</h3>
 <p>반면 분명한 한계도 있다:</p>
 <ul>
 <li><strong>대규모 데이터에 느리다</strong>: 학습 시간 복잡도가 O(n²~n³)이어서, 데이터가 10만 개를 넘어가면 실용적이지 않다. 이 영역에서는 트리 기반 모델이나 신경망이 낫다</li>
@@ -447,7 +447,7 @@ SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div
 <li><strong>스케일링 필수</strong>: 거리 기반이므로 Feature Scaling 없이는 성능이 나오지 않는다</li>
 <li><strong>하이퍼파라미터 튜닝이 까다롭다</strong>: C와 gamma를 동시에 탐색해야 하고, 최적값이 데이터마다 크게 다르다</li>
 </ul>
-<h3>언제 SVM을 선택할까?</h3>
+<h3 id="언제-svm을-선택할까">언제 SVM을 선택할까?</h3>
 <p>결국 선택 기준은 이렇다:</p>
 <ul>
 <li><strong>데이터가 중소 규모</strong>(수천~수만)이고, <strong>고차원</strong>이며, <strong>명확한 마진이 존재할 때</strong> → SVM</li>
@@ -467,9 +467,9 @@ SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div
   </ul>
 </div>
 <hr>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>확률(<a href="/ml/logistic-regression/">로지스틱 회귀</a>), 거리(KNN), 마진(SVM) — 세 가지 전혀 다른 접근으로 분류하는 법을 배웠다. 하지만 이 모든 모델에는 공통적인 근본 문제가 있다. 모델이 단순하면 데이터의 패턴을 못 잡고, 복잡하면 노이즈까지 외운다. 다음 글에서는 <a href="/ml/bias-variance/">편향-분산 트레이드오프</a>를 통해 왜 단일 모델은 한계가 있는지, 그리고 이 한계를 어떻게 진단하는지를 알아본다.</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Andrew Ng — Machine Learning Specialization: Support Vector Machines (Coursera)</a></li>
 <li><a href="https://scikit-learn.org/stable/modules/svm.html" target="_blank" rel="noopener noreferrer">Scikit-learn — SVM Documentation</a></li>
@@ -497,6 +497,6 @@ SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825</code></pre></div
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

@@ -10,7 +10,7 @@
 <li>API 파라미터 변경사항 (temperature, top_p 등 제거)</li>
 <li>Chat Completions에서 <strong>Responses</strong>로 API 마이그레이션</li>
 </ul>
-<h2>Reasoning Effort의 변화</h2>
+<h2 id="reasoning-effort의-변화">Reasoning Effort의 변화</h2>
 <p>reasoning effort란 모델이 생각을 얼마나 깊게 할지 제어하는 파라미터라고 생각하시면 됩니다. GPT-5 이전에는 low, medium, high를 제공했고, GPT-5가 출시되면서 minimal이라는 옵션이 추가되었었습니다. GPT-5의 경우 이 reasoning effot를 높게 설정하지 않았음에도 간헐적으로 너무 길게 생각하여 응답 시간이 오래 걸리거나 토큰 비용이 생각보다 많이 나오는 문제가 있었습니다.</p>
 <p>OpenAI도 이 점을 의식했는지 GPT-5.1에서는 <strong>none</strong> 이라는 옵션이 추가되었으며, 기본값 역시 none으로 설정하면서 기존 GPT-5와는 변화된 모습입니다.</p>
 <ul>
@@ -28,7 +28,7 @@ result <span class="token operator">=</span> client<span class="token punctuatio
     reasoning<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">"effort"</span><span class="token punctuation">:</span> <span class="token string">"none"</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
     text<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">"verbosity"</span><span class="token punctuation">:</span> <span class="token string">"low"</span><span class="token punctuation">}</span>
 <span class="token punctuation">)</span></code></pre></div>
-<h2>API 파라미터 변경사항</h2>
+<h2 id="api-파라미터-변경사항">API 파라미터 변경사항</h2>
 <p>GPT-5.1로 마이그레이션할 때 주의해야 할 점은 <strong>일부 파라미터가 완전히 제거</strong>되었다는 것입니다. 다른 파라미터 수정 없이 단순히 모델만 변경해서 넣어주면 동작하지 않거나 에러가 발생할 수도 있습니다.</p>
 <p>GPT-5.1, GPT-5, GPT-5-mini, GPT-5-nano에서는 다음 파라미터를 <strong>더 이상 지원하지 않습니다.</strong></p>
 <ul>
@@ -46,7 +46,7 @@ result <span class="token operator">=</span> client<span class="token punctuatio
     text<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">"verbosity"</span><span class="token punctuation">:</span> <span class="token string">"medium"</span><span class="token punctuation">}</span><span class="token punctuation">,</span>  <span class="token comment"># low | medium | high</span>
     max_output_tokens<span class="token operator">=</span><span class="token number">1000</span>
 <span class="token punctuation">)</span></code></pre></div>
-<h3>마이그레이션 가이드라인</h3>
+<h3 id="마이그레이션-가이드라인">마이그레이션 가이드라인</h3>
 <p>공식 문서에서 소개하는, 기존 모델에서 GPT-5.1로 전환 시 권장사항입니다. 이때 OpenAI의 <a href="http://platform.openai.com/chat/edit?optimize=true" target="_blank" rel="noopener noreferrer">프롬프트 최적화 도구</a>를 사용하면 GPT-5.1에 맞게 프롬프트를 자동으로 업데이트할 수 있습니다.</p>
 <div style="overflow-x: auto; margin: 24px 0;">
   <table style="width: 100%; max-width: 800px; margin: 0 auto; border-collapse: collapse; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
@@ -81,7 +81,7 @@ result <span class="token operator">=</span> client<span class="token punctuatio
   </table>
 </div>
 <br>
-<h2>Chat Completions에서 Responses API로</h2>
+<h2 id="chat-completions에서-responses-api로">Chat Completions에서 Responses API로</h2>
 <p>OpenAI는 개발자들에게 <strong>Completions, Chat Completions, Responses</strong> 총 3가지 API를 제공하고 있습니다. 이중 가장 많이 사용되는 것은 Chat Completions인데요, OpenAI는 최신 버전인 Responses를 모든 새로운 프로젝트에 추천하고 있으며, GPT-5.1 사용 가이드에서도 소개하고 있습니다.</p>
 <br>
 <p>Responses API의 주요 장점은 다음과 같습니다.</p>
@@ -142,7 +142,7 @@ result <span class="token operator">=</span> client<span class="token punctuatio
         </picture>
     </span></p>
 <br>
-<h3>API 구조 비교</h3>
+<h3 id="api-구조-비교">API 구조 비교</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Chat Completions API</span>
 completion <span class="token operator">=</span> client<span class="token punctuation">.</span>chat<span class="token punctuation">.</span>completions<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
     model<span class="token operator">=</span><span class="token string">"gpt-5"</span><span class="token punctuation">,</span>
@@ -161,7 +161,7 @@ response <span class="token operator">=</span> client<span class="token punctuat
     <span class="token builtin">input</span><span class="token operator">=</span><span class="token string">"Hello!"</span>
 <span class="token punctuation">)</span>
 <span class="token keyword">print</span><span class="token punctuation">(</span>response<span class="token punctuation">.</span>output_text<span class="token punctuation">)</span></code></pre></div>
-<h3>Multi-turn 대화 처리</h3>
+<h3 id="multi-turn-대화-처리">Multi-turn 대화 처리</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Chat Completions API: 컨텍스트를 수동으로 관리</span>
 messages <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">{</span><span class="token string">"role"</span><span class="token punctuation">:</span> <span class="token string">"user"</span><span class="token punctuation">,</span> <span class="token string">"content"</span><span class="token punctuation">:</span> <span class="token string">"What is the capital of France?"</span><span class="token punctuation">}</span><span class="token punctuation">]</span>
 res1 <span class="token operator">=</span> client<span class="token punctuation">.</span>chat<span class="token punctuation">.</span>completions<span class="token punctuation">.</span>create<span class="token punctuation">(</span>model<span class="token operator">=</span><span class="token string">"gpt-5"</span><span class="token punctuation">,</span> messages<span class="token operator">=</span>messages<span class="token punctuation">)</span>
@@ -184,7 +184,7 @@ res2 <span class="token operator">=</span> client<span class="token punctuation"
     previous_response_id<span class="token operator">=</span>res1<span class="token punctuation">.</span><span class="token builtin">id</span><span class="token punctuation">,</span>
     store<span class="token operator">=</span><span class="token boolean">True</span>
 <span class="token punctuation">)</span></code></pre></div>
-<h3>Function 정의</h3>
+<h3 id="function-정의">Function 정의</h3>
 <div class="gatsby-highlight" data-language="jsx"><pre class="language-jsx"><code class="language-jsx"><span class="token comment">// Chat Completions API</span>
 <span class="token punctuation">{</span>
   <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"function"</span><span class="token punctuation">,</span>
@@ -202,7 +202,7 @@ res2 <span class="token operator">=</span> client<span class="token punctuation"
   <span class="token string-property property">"parameters"</span><span class="token operator">:</span> <span class="token punctuation">{</span> <span class="token comment">/* ... */</span> <span class="token punctuation">}</span>
   <span class="token comment">// strict는 기본값</span>
 <span class="token punctuation">}</span></code></pre></div>
-<h3>Structured Outputs 정의</h3>
+<h3 id="structured-outputs-정의">Structured Outputs 정의</h3>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># Chat Completions API: response_format 사용</span>
 completion <span class="token operator">=</span> client<span class="token punctuation">.</span>chat<span class="token punctuation">.</span>completions<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
     model<span class="token operator">=</span><span class="token string">"gpt-5"</span><span class="token punctuation">,</span>
@@ -227,11 +227,11 @@ response <span class="token operator">=</span> client<span class="token punctuat
     <span class="token punctuation">}</span>
 <span class="token punctuation">)</span></code></pre></div>
 <p>이외 상세 내용은 <a href="https://platform.openai.com/docs/guides/migrate-to-responses" target="_blank" rel="noopener noreferrer">공식 문서</a>에서 확인하실 수 있습니다.</p>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>GPT-5.1은 단순히 성능 업그레이드 외에도 API 파라미터 등에서 많은 변화가 있었습니다. 소개드린 내용 외에도 코딩에 활용되는 도구 추가 등 다른 새로운 내용도 있으니 관심있으신 분은 공식 문서를 참고하시길 바랍니다.</p>
 <p>사실 GPT-5는 기대감에 못미치는 성능이라는 평이 많았는데, GPT-5.1이 얼마나 더 보완되었는지는 더 사용해보아야 알 수 있을 것 같습니다. 엔터프라이즈 시장에서는 Anthropic이 1등 자리를 굳건히 함과 동시에, 데티모달을 필두로 무섭게 치고 올라오는 Gemini 사이 속에서 OpenAI가 어떤 행보를 보여줄지도 관심있게 지켜보면 좋을 것 같습니다.
 도</p>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://platform.openai.com/docs/guides/latest-model" target="_blank" rel="noopener noreferrer">GPT-5.1 활용 공식 문서</a></li>
 <li><a href="https://platform.openai.com/docs/guides/migrate-to-responses" target="_blank" rel="noopener noreferrer">Responses API 마이그레이션 가이드</a></li>
@@ -257,6 +257,6 @@ response <span class="token operator">=</span> client<span class="token punctuat
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

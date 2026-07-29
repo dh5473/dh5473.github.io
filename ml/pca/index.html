@@ -6,7 +6,7 @@
 <p><a href="/ml/knn/">KNN</a>에서 이미 한 번 마주쳤다. 차원이 높아지면 모든 데이터 포인트 사이의 거리가 비슷해져서 “가장 가까운 이웃”이라는 개념 자체가 무의미해진다. 하지만 차원의 저주는 KNN만의 문제가 아니다. 고차원 공간에서는 데이터가 극도로 희소해지고, 어떤 모델이든 일반화가 어려워진다. 피처가 100개인 데이터셋을 제대로 채우려면 천문학적인 샘플이 필요하다.</p>
 <p>해결법은 두 가지다. 하나는 <a href="/ml/feature-selection/">피처 선택(Feature Selection)</a> — 불필요한 피처를 <strong>제거</strong>하는 것이다. 다른 하나는 <strong>차원 축소(Dimensionality Reduction)</strong> — 기존 피처를 <strong>변환</strong>해서 더 적은 수의 새로운 피처로 만드는 것이다. 피처 선택은 원래 피처 중 일부를 골라내지만, 차원 축소는 원래 피처들을 조합해 완전히 새로운 축을 만든다. <strong>PCA(Principal Component Analysis, 주성분 분석)</strong> 가 가장 대표적인 차원 축소 기법이다.</p>
 <hr>
-<h2>직관: 분산이 최대인 방향을 찾아라</h2>
+<h2 id="직관-분산이-최대인-방향을-찾아라">직관: 분산이 최대인 방향을 찾아라</h2>
 <p>PCA의 핵심 아이디어를 한 문장으로 요약하면 이렇다:</p>
 <blockquote>
 <p><strong>데이터의 분산이 가장 큰 방향으로 새 축을 잡고, 그 축으로 데이터를 사영(projection)한다.</strong></p>
@@ -30,15 +30,15 @@
 <p>이 대각선 축이 <strong>제1주성분(PC1, First Principal Component)</strong> 이다. PC1은 데이터의 분산을 가장 많이 설명하는 방향이다. 그 다음으로 분산이 큰 방향(PC1과 수직)이 <strong>제2주성분(PC2)</strong> 이다. n개의 피처가 있으면 최대 n개의 주성분이 나오는데, 각 주성분은 이전 주성분과 모두 직교(orthogonal)한다.</p>
 <p>차원 축소의 핵심은 여기에 있다. n개의 주성분 중 <strong>분산이 큰 상위 k개만 남기면</strong>, 정보 손실을 최소화하면서 n차원을 k차원으로 줄일 수 있다.</p>
 <hr>
-<h2>수학적 원리: 4단계로 분해하기</h2>
+<h2 id="수학적-원리-4단계로-분해하기">수학적 원리: 4단계로 분해하기</h2>
 <p>PCA의 수학을 단계별로 풀어보자. 선형대수가 핵심이지만, 각 단계가 “왜 필요한지”에 초점을 맞추면 어렵지 않다.</p>
-<h3>1단계: 데이터 센터링 (Mean Centering)</h3>
+<h3 id="1단계-데이터-센터링-mean-centering">1단계: 데이터 센터링 (Mean Centering)</h3>
 <p>원본 데이터에서 각 피처의 평균을 빼서 중심을 원점으로 옮긴다.</p>
 <blockquote>
 <p><strong>X_centered = X - mean(X)</strong></p>
 </blockquote>
 <p>왜 필요한가? 공분산 행렬을 계산할 때 평균이 0이어야 공식이 깔끔해진다. 또한, 사영 방향을 찾을 때 데이터의 “퍼진 정도”만 봐야 하는데, 평균이 0이 아니면 데이터의 위치(평균)와 퍼진 정도(분산)가 뒤섞인다.</p>
-<h3>2단계: 공분산 행렬 계산</h3>
+<h3 id="2단계-공분산-행렬-계산">2단계: 공분산 행렬 계산</h3>
 <p>센터링된 데이터로 공분산 행렬을 구한다.</p>
 <blockquote>
 <p><strong>C = (1 / (n - 1)) * X_centered^T * X_centered</strong></p>
@@ -54,7 +54,7 @@
 대각선: 각 피처의 분산
 비대각선: 두 피처 간의 공분산 (상관 정도)</code></pre></div>
 <p>공분산이 크다는 건 두 피처가 함께 변한다는 뜻이다. PCA는 이 공분산 구조를 분석해서, 피처들이 함께 변하는 “주된 방향”을 찾아낸다.</p>
-<h3>3단계: 고유값 분해 (Eigendecomposition)</h3>
+<h3 id="3단계-고유값-분해-eigendecomposition">3단계: 고유값 분해 (Eigendecomposition)</h3>
 <p>공분산 행렬 C를 고유값 분해한다.</p>
 <blockquote>
 <p><strong>C * v = lambda * v</strong></p>
@@ -73,7 +73,7 @@
           v3 = [0.6, -0.6, 0.5] ← PC3 (분산 0.3)
 
 → 상위 2개 주성분(PC1, PC2)만 사용하면 분산의 (5.2+1.8)/(5.2+1.8+0.3) = 95.9% 보존</code></pre></div>
-<h3>4단계: 주성분으로 사영 (Projection)</h3>
+<h3 id="4단계-주성분으로-사영-projection">4단계: 주성분으로 사영 (Projection)</h3>
 <p>고유값을 내림차순으로 정렬하고, 상위 k개의 고유벡터를 선택해서 사영 행렬 W를 만든다.</p>
 <blockquote>
 <p><strong>W = [v1 | v2 | … | vk]</strong>  (d x k 행렬)</p>
@@ -81,7 +81,7 @@
 </blockquote>
 <p>원래 d차원이던 데이터가 k차원으로 변환됐다. 각 새로운 축(PC1, PC2, …)은 원래 피처들의 선형 조합이다.</p>
 <hr>
-<h2>NumPy로 직접 구현하기</h2>
+<h2 id="numpy로-직접-구현하기">NumPy로 직접 구현하기</h2>
 <p>수학을 코드로 옮겨보자. sklearn 없이 NumPy만으로 PCA를 구현한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
 
@@ -140,7 +140,7 @@ PCA 변환 후 shape: (200, 1)
 PC1만으로 설명되는 분산: 94.9%</code></pre></div>
 <p>2차원 데이터에서 PC1 하나만으로 분산의 약 95%를 설명한다. 두 피처 사이의 높은 상관관계(공분산 1.73)가 하나의 주성분으로 압축된 것이다. 이것이 PCA의 힘이다 — 상관된 피처들을 독립적인 소수의 축으로 재구성한다.</p>
 <hr>
-<h2>설명된 분산 비율: 몇 개의 주성분을 남길 것인가</h2>
+<h2 id="설명된-분산-비율-몇-개의-주성분을-남길-것인가">설명된 분산 비율: 몇 개의 주성분을 남길 것인가</h2>
 <p>PCA에서 가장 실전적인 질문이다. 주성분을 너무 많이 남기면 차원 축소의 의미가 없고, 너무 적게 남기면 정보 손실이 크다. 판단 기준은 <strong>설명된 분산 비율(Explained Variance Ratio)</strong> 이다.</p>
 <blockquote>
 <p><strong>설명된 분산 비율 = lambda_i / sum(lambda)</strong></p>
@@ -166,7 +166,7 @@ PC10    0.08     0.8%     100.0%
   탐색적 분석이나 시각화 목적이면 2~3개의 주성분만 써도 충분하다. 반대로 모델 성능이 중요한 경우에는 99%까지 보존하는 게 나을 수 있다. 목적에 따라 유연하게 결정하자.
 </div>
 <hr>
-<h2>Scree Plot: 시각적으로 주성분 수 결정하기</h2>
+<h2 id="scree-plot-시각적으로-주성분-수-결정하기">Scree Plot: 시각적으로 주성분 수 결정하기</h2>
 <p>Scree Plot은 주성분 번호를 x축, 고유값(또는 설명된 분산 비율)을 y축에 놓은 그래프다. 고유값이 급격히 떨어지다가 <strong>평탄해지는 지점(elbow)</strong> 에서 주성분 수를 결정한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
@@ -207,7 +207,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">95% 분산 보존에 필요한 주성분 수: 10 / 30</code></pre></div>
 <p>30개 피처를 10개 주성분으로 줄여도 정보의 95%가 보존된다. 20개의 차원이 사실상 “중복”이었다는 뜻이다. 고차원 현실 데이터에서 이런 일은 매우 흔하다 — 피처들 사이의 상관관계가 높기 때문이다.</p>
 <hr>
-<h2>sklearn PCA: 유방암 데이터 실전</h2>
+<h2 id="sklearn-pca-유방암-데이터-실전">sklearn PCA: 유방암 데이터 실전</h2>
 <p>이제 sklearn의 <code class="language-text">PCA</code>를 사용해 실제 데이터에 적용해 보자. 유방암 데이터셋(30개 피처)을 PCA로 축소하고, 분류 성능을 비교한다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split<span class="token punctuation">,</span> cross_val_score
@@ -248,7 +248,7 @@ PCA (10D):   0.9714 (+/- 0.0172)</code></pre></div>
   PCA는 분산이 큰 방향을 찾는다. 피처 간 스케일이 다르면(예: 키는 cm, 몸무게는 kg), 단위가 큰 피처가 분산을 지배해서 PCA 결과가 왜곡된다. StandardScaler로 스케일링한 후 PCA를 적용하는 것이 표준 파이프라인이다. <a href="/ml/feature-scaling/">피처 스케일링</a>에서 다뤘던 것과 같은 맥락이다.
 </div>
 <hr>
-<h2>PCA로 고차원 데이터 시각화하기</h2>
+<h2 id="pca로-고차원-데이터-시각화하기">PCA로 고차원 데이터 시각화하기</h2>
 <p>PCA의 가장 직관적인 활용은 <strong>시각화</strong>다. 사람은 2D/3D까지만 볼 수 있으니, 고차원 데이터를 2개의 주성분으로 사영하면 데이터의 구조를 눈으로 확인할 수 있다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>preprocessing <span class="token keyword">import</span> StandardScaler
@@ -296,7 +296,7 @@ total_3d <span class="token operator">=</span> <span class="token builtin">sum</
 <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"3개 주성분으로 설명되는 분산: </span><span class="token interpolation"><span class="token punctuation">{</span>total_3d<span class="token punctuation">:</span><span class="token format-spec">.1%</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span></code></pre></div>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">3개 주성분으로 설명되는 분산: 72.6%</code></pre></div>
 <hr>
-<h2>PCA가 실패하는 경우: 비선형 구조</h2>
+<h2 id="pca가-실패하는-경우-비선형-구조">PCA가 실패하는 경우: 비선형 구조</h2>
 <p>PCA는 <strong>선형</strong> 변환이다. 데이터의 분산이 가장 큰 <strong>직선</strong> 방향을 찾는다. 이 말은, 데이터의 구조가 비선형이면 PCA가 무력해진다는 뜻이다.</p>
 <p>대표적인 예가 <strong>Swiss Roll</strong> 데이터다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> make_swiss_roll
@@ -334,7 +334,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
 · 가우시안 분포 데이터           · 원형/나선형 구조
 · 고차원 정형 데이터             · 이미지의 의미적 구조</code></pre></div>
 <hr>
-<h2>Kernel PCA: 비선형 차원 축소</h2>
+<h2 id="kernel-pca-비선형-차원-축소">Kernel PCA: 비선형 차원 축소</h2>
 <p>PCA가 비선형 구조를 못 잡는다면, <a href="/ml/svm/">SVM</a>에서 배운 <strong>커널 트릭</strong>을 떠올려 보자. 데이터를 고차원 공간으로 매핑한 후 거기서 PCA를 수행하면, 원래 공간에서의 비선형 구조를 잡을 수 있다. 이것이 <strong>Kernel PCA</strong>다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>decomposition <span class="token keyword">import</span> KernelPCA
 
@@ -365,7 +365,7 @@ plt<span class="token punctuation">.</span>show<span class="token punctuation">(
   시각화 목적이면 t-SNE/UMAP이 보통 더 좋은 결과를 주지만, 모델 파이프라인에 차원 축소를 넣을 때는 PCA가 표준이다.
 </div>
 <hr>
-<h2>PCA를 전처리로: 차원 축소 후 모델 학습</h2>
+<h2 id="pca를-전처리로-차원-축소-후-모델-학습">PCA를 전처리로: 차원 축소 후 모델 학습</h2>
 <p>PCA의 가장 실전적인 용도는 <strong>모델 학습 전 전처리</strong>다. 피처 수를 줄여서 학습 속도를 높이고, 다중공선성을 제거하고, <a href="/ml/bias-variance/">과적합</a>을 억제한다.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">전형적인 PCA 파이프라인:
 
@@ -416,7 +416,7 @@ PCA (d → k 피처)
 </tbody>
 </table>
 <hr>
-<h2>실전 파이프라인: PCA + 분류기 + 교차 검증</h2>
+<h2 id="실전-파이프라인-pca-분류기-교차-검증">실전 파이프라인: PCA + 분류기 + 교차 검증</h2>
 <p>PCA를 포함한 전체 파이프라인을 구성하고, 주성분 수에 따른 성능 변화를 체계적으로 비교해 보자.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>datasets <span class="token keyword">import</span> load_breast_cancer
 <span class="token keyword">from</span> sklearn<span class="token punctuation">.</span>model_selection <span class="token keyword">import</span> train_test_split<span class="token punctuation">,</span> cross_val_score
@@ -537,7 +537,7 @@ results <span class="token operator">=</span> grid<span class="token punctuation
 <p>주성분 10개 이후로 검증 성능이 거의 정체되는 반면, 훈련 성능은 계속 올라간다. 이것은 <a href="/ml/bias-variance/">편향-분산 트레이드오프</a>의 전형적인 패턴이다. 주성분이 적으면 편향이 높고(과소적합), 많으면 분산이 높아질 수 있다(과적합). 10개가 이 데이터셋에서의 적절한 균형점이다.</p>
 <p><a href="/ml/gradient-descent/">경사 하강법</a>의 관점에서도, 차원이 줄면 파라미터 공간이 작아져서 최적화가 더 빠르고 안정적이 된다. 특히 피처가 수천 개인 텍스트 데이터나 유전체 데이터에서는 PCA 전처리가 학습 시간을 극적으로 단축한다.</p>
 <hr>
-<h2>정리</h2>
+<h2 id="정리">정리</h2>
 <p>PCA의 전체 흐름을 다시 한번 정리하자.</p>
 <div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">1. 스케일링 (StandardScaler)
    → 피처 간 스케일 차이 제거
@@ -620,6 +620,6 @@ results <span class="token operator">=</span> grid<span class="token punctuation
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>

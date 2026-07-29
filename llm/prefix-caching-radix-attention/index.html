@@ -6,7 +6,7 @@
 <p>여러 요청이 똑같은 프롬프트로 시작한다면, 같은 KV를 요청마다 새로 계산하는 것은 순수한 낭비입니다. 이 글에서는 그 낭비를 없애는 <strong>prefix caching</strong>이 vLLM 안에서 실제로 어떻게 동작하는지 따라가고, 같은 문제를 트리로 풀어낸 SGLang의 <strong>RadixAttention</strong>과 나란히 놓고 비교합니다. 미리 말해두면, 흔히 알려진 “해시 방식 vLLM vs 트리 방식 SGLang”이라는 대비는 실제 구조를 뜯어보면 거의 무너집니다. 두 엔진의 진짜 차이는 다른 곳에 있습니다.</p>
 <p>vLLM은 v0.25.1, SGLang은 2026년 7월 기준 main 브랜치를 기준으로 씁니다.</p>
 <br>
-<h2>끝난 요청이 남긴 블록을 주워 쓴다</h2>
+<h2 id="끝난-요청이-남긴-블록을-주워-쓴다">끝난 요청이 남긴 블록을 주워 쓴다</h2>
 <p>vLLM은 KV Cache를 고정 크기 블록으로 쪼개 관리하고, 동시에 살아 있는 요청들이 같은 물리 블록을 가리키게 하는 블록 공유를 지원합니다. 같은 시스템 프롬프트로 시작한 요청 A와 B가 나란히 돌고 있으면, 공통 구간의 KV는 물리 메모리에 한 번만 두고 둘이 나눠 씁니다.</p>
 <p>그런데 실제 서비스에서 더 흔한 상황은 따로 있습니다. 요청 A가 <strong>이미 끝난 뒤에</strong>, 같은 시스템 프롬프트를 든 요청 B가 도착하는 경우입니다. A가 끝나면 A의 블록들은 풀에 반납됩니다. 여기서 vLLM의 선택이 중요합니다. 반납된 블록의 <strong>내용을 지우지 않습니다</strong>. 블록은 “빈 블록” 목록에 들어가지만, 안에 든 KV와 “이 블록이 어떤 토큰들의 KV인지” 알려주는 꼬리표는 그대로 남습니다. B가 도착했을 때 같은 접두사로 시작한다는 것만 확인되면, prefill 계산을 통째로 건너뛰고 그 블록을 다시 가리키기만 하면 됩니다.</p>
 <p>이것이 prefix caching입니다. 블록 공유가 <strong>공간축의 공유</strong>(동시에 살아 있는 요청들 사이)였다면, prefix caching은 <strong>시간축의 재사용</strong>(끝난 요청과 새 요청 사이)입니다.</p>
@@ -14,10 +14,10 @@
 <p>왜 하필 “prefix”, 접두사일까요? 어텐션의 인과성 때문입니다. 각 토큰의 KV는 자기 자신과 앞선 토큰들에만 의존합니다. 그래서 프롬프트의 <strong>앞부분이 완전히 같으면</strong> 그 구간의 KV도 완전히 같고, 계산 없이 가져다 써도 결과가 한 비트도 달라지지 않습니다. 반대로 중간이나 뒷부분만 같은 경우는 재사용할 수 없습니다. 같은 문장이라도 앞에 온 내용이 다르면 KV가 달라지니까요.</p>
 <p>얼마나 이득인지 숫자로 보겠습니다. 시스템 프롬프트가 2,048토큰이고 사용자 질문이 평균 50토큰인 챗봇을 생각해봅시다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="prefix caching 유무에 따른 요청당 prefill 토큰 수 비교. 캐시가 없으면 2,098 토큰을 전부 계산하고, 캐시가 있으면 시스템 프롬프트 2,048 토큰은 재사용해 실제 prefill은 50 토큰으로 줄어든다.">
+     role="img" aria-label="prefix caching 유무에 따른 요청당 prefill 토큰 수 비교. 캐시가 없으면 2,098 토큰을 전부 계산하고, 캐시가 있으면 시스템 프롬프트 2,048 토큰은 재사용해 실제 prefill은 50 토큰으로 줄어듭니다.">
   <style>
     .pc1-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: start; }
     .pc1-in    { font-size: 18px; text-anchor: middle; }
@@ -46,14 +46,14 @@
 <p>prefill은 GPU 연산량이 병목인 compute-bound 구간입니다. 그 연산이 1/40이 되면 첫 토큰까지의 대기 시간(TTFT)이 그만큼 짧아지고, 아낀 연산은 같은 GPU 위에서 도는 다른 요청들 몫으로 돌아갑니다.</p>
 <p>멀티턴 대화에서는 효과가 더 큽니다. 대화형 API는 매 턴 “지금까지의 대화 전체 + 새 발화”를 프롬프트로 보내는데, 이 “지금까지의 대화 전체”가 정확히 직전 턴에 계산해둔 접두사입니다. 캐시가 없으면 대화가 길어질수록 매 턴 다시 계산하는 양이 계속 불어나고, 캐시가 있으면 매 턴 새 발화 몫만 계산하면 됩니다.</p>
 <br>
-<h2>블록 해시가 곧 접두사다</h2>
+<h2 id="블록-해시가-곧-접두사다">블록 해시가 곧 접두사다</h2>
 <p>남은 문제는 이것입니다. 새 요청이 왔을 때 “이 접두사의 KV가 이미 있다”는 걸 어떻게 알아낼까요? 지금까지 거쳐 간 요청들의 프롬프트와 일일이 문자열 비교를 할 수는 없습니다. vLLM의 답은 해시입니다.</p>
 <p>vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은 여기에 한 가지를 얹습니다. 블록이 가득 차는 순간, 그 블록에 해시를 하나 매겨두는 것입니다. 그런데 이 해시를 만드는 방식이 핵심입니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 360" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 276" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="프롬프트를 16토큰 블록으로 자르고 해시를 사슬처럼 잇는 구조. 블록 0의 해시 h0은 블록 0의 토큰만으로 만들고, h1은 h0과 블록 1의 토큰으로, h2는 h1과 블록 2의 토큰으로 만든다. 부모 블록의 해시가 자식 블록의 키에 함께 들어간다.">
+     role="img" aria-label="프롬프트를 16토큰 블록으로 자르고 해시를 사슬처럼 잇는 구조. 블록 0의 해시 h0은 블록 0의 토큰만으로 만들고, h1은 h0과 블록 1의 토큰으로, h2는 h1과 블록 2의 토큰으로 만듭니다. 부모 블록의 해시가 자식 블록의 키에 함께 들어갑니다.">
   <style>
     .pc2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pc2-blk   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -72,48 +72,45 @@
       <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
     </marker>
   </defs>
-  <text x="240" y="24" class="pc2-cap">프롬프트를 16토큰씩 잘라 블록으로 만들고,</text>
-  <text x="240" y="46" class="pc2-cap">해시를 사슬처럼 잇는다</text>
+  <text x="240" y="24" class="pc2-cap">프롬프트를 16토큰씩 자른 블록과 해시 사슬</text>
   <!-- 블록 0 -->
-  <rect x="16" y="66" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="90" class="pc2-label">블록 0</text>
-  <text x="72" y="112" class="pc2-sub">토큰 1~16</text>
-  <path d="M132,94 L142,94" class="pc2-arrow"/>
-  <rect x="146" y="66" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="101" class="pc2-label">h0 = hash(∅, 블록0 토큰)</text>
-  <path d="M200,122 L200,143" class="pc2-chain"/>
-  <text x="210" y="139" class="pc2-side">부모 해시</text>
+  <rect x="16" y="44" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="68" class="pc2-label">블록 0</text>
+  <text x="72" y="90" class="pc2-sub">토큰 1~16</text>
+  <path d="M132,72 L142,72" class="pc2-arrow"/>
+  <rect x="146" y="44" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="79" class="pc2-label">h0 = hash(∅, 블록0 토큰)</text>
+  <path d="M200,100 L200,121" class="pc2-chain"/>
+  <text x="210" y="117" class="pc2-side">부모 해시</text>
   <!-- 블록 1 -->
-  <rect x="16" y="146" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="170" class="pc2-label">블록 1</text>
-  <text x="72" y="192" class="pc2-sub">토큰 17~32</text>
-  <path d="M132,174 L142,174" class="pc2-arrow"/>
-  <rect x="146" y="146" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="181" class="pc2-label">h1 = hash(h0, 블록1 토큰)</text>
-  <path d="M200,202 L200,223" class="pc2-chain"/>
-  <text x="210" y="219" class="pc2-side">부모 해시</text>
+  <rect x="16" y="124" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="148" class="pc2-label">블록 1</text>
+  <text x="72" y="170" class="pc2-sub">토큰 17~32</text>
+  <path d="M132,152 L142,152" class="pc2-arrow"/>
+  <rect x="146" y="124" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="159" class="pc2-label">h1 = hash(h0, 블록1 토큰)</text>
+  <path d="M200,180 L200,201" class="pc2-chain"/>
+  <text x="210" y="197" class="pc2-side">부모 해시</text>
   <!-- 블록 2 -->
-  <rect x="16" y="226" width="112" height="56" rx="7" class="pc2-blk"/>
-  <text x="72" y="250" class="pc2-label">블록 2</text>
-  <text x="72" y="272" class="pc2-sub">토큰 33~48</text>
-  <path d="M132,254 L142,254" class="pc2-arrow"/>
-  <rect x="146" y="226" width="318" height="56" rx="7" class="pc2-hash"/>
-  <text x="305" y="261" class="pc2-label">h2 = hash(h1, 블록2 토큰)</text>
-  <text x="240" y="316" class="pc2-cap">부모 블록의 해시가 자식 블록의 키에</text>
-  <text x="240" y="338" class="pc2-cap">함께 들어간다</text>
+  <rect x="16" y="204" width="112" height="56" rx="7" class="pc2-blk"/>
+  <text x="72" y="228" class="pc2-label">블록 2</text>
+  <text x="72" y="250" class="pc2-sub">토큰 33~48</text>
+  <path d="M132,232 L142,232" class="pc2-arrow"/>
+  <rect x="146" y="204" width="318" height="56" rx="7" class="pc2-hash"/>
+  <text x="305" y="239" class="pc2-label">h2 = hash(h1, 블록2 토큰)</text>
 </svg>
 </div>
 <p>해시의 입력에 그 블록의 토큰들만 넣는 게 아니라 <strong>바로 앞 블록의 해시를 함께</strong> 넣습니다. 이 사슬 구조가 만드는 성질을 따라가 보면, h2가 같다는 것은 블록 2의 토큰들이 같고 h1도 같다는 뜻입니다. h1이 같다는 것은 다시 블록 1의 토큰들이 같고 h0도 같다는 뜻이고, h0까지 내려가면 결국 <strong>“처음부터 여기까지의 모든 토큰이 같다”</strong>가 됩니다. 해시값 하나가 블록 하나가 아니라 접두사 전체를 보증하는 것입니다. 그래서 vLLM은 “해시 → 물리 블록” 맵 하나만 갖고 있으면 됩니다.</p>
 <p>새 요청이 오면 프롬프트를 16토큰씩 잘라 이 해시 사슬을 만들고, 앞에서부터 맵을 조회합니다. 연속으로 걸리는 데까지가 캐시 히트고, 처음 미스가 난 지점부터만 prefill을 수행합니다.</p>
 <p>해시 입력에는 토큰 외에 몇 가지가 더 들어갑니다. LoRA 어댑터 ID와 멀티모달 입력의 해시가 대표적입니다. 같은 토큰이라도 다른 어댑터를 거치면 KV가 다르니, 키를 분리해서 잘못된 재사용을 막는 것입니다. 요청에 <code class="language-text">cache_salt</code>를 넣어 캐시를 사용자 단위로 격리할 수도 있습니다. 여러 테넌트가 한 서버를 쓸 때, 응답 지연의 차이를 관찰해서 다른 사용자의 캐시 내용(예: 프롬프트에 든 비밀 정보)을 추측하는 공격을 막는 용도입니다. 해시 함수는 v0.11부터 SHA-256이 기본이라 서로 다른 접두사가 같은 해시를 갖게 될 걱정은 실질적으로 없습니다.</p>
 <br>
-<h2>16토큰 경계에서만 걸린다</h2>
+<h2 id="16토큰-경계에서만-걸린다">16토큰 경계에서만 걸린다</h2>
 <p>한 가지 주의할 성질이 있습니다. vLLM은 <strong>가득 찬 블록만</strong> 해시를 매기고 캐시합니다. 반쯤 찬 블록은 해시가 없고, 따라서 재사용도 안 됩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 232" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 178" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="공유 접두사 2,040 토큰을 block_size 16으로 자른 모습. 블록 0부터 블록 126까지 2,032 토큰은 캐시 히트가 나고, 마지막 8 토큰은 블록을 채우지 못해 해시가 없어 재계산된다.">
+     role="img" aria-label="공유 접두사 2,040 토큰을 block_size 16으로 자른 모습. 블록 0부터 블록 126까지 2,032 토큰은 캐시 히트가 나고, 마지막 8 토큰은 블록을 채우지 못해 해시가 없어 재계산됩니다.">
   <style>
     .pc3-cap  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
     .pc3-hit  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
@@ -142,8 +139,6 @@
   <text x="172" y="156" class="pc3-blk">블록 1</text>
   <text x="347" y="156" class="pc3-blk">블록 126</text>
   <text x="420" y="156" class="pc3-blk">미완성</text>
-  <text x="240" y="194" class="pc3-cap">가득 찬 블록만 해시를 매기므로</text>
-  <text x="240" y="216" class="pc3-cap">마지막 8 토큰은 재사용되지 않는다</text>
 </svg>
 </div>
 <p>즉 캐시 히트는 항상 16토큰 경계에서 끊깁니다. 최악의 경우 15토큰이 “사실은 같은데도” 다시 계산됩니다. 이게 실무에서 문제가 될까요? 대부분 아닙니다. 손해는 접두사 길이와 무관하게 <strong>최대 15토큰으로 고정</strong>되어 있습니다. 2,000토큰짜리 시스템 프롬프트라면 1%도 안 되는 양이고, 접두사가 짧아서 비율이 커지는 경우라면 애초에 캐시로 아낄 절대량 자체가 작습니다.</p>
@@ -152,7 +147,7 @@
 <p>인터넷에는 “sliding window 모델은 prefix caching 미지원”이라는 오래된 정보가 남아 있는데, V0 시절 이야기입니다. v0.8.0부터 sliding window와 prefix caching을 함께 쓸 수 있고, Gemma 계열처럼 로컬(sliding window)과 글로벌 어텐션을 섞어 쓰는 하이브리드 모델도 전용 KV Cache 관리자(<code class="language-text">HybridKVCacheCoordinator</code>)가 레이어 종류별로 캐시 히트를 따로 계산해서 지원합니다.</p>
 </div>
 <br>
-<h2>공짜에 가까워서 기본으로 켠다</h2>
+<h2 id="공짜에-가까워서-기본으로-켠다">공짜에 가까워서 기본으로 켠다</h2>
 <p>캐시가 좋다는 건 알겠는데, 공짜는 아닐 것 같습니다. 요청마다 해시를 계산하고 맵을 조회하는 비용은 히트가 나든 안 나든 매번 듭니다. 프롬프트가 전부 제각각이라 히트율이 0%에 가까운 서비스라면, 이 비용은 순수한 손해입니다.</p>
 <p>실제로 V0 엔진에서는 이 이유로 prefix caching이 기본으로 꺼져 있었습니다. 히트율이 낮은 워크로드에서 CPU 오버헤드가 이득을 갉아먹는 경우가 있었기 때문입니다. V1은 이 오버헤드를 없애는 쪽으로 자료구조를 다시 설계했습니다.</p>
 <ul>
@@ -169,15 +164,15 @@
 </ul>
 <p>이 규칙들이 맞물린 결과가 실무에서 보는 그 동작입니다. 모두가 쓰는 시스템 프롬프트의 블록은 요청이 올 때마다 다시 히트되어 목록 밖으로 빠져나가니, 사실상 GPU에 상주하게 됩니다.</p>
 <br>
-<h2>같은 아이디어를 트리로 세운 RadixAttention</h2>
+<h2 id="같은-아이디어를-트리로-세운-radixattention">같은 아이디어를 트리로 세운 RadixAttention</h2>
 <p>이제 SGLang 차례입니다. SGLang은 LMSYS에서 만든 서빙 엔진으로, 같은 프롬프트 재사용 문제를 <strong>RadixAttention</strong>이라는 이름으로 풀었습니다. KV Cache를 radix tree 하나로 관리하는 방식입니다.</p>
 <p>radix tree는 trie(접두사 트리)의 압축판입니다. 갈림길 없이 이어지는 구간을 노드 하나로 합쳐서, 엣지 하나에 문자 하나가 아니라 <strong>시퀀스 통째로</strong> 붙습니다. RadixAttention에서는 이 엣지에 토큰 시퀀스가 붙고, 노드가 해당 구간의 KV 텐서를 들고 있습니다.</p>
 <p>새 요청이 오면 루트에서 출발해 프롬프트와 일치하는 경로를 끝까지 따라갑니다. 따라간 만큼이 캐시 히트입니다. 일치가 노드 중간에서 끝나면 그 노드를 그 지점에서 둘로 쪼개 경계를 만들고(데이터 복사는 일어나지 않습니다), 거기서부터 새 가지가 자랍니다. 같은 시스템 프롬프트를 쓰는 요청들은 자연스럽게 한 몸통을 공유하고 질문 부분에서만 갈라지는 나무가 됩니다.</p>
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 480 664" style="width: 100%; height: auto; max-width: 480px;"
+<svg viewBox="0 0 480 616" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="같은 시스템 프롬프트를 공유하는 요청 A와 B를 두 엔진이 어떻게 다루는지 비교. 위쪽 vLLM은 h0, h1, h2까지 같은 해시가 나와 같은 물리 블록을 가리키고 마지막 블록에서만 a3과 b3으로 갈라진다. 아래쪽 SGLang은 루트에서 시스템 프롬프트 노드까지 한 몸통을 공유하고 그 아래에서 두 질문 노드로 갈라진다.">
+     role="img" aria-label="같은 시스템 프롬프트를 공유하는 요청 A와 B를 두 엔진이 어떻게 다루는지 비교. 위쪽 vLLM은 h0, h1, h2까지 같은 해시가 나와 같은 물리 블록을 가리키고 마지막 블록에서만 a3과 b3으로 갈라집니다. 아래쪽 SGLang은 루트에서 시스템 프롬프트 노드까지 한 몸통을 공유하고 그 아래에서 두 질문 노드로 갈라집니다.">
   <style>
     .pc4-req   { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }
     .pc4-head  { fill: var(--primary, #0d9488); font-size: 22px; text-anchor: middle; font-weight: 600; }
@@ -245,8 +240,6 @@
   <text x="352" y="560" class="pc4-lbl">배송 조회해줘</text>
   <text x="128" y="596" class="pc4-cap">요청 A</text>
   <text x="352" y="596" class="pc4-cap">요청 B</text>
-  <text x="240" y="630" class="pc4-cap">공통 접두사는 한 몸통으로 공유되고,</text>
-  <text x="240" y="652" class="pc4-cap">질문 부분에서만 갈라진다</text>
 </svg>
 </div>
 <p>지우는 규칙도 vLLM과 비슷한 결을 갖습니다. 메모리가 부족하면 <strong>잎(leaf)부터</strong> LRU 순서로 지웁니다. 지금 돌고 있는 요청이 쓰는 경로는 매치된 노드부터 루트까지 통째로 참조 카운트가 잡혀 있어 지워지지 않습니다. 안쪽 노드, 즉 여러 요청이 공유하는 접두사는 자식들이 다 사라지기 전에는 지울 수 없으니, 자연히 마지막까지 살아남습니다.</p>
@@ -259,7 +252,7 @@
 <p>SGLang 논문의 “최대 6.4배 처리량” 수치를 vLLM과의 성능 비교로 인용하는 글이 많은데, 논문의 비교 대상은 prefix caching이 없던 <strong>vLLM v0.2.5</strong>입니다. 논문 스스로 “RadixAttention이 최신 vLLM에 실험 기능으로 들어가서 이전 버전과 비교했다”고 밝히고 있습니다. 즉 이 수치는 “prefix caching이 있느냐 없느냐”의 효과이지, 오늘의 두 엔진 중 무엇이 빠른가에 관한 근거가 아닙니다.</p>
 </div>
 <br>
-<h2>진짜 차이는 스케줄러에 있다</h2>
+<h2 id="진짜-차이는-스케줄러에-있다">진짜 차이는 스케줄러에 있다</h2>
 <p>같은 자료구조에 도달했다면, 두 엔진은 어디서 갈라질까요? 캐시 자체가 아니라 <strong>캐시를 대하는 스케줄러의 태도</strong>에서 갈라집니다.</p>
 <p>이런 상황을 생각해봅시다. 캐시 공간은 빠듯한데, 접두사 X를 공유하는 요청들과 접두사 Y를 공유하는 요청들이 번갈아 도착합니다. 도착 순서대로(FCFS) 처리하면 X를 올렸다가 Y에 밀려 지우고, 다시 X를 올리는 일이 반복될 수 있습니다. 캐시는 있는데 히트가 안 나는, 캐시 스래싱입니다.</p>
 <p>SGLang 논문의 답이 <strong>cache-aware scheduling</strong>입니다. 대기 중인 요청들을 도착 순서가 아니라 <strong>radix tree와의 매치 길이 순으로</strong> 정렬해서, 같은 접두사를 공유하는 요청들을 몰아서 처리합니다. X 팀을 먼저 다 처리하고 Y 팀으로 넘어가면 지웠다 다시 올리는 낭비가 사라집니다. 논문은 이 정렬(longest prefix match)이 실측 워크로드에서 이론적 최적 히트율의 96%에 도달했다고 보고합니다. vLLM의 V1 스케줄러에는 이에 해당하는 정책이 없습니다. 도착 순서대로 처리하는 FCFS와 우선순위 정책이 전부고, 캐시 상태는 스케줄 순서에 영향을 주지 않습니다. 논문의 기여 중 시간이 지나도 남는 것은 트리 그 자체가 아니라 이 스케줄링입니다.</p>
@@ -303,18 +296,18 @@
 </table>
 <p>표의 위쪽 세 줄이 “구현이 다를 뿐 결과가 같은” 부분이고, 마지막 줄이 설계 사상이 실제로 갈라지는 부분입니다.</p>
 <br>
-<h2>마치며</h2>
+<h2 id="마치며">마치며</h2>
 <p>prefix caching은 한 문장으로 줄이면 “이미 한 계산은 두 번 하지 않는다”입니다. vLLM은 부모 해시를 물고 이어지는 블록 사슬로, SGLang은 radix tree로 이 문장을 구현했고, 뜯어보면 두 구현은 같은 구조의 두 표현입니다. 남는 차이는 캐시를 알고 스케줄을 짤 것인가라는 정책의 문제였습니다.</p>
 <p>그런데 재사용이 아껴주는 것은 어디까지나 <strong>이미 계산한 것</strong>입니다. 캐시에 담기는 KV 그 자체의 크기, 그리고 매 스텝 GPU가 읽어야 하는 모델 가중치의 크기는 재사용으로 줄지 않습니다. 다음 글에서는 이 크기 자체를 줄이는 방법, 양자화를 살펴봅니다. FP8, AWQ, GPTQ가 각각 무엇을 몇 비트로 줄이는지, 그리고 GPU 세대에 따라 무엇을 골라야 하는지 정리합니다.</p>
 <br>
-<h2>함께 보면 좋은 글</h2>
+<h2 id="함께-보면-좋은-글">함께 보면 좋은 글</h2>
 <ul>
 <li><a href="/llm/llm-inference-process/">Prefill과 Decode로 이해하는 LLM 추론 과정</a></li>
 <li><a href="/llm/paged-attention/">vLLM의 핵심 원리 PagedAttention 파헤치기</a></li>
 <li><a href="/llm/continuous-batching/">Continuous Batching과 Chunked Prefill 완전 이해</a></li>
 </ul>
 <br>
-<h2>참고자료</h2>
+<h2 id="참고자료">참고자료</h2>
 <ul>
 <li><a href="https://docs.vllm.ai/en/latest/design/prefix_caching.html" target="_blank" rel="noopener noreferrer">Automatic Prefix Caching (vLLM Design Document)</a></li>
 <li><a href="https://docs.vllm.ai/en/latest/design/hybrid_kv_cache_manager.html" target="_blank" rel="noopener noreferrer">Hybrid KV Cache Manager (vLLM Design Document)</a></li>
@@ -343,6 +336,6 @@
           <script
             id="gatsby-chunk-mapping"
           >
-            window.___chunkMapping="{\"app\":[\"/app-42c8eb55dc543e138376.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-856595d8666078cb96af.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-b4c4c7e0e45d2ac7b2ff.js\"]}";
+            window.___chunkMapping="{\"app\":[\"/app-c3c954ae14c9c5464a11.js\"],\"component---src-pages-404-tsx\":[\"/component---src-pages-404-tsx-b06ac45fe9465823827e.js\"],\"component---src-pages-index-tsx\":[\"/component---src-pages-index-tsx-7b887c0cb19fa9675ed2.js\"],\"component---src-pages-info-tsx\":[\"/component---src-pages-info-tsx-92d2e3773cea5197018b.js\"],\"component---src-templates-post-template-tsx\":[\"/component---src-templates-post-template-tsx-8541670ad9ce2b9b8608.js\"],\"component---src-templates-quiz-hub-template-tsx\":[],\"component---src-templates-quiz-list-template-tsx\":[],\"component---src-templates-quiz-session-template-tsx\":[\"/component---src-templates-quiz-session-template-tsx-6db724ed991dff177af0.js\"]}";
           </script>
-        <script>window.___webpackCompilationHash="bd975b1e3526d603c869";</script><script src="/webpack-runtime-df3fe1ddd21b015707db.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-42c8eb55dc543e138376.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
+        <script>window.___webpackCompilationHash="870f961d040dfc5d0ab6";</script><script src="/webpack-runtime-0249e2f3c325b3a2482e.js" async></script><script src="/framework-db988868b0935e917b4a.js" async></script><script src="/app-c3c954ae14c9c5464a11.js" async></script><!-- slice-end id="_gatsby-scripts-1" --></body></html>
