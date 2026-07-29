@@ -1,0 +1,179 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "heap-page-tuple-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "scenario": {
+        "kind": "log",
+        "body": "UPDATE hot_demo SET val = 'B' WHERE id = 2;  실행 직후\n\n lp | lp_off | lp_flags | t_xmin | t_xmax | t_ctid | t_infomask2\n----+--------+----------+--------+--------+--------+-------------\n  1 |   8160 |        1 |    742 |      0 | (0,1)  |           2\n  2 |   8128 |        1 |    742 |    743 | (0,4)  |       16386\n  3 |   8096 |        1 |    742 |      0 | (0,3)  |           2\n  4 |   8064 |        1 |    743 |      0 | (0,4)  |       32770"
+      },
+      "question": "슬롯 2번의 t_ctid가 자기 자신이 아니라 (0,4)를 가리키고 있습니다. 이 값이 뜻하는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "이 튜플이 4번 슬롯으로 물리적으로 옮겨졌고 2번 슬롯은 비었습니다.",
+          "why": "옛 튜플은 자리에 그대로 남습니다. 2번 슬롯의 lp_flags가 1(LP_NORMAL)이고 lp_off도 8128로 유효한 것이 그 증거입니다. 자리를 옮긴 것이 아니라 버전이 하나 더 생긴 것입니다."
+        },
+        {
+          "text": "4번 슬롯의 튜플이 이 튜플을 참조하는 외래 키 관계입니다.",
+          "why": "t_ctid는 물리 위치 포인터일 뿐 논리적 참조 관계와는 무관합니다. 외래 키는 제약 조건과 인덱스로 관리되며 튜플 헤더에 흔적을 남기지 않습니다."
+        },
+        {
+          "text": "이 튜플의 다음 버전이 같은 페이지의 4번 슬롯에 있습니다.",
+          "correct": true,
+          "why": "t_ctid는 평소 자기 위치를 가리키다가, UPDATE로 새 버전이 생기면 그 위치로 갱신됩니다. 한 row의 여러 버전이 이 필드로 이어진 연결 리스트가 되고, 인덱스는 옛 위치만 알아도 이 사슬을 따라 최신 버전에 도달합니다."
+        },
+        {
+          "text": "이 페이지에서 4번 슬롯부터 빈 공간이 시작됩니다.",
+          "why": "페이지의 빈 공간 경계는 개별 튜플의 t_ctid가 아니라 페이지 헤더의 pd_lower와 pd_upper가 정합니다. 튜플 헤더는 페이지 전체의 여유 공간을 알지 못합니다."
+        }
+      ],
+      "explanation": "UPDATE는 기존 튜플을 제자리에서 고치지 않고 새 튜플을 추가합니다. 옛 튜플에는 t_xmax에 UPDATE 트랜잭션의 xid가 찍히고 t_ctid가 새 버전의 위치로 갱신됩니다. 위 출력에서 슬롯 2의 t_xmax와 슬롯 4의 t_xmin이 똑같이 743인 것은 한 트랜잭션이 한쪽을 죽이고 한쪽을 만들었다는 뜻입니다. t_infomask2의 16386과 32770은 각각 HEAP_HOT_UPDATED(0x4000)와 HEAP_ONLY_TUPLE(0x8000)에 컬럼 수 2가 더해진 값이라, 이번 UPDATE가 HOT으로 처리되어 인덱스 엔트리가 추가되지 않았음까지 읽어낼 수 있습니다.",
+      "postSlug": "/postgres/heap-page-tuple/",
+      "anchor": "#update는-사실-insert다"
+    },
+    {
+      "id": "heap-page-tuple-02",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["계산", "함정"],
+      "scenario": {
+        "kind": "svg",
+        "asset": "heap-page-tuple-02-scenario.svg"
+      },
+      "question": "MAXALIGN을 적용한 크기가 정확히 1,024바이트인 튜플 하나를 이 페이지에 INSERT할 수 있습니까?",
+      "choices": [
+        {
+          "text": "없습니다. line pointer 4바이트가 함께 필요해 1,028바이트가 있어야 합니다.",
+          "correct": true,
+          "why": "튜플 하나가 들어가려면 데이터 영역에 튜플 본체가, 슬롯 디렉터리에 그것을 가리킬 ItemId 4바이트가 동시에 자리를 잡아야 합니다. 여유는 pd_lower와 pd_upper 사이의 1,024바이트뿐이라 4바이트가 모자랍니다."
+        },
+        {
+          "text": "있습니다. 여유 공간이 정확히 1,024바이트라 딱 맞습니다.",
+          "why": "튜플 크기만 세고 슬롯 디렉터리를 빠뜨린 계산입니다. 페이지는 양쪽에서 채워지므로 INSERT 한 건은 언제나 두 방향을 함께 소비합니다."
+        },
+        {
+          "text": "있습니다. special space가 비어 있어 8,192바이트 지점까지 쓸 수 있습니다.",
+          "why": "힙 페이지의 special space 크기가 0인 것은 맞지만, pd_upper 아래쪽은 이미 기존 튜플들이 채우고 있습니다. 실제 여유는 pd_special까지의 거리가 아니라 pd_lower와 pd_upper 사이입니다."
+        },
+        {
+          "text": "판단할 수 없습니다. 이 테이블의 FILLFACTOR를 알아야 합니다.",
+          "why": "FILLFACTOR는 이 페이지를 INSERT 대상으로 고를지 말지를 정하는 기준이라, 낮게 잡혀 있으면 오히려 더 일찍 다른 페이지로 넘어갑니다. 물리적으로 들어가느냐는 pd_lower와 pd_upper만으로 답이 나옵니다."
+        }
+      ],
+      "explanation": "페이지의 여유 공간은 pd_upper에서 pd_lower를 뺀 값입니다. 여기서는 1,116에서 92를 뺀 1,024바이트입니다. 그런데 INSERT 한 건은 이 공간을 양쪽에서 갉아먹습니다. 튜플 본체는 pd_upper를 앞으로 당기고, 그 튜플을 가리킬 ItemId 4바이트는 pd_lower를 뒤로 밉니다. 필요한 것은 1,028바이트이고 4바이트가 모자라 이 페이지는 후보에서 탈락합니다. PostgreSQL은 FSM을 뒤져 다른 페이지를 찾고, 없으면 파일 끝에 새 페이지를 붙입니다. 한 가지 덧붙이면, LP_UNUSED 상태의 빈 슬롯이 남아 있을 때는 그 ItemId를 재사용해 4바이트를 아낄 여지가 있습니다. 다만 페이지를 고를 때 쓰는 PageGetHeapFreeSpace는 재사용 가능한 슬롯이 있는지 따지지 않고 언제나 ItemId 4바이트를 미리 빼고 여유를 계산하므로, 이 페이지는 어느 쪽이든 후보에서 빠집니다.",
+      "postSlug": "/postgres/heap-page-tuple/",
+      "anchor": "#8kb-페이지-안에는-무엇이-들어-있는가"
+    },
+    {
+      "id": "heap-page-tuple-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "CREATE TABLE members (\n    id         bigint PRIMARY KEY,\n    email      text,\n    status     text,\n    last_login timestamptz,\n    memo       text\n);\n\nCREATE UNIQUE INDEX ON members (lower(email));\nCREATE INDEX ON members (id) WHERE status = 'active';"
+      },
+      "question": "이 테이블의 페이지에는 새 튜플이 들어갈 여유가 충분합니다. 다음 UPDATE 중 HOT update로 처리될 수 있는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "UPDATE members SET status = 'inactive' WHERE id = 7;",
+          "why": "status는 부분 인덱스의 WHERE predicate에 등장합니다. 값이 바뀌면 그 row가 인덱스에 포함되는지 여부 자체가 달라지므로 인덱스를 갱신해야 하고 HOT 조건이 깨집니다. 인덱스 키 목록만 훑으면 놓치는 지점입니다."
+        },
+        {
+          "text": "UPDATE members SET last_login = now() WHERE id = 7;",
+          "correct": true,
+          "why": "last_login은 인덱스 키에도, 표현식에도, 부분 인덱스의 predicate에도 등장하지 않습니다. 갱신된 컬럼이 어떤 인덱스와도 무관하고 같은 페이지에 자리가 있으므로, 새 인덱스 엔트리 없이 HOT chain으로 연결됩니다."
+        },
+        {
+          "text": "UPDATE members SET email = 'new@x.com' WHERE id = 7;",
+          "why": "email 자체는 인덱스 키가 아니지만 lower(email) 표현식 인덱스가 이 컬럼을 참조합니다. 표현식이 계산에 쓰는 컬럼도 인덱스에 등장하는 컬럼으로 취급됩니다."
+        },
+        {
+          "text": "UPDATE members SET memo = NULL, id = id + 1000 WHERE id = 7;",
+          "why": "id는 PRIMARY KEY라 인덱스 키 컬럼입니다. 한 UPDATE가 여러 컬럼을 건드릴 때는 그중 하나만 인덱스에 걸려도 전체가 HOT에서 제외됩니다."
+        }
+      ],
+      "explanation": "HOT update의 첫 번째 조건은 갱신된 컬럼이 그 테이블의 어떤 인덱스 정의에도 등장하지 않는 것인데, 여기서 등장한다는 말의 범위가 넓습니다. 인덱스 키 컬럼은 물론이고 표현식 인덱스가 계산에 쓰는 컬럼, 부분 인덱스의 WHERE predicate에 나오는 컬럼까지 전부 포함됩니다. BRIN 같은 summarizing 인덱스만 이 검사에서 빠집니다. 두 번째 조건인 같은 페이지의 여유 공간은 문제에서 충족된다고 주었으니 판정은 컬럼 조건만으로 끝납니다. 운영에서 HOT 비율이 기대보다 낮게 나온다면, 무심코 만들어둔 부분 인덱스나 표현식 인덱스가 조건을 조용히 깨고 있는 경우가 많습니다.",
+      "postSlug": "/postgres/heap-page-tuple/",
+      "anchor": "#hot-update-인덱스를-건드리지-않는-update"
+    },
+    {
+      "id": "heap-page-tuple-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "INSERT INTO docs\nSELECT 1, string_agg(md5(g::text), '') FROM generate_series(1, 5000) g;\n\nSELECT pg_column_size(content)        AS column_size,\n       pg_column_compression(content) AS compression\nFROM docs WHERE id = 1;\n--  column_size | compression\n-- -------------+-------------\n--       160000 |\n\nSELECT pg_relation_size('docs') AS main_size;\n--  main_size\n-- -----------\n--       8192"
+      },
+      "question": "content 컬럼의 값에 실제로 무슨 일이 일어났습니까?",
+      "choices": [
+        {
+          "text": "TOAST가 동작하지 않았습니다. column_size가 원본 크기 그대로입니다.",
+          "why": "pg_column_size는 외부 저장된 값에 대해 TOAST 테이블에 실제로 들어간 크기를 돌려줍니다. 압축이 안 걸리면 그 크기가 원본과 같아지므로, 이 숫자만으로는 in-line인지 외부인지 구분되지 않습니다."
+        },
+        {
+          "text": "pglz로 압축되어 본 테이블 안에 in-line으로 저장되었습니다.",
+          "why": "압축이 걸렸다면 pg_column_compression이 pglz를 돌려줍니다. md5 해시를 이어붙인 문자열은 반복 패턴이 없어 pglz가 거의 줄이지 못하고, 압축해도 이득이 없으면 압축본을 쓰지 않습니다."
+        },
+        {
+          "text": "값이 여러 chunk로 쪼개져 본 테이블의 여러 페이지에 나뉘어 저장되었습니다.",
+          "why": "chunk로 쪼개지는 것은 맞지만 장소가 틀렸습니다. chunk는 본 테이블이 아니라 전용 TOAST 테이블에 저장됩니다. 본 테이블의 한 튜플이 여러 페이지에 걸치는 일은 없습니다."
+        },
+        {
+          "text": "압축이 통하지 않아 TOAST 테이블로 외부 저장되었고, 본 테이블에는 포인터만 남았습니다.",
+          "correct": true,
+          "why": "compression이 비어 있으니 압축은 걸리지 않았고, 본 테이블이 페이지 한 장 크기 그대로인 것은 160KB가 그 안에 없다는 뜻입니다. 두 지표를 합치면 값이 옆 테이블로 빠졌다는 결론만 남습니다."
+        }
+      ],
+      "explanation": "튜플 크기가 임계값(약 2KB)을 넘으면 PostgreSQL은 먼저 압축을 시도하고, 압축 후에도 임계값 아래로 내려가지 않으면 값을 떼어내 pg_toast.pg_toast_<oid> 테이블로 옮긴 뒤 본 테이블에는 18바이트짜리 포인터만 남깁니다. 판정하려면 세 지표를 함께 읽어야 합니다. pg_column_compression이 비어 있으면 압축은 없었고, pg_relation_size가 페이지 한 장이면 값이 본 테이블에 없으며, pg_column_size는 어느 경우든 실제 저장 크기를 돌려주므로 단독으로는 근거가 되지 못합니다. 외부 저장된 컬럼은 읽을 때마다 TOAST 테이블 조회가 따라붙으므로, 이런 컬럼이 있는 테이블에 SELECT * 를 습관적으로 쓰면 필요 없는 I/O를 매번 지불하게 됩니다.",
+      "postSlug": "/postgres/heap-page-tuple/",
+      "anchor": "#toast-8kb에-안-들어가는-큰-값"
+    },
+    {
+      "id": "heap-page-tuple-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영", "함정"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- update가 잦은 테이블의 HOT 비율을 올리려고 적용\nALTER TABLE members SET (fillfactor = 80);\nVACUUM members;"
+      },
+      "question": "며칠이 지나도 기존 데이터가 들어 있는 페이지들의 밀도는 그대로이고 HOT update 비율도 거의 오르지 않았습니다. 원인은 무엇입니까?",
+      "choices": [
+        {
+          "text": "fillfactor는 새로 쓰이는 페이지에만 적용되고, 일반 VACUUM은 페이지를 재구성하지 않습니다.",
+          "correct": true,
+          "why": "ALTER TABLE은 storage parameter만 바꿀 뿐 이미 놓인 튜플을 건드리지 않습니다. 일반 VACUUM도 dead tuple을 회수해 재사용 가능으로 표시할 뿐, 살아 있는 튜플을 옮겨 밀도를 낮추지는 않습니다. 기존 페이지에 여유를 만들려면 테이블을 통째로 다시 쓰는 VACUUM FULL, CLUSTER, pg_repack이 필요합니다."
+        },
+        {
+          "text": "fillfactor 80은 힙에 적용되지 않습니다. 인덱스 전용 파라미터입니다.",
+          "why": "힙에도 적용되며 기본값이 100입니다. 인덱스는 종류별로 기본값이 달라서 B-tree가 90, Hash가 75입니다."
+        },
+        {
+          "text": "VACUUM이 아니라 ANALYZE를 돌려야 새 fillfactor가 반영됩니다.",
+          "why": "ANALYZE는 플래너용 통계를 수집할 뿐 페이지 배치와 무관합니다. 어떤 통계 갱신도 이미 디스크에 놓인 튜플의 위치를 바꾸지 않습니다."
+        },
+        {
+          "text": "fillfactor를 80보다 더 낮춰야 효과가 나타납니다.",
+          "why": "값이 아니라 적용 시점이 문제입니다. 기존 페이지가 다시 쓰이지 않는 한 70으로 낮춰도 결과는 같습니다."
+        }
+      ],
+      "explanation": "ALTER TABLE로 바꾼 fillfactor는 그 이후 새로 할당되거나 새로 채워지는 페이지에만 효력이 있습니다. 이미 가득 찬 페이지는 그대로 남고, 그 페이지의 row를 UPDATE하면 새 버전이 들어갈 자리가 없어 다른 페이지로 나가면서 HOT 조건이 깨집니다. 일반 VACUUM은 dead tuple의 line pointer를 LP_UNUSED로 되돌려 그 자리를 재사용 가능하게 만들 뿐, 남은 튜플을 밀어 모아 여유를 만드는 재구성은 하지 않습니다. 기존 페이지까지 새 밀도로 다시 쓰려면 테이블 전체를 다시 쓰는 작업이 필요하고, 운영 중이라면 락을 오래 잡지 않는 pg_repack이 현실적인 선택입니다.",
+      "explainAsset": "heap-page-tuple-05-explain.svg",
+      "postSlug": "/postgres/heap-page-tuple/",
+      "anchor": "#fillfactor-페이지를-처음부터-가득-채우지-않는-이유"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+<svg viewBox="0 0 360 316" style="width: 100%; height: auto; max-width: 360px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="테이블 재구성 중 디스크 사용량 변화. 시작 시점에는 원본 500기가바이트만 있고, 복사 중에는 원본 500기가바이트와 사본 200기가바이트가 함께 존재해 순간 최대 700기가바이트에 도달하며, 이 값이 가용 한계 650기가바이트를 넘습니다. 완료 후에는 사본 200기가바이트만 남습니다.">
+<style>
+.qvb4-t { fill: var(--text, #1c1917); }
+.qvb4-m { fill: var(--text-muted, #78716c); }
+.qvb4-d { fill: var(--text-danger, #dc2626); font-weight: 600; }
+.qvb4-orig { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.qvb4-copy { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.qvb4-cap { stroke: var(--text-danger, #dc2626); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+.qvb4-ax { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
+</style>
+<text x="180" y="26" text-anchor="middle" font-size="16" font-weight="600" class="qvb4-t">재구성 중 디스크 사용량</text>
+<text x="178" y="58" text-anchor="middle" font-size="14" class="qvb4-d">순간 최대 700 GB</text>
+<rect x="32" y="121" width="76" height="129" class="qvb4-orig"/>
+<text x="70" y="192" text-anchor="middle" font-size="14" class="qvb4-t">원본 500</text>
+<rect x="140" y="121" width="76" height="129" class="qvb4-orig"/>
+<text x="178" y="192" text-anchor="middle" font-size="14" class="qvb4-t">원본 500</text>
+<rect x="140" y="70" width="76" height="51" class="qvb4-copy"/>
+<text x="178" y="101" text-anchor="middle" font-size="14" class="qvb4-t">사본 200</text>
+<rect x="248" y="199" width="76" height="51" class="qvb4-copy"/>
+<text x="286" y="230" text-anchor="middle" font-size="14" class="qvb4-t">사본 200</text>
+<line x1="20" y1="83" x2="350" y2="83" class="qvb4-cap"/>
+<text x="350" y="77" text-anchor="end" font-size="14" class="qvb4-d">가용 한계 650 GB</text>
+<line x1="20" y1="250" x2="350" y2="250" class="qvb4-ax"/>
+<text x="70" y="272" text-anchor="middle" font-size="14" class="qvb4-m">시작</text>
+<text x="178" y="272" text-anchor="middle" font-size="14" class="qvb4-m">복사 중</text>
+<text x="286" y="272" text-anchor="middle" font-size="14" class="qvb4-m">완료</text>
+<text x="180" y="302" text-anchor="middle" font-size="14" class="qvb4-m">VACUUM FULL도 같은 모양을 그립니다.</text>
+</svg>

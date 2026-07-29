@@ -107,6 +107,9 @@ module.exports = {
             options: {},
           },
 
+          // 헤딩에 id 부여 (딥링크용, 퀴즈의 원문 링크가 이 id를 씀)
+          'gatsby-remark-heading-ids',
+
           // 코드 하이라이팅
           {
             resolve: 'gatsby-remark-prismjs',
@@ -205,7 +208,15 @@ module.exports = {
           changefreq: path === '/' ? 'daily' : 'weekly',
           priority: path === '/' ? 1.0 : 0.7,
         }),
-        excludes: ['/info/', '/404/', '/404.html', '/dev-404-page/'],
+        // 퀴즈 세션 페이지(/quiz/{scope}/)는 noindex라 제외하고,
+        // 전 문항이 정적으로 나열되는 list 페이지만 남긴다
+        excludes: [
+          '/info/',
+          '/404/',
+          '/404.html',
+          '/dev-404-page/',
+          '/quiz/*/',
+        ],
       },
     },
 

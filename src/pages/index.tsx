@@ -1,21 +1,28 @@
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect } from 'react'
 import styled from '@emotion/styled'
 import PostList from 'components/Main/PostList'
 import NavDropdown from 'components/Main/NavDropdown'
 import HeroCarousel from 'components/Main/HeroCarousel'
+import QuizPromo from 'components/Main/QuizPromo'
 import { graphql, navigate } from 'gatsby'
 import { PostListItemType, SeriesInfo } from 'types/PostItem.types'
+import { QuizScopeSummary } from 'types/quiz.types'
 import queryString, { ParsedQuery } from 'query-string'
 import Template from 'components/Common/Template'
+import SiteHeader, { HeaderIconLink } from 'components/Common/SiteHeader'
 import { seriesMetadata } from 'utils/seriesData'
 import { getSectionForCategory } from 'styles/sections'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
+import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons'
 import { c, bp, shadow } from 'styles/theme'
 
 type IndexPageProps = {
   location: {
     search: string
+  }
+  pageContext: {
+    quizScopes?: QuizScopeSummary[]
+    quizTotal?: number
   }
   data: {
     site: {
@@ -39,109 +46,10 @@ const Container = styled.div`
   background: ${c.bg};
 `
 
-const Header = styled.header`
-  background: ${c.bg};
-  border-bottom: 1px solid ${c.border};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  transition: background 0.2s ease, border-color 0.2s ease;
-`
-
-const HeaderContent = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 32px;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  gap: 16px;
-
-  ${bp.md} {
-    padding: 0 20px;
-    height: 54px;
-  }
-`
-
-const Logo = styled.h1`
-  font-size: 19px;
-  font-weight: 700;
-  color: ${c.text};
-  margin: 0;
-  flex-shrink: 0;
-  cursor: pointer;
-
-  span {
-    color: ${c.primary};
-  }
-`
-
-const NavCenter = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-
-  ${bp.lg} {
+// 좁은 화면에서는 캐러셀 아래 QuizPromo가 같은 역할을 해서 헤더를 비운다
+const QuizIconLink = styled(HeaderIconLink)`
+  ${bp.sm} {
     display: none;
-  }
-`
-
-const HeaderActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-`
-
-const ThemeToggle = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid ${c.border};
-  border-radius: 8px;
-  background: ${c.bgSubtle};
-  color: ${c.textMuted};
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-
-  &:hover {
-    background: ${c.bgMuted};
-    color: ${c.text};
-    border-color: ${c.primary};
-  }
-
-  ${bp.md} {
-    width: 32px;
-    height: 32px;
-    font-size: 13px;
-  }
-`
-
-const GitHubButton = styled.a`
-  background: ${c.primary};
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  text-decoration: none;
-  display: inline-block;
-  flex-shrink: 0;
-
-  &:hover {
-    background: ${c.primaryHov};
-  }
-
-  ${bp.md} {
-    padding: 6px 12px;
-    font-size: 12px;
   }
 `
 
@@ -284,6 +192,7 @@ const SidebarSeriesCount = styled.span`
 
 const IndexPage: FunctionComponent<IndexPageProps> = function ({
   location: { search },
+  pageContext: { quizScopes = [], quizTotal = 0 },
   data: {
     site: {
       siteMetadata: { title, description, siteUrl },
@@ -310,20 +219,6 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
     }
     return 'all'
   })()
-
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const current = document.documentElement.getAttribute('data-theme')
-    setIsDark(current === 'dark')
-  }, [])
-
-  const toggleTheme = () => {
-    const next = isDark ? 'light' : 'dark'
-    document.documentElement.setAttribute('data-theme', next)
-    localStorage.setItem('theme', next)
-    setIsDark(!isDark)
-  }
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -396,46 +291,40 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
       siteUrl={siteUrl}
     >
       <Container>
-        <Header>
-          <HeaderContent>
-            <Logo onClick={() => navigate('/')}>
-              <span>don</span>tech
-            </Logo>
-
-            <NavCenter>
+        <SiteHeader
+          logoAsHeading
+          center={
+            <NavDropdown
+              selectedSection={selectedSection}
+              selectedCategory={selectedCategory}
+              categoryCounts={categoryCounts}
+            />
+          }
+          actions={
+            quizScopes.length > 0 && (
+              <QuizIconLink href="/quiz/" aria-label="Quiz" title="Quiz">
+                <FontAwesomeIcon icon={faCircleQuestion} />
+              </QuizIconLink>
+            )
+          }
+          trailing={
+            /* Mobile: hamburger is rendered inside NavDropdown */
+            <MobileNavWrapper>
               <NavDropdown
                 selectedSection={selectedSection}
                 selectedCategory={selectedCategory}
                 categoryCounts={categoryCounts}
               />
-            </NavCenter>
-
-            <HeaderActions>
-              <ThemeToggle onClick={toggleTheme} aria-label="테마 전환">
-                <FontAwesomeIcon icon={isDark ? faSun : faMoon} />
-              </ThemeToggle>
-              <GitHubButton
-                href="https://github.com/dh5473"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub
-              </GitHubButton>
-              {/* Mobile: hamburger is rendered inside NavDropdown */}
-              <MobileNavWrapper>
-                <NavDropdown
-                  selectedSection={selectedSection}
-                  selectedCategory={selectedCategory}
-                  categoryCounts={categoryCounts}
-                />
-              </MobileNavWrapper>
-            </HeaderActions>
-          </HeaderContent>
-        </Header>
+            </MobileNavWrapper>
+          }
+        />
 
         <MainContent>
           {/* Hero carousel */}
           <HeroCarousel posts={featuredPosts} />
+
+          {/* Quiz entry point */}
+          <QuizPromo scopeCount={quizScopes.length} total={quizTotal} />
 
           <ContentRow>
             {/* Post list */}

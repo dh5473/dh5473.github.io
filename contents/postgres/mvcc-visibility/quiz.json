@@ -1,0 +1,176 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "mvcc-visibility-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "SELECT pg_current_snapshot();\n--  pg_current_snapshot\n-- ---------------------\n--  748:752:748,750"
+      },
+      "question": "이 snapshot을 들고 있는 트랜잭션에게, xid 750이 INSERT한 튜플은 보입니까?",
+      "choices": [
+        {
+          "text": "보입니다. 750이 xmin(748)과 xmax(752) 사이에 있습니다.",
+          "why": "그 구간에 있다는 사실만으로는 아무것도 결정되지 않습니다. 구간 안의 xid는 xip 목록에 있으면 진행 중, 없으면 이미 종료된 것으로 갈립니다. 749나 751이었다면 이 답이 맞습니다."
+        },
+        {
+          "text": "안 보입니다. 750이 xip 목록에 있어 snapshot을 찍은 순간 아직 진행 중이었습니다.",
+          "correct": true,
+          "why": "xip 목록은 snapshot 생성 시점에 끝나지 않은 트랜잭션의 명단입니다. INSERT가 확정되지 않은 상태이므로 이 튜플은 존재 자체가 보이지 않습니다. 750이 그 뒤에 커밋하더라도 이 snapshot을 쓰는 동안에는 판정이 바뀌지 않습니다."
+        },
+        {
+          "text": "보입니다. 750은 xmax(752)보다 작으므로 이미 커밋된 과거입니다.",
+          "why": "xmax보다 작다는 것은 snapshot을 찍을 때 이미 시작은 했다는 뜻일 뿐입니다. 시작한 것과 끝난 것은 다릅니다."
+        },
+        {
+          "text": "CLOG를 읽어봐야 알 수 있습니다.",
+          "why": "CLOG는 종료된 트랜잭션이 커밋인지 롤백인지 가릴 때 필요합니다. 750은 xip 목록에 있어 아직 종료되지 않았으므로, CLOG를 볼 것도 없이 안 보인다고 판정됩니다."
+        }
+      ],
+      "explanation": "xmin:xmax:xip_list 형식은 xid 번호선을 세 구간으로 나눕니다. 748 미만은 모두 종료된 과거, 752 이상은 아직 시작하지 않은 미래, 그 사이는 xip 목록으로 갈립니다. 목록에 있으면 진행 중이라 안 보이고, 목록에 없으면 종료된 것이므로 CLOG에서 커밋 여부를 확인한 뒤 판정합니다. 여기서 749와 751은 구간 안에 있지만 목록에 없으므로 이미 끝난 트랜잭션이고, 커밋되었다면 그들이 만든 튜플은 보입니다. 구간 안에 있다는 것과 보인다는 것을 같은 말로 읽으면 이후 판정이 전부 어긋납니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#snapshot-지금-세상이-어떤-모습인가의-사진"
+    },
+    {
+      "id": "mvcc-visibility-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판정"],
+      "chain": { "id": "long-open-transaction", "order": 1 },
+      "scenario": {
+        "kind": "svg",
+        "asset": "mvcc-visibility-02-scenario.svg"
+      },
+      "question": "Session A는 Repeatable Read로 트랜잭션을 열어 snapshot 743:749:743을 확보했습니다. 그 뒤 Session B가 xid 749로 balance를 2000으로 UPDATE하고 커밋했습니다. 지금 Session A가 SELECT balance FROM accounts WHERE id = 1을 실행하면 무엇이 나옵니까?",
+      "choices": [
+        {
+          "text": "2000. Session B가 커밋을 마쳤으므로 최신 값이 보입니다.",
+          "why": "커밋 여부는 판정의 한 축일 뿐이고 다른 축이 snapshot입니다. 749는 Session A가 snapshot을 찍은 뒤에 시작한 트랜잭션이라, 커밋을 했든 안 했든 이 snapshot에서는 존재하지 않는 미래입니다."
+        },
+        {
+          "text": "두 행이 모두 나옵니다. 페이지에 튜플이 두 개 있습니다.",
+          "why": "물리적으로 두 개가 있는 것은 맞지만 가시성 판정이 그중 하나만 통과시킵니다. 여러 버전이 동시에 존재하면서도 결과 집합에는 하나만 나오게 하는 것이 MVCC가 하는 일입니다."
+        },
+        {
+          "text": "에러가 납니다. 다른 트랜잭션이 같은 row를 이미 커밋했습니다.",
+          "why": "읽기만으로는 충돌이 나지 않습니다. Repeatable Read에서 에러가 발생하는 것은 이 트랜잭션이 같은 row를 쓰려고 할 때입니다."
+        },
+        {
+          "text": "1000. 구 버전이 보입니다.",
+          "correct": true,
+          "why": "구 버전의 t_xmin은 740이라 snapshot의 xmin(743)보다 작은 확정된 과거이고, t_xmax는 749라 snapshot의 xmax(749)와 같아 아직 시작하지 않은 미래로 분류됩니다. 만든 트랜잭션은 보이고 죽인 트랜잭션은 보이지 않으므로 이 튜플은 살아 있는 것으로 판정됩니다."
+        }
+      ],
+      "explanation": "판정은 두 단계로 나뉩니다. 먼저 t_xmin이 이 snapshot에서 보이는가, 그다음 t_xmax가 유효한 삭제인가. 구 버전은 t_xmin 740이 snapshot의 xmin(743) 아래라 1단계를 통과하고, t_xmax 749가 snapshot의 xmax(749) 이상이라 아직 일어나지 않은 삭제로 판정되어 살아남습니다. 신 버전은 t_xmin 749가 같은 이유로 미래에 속해 1단계에서 탈락합니다. Session B의 커밋은 실제로 끝났지만 Session A의 snapshot은 그 사건보다 먼저 찍혔고, 그 사진을 트랜잭션 끝까지 그대로 들고 가는 것이 Repeatable Read입니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#도입부-시나리오를-손으로-풀어보기"
+    },
+    {
+      "id": "mvcc-visibility-03",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["예측"],
+      "chain": { "id": "long-open-transaction", "order": 2 },
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- Session A, 앞의 트랜잭션을 그대로 유지한 채 이어서 실행\nUPDATE accounts SET balance = balance + 500 WHERE id = 1;"
+      },
+      "question": "Session A가 같은 트랜잭션 안에서 이어서 이 UPDATE를 실행합니다. 무슨 일이 일어납니까?",
+      "choices": [
+        {
+          "text": "직렬화 실패 에러가 나고 트랜잭션이 중단됩니다.",
+          "correct": true,
+          "why": "Repeatable Read에서 UPDATE는 자기 snapshot이 보는 버전이 아니라 row의 최신 버전을 잡으려 합니다. 그런데 그 최신 버전은 snapshot을 찍은 뒤에 커밋된 것이라, PostgreSQL은 조용히 덮어쓰는 대신 could not serialize access due to concurrent update 에러로 트랜잭션을 중단시킵니다."
+        },
+        {
+          "text": "1000에 500을 더한 1500이 저장됩니다.",
+          "why": "그렇게 되면 Session B가 커밋한 2000이 흔적 없이 사라집니다. lost update를 막기 위해 Repeatable Read는 이 상황을 성공이 아니라 에러로 처리합니다."
+        },
+        {
+          "text": "2000에 500을 더한 2500이 저장됩니다.",
+          "why": "Read Committed의 동작입니다. 그쪽은 UPDATE 직전에 snapshot을 다시 찍어 최신 버전 위에서 계산합니다. snapshot을 다시 찍지 않는 Repeatable Read는 같은 결말에 도달할 수 없습니다."
+        },
+        {
+          "text": "Session B의 트랜잭션이 끝날 때까지 대기하다가 진행됩니다.",
+          "why": "Session B는 이미 커밋했으므로 기다릴 대상이 없습니다. 대기는 상대가 아직 진행 중일 때의 이야기이고, 여기서는 기다림 없이 즉시 판정이 납니다."
+        }
+      ],
+      "explanation": "읽기는 snapshot이 보여주는 버전을 그대로 쓰면 되지만 쓰기는 그럴 수 없습니다. row의 최신 버전을 잡지 않으면 다른 트랜잭션이 커밋한 변경을 덮어쓰게 되기 때문입니다. Repeatable Read는 이 모순을 감추지 않고 에러로 드러냅니다. 그래서 이 격리 수준을 쓰는 애플리케이션은 직렬화 실패를 잡아 트랜잭션을 통째로 재시도하는 경로를 반드시 갖춰야 합니다. 재시도 없이 격리 수준만 올리면 이상 현상 대신 실패율을 얻게 됩니다. Read Committed는 매 문장마다 snapshot을 다시 찍어 이 에러를 피하는 대신, 한 트랜잭션 안에서 같은 SELECT가 다른 값을 돌려주는 non-repeatable read를 허용합니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#read-committed-vs-repeatable-read"
+    },
+    {
+      "id": "mvcc-visibility-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단", "함정"],
+      "question": "대량 INSERT 직후, 아무것도 변경하지 않고 SELECT count(*)만 반복해서 돌렸습니다. 그런데 첫 실행에서 상당한 양의 페이지가 dirty로 표시되고 이후 checkpoint에서 디스크 쓰기가 발생했습니다. 원인은 무엇입니까?",
+      "choices": [
+        {
+          "text": "SELECT가 통계를 갱신하느라 시스템 카탈로그에 write가 발생했습니다.",
+          "why": "플래너용 통계는 ANALYZE와 autovacuum이 갱신합니다. SELECT는 실행 계획을 세울 때 그 통계를 읽기만 합니다."
+        },
+        {
+          "text": "count(*)가 중간 집계 결과를 디스크에 쓰는 과정에서 발생했습니다.",
+          "why": "임시 파일은 work_mem을 넘기는 정렬이나 해시에서 생기고, 그 경우에도 shared_buffers의 페이지를 dirty로 만들지는 않습니다. 단순 집계는 임시 파일 자체를 만들지 않습니다."
+        },
+        {
+          "text": "가시성 판정 결과를 튜플 헤더의 hint bit에 캐싱하면서 페이지가 변경되었습니다.",
+          "correct": true,
+          "why": "첫 조회는 각 튜플의 xmin이 커밋되었는지 CLOG를 뒤져야 합니다. 그 결과를 t_infomask에 HEAP_XMIN_COMMITTED 같은 비트로 적어두면 다음 조회부터 CLOG를 건너뛸 수 있고, 이 기록이 페이지를 dirty로 만듭니다."
+        },
+        {
+          "text": "Seq Scan이 읽은 페이지를 shared_buffers에 올리는 것 자체가 dirty 표시입니다.",
+          "why": "읽어서 올리기만 한 버퍼는 clean 상태입니다. dirty는 버퍼의 내용이 디스크와 달라졌다는 뜻이라, 페이지를 실제로 수정해야만 붙습니다."
+        }
+      ],
+      "explanation": "가시성 판정의 진실 소스는 CLOG(pg_xact)입니다. 트랜잭션당 2비트로 커밋 여부를 기록하는데, 튜플마다 이걸 조회하면 비쌉니다. 그래서 PostgreSQL은 한 번 확인한 결과를 튜플 헤더 t_infomask의 hint bit에 캐시해둡니다. 읽기만 하는 쿼리가 페이지를 수정하는 이 동작 때문에, 대량 INSERT 직후의 첫 조회는 읽기 쿼리인데도 쓰기 부하를 만듭니다. 같은 쿼리를 두 번째 돌릴 때 빨라지는 이유의 상당 부분이 여기에 있습니다. 벤치마크에서 첫 회차 수치를 그대로 쓰면 이 일회성 비용을 조회 성능으로 잘못 읽게 됩니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#가시성-판정-규칙"
+    },
+    {
+      "id": "mvcc-visibility-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "extended",
+      "tags": ["면접", "운영"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 모니터링 스크립트가 1초마다 반복 실행\nSELECT pg_current_xact_id();"
+      },
+      "question": "이 스크립트를 몇 달간 계속 돌리면 어떤 부작용이 생깁니까?",
+      "choices": [
+        {
+          "text": "호출마다 CLOG에 커밋 레코드가 쌓여 pg_xact 디렉터리가 무한히 커집니다.",
+          "why": "CLOG는 freeze가 진행되면서 오래된 구간이 잘려나가므로 무한히 자라지 않습니다. 문제는 저장 공간이 아니라 번호 공간의 소비 속도입니다."
+        },
+        {
+          "text": "읽기만 하는 트랜잭션에도 xid가 강제로 할당되어 xid 소비 속도가 올라갑니다.",
+          "correct": true,
+          "why": "이 함수는 xid가 없는 트랜잭션에 xid를 그 자리에서 발급합니다. 1초에 하나면 하루 약 8만 6천 개, 한 달이면 약 260만 개가 데이터 변경 없이 소비됩니다. 값만 확인할 목적이라면 발급하지 않는 pg_current_xact_id_if_assigned()를 써야 합니다."
+        },
+        {
+          "text": "부작용은 없습니다. 읽기 전용 쿼리는 트랜잭션 ID를 소비하지 않습니다.",
+          "why": "일반적으로는 맞지만 이 함수가 예외입니다. read-only 트랜잭션은 원래 xid를 받지 않는데, 이 함수는 돌려줄 값을 만들기 위해 xid를 강제로 할당합니다."
+        },
+        {
+          "text": "매 호출이 snapshot을 새로 찍어 oldest xmin이 계속 앞당겨지고 VACUUM이 막힙니다.",
+          "why": "방향이 반대입니다. 짧게 끝나는 트랜잭션은 oldest xmin을 붙잡지 않습니다. VACUUM을 막는 것은 오래 열려 있는 트랜잭션입니다."
+        }
+      ],
+      "explanation": "pg_current_xact_id()는 현재 트랜잭션의 xid를 돌려주는데, 아직 xid가 없으면 그 자리에서 발급합니다. PostgreSQL이 read-only 트랜잭션에 xid를 주지 않는 이유가 32비트뿐인 번호 공간을 아끼기 위해서인데, 이 호출이 그 절약을 무력화합니다. 한 달에 260만 개면 21억 개인 번호 공간을 당장 위협하지는 않습니다. 문제는 age(relfrozenxid)가 데이터 변경과 무관하게 계속 자라 anti-wraparound VACUUM이 그만큼 일찍 발동한다는 점이고, 쓰기가 거의 없는 인스턴스일수록 이 인위적인 소비가 차지하는 비중이 커집니다. 확인만 할 목적이라면 xid가 이미 할당된 경우에만 값을 돌려주고 아니면 NULL을 주는 pg_current_xact_id_if_assigned()가 정확한 도구입니다. 관측 도구가 관측 대상의 상태를 바꿔놓는 사례라, 모니터링 쿼리를 상시로 걸 때는 이런 부작용을 먼저 확인하는 편이 안전합니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#트랜잭션-idxid"
+    }
+  ]
+}

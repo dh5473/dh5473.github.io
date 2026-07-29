@@ -23,6 +23,8 @@ type TemplateProps = {
   ogImageHeight?: number
   authorSocial?: { github: string }
   logo?: string
+  /** 인터랙티브 세션처럼 색인할 내용이 없는 페이지에 쓴다 */
+  noindex?: boolean
 }
 
 const Container = styled.main`
@@ -49,11 +51,14 @@ const Template: FunctionComponent<TemplateProps> = function ({
   ogImageHeight,
   authorSocial,
   logo,
+  noindex = false,
 }) {
   return (
     <Container>
       <Helmet>
         <title>{title}</title>
+
+        {noindex && <meta name="robots" content="noindex, follow" />}
 
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

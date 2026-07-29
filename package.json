@@ -60,6 +60,8 @@
     "start": "gatsby develop",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
+    "validate:quiz": "node scripts/validate-quiz.js",
+    "quiz:coverage": "node scripts/validate-quiz.js --coverage",
     "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1",
     "deploy": "gatsby build && gh-pages -d public --dotfiles"
   },

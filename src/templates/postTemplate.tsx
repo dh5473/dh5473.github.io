@@ -5,6 +5,7 @@ import PostHead from 'components/Post/PostHead'
 import PostContent from 'components/Post/PostContent'
 import PostSeriesNav from 'components/Post/PostSeriesNav'
 import PostSeriesIndex from 'components/Post/PostSeriesIndex'
+import PostQuizCta from 'components/Post/PostQuizCta'
 import CommentWidget from 'components/Post/CommentWidget'
 import { IGatsbyImageData } from 'gatsby-plugin-image'
 import { seriesMetadata } from 'utils/seriesData'
@@ -69,6 +70,12 @@ type PostTemplateProps = {
     seriesPosts?: { slug: string; title: string; seriesOrder: number }[]
     prevPost?: { slug: string; title: string }
     nextPost?: { slug: string; title: string }
+    quiz?: {
+      scopeId: string
+      scopeTitle: string
+      scopeQuestionCount: number
+      postQuestionCount: number
+    } | null
   }
 }
 
@@ -79,7 +86,7 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
     },
     allMarkdownRemark: { edges },
   },
-  pageContext: { seriesId, seriesCurrentOrder, seriesTotal, seriesPosts, prevPost, nextPost },
+  pageContext: { seriesId, seriesCurrentOrder, seriesTotal, seriesPosts, prevPost, nextPost, quiz },
 }) {
   const {
     node: {
@@ -154,6 +161,14 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
         />
       )}
       <PostContent html={html} />
+      {quiz && (
+        <PostQuizCta
+          scopeId={quiz.scopeId}
+          scopeTitle={quiz.scopeTitle}
+          scopeQuestionCount={quiz.scopeQuestionCount}
+          postQuestionCount={quiz.postQuestionCount}
+        />
+      )}
       {hasSeriesNav && (
         <PostSeriesNav
           seriesId={seriesId!}

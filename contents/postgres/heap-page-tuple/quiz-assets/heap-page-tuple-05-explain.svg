@@ -1,0 +1,29 @@
+<svg viewBox="0 0 360 312" style="width: 100%; height: auto; max-width: 360px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="fillfactor 80을 적용한 뒤의 두 페이지 비교. 이미 채워진 기존 페이지는 튜플로 가득 차 있어 UPDATE 시 새 버전이 다른 페이지로 나가고 HOT이 성립하지 않습니다. ALTER 이후 새로 쓰인 페이지는 80퍼센트만 채워지고 20퍼센트가 여유로 남아 같은 페이지 안에서 HOT chain이 성립합니다.">
+<style>
+.qhp5-t { fill: var(--text, #1c1917); }
+.qhp5-m { fill: var(--text-muted, #78716c); }
+.qhp5-h { fill: var(--text, #1c1917); font-weight: 600; }
+.qhp5-full { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+.qhp5-free { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.qhp5-note { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.qhp5-div { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+</style>
+<text x="180" y="26" text-anchor="middle" font-size="16" font-weight="600" class="qhp5-t">fillfactor 80을 적용한 뒤</text>
+<text x="20" y="58" font-size="15" class="qhp5-h">이미 채워진 기존 페이지</text>
+<rect x="20" y="68" width="320" height="34" class="qhp5-full"/>
+<text x="180" y="90" text-anchor="middle" font-size="14" class="qhp5-t">튜플로 가득 참</text>
+<text x="20" y="124" font-size="14" class="qhp5-m">UPDATE 시 새 버전이 다른 페이지로</text>
+<text x="20" y="144" font-size="14" class="qhp5-m">인덱스 엔트리가 추가되고 HOT 불가</text>
+<text x="20" y="180" font-size="15" class="qhp5-h">ALTER 이후 새로 쓰인 페이지</text>
+<rect x="20" y="190" width="256" height="34" class="qhp5-full"/>
+<text x="148" y="212" text-anchor="middle" font-size="14" class="qhp5-t">튜플 80%</text>
+<rect x="276" y="190" width="64" height="34" class="qhp5-free"/>
+<text x="308" y="212" text-anchor="middle" font-size="14" class="qhp5-m">여유</text>
+<text x="20" y="246" font-size="14" class="qhp5-m">UPDATE 시 같은 페이지에서 HOT chain</text>
+<line x1="20" y1="262" x2="340" y2="262" class="qhp5-div"/>
+<text x="20" y="286" font-size="14" class="qhp5-t">일반 VACUUM은 위를 아래로 바꾸지 않습니다.</text>
+<text x="20" y="306" font-size="14" class="qhp5-t">페이지를 다시 쓰는 작업이 필요합니다.</text>
+</svg>
