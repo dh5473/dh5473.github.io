@@ -147,7 +147,7 @@ continuous batching은 운영체제의 선점형 시분할 스케줄링과 닮�
 
 :::
 
-그런데 배치가 무한정 커지지는 않습니다. 요청들이 토큰을 생성할수록 각자가 붙들고 있는 KV Cache 블록이 늘어나고, 블록 풀이 바닥나면 vLLM은 가장 뒤늦게 들어온 요청부터 선점(preemption)합니다. 선점된 요청의 블록은 풀에 반납되고, 그 요청은 나중에 자리가 나면 KV Cache를 다시 계산해 이어갑니다(recompute). 즉 동시 처리량은 블록 예산이라는 천장까지만 올라가고, 그 너머는 선점으로 되돌아옵니다.
+그런데 배치가 무한정 커지지는 않습니다. 요청들이 토큰을 생성할수록 각자가 붙들고 있는 KV Cache 블록이 늘어나고, 블록 풀이 바닥나면 vLLM은 가장 뒤늦게 들어온 요청부터 선점(preemption)합니다. 선점된 요청의 블록은 풀에 반납되고, 그 요청은 계산해둔 진행분이 0으로 초기화된 채 waiting 큐 맨 앞으로 돌아갑니다. 자리가 나면 프롬프트부터 다시 계산해 올라옵니다(recompute). 반납한 블록이 prefix cache에 아직 살아 있다면 그중 일부는 다시 계산하지 않고 건너뛸 수도 있습니다. 즉 동시 처리량은 블록 예산이라는 천장까지만 올라가고, 그 너머는 선점으로 되돌아옵니다.
 
 <br>
 
@@ -249,7 +249,7 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
 
 여기엔 자원을 알뜰하게 쓰는 이득이 하나 더 딸려옵니다. compute-bound인 prefill 청크와 memory-bound인 decode를 한 스텝에 섞으면, GPU의 연산 유닛과 메모리 대역폭이 같은 스텝에 동시에 바쁘게 돌아갑니다. prefill만 있는 스텝은 대역폭이 놀고, decode만 있는 스텝은 연산 유닛이 놀았는데, 둘을 겹치면 양쪽을 함께 채우는 셈입니다.
 
-물론 공짜는 아닙니다. prefill을 잘게 쪼갤수록 기존 decode의 끊김은 줄지만, prefill 자체는 조금 손해를 봅니다. 청크가 작아질수록 GPU가 한 번에 처리하는 연산량이 줄어 prefill의 계산 효율이 떨어지기 때문입니다. 그래서 청크를 얼마나 크게 자를지가 TTFT와 ITL 사이의 조절 손잡이가 됩니다.
+물론 공짜는 아닙니다. Sarathi-Serve 논문은 청크를 잘게 쪼갤수록 두 가지 대가를 치른다고 짚습니다. 하나는 GPU 이용률입니다. 청크가 작아질수록 한 번에 처리하는 행렬이 작아져 prefill의 계산 효율이 떨어집니다. 다른 하나는 KV 재읽기입니다. 청크 하나를 계산할 때 attention은 앞선 모든 청크의 KV를 읽어야 하므로, N개로 자르면 첫 청크의 KV가 N-1번, 두 번째가 N-2번 다시 읽힙니다. 곱셈 연산량은 그대로인데 HBM에서 퍼 오는 양만 늘어나는 셈입니다. 다만 논문은 attention이 전체 실행 시간에서 차지하는 몫이 작아 이쪽 손해가 크지는 않고, 전체 오버헤드는 앞의 GPU 이용률 쪽을 따라간다고 덧붙입니다. 그래서 청크를 얼마나 크게 자를지가 TTFT와 ITL 사이의 조절 손잡이가 됩니다.
 
 :::tip
 
@@ -267,20 +267,20 @@ vLLM V1에서 chunked prefill은 기본으로 켜져 있습니다. V0 시절 인
 
 V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 용도별로 나누던 구분을 없앴습니다. 정확히 말하면, "한 배치는 전부 prefill 아니면 전부 decode"라는 페이즈 경계가 사라진 것입니다. 대신 스텝마다 **처리할 토큰 수의 상한**(`max_num_batched_tokens`)을 하나 정해두고, 그 예산 안에서 어떤 요청에 토큰을 몇 개씩 줄지를 결정합니다. 스케줄 결과는 `{요청ID: 토큰 수}` 형태의 딕셔너리로 표현됩니다.
 
-배분 순서에는 우선순위가 있습니다. 스케줄러는 먼저 진행 중인 요청(running 큐)의 decode부터 예산에 채웁니다. 그리고 남은 예산으로 대기 중인 요청(waiting 큐)의 prefill을 채우는데, 남은 예산에 다 안 들어가면 그만큼만 잘라서 넣습니다. 이 "잘라서 넣기"가 바로 chunked prefill입니다.
+배분 순서에는 우선순위가 있습니다. 스케줄러는 먼저 진행 중인 요청(running 큐)을 훑어 예산을 채웁니다. 이미 시작한 요청은 prefill이 남아 있어도 여기에 포함됩니다. 그리고 남은 예산으로 대기 중인 요청(waiting 큐)을 채우는데, 남은 예산에 다 안 들어가면 그만큼만 잘라서 넣습니다. 이 "잘라서 넣기"가 바로 chunked prefill입니다.
 
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 292" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 decode 요청 A B C가 1토큰씩 3토큰을 차지하고, 남은 예산으로 waiting 큐의 X가 2048토큰 prefill 청크를 채웁니다. 최종 스케줄 결과는 A 1, B 1, C 1, X 2048">
+     role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 A B C가 decode로 1토큰씩 3토큰을 차지하고, 남은 예산 8189를 waiting 큐의 X가 prefill 청크로 가져갑니다. X의 프롬프트 10000토큰 중 나머지 1811토큰은 다음 스텝으로 넘어갑니다. 최종 스케줄 결과는 A 1, B 1, C 1, X 8189">
   <style>
     .cb5-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
     .cb5-dec   { fill: var(--primary, #0d9488); }
     .cb5-pre   { fill: var(--accent, #d97706); }
-    .cb5-rest  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .cb5-leg   { fill: var(--text, #1c1917); font-size: 17px; }
     .cb5-muted { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .cb5-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb5-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
   </style>
   <defs>
@@ -289,28 +289,26 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
     </marker>
   </defs>
   <text x="240" y="26" class="cb5-title">한 스텝의 토큰 예산 = 8,192</text>
-  <!-- 예산 막대: decode / prefill 청크 / 남은 예산 -->
+  <!-- 예산 막대: decode / prefill 청크 -->
   <rect x="20" y="44" width="30" height="44" rx="4" class="cb5-dec"/>
-  <rect x="50" y="44" width="100" height="44" class="cb5-pre"/>
-  <rect x="150" y="44" width="310" height="44" rx="4" class="cb5-rest"/>
+  <rect x="50" y="44" width="410" height="44" rx="4" class="cb5-pre"/>
   <!-- 막대 구간 설명 -->
   <rect x="20" y="104" width="18" height="14" rx="2" class="cb5-dec"/>
   <text x="46" y="116" class="cb5-leg">decode A·B·C = 3토큰</text>
   <rect x="20" y="128" width="18" height="14" rx="2" class="cb5-pre"/>
-  <text x="46" y="140" class="cb5-leg">X 청크 = 2,048토큰</text>
-  <rect x="20" y="152" width="18" height="14" rx="2" class="cb5-rest"/>
-  <text x="46" y="164" class="cb5-leg">남은 예산 = 6,141토큰</text>
+  <text x="46" y="140" class="cb5-leg">X 청크 = 8,189토큰 (프롬프트 10,000 중)</text>
+  <text x="46" y="164" class="cb5-note">남은 1,811토큰은 다음 스텝에서 이어서</text>
   <path d="M240,180 L240,200" class="cb5-arrow"/>
   <!-- 스케줄 결과 -->
   <rect x="70" y="208" width="340" height="42" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
-  <text x="240" y="235" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:2048 }</text>
+  <text x="240" y="235" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20px" text-anchor="middle" fill="var(--text, #1c1917)">{ A:1, B:1, C:1, X:8189 }</text>
   <text x="240" y="276" class="cb5-muted">이 조합을 한 번의 forward pass로 실행</text>
 </svg>
 </div>
 
 이 그림 하나에 두 기법이 다 들어 있습니다. 매 스텝 배치를 새로 짜서 decode 요청을 채우는 것이 continuous batching이고, 긴 prefill이 예산에 안 맞아 잘려 들어가는 것이 chunked prefill입니다. 스케줄러는 그저 매 스텝 토큰 예산을 채울 뿐인데, 그 결과로 두 기법이 함께 굴러갑니다.
 
-주의할 점은, 페이즈 경계가 사라졌다고 해서 prefill과 decode의 구분 자체가 없어진 게 아니라는 것입니다. running과 waiting 큐는 여전히 따로 있고, decode가 예산을 먼저 가져갑니다. 사라진 것은 "한 스텝에는 한 종류만"이라는 제약이지, 두 작업의 성격 차이가 아닙니다.
+주의할 점은, 페이즈 경계가 사라졌다고 해서 prefill과 decode의 구분 자체가 없어진 게 아니라는 것입니다. running과 waiting 큐는 여전히 따로 있고, running 큐가 예산을 먼저 가져갑니다. 두 큐를 가르는 기준은 prefill이냐 decode냐가 아니라 이미 시작했느냐입니다. 사라진 것은 "한 스텝에는 한 종류만"이라는 제약이지, 두 작업의 성격 차이가 아닙니다.
 
 <br>
 

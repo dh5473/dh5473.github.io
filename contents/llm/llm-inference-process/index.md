@@ -155,7 +155,7 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
 </svg>
 </div>
 
-KV Cache 덕분에 decode 스텝의 계산량은 시퀀스 길이와 무관하게 "새 토큰 1개 분량"으로 고정됩니다. 대신 그 대가로 **요청마다 GPU 메모리에 상태(state)를 유지**해야 합니다. 대화가 길어질수록, 동시 요청이 많아질수록 이 캐시가 GPU 메모리를 잠식합니다.
+KV Cache 덕분에 decode 스텝에서 새로 계산할 것은 시퀀스 길이와 무관하게 "새 토큰 1개 분량"으로 줄어듭니다. 시퀀스가 길어지면서 늘어나는 것은 쌓인 캐시를 훑는 부분뿐입니다. 대신 그 대가로 **요청마다 GPU 메모리에 상태(state)를 유지**해야 합니다. 대화가 길어질수록, 동시 요청이 많아질수록 이 캐시가 GPU 메모리를 잠식합니다.
 
 지금은 "재계산을 피하려고 K, V를 저장해둔다" 정도만 기억하면 됩니다. 이 캐시가 정확히 어떻게 동작하고 서빙을 어떻게 바꾸는지는 다음 글에서 이어집니다.
 
@@ -214,7 +214,7 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
 <svg viewBox="0 0 480 552" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="요청 하나의 처리 흐름. 요청이 도착하면 요청당 한 번 실행되는 Prefill 단계가 프롬프트 전체를 병렬 처리해 KV Cache와 첫 토큰을 만들며 compute-bound라 TTFT를 결정합니다. 이어서 출력 토큰 수만큼 반복되는 Decode 단계가 스텝당 토큰 하나씩 생성하며 memory-bound라 TPOT를 결정합니다. 마지막에 응답이 완료됩니다.">
+     role="img" aria-label="요청 하나의 처리 흐름. 요청이 도착하면 요청당 한 번 실행되는 Prefill 단계가 프롬프트 전체를 병렬 처리해 KV Cache와 첫 토큰을 만들며 compute-bound라 TTFT를 결정합니다. 이어서 나머지 출력 토큰 수만큼 반복되는 Decode 단계가 스텝당 토큰 하나씩 생성하며 memory-bound라 TPOT를 결정합니다. 마지막에 응답이 완료됩니다.">
   <style>
     .pd1-pill  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pd1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
@@ -248,7 +248,7 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
   <rect x="20" y="286" width="440" height="196" rx="10" class="pd1-box"/>
   <rect x="20" y="286" width="6" height="196" fill="var(--primary, #0d9488)"/>
   <text x="46" y="318" class="pd1-title">Decode</text>
-  <text x="142" y="318" class="pd1-meta">토큰 수만큼 반복</text>
+  <text x="142" y="318" class="pd1-meta">나머지 토큰 수만큼 반복</text>
   <text x="46" y="348" class="pd1-hotB">memory-bound</text>
   <text x="46" y="376" class="pd1-meta">TPOT(토큰당 시간) 결정</text>
   <text x="46" y="408" class="pd1-meta">스텝당 토큰 1개 생성</text>
@@ -263,7 +263,7 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
 | 구분 | Prefill | Decode |
 |------|---------|--------|
 | 처리 단위 | 프롬프트 전체 (병렬) | 토큰 1개씩 (순차) |
-| 횟수 | 요청당 1회 | 출력 토큰 수만큼 |
+| 횟수 | 요청당 1회 (첫 토큰까지 생성) | 나머지 출력 토큰 수만큼 |
 | 병목 | 연산 (compute-bound) | 메모리 대역폭 (memory-bound) |
 | 결정하는 지표 | TTFT (첫 토큰 지연) | TPOT (토큰당 생성 시간) |
 | GPU 연산 사용률 | 높음 | 낮음 |

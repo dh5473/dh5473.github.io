@@ -116,7 +116,7 @@ draft가 "매우"라는 토큰을 뽑아왔다고 하겠습니다. draft는 이 
 
 세 규칙을 합치면 최종 토큰의 분포는 target 혼자 뽑았을 때의 p와 정확히 일치합니다. 원 논문이 정리(theorem)로 증명해둔 사실입니다.
 
-다만 "무손실"이 매번 같은 문장이 나온다는 뜻은 아닙니다. sampling에는 무작위성이 있으니 개별 문장은 달라질 수 있습니다. 보장되는 것은 어떤 문장이 나올 확률이 target 혼자 뽑을 때와 정확히 같다는 것, 즉 출력 품질이 통계적으로 동일하다는 것입니다. 무작위성이 없는 greedy(temperature 0)라면 문장 자체도 같게 나옵니다.
+다만 "무손실"이 매번 같은 문장이 나온다는 뜻은 아닙니다. sampling에는 무작위성이 있으니 개별 문장은 달라질 수 있습니다. 보장되는 것은 어떤 문장이 나올 확률이 target 혼자 뽑을 때와 정확히 같다는 것, 즉 출력 품질이 통계적으로 동일하다는 것입니다. 무작위성이 없는 greedy(temperature 0)라면 문장 자체도 같게 나옵니다. 정확히는 부동소수점 연산 순서까지 같다는 가정에서입니다. vLLM 문서도 무손실을 하드웨어 수치 정밀도의 한계 안에서라고 단서를 달아둡니다.
 
 그럼 얼마나 빨라질까요? 토큰 하나가 수락될 확률의 기댓값을 α, draft 토큰 수를 γ라 하면, iteration당 기대 확정 토큰 수 E는 원 논문의 공식으로 계산할 수 있습니다.
 
@@ -136,7 +136,7 @@ speculative decoding의 성능은 결국 α, 즉 draft가 target을 얼마나 �
 
 **n-gram** 방식은 draft에 모델이 필요 없다는 발상입니다. 최근 생성된 토큰 몇 개를 프롬프트에서 검색해서, 매치된 지점 뒤에 이어지는 토큰들을 그대로 draft로 씁니다. 요약, 문서 기반 QA, 코드 수정처럼 **출력이 입력을 많이 복사하는 워크로드**에서는 이 공짜 draft(c가 사실상 0)가 놀랍도록 잘 맞습니다. vLLM 팀의 공식 벤치마크에서 낮은 부하 기준 최대 2.8배 향상으로, 별도 모델을 쓴 방식보다 오히려 좋았습니다. RAG 파이프라인을 서빙한다면 가장 먼저 시도해볼 방식입니다.
 
-**EAGLE**은 현재 사실상 표준이 된 계열입니다. 별도 draft 모델은 target과 완전히 다른 머리로 생각하니 예측이 어긋날 수밖에 없습니다. EAGLE은 대신 target에 작은 모듈(decoder layer 1개 남짓)을 붙이고, target이 직전 토큰을 계산하며 만든 내부 표현(hidden state)을 이 모듈에 입력으로 넘깁니다. target이 방금 무슨 생각을 했는지 그대로 이어받아 다음 토큰을 그리니 예측이 잘 맞고, 수락률도 그만큼 높습니다. 이후 버전들은 이 구조를 다듬었습니다. EAGLE-2는 후보를 한 줄이 아니라 트리로 여러 갈래 그려서 forward 한 번에 검증하고, EAGLE-3는 학습 방식을 갈아엎어 학습 데이터를 늘릴수록 수락률이 계속 오르는 성질을 얻었습니다. 학술 벤치마크(배치 1, temperature 0)에서는 최대 6.5배까지 보고됐습니다. 이렇게 target에 붙여 쓰는 draft 모듈을 **speculator**라고 부릅니다.
+**EAGLE**은 현재 사실상 표준이 된 계열입니다. 별도 draft 모델은 target과 완전히 다른 머리로 생각하니 예측이 어긋날 수밖에 없습니다. EAGLE은 대신 target에 작은 모듈(decoder layer 1개 남짓)을 붙이고, target이 직전 토큰을 계산하며 만든 내부 표현(hidden state)을 이 모듈에 입력으로 넘깁니다. target이 방금 무슨 생각을 했는지 그대로 이어받아 다음 토큰을 그리니 예측이 잘 맞고, 수락률도 그만큼 높습니다. 이후 버전들은 이 구조를 다듬었습니다. EAGLE은 처음부터 후보를 한 줄이 아니라 트리로 여러 갈래 그려 forward 한 번에 검증했는데, 그 트리 모양이 위치별로 고정이었습니다. EAGLE-2는 이 트리를 문맥에 따라 동적으로 키우고 잘라내 같은 검증 예산으로 더 많은 토큰을 확정하고, EAGLE-3는 학습 방식을 갈아엎어 학습 데이터를 늘릴수록 수락률이 계속 오르는 성질을 얻었습니다. 학술 벤치마크(배치 1, temperature 0)에서는 최대 6.5배까지 보고됐습니다. 이렇게 target에 붙여 쓰는 draft 모듈을 **speculator**라고 부릅니다.
 
 **MTP**(multi-token prediction)는 모델이 draft를 내장하고 나오는 흐름입니다. DeepSeek-V3는 학습 품질을 올리려고 다음 토큰 하나를 더 예측하는 MTP 모듈을 뒀는데, 추론에서 이 모듈이 그대로 draft가 됩니다. 본체와 embedding, LM head를 공유하는 1레이어 모듈이라 EAGLE과 닮은꼴입니다. DeepSeek-V3 논문 기준으로 두 번째 토큰의 수락률이 주제를 가리지 않고 85%에서 90%였고, 생성 속도는 1.8배로 올랐습니다. Gemma 4도 같은 방식으로 쓸 수 있는 공식 draft 체크포인트를 배포합니다. 별도 학습도, 맞는 draft 모델을 찾는 수고도 필요 없어서, 서빙하려는 모델이 MTP를 지원한다면 첫 번째 선택지입니다.
 
@@ -145,7 +145,7 @@ speculative decoding의 성능은 결국 α, 즉 draft가 target을 얼마나 �
 | **draft 모델** | 같은 계열 소형 모델 | vocabulary가 같은 소형 모델 | 준비가 간단, 수락률은 낮은 편 |
 | **n-gram** | 프롬프트 문자열 매칭 | 없음 | 요약, RAG, 코드 수정처럼 복사가 많은 워크로드에 강함 |
 | **EAGLE-3** | target의 hidden state를 받는 전용 모듈 | 학습된 speculator 체크포인트 | 높은 수락률, 사실상 표준 |
-| **MTP** | 모델에 내장된 예측 모듈 | 모델 제작자가 제공해야 함 | 준비 없이 바로, DeepSeek과 Gemma 4 등이 제공 |
+| **MTP** | 모델 제작자가 제공하는 예측 모듈 | 모델 제작자가 제공해야 함 | 준비 없이 바로, DeepSeek과 Gemma 4 등이 제공 |
 
 <br>
 
@@ -175,7 +175,7 @@ vLLM이 공개한 실측 결과가 이 구도를 그대로 보여줍니다. 초�
 
 ## vLLM에서 켜고 확인하기
 
-vLLM v0.25.1에서 speculative decoding 설정은 `--speculative-config`에 JSON 하나로 전달합니다. 옛 자료에 나오는 `--speculative-model` 같은 개별 플래그는 폐기(deprecated)되었습니다.
+vLLM v0.25.1에서 speculative decoding 설정은 `--speculative-config`에 JSON 하나로 전달합니다. 옛 자료에 나오는 `--speculative-model` 같은 개별 플래그는 제거되어 더 이상 동작하지 않습니다.
 
 ```bash
 # n-gram: 준비물 없이 바로 켠다
@@ -190,7 +190,7 @@ vllm serve google/gemma-4-31B-it \
                          "num_speculative_tokens": 3}'
 ```
 
-MTP를 지원하는 모델은 `"method": "mtp"`를 씁니다. DeepSeek처럼 draft 모듈이 체크포인트에 내장된 경우 model 지정 없이 method와 `num_speculative_tokens`만 주면 되고, Gemma 4의 공식 draft 체크포인트도 이 경로로 붙입니다. EAGLE 계열의 공개 speculator가 없는 모델이라면, vLLM 프로젝트의 speculators 라이브러리로 직접 학습하는 길도 있습니다.
+MTP를 지원하는 모델은 `"method": "mtp"`를 씁니다. DeepSeek처럼 draft 모듈이 체크포인트에 내장된 경우 model 지정 없이 method와 `num_speculative_tokens`만 주면 됩니다. 반면 Gemma 4처럼 draft가 별도 체크포인트로 배포되는 모델은 method는 `mtp`로 두되 `model`에 그 체크포인트(`google/gemma-4-31B-it-assistant`)를 지정해야 합니다. EAGLE 계열의 공개 speculator가 없는 모델이라면, vLLM 프로젝트의 speculators 라이브러리로 직접 학습하는 길도 있습니다.
 
 스케줄러 관점에서는 걱정할 것이 없습니다. vLLM V1 스케줄러는 모든 요청을 토큰 예산 하나로 다루기 때문에 draft 토큰도 그 예산 안의 토큰일 뿐이고, chunked prefill이나 prefix caching과도 자연스럽게 함께 동작합니다.
 

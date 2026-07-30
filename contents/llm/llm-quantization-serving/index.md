@@ -190,7 +190,7 @@ INT8 W8A8도 같은 자리에 있는 선택지입니다. FP8 텐서코어가 없
 
 주의할 것은 이 역전이 GPU 전체가 compute-bound로 바뀐다는 뜻은 아니라는 점입니다. 요청마다 자기 몫의 KV Cache를 따로 읽어야 하는 어텐션은 배치가 커져도 memory-bound로 남아서, GPU 전체로 보면 고배치 decode도 여전히 메모리 대역폭을 한계까지 씁니다. 두 방식의 승부는 가중치 행렬곱 안에서만 갈리는 것이라, 컨텍스트가 길어 KV 읽기 비중이 큰 워크로드일수록 W8A8의 우위는 좁아집니다.
 
-Red Hat이 Llama 3.1 계열로 50만 회 이상 평가를 돌린 연구가 이 구도를 정량적으로 확인해줍니다. 요청을 하나씩 처리하는 동기 시나리오에서는 W4A16이 가장 효율적이었고(단일 스트림 평균 2.4배), 고배치 비동기 서빙에서는 대체로 W8A8이 최고 처리량을 냈습니다(평균 1.8배). 다만 비동기에서도 W4A16이 이기는 시나리오가 있고, 두 구간이 갈리는 경계 배치 크기도 모델과 하드웨어마다 달라서 보편적인 숫자는 없습니다. 정확도는 학술 벤치마크 평균으로 99% 안팎을 회복했고 가장 어려운 평가에서도 하한이 96%였는데, 특히 FP8은 모든 규모에서 사실상 무손실이었습니다.
+Red Hat이 Llama 3.1 계열로 50만 회 이상 평가를 돌린 연구가 이 구도를 정량적으로 확인해줍니다. 요청을 하나씩 처리하는 동기 시나리오에서는 W4A16이 가장 효율적이었고, 고배치 비동기 서빙에서는 대체로 W8A8이 최고 처리량을 냈습니다. 연구팀이 블로그에 정리한 요약 수치로는 W4A16이 단일 스트림에서 평균 2.4배, W8A8이 다중 요청 서버 시나리오에서 평균 1.8배입니다. 논문 본문은 같은 결과를 범위로 보고하는데, 8B와 70B에서 W4A16이 쿼리당 비용을 2~3배 낮추고 지연을 1.5~2.5배 개선했습니다. 다만 비동기에서도 W4A16이 이기는 시나리오가 있고, 두 구간이 갈리는 경계 배치 크기도 모델과 하드웨어마다 달라서 보편적인 숫자는 없습니다. 정확도는 학술 벤치마크 평균으로 99% 안팎을 회복했고 가장 어려운 평가에서도 하한이 96%였는데, 특히 FP8은 모든 규모에서 사실상 무손실이었습니다.
 
 | 항목 | W4A16 (AWQ, GPTQ) | W8A8 (FP8, INT8) |
 |---|---|---|
@@ -235,7 +235,7 @@ Blackwell 세대부터는 4비트 부동소수점(NVFP4)이 텐서코어에 들�
 
 1차 효과는 메모리입니다. 같은 KV 예산에 두 배의 토큰이 들어가므로, 동시에 올려둘 수 있는 요청 수나 감당 가능한 컨텍스트 길이가 두 배로 늘어납니다. PagedAttention의 블록으로 말하면 블록 하나에 같은 16토큰을 절반 크기로 담는 것입니다.
 
-어텐션 연산까지 빨라지는지는 백엔드에 달려 있습니다. FlashAttention 3 백엔드에서는 쿼리까지 FP8로 양자화해 어텐션 자체를 저정밀 도메인에서 계산하지만, 그 외 백엔드에서는 FP8이 저장 형식일 뿐이고 커널 안에서 복원해 16비트로 계산합니다. 그러니 KV Cache 양자화는 "어텐션이 빨라지는 기능"이 아니라 "KV 예산이 두 배가 되는 기능"으로 이해하는 것이 안전합니다.
+어텐션 연산까지 빨라지는지는 백엔드와 GPU 세대에 달려 있습니다. FlashAttention은 Hopper의 FA3와 Blackwell의 FA4에서만 FP8 KV를 받아들이고, 이때는 쿼리까지 FP8로 양자화해 어텐션 자체를 저정밀 도메인에서 계산합니다. 그보다 앞선 세대에서 쓰이는 FA2는 FP8 KV를 저장 형식으로도 받지 않아서, 이 조합에서는 FP8 KV를 지원하는 다른 백엔드가 선택됩니다. 그쪽에서는 FP8이 저장 형식일 뿐이고 커널 안에서 복원해 16비트로 계산합니다. 그러니 KV Cache 양자화는 "어텐션이 빨라지는 기능"이 아니라 "KV 예산이 두 배가 되는 기능"으로 이해하는 것이 안전합니다.
 
 품질 쪽에서 신경 쓸 것은 스케일입니다. E4M3는 표현 범위가 좁아 값에 맞는 스케일이 필요한데, 기본값은 스케일 1.0이라 분포가 큰 모델에서는 outlier가 잘려나갈 수 있습니다. llm-compressor로 calibration 데이터를 흘려 K와 V의 스케일을 체크포인트에 구워두는 것이 좋습니다. 참고로 sliding window 레이어의 KV는 양자화에 상대적으로 민감하다고 알려져 있어, v0.25.1 기준으로 특정 레이어를 KV 양자화에서 제외하는 옵션(`--kv-cache-dtype-skip-layers`)도 있습니다.
 
@@ -280,6 +280,7 @@ Gemma가 대표적인 예입니다. Google은 Gemma 3에서 bf16 체크포인트
 - [AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration (arXiv 2306.00978)](https://arxiv.org/abs/2306.00978)
 - [FP8 Formats for Deep Learning (arXiv 2209.05433)](https://arxiv.org/abs/2209.05433)
 - ["Give Me BF16 or Give Me Death"? Accuracy-Performance Trade-Offs in LLM Quantization (arXiv 2411.02355)](https://arxiv.org/abs/2411.02355)
+- [We ran over half a million evaluations on quantized LLMs (Red Hat Developer)](https://developers.redhat.com/articles/2024/10/17/we-ran-over-half-million-evaluations-quantized-llms)
 - [QQQ: Quality Quattuor-Bit Quantization for Large Language Models (arXiv 2406.09904)](https://arxiv.org/abs/2406.09904)
 - [Mind the Memory Gap: Unveiling GPU Bottlenecks in Large-Batch LLM Inference (arXiv 2503.08311)](https://arxiv.org/abs/2503.08311)
 - [Gemma 3 QAT Models: Bringing state-of-the-Art AI to consumer GPUs (Google Developers Blog)](https://developers.googleblog.com/en/gemma-3-quantized-aware-trained-state-of-the-art-ai-to-consumer-gpus/)
