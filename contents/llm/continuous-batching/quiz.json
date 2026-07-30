@@ -1,0 +1,174 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "continuous-batching-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조", "계산"],
+      "scenario": {
+        "kind": "log",
+        "body": "# 서버 기동 인자\n--max-num-batched-tokens 4096  --max-num-seqs 64  --max-model-len 32768\n\n# 어느 스텝 직전의 큐 상태\nrunning : A, B, C, D, E   (다섯 요청 모두 decode 단계, 각 1토큰 필요)\nwaiting : X               (프롬프트 12,000토큰, 아직 한 토큰도 계산 안 됨)"
+      },
+      "question": "vLLM V1 스케줄러가 이번 스텝에 만들어낼 {요청ID: 토큰 수} 스케줄은 무엇입니까?",
+      "choices": [
+        {
+          "text": "A부터 E에 1토큰씩 주고, 남은 4,091토큰을 전부 X의 첫 청크로 씁니다.",
+          "correct": true,
+          "why": "스케줄러는 running 큐를 먼저 훑어 예산을 채우고, 남은 예산으로 waiting 큐를 채웁니다. decode 다섯 개가 5토큰을 가져가면 4,091토큰이 남고, X의 12,000토큰은 그 안에 안 들어가니 남은 만큼만 잘려 들어갑니다. 이 잘라 넣기가 chunked prefill입니다."
+        },
+        {
+          "text": "X의 첫 청크에 4,096토큰을 주고, A부터 E는 다음 스텝으로 밀립니다.",
+          "why": "waiting 큐를 먼저 보는 순서였다면 긴 요청이 들어올 때마다 진행 중인 요청의 토큰이 멈춥니다. V1은 running 큐를 먼저 훑기 때문에 그 일이 생기지 않습니다."
+        },
+        {
+          "text": "A부터 E에 1토큰씩 주고, 남은 4,091토큰은 놀린 채 X를 다음 스텝으로 미룹니다.",
+          "why": "예산에 통째로 안 들어가면 대기시키는 것은 chunked prefill이 없을 때의 동작입니다. 프롬프트가 12,000토큰인데 예산이 4,096이면 X는 영원히 시작하지 못합니다. 잘라서라도 넣는 것이 V1 스케줄러의 기본 동작입니다."
+        },
+        {
+          "text": "A부터 E에 1토큰씩 주고, 그와 별개로 X의 첫 청크에 4,096토큰을 씁니다.",
+          "why": "예산은 그 스텝의 forward pass에 밀어 넣는 토큰 전부에 걸리는 상한입니다. decode 토큰도 같은 배치에 실리므로 예산에서 함께 차감됩니다. decode가 몇 개 안 되면 차이가 작지만, 동시 요청이 수백 개면 이 몫이 예산에서 무시 못 할 자리를 차지합니다."
+        }
+      ],
+      "explanation": "한 스텝의 스케줄은 running 큐를 먼저 채우고 남은 예산을 waiting 큐로 넘기는 두 단계로 만들어집니다. running 큐의 요청은 대부분 decode라 요청당 1토큰씩만 쓰므로, 동시 요청이 수백 개가 아닌 이상 예산의 대부분이 그대로 남습니다. 그 남은 몫이 새 요청의 prefill 청크 크기가 되고, 프롬프트가 그보다 길면 딱 남은 만큼만 잘려 들어갑니다. max_num_batched_tokens가 곧 청크 크기의 상한 역할을 하는 이유가 여기에 있습니다. 한 가지 더 짚을 것은, 한 번 시작한 요청은 prefill이 끝나지 않았어도 running 큐로 옮겨진다는 점입니다. X의 두 번째 청크부터는 waiting 큐가 아니라 running 큐를 훑는 단계에서 잡히므로, 이미 시작한 prefill이 새로 도착한 요청보다 먼저 예산을 가져갑니다. running과 waiting을 가르는 기준은 prefill이냐 decode냐가 아니라 이미 시작했느냐입니다.",
+      "postSlug": "/llm/continuous-batching/",
+      "anchor": "#토큰-예산-하나로-굴러가는-v1-스케줄러"
+    },
+    {
+      "id": "continuous-batching-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단"],
+      "chain": { "id": "itl-hiccup", "order": 1 },
+      "scenario": {
+        "kind": "log",
+        "body": "# 서버 기동 인자\n--max-num-batched-tokens 8192  --max-num-seqs 256\n\n$ vllm bench serve --request-rate inf --max-concurrency 16\n============ Serving Benchmark Result ============\nSuccessful requests:                          900\nMean TTFT (ms):                            902.50\nMedian ITL (ms):                            11.83\nP99 ITL (ms):                              231.44\n==================================================\n\n# 트래픽: 프롬프트 5,000~9,000토큰, 출력 200~400토큰\n# 엔진 로그: Running 16 reqs, Avg prompt throughput 13,280 tokens/s,\n#            GPU KV cache usage 63.4%, Preemptions 항목은 한 번도 찍히지 않음"
+      },
+      "question": "median ITL은 12ms 수준인데 P99만 231ms로 튑니다. 사용자들은 토큰이 잘 나오다가 주기적으로 한 박자씩 멈춘다고 말합니다. 이 순간 스케줄러 안에서 무슨 일이 벌어지고 있습니까?",
+      "choices": [
+        {
+          "text": "긴 prefill이 그 스텝을 독점해 진행 중인 요청의 decode가 아예 빠집니다.",
+          "why": "chunked prefill이 없던 시절의 동작입니다. V1 스케줄러는 running 큐의 decode부터 예산에 채우므로 decode가 스텝에서 통째로 밀려나는 일은 없습니다. 빠지는 것이 아니라 함께 실린 채로 스텝이 길어집니다."
+        },
+        {
+          "text": "KV 블록이 모자라 선점이 일어나고, 선점된 요청이 재계산되는 동안 토큰이 멈춥니다.",
+          "why": "선점이라면 엔진 로그에 Preemptions 항목이 나타나는데 여기에는 그 흔적이 없습니다. 선점은 특정 요청의 진행분을 0으로 되돌리는 사건이라 231ms보다 훨씬 큰 공백을 만듭니다."
+        },
+        {
+          "text": "매 스텝 배치를 새로 구성하는 스케줄링 비용이 스텝 사이에 끼어들어 간격이 벌어집니다.",
+          "why": "스케줄 결정은 요청 수만큼의 항목을 담은 딕셔너리를 만드는 정도의 일이라 밀리초 단위 지연을 만들지 않습니다. 매 스텝 배치를 다시 짜는 것은 continuous batching의 비용이 아니라 이득의 원천입니다."
+        },
+        {
+          "text": "prefill 청크를 크게 실은 스텝이 decode까지 함께 태우면서 그 스텝만 길어집니다.",
+          "correct": true,
+          "why": "예산이 8,192이면 새 요청의 prefill 청크도 그 크기까지 커집니다. compute-bound인 prefill 수천 토큰이 실린 스텝은 decode만 있는 스텝보다 한 자릿수 이상 오래 걸립니다. decode는 그 스텝에도 함께 실려 토큰을 만들지만, 그 한 스텝이 길어진 만큼 ITL이 그대로 벌어집니다."
+        }
+      ],
+      "explanation": "ITL 꼬리는 그 스텝에 무엇이 함께 실렸는가로 결정됩니다. decode만 있는 스텝은 요청당 1토큰씩만 계산하니 memory-bound로 짧게 끝나지만, prefill 청크가 함께 실린 스텝은 수천 토큰을 병렬로 계산하는 compute-bound 작업이 됩니다. 같은 배치의 decode 요청들은 그 스텝이 끝나야 다음 토큰을 받으므로, 스텝 길이가 그대로 ITL이 됩니다. chunked prefill은 decode를 스텝에서 밀어내지 않는다는 점에서 head-of-line blocking을 없앤 것이 맞지만, 스텝 길이의 출렁임까지 없애주지는 않습니다. 프롬프트가 길고 요청이 꾸준히 들어오는 트래픽에서는 이런 스텝이 규칙적으로 섞이므로, 평균은 멀쩡한데 P99만 튀는 모양이 나옵니다.",
+      "postSlug": "/llm/continuous-batching/",
+      "anchor": "#긴-프롬프트-하나가-모두를-멈춘다"
+    },
+    {
+      "id": "continuous-batching-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영"],
+      "chain": { "id": "itl-hiccup", "order": 2 },
+      "question": "예산 8,192, 동시 요청 상한 256으로 띄운 이 서버를 동시 요청 16개로 부하 시험하는 중입니다. ITL 꼬리를 먼저 잡기로 했고 TTFT가 다소 나빠지는 것은 감수합니다. 어느 인자를 어느 방향으로 움직입니까?",
+      "choices": [
+        {
+          "text": "max_num_seqs를 256에서 64로 낮춥니다.",
+          "why": "동시 요청이 16개인 부하에서 상한을 64로 내려도 배치 구성은 그대로입니다. 상한이 실제 배치를 제약하지 않으니 꼬리도 처리량도 움직이지 않고, 배치가 컸다 해도 decode 몫이 줄면 prefill 청크가 커질 자리만 넓어집니다."
+        },
+        {
+          "text": "max_num_batched_tokens를 8,192에서 1,024로 낮춥니다.",
+          "correct": true,
+          "why": "이 값이 곧 한 스텝에 실릴 수 있는 prefill 청크의 상한입니다. 1,024로 내리면 8,000토큰짜리 프롬프트가 여덟 스텝에 나뉘어 들어가고, 한 스텝이 떠안는 추가 연산이 8분의 1로 줄어 ITL 꼬리가 그만큼 눌립니다."
+        },
+        {
+          "text": "max_num_batched_tokens를 8,192에서 32,768로 올립니다.",
+          "why": "prefill을 더 빨리 끝내면 끊김도 빨리 끝난다는 직관인데 방향이 반대입니다. 청크가 커지면 그 스텝 하나가 더 길어져 꼬리는 더 높아집니다. 이 방향은 TTFT와 처리량을 우선할 때 고르는 쪽입니다."
+        },
+        {
+          "text": "max_num_seqs를 256에서 1,024로 올립니다.",
+          "why": "배치를 키우면 GPU를 더 쓴다는 생각이지만, ITL 꼬리의 원인인 prefill 청크 크기와는 무관합니다. 블록 풀이 늘지 않는 한 실제 배치 크기도 따라 오르지 않습니다."
+        }
+      ],
+      "explanation": "두 인자는 서로 다른 축을 잡습니다. max_num_batched_tokens는 한 스텝의 길이를 정하고, max_num_seqs는 동시에 올라가는 요청 수를 정합니다. ITL 꼬리는 특정 스텝이 유독 길어져서 생기는 현상이니 스텝 길이 쪽 인자를 건드려야 합니다. 동시 요청 수를 줄이는 것은 decode가 예산에서 차지하는 몫을 줄이는 일이라 예산이 수천 단위일 때는 꼬리에 거의 영향을 주지 못하고, 실제 배치가 상한보다 작은 상황이라면 아무것도 바뀌지 않습니다. 방향도 함께 봐야 합니다. 이 값을 키우면 prefill을 한 번에 많이 삼켜 TTFT와 처리량이 좋아지고, 줄이면 스텝이 짧아져 ITL이 매끄러워집니다. 손잡이 하나가 두 지표를 반대로 움직이므로, 무엇을 SLO로 삼을지 먼저 정하지 않으면 조정이 왕복만 하게 됩니다.",
+      "postSlug": "/llm/continuous-batching/",
+      "anchor": "#스케줄러를-조율하는-두-손잡이"
+    },
+    {
+      "id": "continuous-batching-04",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["함정"],
+      "chain": { "id": "itl-hiccup", "order": 3 },
+      "scenario": {
+        "kind": "log",
+        "body": "# max-num-batched-tokens 8,192 → 1,024 적용 후 같은 트래픽으로 재측정\n\n                                     변경 전    변경 후\nRunning (avg, reqs)                    16.0      16.0\nMedian ITL (ms)                        11.83     13.10\nP99 ITL (ms)                          231.44     44.30\nMean TTFT (ms)                        902.50   2610.40\nAvg prompt throughput (tok/s)       13280.0   11390.0"
+      },
+      "question": "ITL 꼬리는 목표대로 잡혔고 TTFT가 늘어난 것도 예상한 대가입니다. 그런데 프롬프트 처리량까지 14% 떨어졌습니다. 같은 GPU로 같은 프롬프트를 처리하는데 총량이 줄어든 가장 큰 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "행렬 곱 연산량은 어떻게 잘라도 같으므로, 이 하락은 측정 잡음으로 봐야 합니다.",
+          "why": "선형 계층의 곱셈 연산량이 자르는 방식과 무관하다는 것까지는 맞습니다. 하지만 달라지는 것이 연산량 말고도 있습니다. attention이 읽어야 하는 KV의 양과 커널의 효율이 함께 움직이고, 14%는 잡음으로 넘길 크기가 아닙니다."
+        },
+        {
+          "text": "청크를 처리할 때마다 KV Cache 블록을 새로 할당하는 비용이 붙어 쌓입니다.",
+          "why": "블록 할당은 요청이 필요로 하는 블록 수만큼 일어나고, 그 총량은 프롬프트 길이가 정합니다. 청크를 몇 개로 자르든 결국 같은 수의 블록을 할당하므로 이 비용은 거의 변하지 않습니다."
+        },
+        {
+          "text": "청크마다 앞선 청크들의 KV를 다시 읽어야 하고, 작은 청크는 GPU 이용률도 낮습니다.",
+          "correct": true,
+          "why": "한 청크의 attention은 자기 토큰뿐 아니라 앞서 계산해둔 모든 청크의 KV를 읽어야 합니다. N개로 자르면 첫 청크의 KV는 N-1번, 두 번째는 N-2번 다시 읽히므로 HBM 읽기가 청크 수를 따라 불어납니다. 여기에 청크가 작아져 행렬이 작아지면 커널 효율까지 떨어져 두 손해가 겹칩니다."
+        },
+        {
+          "text": "예산이 작아진 만큼 running decode가 가져가는 몫의 비중이 커져 prefill 자리가 줄었습니다.",
+          "why": "방향은 맞지만 크기가 안 맞습니다. Running이 16개면 decode 몫은 예산의 0.2%(8,192일 때)에서 1.6%(1,024일 때)로 오를 뿐이라 prefill에 남는 자리는 1.4%p 남짓 줄어듭니다. 관측된 14% 하락을 이 몫으로 설명할 수 없습니다."
+        }
+      ],
+      "explanation": "chunked prefill의 대가는 TTFT 하나가 아니라 prefill 자체의 효율입니다. 손해는 두 갈래로 옵니다. 청크가 작아지면 한 번에 미는 행렬이 작아져 GPU 이용률이 떨어지고, 동시에 청크 하나의 attention이 앞선 모든 청크의 KV를 다시 읽어야 해서 HBM 트래픽이 청크 수를 따라 불어납니다. 곱셈 연산량 자체는 어떻게 자르든 같은데도 시간이 늘어나는 이유가 이 둘입니다. 논문의 측정으로는 전체 실행 시간을 좌우하는 쪽이 앞의 GPU 이용률이고, KV 재읽기는 attention이 전체에서 차지하는 몫이 작아 상대적으로 덜 아픕니다. 그래서 예산을 낮추는 조정은 ITL을 사면서 TTFT와 프롬프트 처리량을 함께 지불하는 거래입니다. 적정선은 트래픽의 프롬프트 길이 분포와 SLO에 따라 달라지므로, 한쪽 지표만 보고 내리지 말고 양쪽을 같이 재면서 찾아야 합니다.",
+      "postSlug": "/llm/continuous-batching/",
+      "anchor": "#긴-프롬프트를-잘라-섞는-chunked-prefill"
+    },
+    {
+      "id": "continuous-batching-05",
+      "type": "single",
+      "difficulty": 3,
+      "source": "extended",
+      "tags": ["진단", "운영"],
+      "scenario": {
+        "kind": "log",
+        "body": "# max-num-seqs 256 → 1024, 같은 트래픽으로 재측정\n\n[변경 전]\nEngine 000: Avg prompt throughput: 2884.6 tokens/s,\n            Avg generation throughput: 1341.7 tokens/s,\n            Running: 256 reqs, Waiting: 514 reqs,\n            GPU KV cache usage: 86.0%, Prefix cache hit rate: 5.1%\n\n[변경 후]\nEngine 000: Avg prompt throughput: 2410.2 tokens/s,\n            Avg generation throughput: 1138.9 tokens/s,\n            Running: 297 reqs, Waiting: 592 reqs, Preemptions: 23,\n            GPU KV cache usage: 100.0%, Prefix cache hit rate: 5.3%"
+      },
+      "question": "동시 요청 상한을 네 배로 올렸는데 Running은 297에서 더 오르지 않고, 생성 처리량은 오히려 15% 떨어졌습니다. 무슨 일이 벌어진 것입니까?",
+      "choices": [
+        {
+          "text": "블록이 감당 못 하는 만큼 요청이 들어왔다 선점되고, 그 요청이 prefill을 다시 밟습니다.",
+          "correct": true,
+          "why": "max_num_seqs는 배치에 올릴 요청 수의 상한일 뿐이고 실제 천장은 KV 블록 풀입니다. 상한을 올리면 스케줄러가 블록이 남아 있는 동안 waiting 큐에서 요청을 계속 끌어오고, 그렇게 풀이 마른 다음 스텝에 running 큐의 decode가 새 블록을 못 받는 순간 running 큐의 가장 뒤 요청이 선점됩니다. 선점된 요청은 계산해둔 토큰 수가 0으로 되돌아가므로, 그 재계산이 GPU 시간을 먹어 유효 처리량이 깎입니다."
+        },
+        {
+          "text": "선점된 요청의 KV가 CPU 메모리로 스왑됐다 돌아오느라 PCIe 전송이 병목이 됐습니다.",
+          "why": "V1의 선점은 스왑이 아니라 재계산입니다. 블록을 풀에 반납하고 그 요청을 waiting 큐 맨 앞에 되돌려 놓을 뿐이라, KV가 CPU로 오가는 경로 자체가 없습니다. 손해는 전송이 아니라 버린 계산을 다시 하는 데서 옵니다."
+        },
+        {
+          "text": "prefix cache hit rate가 5%대에 머물러 재계산이 늘어난 것입니다.",
+          "why": "히트율은 변경 전 5.1%, 변경 후 5.3%로 사실상 그대로입니다. 두 측정에서 달라지지 않은 값은 달라진 결과의 원인이 될 수 없습니다. 히트율이 오르면 요청당 점유가 줄어 도움이 되기는 하지만, 지금 Running을 297에 묶고 있는 것은 100%에 붙은 KV 풀입니다."
+        },
+        {
+          "text": "배치가 커지면서 decode의 attention 비용이 요청 수의 제곱으로 늘어 스텝이 느려졌습니다.",
+          "why": "요청들의 attention은 서로 독립이라 비용은 요청 수에 비례해 늘 뿐 제곱이 되지 않습니다. 게다가 decode는 memory-bound라 배치를 키우면 요청당 비용이 오히려 줄어듭니다. 배치를 키우는 것 자체는 처리량에 유리하고, 문제는 블록 없이 키운 데 있습니다."
+        }
+      ],
+      "explanation": "동시 요청 수의 진짜 상한은 max_num_seqs가 아니라 KV 블록 풀의 크기입니다. 이 인자는 이보다 많이 올리지 말라는 선을 그을 뿐이라, 블록이 부족한 상태에서 값만 키우면 스케줄러는 감당 못 할 요청까지 running 큐에 올렸다가 되돌리는 일을 반복합니다. vLLM V1의 선점은 재계산 방식이라 선점된 요청의 진도가 0으로 초기화되고, 그 요청은 waiting 큐 맨 앞으로 가서 prefill부터 다시 시작합니다. prefix caching이 켜져 있으면 반납한 블록이 아직 캐시에 남아 일부를 건너뛸 수도 있지만, 캐시가 이미 압박받는 상황이라 기대하기 어렵습니다. 이미 한 계산을 버리고 다시 하는 만큼이 그대로 처리량 손실입니다. 게다가 선점이 일어난 스텝에서는 waiting 큐에서 새 요청을 아예 받지 않으므로, 선점이 잦아지면 신규 요청의 진입까지 느려집니다. 그래서 Preemptions가 꾸준히 오르는 상황의 처방은 상한을 더 올리는 것이 아니라, 메모리나 병렬도를 늘려 블록을 더 확보하거나 상한을 도로 내려 선점을 없애는 쪽입니다.",
+      "postSlug": "/llm/continuous-batching/",
+      "anchor": "#매-스텝-배치를-다시-짜는-continuous-batching"
+    }
+  ]
+}
