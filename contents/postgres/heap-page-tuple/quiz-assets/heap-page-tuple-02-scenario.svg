@@ -1,7 +1,7 @@
 <svg viewBox="0 0 360 306" style="width: 100%; height: auto; max-width: 360px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="힙 페이지 한 장의 현재 상태. 오프셋 0부터 24까지 PageHeaderData, 24부터 pd_lower인 92까지 ItemId 배열 17개, 92부터 pd_upper인 1116까지 1024바이트의 free space, 그 뒤로 페이지 끝 8192까지 기존 튜플 17개의 데이터가 들어 있습니다.">
+     role="img" aria-label="힙 페이지 한 장의 현재 상태. 오프셋 0부터 24까지 PageHeaderData, 24부터 pd_lower인 96까지 ItemId 배열 18개, 96부터 pd_upper인 1120까지 1024바이트의 free space, 그 뒤로 페이지 끝 8192까지 기존 튜플 18개의 데이터가 들어 있습니다.">
 <style>
 .qhp2-t { fill: var(--text, #1c1917); }
 .qhp2-m { fill: var(--text-muted, #78716c); }
@@ -13,19 +13,19 @@
 <rect x="96" y="44" width="240" height="28" class="qhp2-meta"/>
 <text x="216" y="64" text-anchor="middle" font-size="15" class="qhp2-t">PageHeaderData (24 B)</text>
 <rect x="96" y="72" width="240" height="36" class="qhp2-meta"/>
-<text x="216" y="96" text-anchor="middle" font-size="15" class="qhp2-t">ItemId 배열 17개 사용</text>
+<text x="216" y="96" text-anchor="middle" font-size="15" class="qhp2-t">ItemId 배열 18개 사용</text>
 <rect x="96" y="108" width="240" height="90" class="qhp2-free"/>
 <text x="216" y="148" text-anchor="middle" font-size="16" class="qhp2-m">free space</text>
 <text x="216" y="172" text-anchor="middle" font-size="15" class="qhp2-m">1,024 bytes</text>
 <rect x="96" y="198" width="240" height="66" class="qhp2-data"/>
 <text x="216" y="229" text-anchor="middle" font-size="15" class="qhp2-t">튜플 데이터</text>
-<text x="216" y="251" text-anchor="middle" font-size="14" class="qhp2-m">기존 17개</text>
+<text x="216" y="251" text-anchor="middle" font-size="14" class="qhp2-m">기존 18개</text>
 <text x="88" y="50" text-anchor="end" font-size="14" class="qhp2-m">0</text>
 <text x="88" y="78" text-anchor="end" font-size="14" class="qhp2-m">24</text>
 <text x="88" y="106" text-anchor="end" font-size="14" class="qhp2-m">pd_lower</text>
-<text x="88" y="123" text-anchor="end" font-size="14" class="qhp2-m">92</text>
+<text x="88" y="123" text-anchor="end" font-size="14" class="qhp2-m">96</text>
 <text x="88" y="196" text-anchor="end" font-size="14" class="qhp2-m">pd_upper</text>
-<text x="88" y="213" text-anchor="end" font-size="14" class="qhp2-m">1,116</text>
+<text x="88" y="213" text-anchor="end" font-size="14" class="qhp2-m">1,120</text>
 <text x="88" y="270" text-anchor="end" font-size="14" class="qhp2-m">8192</text>
 <text x="180" y="294" text-anchor="middle" font-size="14" class="qhp2-m">세로 비율은 실제 축척이 아닙니다.</text>
 </svg>

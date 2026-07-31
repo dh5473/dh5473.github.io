@@ -78,7 +78,7 @@
       "tags": ["진단", "운영"],
       "scenario": {
         "kind": "log",
-        "body": "INFO 07-21 14:02:11 [loggers.py:127] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 941.3 tokens/s, Running: 32 reqs, Waiting: 0 reqs, GPU KV cache usage: 38.4%, Prefix cache hit rate: 0.0%\nINFO 07-21 14:02:21 [loggers.py:127] Engine 000: Avg prompt throughput: 3276.8 tokens/s, Avg generation throughput: 402.7 tokens/s, Running: 33 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.2%, Prefix cache hit rate: 0.0%\nINFO 07-21 14:02:31 [loggers.py:127] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 938.6 tokens/s, Running: 33 reqs, Waiting: 0 reqs, GPU KV cache usage: 52.0%, Prefix cache hit rate: 0.0%\n\n기존 32개 요청의 토큰 간 지연(ITL)\n  14:02:01 ~ 11   p50 34ms   최대    58ms\n  14:02:11 ~ 21   p50 35ms   최대 5,720ms\n  14:02:21 ~ 31   p50 35ms   최대    61ms"
+        "body": "INFO 07-21 14:02:11 [loggers.py:127] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 941.3 tokens/s, Running: 32 reqs, Waiting: 0 reqs, GPU KV cache usage: 38.4%, Prefix cache hit rate: 0.0%\nINFO 07-21 14:02:21 [loggers.py:127] Engine 000: Avg prompt throughput: 3276.8 tokens/s, Avg generation throughput: 402.7 tokens/s, Running: 33 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.2%, Prefix cache hit rate: 0.0%\nINFO 07-21 14:02:31 [loggers.py:127] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 938.6 tokens/s, Running: 33 reqs, Waiting: 0 reqs, GPU KV cache usage: 54.5%, Prefix cache hit rate: 0.0%\n\n이 서버는 처리량을 노려 max_num_batched_tokens를 32768로 올려 두었습니다.\n\n기존 32개 요청의 토큰 간 지연(ITL)\n  14:02:01 ~ 11   p50 34ms   최대    58ms\n  14:02:11 ~ 21   p50 35ms   최대 5,720ms\n  14:02:21 ~ 31   p50 35ms   최대    61ms"
       },
       "question": "14:02:11 ~ 21 구간에서만 기존 32개 요청의 ITL 꼬리가 5.7초까지 벌어졌습니다. 로그에서 원인으로 지목할 수 있는 것은 무엇입니까?",
       "choices": [
@@ -131,12 +131,46 @@
         {
           "text": "가중치 축소는 memory-bound 구간에서만 속도가 되고, 연산 병목에서는 역양자화 비용만 남습니다.",
           "correct": true,
-          "why": "배치가 작을 때의 decode는 가중치를 읽어오는 시간이 전부라 읽을 양이 4분의 1이 되면 그대로 속도가 됩니다. 반면 긴 프롬프트의 prefill과 배치가 큰 decode는 연산이 병목이라 읽기량 감소가 값을 하지 못합니다. W4A16은 활성값이 16비트 그대로여서 곱셈 직전에 4비트 가중치를 되돌리는 역양자화가 매 연산에 붙고, 그 비용이 이 구간에서는 순손실로 남습니다."
+          "why": "배치가 작을 때의 decode는 가중치를 읽어오는 시간이 사실상 전부라, 읽을 양이 4분의 1이 되면 그만큼 스텝이 짧아집니다. 반면 긴 프롬프트의 prefill과 배치가 큰 decode는 연산이 병목이라 읽기량 감소가 값을 하지 못합니다. W4A16은 활성값이 16비트 그대로여서 곱셈 직전에 4비트 가중치를 되돌리는 역양자화가 매 연산에 붙고, 그 비용이 이 구간에서는 순손실로 남습니다."
         }
       ],
-      "explanation": "가중치만 줄이는 양자화는 병목이 메모리 대역폭일 때만 속도로 환산됩니다. 배치가 작을 때의 decode가 정확히 그 조건이라, 읽을 가중치가 4분의 1이 되면 스텝 시간도 그만큼 줄어듭니다. 그런데 W4A16은 활성값이 16비트 그대로라 실제 행렬 곱은 여전히 16비트로 돌아야 하고, 압축된 가중치를 곱셈 직전에 되돌리는 역양자화가 매번 따라붙습니다. 연산이 병목인 구간, 즉 긴 프롬프트의 prefill이나 배치가 충분히 커진 decode에서는 줄어든 읽기량이 값을 못 하고 이 역양자화 비용만 남습니다. vLLM 문서가 INT4 가중치 양자화를 QPS가 낮은 워크로드용으로 안내하는 이유가 여기 있습니다. 처리량이 목표라면 활성값까지 8비트로 내려 저정밀 텐서 코어를 실제로 돌리는 W8A8 계열이 맞는 선택이고, 두 방식의 우열은 배치 크기를 축으로 뒤집힙니다. 어떤 양자화를 고를지는 정확도 손실만이 아니라 자기 트래픽이 어느 병목에 서 있는지가 정합니다.",
+      "explanation": "가중치만 줄이는 양자화는 병목이 메모리 대역폭일 때만 속도로 환산됩니다. 배치가 작을 때의 decode가 정확히 그 조건이라, 읽을 가중치가 4분의 1이 되면 스텝 시간도 함께 짧아집니다. 역양자화와 KV Cache 읽기가 그대로 남기 때문에 이론치인 4배까지는 가지 못하고 2배 안팎에 머무는 것이 보통입니다. 그런데 W4A16은 활성값이 16비트 그대로라 실제 행렬 곱은 여전히 16비트로 돌아야 하고, 압축된 가중치를 곱셈 직전에 되돌리는 역양자화가 매번 따라붙습니다. 연산이 병목인 구간, 즉 긴 프롬프트의 prefill이나 배치가 충분히 커진 decode에서는 줄어든 읽기량이 값을 못 하고 이 역양자화 비용만 남습니다. vLLM 문서가 INT4 가중치 양자화를 QPS가 낮은 워크로드용으로 안내하는 이유가 여기 있습니다. 처리량이 목표라면 활성값까지 8비트로 내려 저정밀 텐서 코어를 실제로 돌리는 W8A8 계열이 맞는 선택이고, 두 방식의 우열은 배치 크기를 축으로 뒤집힙니다. 어떤 양자화를 고를지는 정확도 손실만이 아니라 자기 트래픽이 어느 병목에 서 있는지가 정합니다.",
       "postSlug": "/llm/llm-inference-process/",
       "anchor": "#이-프레임으로-서빙-문제를-다시-보면"
+    },
+    {
+      "id": "llm-inference-process-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["계산", "구조"],
+      "scenario": {
+        "kind": "log",
+        "body": "$ vllm serve Qwen/Qwen3-32B --dtype bfloat16 --max-model-len 16384 \\\n      --gpu-memory-utilization 0.90 --no-enable-prefix-caching\n\nINFO  Device: NVIDIA H200 SXM 141GB | HBM3e 4.8 TB/s | BF16 dense 989 TFLOPS\nINFO  Model weights: 32.8B params x 2 bytes = 65.6 GB\nINFO  GPU KV cache size: 58.0 GB  (토큰당 0.26 MB = 64층 x KV헤드 8 x head_dim 128 x K/V 2개 x 2 bytes)\n\ndecode-only 스윕 (컨텍스트 512토큰 고정, prefill 제외)\n  batch   step time   generation\n      1     17.2 ms      58 tok/s\n      8     17.6 ms     455 tok/s\n     32     18.4 ms   1,739 tok/s\n     64     19.6 ms   3,265 tok/s\n\n실제 서비스 트래픽: 요청당 평균 컨텍스트 8,000토큰"
+      },
+      "question": "배치를 1에서 64로 64배 키우는 동안 스텝 시간은 17.2ms에서 19.6ms로 14%밖에 늘지 않았습니다. 이 결과의 원인과, 실제 서비스 트래픽에서 배치를 더 키우지 못하게 먼저 막아서는 제약을 옳게 짝지은 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "스텝당 가중치 65.6GB 읽기가 배치와 무관한 상수이기 때문이며, 연산 한계인 배치 206보다 앞선 27요청에서 KV Cache 풀이 막습니다.",
+          "correct": true,
+          "why": "decode 스텝이 하는 일의 대부분은 가중치 65.6GB를 HBM에서 한 번 훑어오는 것이고, 이 비용은 배치가 1이든 64든 똑같습니다. 반면 배치를 키우려면 요청 수만큼 KV Cache가 동시에 살아 있어야 해서, 58GB 풀을 8,000토큰 요청 하나분인 2.1GB로 나누면 27요청 남짓에서 자리가 동납니다."
+        },
+        {
+          "text": "KV Cache 읽기가 배치와 무관한 상수이기 때문이며, 배치에 비례해 늘어난 가중치 읽기가 4.8TB/s를 먼저 포화시킵니다.",
+          "why": "상수와 변수를 맞바꾼 설명입니다. 가중치는 배치에 묶인 요청들이 전부 같은 것을 쓰므로 스텝당 한 번만 읽히고, KV Cache는 요청마다 내용이 달라 읽을 양이 배치에 비례해 늘어납니다. 스텝 시간이 그나마 14% 오른 것도 커진 KV Cache 쪽 몫이지 가중치 쪽이 아닙니다."
+        },
+        {
+          "text": "배치가 KV Cache를 한 벌로 공유해 읽을 양이 늘지 않기 때문이며, 배치가 아니라 컨텍스트 상한 16,384가 먼저 걸립니다.",
+          "why": "가중치는 배치가 공유하지만 KV Cache는 공유되지 않습니다. 요청마다 지금까지 본 토큰이 다르니 K와 V도 달라지고, prefix caching까지 꺼져 있어 요청 수만큼의 캐시를 따로 들고 있어야 합니다. 컨텍스트 상한은 요청 하나가 얼마나 길어질 수 있는지를 정할 뿐, 평균 8,000토큰 트래픽에서 동시 요청 수를 묶는 것은 58GB 풀입니다."
+        },
+        {
+          "text": "배치 64에서도 연산 유닛이 데이터를 기다리며 놀고 있기 때문이며, 연산 강도가 206에 닿는 배치에서 연산이 먼저 막습니다.",
+          "why": "연산에 여유가 남았다는 관찰은 맞지만 한계를 잘못 짚었습니다. bf16 decode의 연산 강도는 배치 크기와 같은 값이라 206 근처에서 연산이 포화하는 것은 사실이나, 배치 206을 띄우려면 KV Cache만 430GB가 넘게 필요해 141GB 카드로는 닿을 수 없습니다. 이 서버에서 먼저 걸리는 쪽은 언제나 메모리입니다."
+        }
+      ],
+      "explanation": "배치를 키워도 스텝 시간이 거의 그대로인 이유는 decode 스텝의 지배적 비용이 배치와 무관한 상수이기 때문입니다. 스텝마다 하는 일은 가중치 65.6GB를 HBM에서 연산 유닛으로 한 번 옮기는 것이고, 그 한 번의 이동으로 배치에 묶인 요청 전부의 다음 토큰이 나옵니다. 읽은 바이트당 연산량, 즉 연산 강도가 정확히 배치 크기와 같아지므로 989 TFLOPS를 4.8TB/s로 나눈 206에 닿기 전까지는 병목이 여전히 대역폭이고, 그래서 배치가 64배가 되는 동안 처리량만 58에서 3,265 tok/s로 뛰었습니다. 다만 이 공짜 점심에는 계산서가 붙습니다. 배치에 들어온 요청 수만큼 KV Cache가 동시에 살아 있어야 하는데, 8,000토큰 컨텍스트면 요청당 2.1GB라 58GB 풀은 27요청 남짓에서 바닥납니다. 연산 한계인 배치 206까지 가려면 캐시만 430GB가 넘게 필요하니, 이 서버에서 배치를 정하는 것은 연산 성능이 아니라 KV Cache에 남은 자리입니다. 처리량이 목표일 때 더 좋은 GPU보다 PagedAttention이나 GQA, KV Cache 양자화처럼 캐시를 아끼는 수단을 먼저 보게 되는 이유가 여기 있습니다.",
+      "postSlug": "/llm/llm-inference-process/",
+      "anchor": "#그래서-배칭이-답이-된다"
     }
   ]
 }

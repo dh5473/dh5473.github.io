@@ -32,7 +32,7 @@
           "why": "CLOG는 종료된 트랜잭션이 커밋인지 롤백인지 가릴 때 필요합니다. 750은 xip 목록에 있어 아직 종료되지 않았으므로, CLOG를 볼 것도 없이 안 보인다고 판정됩니다."
         }
       ],
-      "explanation": "xmin:xmax:xip_list 형식은 xid 번호선을 세 구간으로 나눕니다. 748 미만은 모두 종료된 과거, 752 이상은 아직 시작하지 않은 미래, 그 사이는 xip 목록으로 갈립니다. 목록에 있으면 진행 중이라 안 보이고, 목록에 없으면 종료된 것이므로 CLOG에서 커밋 여부를 확인한 뒤 판정합니다. 여기서 749와 751은 구간 안에 있지만 목록에 없으므로 이미 끝난 트랜잭션이고, 커밋되었다면 그들이 만든 튜플은 보입니다. 구간 안에 있다는 것과 보인다는 것을 같은 말로 읽으면 이후 판정이 전부 어긋납니다.",
+      "explanation": "xmin:xmax:xip_list 형식은 xid 번호선을 세 구간으로 나눕니다. 748 미만은 모두 종료된 과거이고, 752 이상은 snapshot을 찍은 시점에 아직 완료되지 않은 구간입니다(시작하지 않았거나 진행 중입니다). 그 사이는 xip 목록으로 갈립니다. 목록에 있으면 진행 중이라 안 보이고, 목록에 없으면 종료된 것이므로 CLOG에서 커밋 여부를 확인한 뒤 판정합니다. 여기서 749와 751은 구간 안에 있지만 목록에 없으므로 이미 끝난 트랜잭션이고, 커밋되었다면 그들이 만든 튜플은 보입니다. 구간 안에 있다는 것과 보인다는 것을 같은 말로 읽으면 이후 판정이 전부 어긋납니다.",
       "postSlug": "/postgres/mvcc-visibility/",
       "anchor": "#snapshot-지금-세상이-어떤-모습인가의-사진"
     },
@@ -47,11 +47,11 @@
         "kind": "svg",
         "asset": "mvcc-visibility-02-scenario.svg"
       },
-      "question": "Session A는 Repeatable Read로 트랜잭션을 열어 snapshot 743:749:743을 확보했습니다. 그 뒤 Session B가 xid 749로 balance를 2000으로 UPDATE하고 커밋했습니다. 지금 Session A가 SELECT balance FROM accounts WHERE id = 1을 실행하면 무엇이 나옵니까?",
+      "question": "Session A는 Repeatable Read로 트랜잭션을 열어 snapshot 806:812:806을 확보했습니다. 그 뒤 Session B가 xid 812로 balance를 7000으로 UPDATE하고 커밋했습니다. 지금 Session A가 SELECT balance FROM accounts WHERE id = 1을 실행하면 무엇이 나옵니까?",
       "choices": [
         {
-          "text": "2000. Session B가 커밋을 마쳤으므로 최신 값이 보입니다.",
-          "why": "커밋 여부는 판정의 한 축일 뿐이고 다른 축이 snapshot입니다. 749는 Session A가 snapshot을 찍은 뒤에 시작한 트랜잭션이라, 커밋을 했든 안 했든 이 snapshot에서는 존재하지 않는 미래입니다."
+          "text": "7000. Session B가 커밋을 마쳤으므로 최신 값이 보입니다.",
+          "why": "커밋 여부는 판정의 한 축일 뿐이고 다른 축이 snapshot입니다. 812는 Session A가 snapshot을 찍은 시점에 아직 완료되지 않은 트랜잭션이라, 그 뒤에 커밋을 했더라도 이 snapshot에서는 없는 것으로 취급됩니다."
         },
         {
           "text": "두 행이 모두 나옵니다. 페이지에 튜플이 두 개 있습니다.",
@@ -62,12 +62,12 @@
           "why": "읽기만으로는 충돌이 나지 않습니다. Repeatable Read에서 에러가 발생하는 것은 이 트랜잭션이 같은 row를 쓰려고 할 때입니다."
         },
         {
-          "text": "1000. 구 버전이 보입니다.",
+          "text": "5000. 구 버전이 보입니다.",
           "correct": true,
-          "why": "구 버전의 t_xmin은 740이라 snapshot의 xmin(743)보다 작은 확정된 과거이고, t_xmax는 749라 snapshot의 xmax(749)와 같아 아직 시작하지 않은 미래로 분류됩니다. 만든 트랜잭션은 보이고 죽인 트랜잭션은 보이지 않으므로 이 튜플은 살아 있는 것으로 판정됩니다."
+          "why": "구 버전의 t_xmin은 799라 snapshot의 xmin(806)보다 작은 확정된 과거이고, t_xmax는 812라 snapshot의 xmax(812)와 같아 아직 완료되지 않은 트랜잭션으로 분류됩니다. 만든 트랜잭션은 보이고 죽인 트랜잭션은 보이지 않으므로 이 튜플은 살아 있는 것으로 판정됩니다."
         }
       ],
-      "explanation": "판정은 두 단계로 나뉩니다. 먼저 t_xmin이 이 snapshot에서 보이는가, 그다음 t_xmax가 유효한 삭제인가. 구 버전은 t_xmin 740이 snapshot의 xmin(743) 아래라 1단계를 통과하고, t_xmax 749가 snapshot의 xmax(749) 이상이라 아직 일어나지 않은 삭제로 판정되어 살아남습니다. 신 버전은 t_xmin 749가 같은 이유로 미래에 속해 1단계에서 탈락합니다. Session B의 커밋은 실제로 끝났지만 Session A의 snapshot은 그 사건보다 먼저 찍혔고, 그 사진을 트랜잭션 끝까지 그대로 들고 가는 것이 Repeatable Read입니다.",
+      "explanation": "판정은 두 단계로 나뉩니다. 먼저 t_xmin이 이 snapshot에서 보이는가, 그다음 t_xmax가 유효한 삭제인가. 구 버전은 t_xmin 799가 snapshot의 xmin(806) 아래라 1단계를 통과하고, t_xmax 812가 snapshot의 xmax(812) 이상이라 아직 확정되지 않은 삭제로 판정되어 살아남습니다. 신 버전은 t_xmin 812가 같은 이유로 미완료 구간에 속해 1단계에서 탈락합니다. Session B의 커밋은 실제로 끝났지만 Session A의 snapshot은 그 사건보다 먼저 찍혔고, 그 사진을 트랜잭션 끝까지 그대로 들고 가는 것이 Repeatable Read입니다.",
       "postSlug": "/postgres/mvcc-visibility/",
       "anchor": "#도입부-시나리오를-손으로-풀어보기"
     },
@@ -88,14 +88,14 @@
         {
           "text": "직렬화 실패 에러가 나고 트랜잭션이 중단됩니다.",
           "correct": true,
-          "why": "Repeatable Read에서 UPDATE는 자기 snapshot이 보는 버전이 아니라 row의 최신 버전을 잡으려 합니다. 그런데 그 최신 버전은 snapshot을 찍은 뒤에 커밋된 것이라, PostgreSQL은 조용히 덮어쓰는 대신 could not serialize access due to concurrent update 에러로 트랜잭션을 중단시킵니다."
+          "why": "Repeatable Read의 UPDATE는 트랜잭션 시작 시점에 커밋되어 있던 버전만 대상으로 찾습니다. 그 버전은 이미 Session B가 갱신하고 커밋한 뒤라, PostgreSQL은 최신 버전을 따라가 덮어쓰는 대신 could not serialize access due to concurrent update 에러로 트랜잭션을 롤백합니다."
         },
         {
-          "text": "1000에 500을 더한 1500이 저장됩니다.",
-          "why": "그렇게 되면 Session B가 커밋한 2000이 흔적 없이 사라집니다. lost update를 막기 위해 Repeatable Read는 이 상황을 성공이 아니라 에러로 처리합니다."
+          "text": "5000에 500을 더한 5500이 저장됩니다.",
+          "why": "그렇게 되면 Session B가 커밋한 7000이 흔적 없이 사라집니다. lost update를 막기 위해 Repeatable Read는 이 상황을 성공이 아니라 에러로 처리합니다."
         },
         {
-          "text": "2000에 500을 더한 2500이 저장됩니다.",
+          "text": "7000에 500을 더한 7500이 저장됩니다.",
           "why": "Read Committed의 동작입니다. 그쪽은 UPDATE 직전에 snapshot을 다시 찍어 최신 버전 위에서 계산합니다. snapshot을 다시 찍지 않는 Repeatable Read는 같은 결말에 도달할 수 없습니다."
         },
         {
@@ -103,7 +103,7 @@
           "why": "Session B는 이미 커밋했으므로 기다릴 대상이 없습니다. 대기는 상대가 아직 진행 중일 때의 이야기이고, 여기서는 기다림 없이 즉시 판정이 납니다."
         }
       ],
-      "explanation": "읽기는 snapshot이 보여주는 버전을 그대로 쓰면 되지만 쓰기는 그럴 수 없습니다. row의 최신 버전을 잡지 않으면 다른 트랜잭션이 커밋한 변경을 덮어쓰게 되기 때문입니다. Repeatable Read는 이 모순을 감추지 않고 에러로 드러냅니다. 그래서 이 격리 수준을 쓰는 애플리케이션은 직렬화 실패를 잡아 트랜잭션을 통째로 재시도하는 경로를 반드시 갖춰야 합니다. 재시도 없이 격리 수준만 올리면 이상 현상 대신 실패율을 얻게 됩니다. Read Committed는 매 문장마다 snapshot을 다시 찍어 이 에러를 피하는 대신, 한 트랜잭션 안에서 같은 SELECT가 다른 값을 돌려주는 non-repeatable read를 허용합니다.",
+      "explanation": "읽기는 snapshot이 보여주는 버전을 그대로 쓰면 되지만 쓰기는 그럴 수 없습니다. 자기 snapshot이 보여준 버전을 그대로 갱신하면 다른 트랜잭션이 커밋한 변경이 덮여 사라지기 때문입니다. Repeatable Read는 이 모순을 감추지 않고 에러로 드러냅니다. 그래서 이 격리 수준을 쓰는 애플리케이션은 직렬화 실패를 잡아 트랜잭션을 통째로 재시도하는 경로를 반드시 갖춰야 합니다. 재시도 없이 격리 수준만 올리면 이상 현상 대신 실패율을 얻게 됩니다. Read Committed는 매 문장마다 snapshot을 다시 찍어 이 에러를 피하는 대신, 한 트랜잭션 안에서 같은 SELECT가 다른 값을 돌려주는 non-repeatable read를 허용합니다.",
       "postSlug": "/postgres/mvcc-visibility/",
       "anchor": "#read-committed-vs-repeatable-read"
     },
@@ -171,6 +171,41 @@
       "explanation": "pg_current_xact_id()는 현재 트랜잭션의 xid를 돌려주는데, 아직 xid가 없으면 그 자리에서 발급합니다. PostgreSQL이 read-only 트랜잭션에 xid를 주지 않는 이유가 32비트뿐인 번호 공간을 아끼기 위해서인데, 이 호출이 그 절약을 무력화합니다. 한 달에 260만 개면 21억 개인 번호 공간을 당장 위협하지는 않습니다. 문제는 age(relfrozenxid)가 데이터 변경과 무관하게 계속 자라 anti-wraparound VACUUM이 그만큼 일찍 발동한다는 점이고, 쓰기가 거의 없는 인스턴스일수록 이 인위적인 소비가 차지하는 비중이 커집니다. 확인만 할 목적이라면 xid가 이미 할당된 경우에만 값을 돌려주고 아니면 NULL을 주는 pg_current_xact_id_if_assigned()가 정확한 도구입니다. 관측 도구가 관측 대상의 상태를 바꿔놓는 사례라, 모니터링 쿼리를 상시로 걸 때는 이런 부작용을 먼저 확인하는 편이 안전합니다.",
       "postSlug": "/postgres/mvcc-visibility/",
       "anchor": "#트랜잭션-idxid"
+    },
+    {
+      "id": "mvcc-visibility-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판정", "구조"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- archive 테이블은 오래전 적재 뒤 갱신이 없었고, 그동안 인스턴스의 xid만 진행했습니다.\n-- wraparound 방어가 작동하지 않아 여기까지 왔다고 가정합니다.\n\nSELECT lp, t_xmin, to_hex(t_infomask) AS infomask\nFROM heap_page_items(get_raw_page('archive', 0))\nWHERE lp <= 2;\n--  lp | t_xmin | infomask\n-- ----+--------+----------\n--   1 |    412 | 300        -- HEAP_XMIN_FROZEN (0x0100 | 0x0200)\n--   2 |    412 | 100        -- HEAP_XMIN_COMMITTED\n\n-- 현재 xid는 2600000000이고(412와의 거리는 약 26억) 진행 중인 트랜잭션은 없습니다.\n-- xid 순서 비교는 modular arithmetic으로 동작합니다."
+      },
+      "question": "t_xmin이 412로 같은 이 두 튜플에 대해 가시성 판정은 각각 어떻게 납니까?",
+      "choices": [
+        {
+          "text": "lp=1만 보입니다. freeze 비트가 켜져 있으면 t_xmin 비교를 건너뛰고 과거로 확정합니다.",
+          "correct": true,
+          "why": "HEAP_XMIN_FROZEN이 켜진 튜플은 xmin을 snapshot과 대조하는 단계 자체를 수행하지 않고 커밋된 과거로 확정되므로, t_xmin이 412로 남아 있어도 판정이 흔들리지 않습니다. 반면 lp=2는 412와 현재 xid의 거리가 약 26억이라 2^31을 넘어 미래로 뒤집히고, 아직 확정되지 않은 INSERT로 분류되어 탈락합니다."
+        },
+        {
+          "text": "둘 다 보입니다. t_xmin 412는 현재 xid 2600000000보다 작은 수이므로 과거입니다.",
+          "why": "순서를 정하는 것은 숫자의 대소가 아니라 modulo 2^32 비교입니다. 어떤 xid에서 보든 과거로 읽히는 범위는 2^31개(약 21억 4700만)뿐이고, 거리가 그보다 멀어지면 작은 쪽이 미래가 됩니다. 412는 약 26억 떨어져 있어 이미 그 경계를 넘었습니다."
+        },
+        {
+          "text": "둘 다 안 보입니다. freeze는 t_xmin 값을 그대로 두므로 비교 결과가 달라지지 않습니다.",
+          "why": "값을 보존하는 것은 맞지만 판정까지 같아지지는 않습니다. 가시성 검사는 t_infomask의 freeze 비트를 먼저 확인하고, 켜져 있으면 t_xmin을 꺼내 비교하는 경로로 내려가지 않습니다. 값이 남는 것은 사후 확인용이고 판정을 결정하는 것은 비트입니다."
+        },
+        {
+          "text": "lp=2만 보입니다. lp=1은 t_xmin이 FrozenTransactionId(2)가 아니라 412라서 freeze가 미완입니다.",
+          "why": "PostgreSQL 9.4 이전의 방식입니다. 그 시절에는 t_xmin을 2로 덮어썼지만, 지금은 원래 xid를 보존한 채 t_infomask에 비트만 세팅하는 방식으로 바뀌었습니다. t_xmin이 412로 남아 있다는 것은 freeze가 덜 된 증거가 아니라 현재 구현이 정상 동작한 결과입니다."
+        }
+      ],
+      "explanation": "freeze는 튜플을 옮기거나 값을 다시 쓰는 작업이 아니라 헤더에 표식 하나를 남기는 작업입니다. VACUUM이 충분히 오래된 튜플을 만나면 t_infomask에 HEAP_XMIN_FROZEN을 세팅하고, 가시성 검사는 이 비트가 켜져 있으면 snapshot과의 xmin 비교를 아예 수행하지 않고 커밋된 과거로 확정합니다. 그래서 lp=1은 t_xmin이 412로 남아 있어도 그 값이 판정에 쓰이지 않습니다. 9.4 이전에는 t_xmin을 FrozenTransactionId(2)로 덮어쓰는 방식이었고, 지금은 원래 xid를 보존해 이 튜플을 누가 넣었는지 나중에 확인할 수 있게 합니다. 값이 남아 있다는 것과 그 값으로 비교한다는 것은 별개입니다. 표식이 없는 lp=2가 겪는 일이 wraparound입니다. xid 순서는 modulo 2^32 비교라 어떤 xid에서 보든 과거로 읽히는 범위는 2^31개(약 21억 4700만)뿐이고, 그보다 멀어진 xid는 미래로 뒤집힙니다. 412는 현재 xid에서 약 26억 떨어져 있어 미래에 해당하고, 미래 트랜잭션이 만든 튜플은 아직 확정되지 않은 INSERT로 취급되어 Step 1을 통과하지 못합니다. 디스크에는 데이터가 그대로 있는데 SELECT 결과에서만 사라지는 형태의 유실이고, freeze는 오래된 튜플을 이 비교의 대상에서 빼내 그 사고를 원천적으로 막습니다.",
+      "postSlug": "/postgres/mvcc-visibility/",
+      "anchor": "#xid-wraparound와-freeze"
     }
   ]
 }
