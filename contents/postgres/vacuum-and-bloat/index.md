@@ -47,7 +47,7 @@ dead tuple은 아무 트랜잭션에도 보이지 않는 튜플입니다. 보이
 
 ### 힙 bloat
 
-Seq Scan은 테이블의 모든 페이지를 순서대로 읽습니다. dead tuple이 차지하는 페이지까지 전부 읽게 되므로, 논리적으로 필요한 것보다 더 많은 I/O를 씁니다. 위 실험에서 13MB가 된 테이블에 `SELECT COUNT(*)`를 걸면, 살아있는 10만 행을 세는 데 13MB를 전부 읽어야 합니다. VACUUM을 돌려도 물리적 페이지 수는 줄지 않으므로(뒤에서 다룹니다) Seq Scan I/O 자체는 그대로지만, dead tuple이 줄어들면 이후 INSERT가 빈 공간을 재사용해 테이블이 더 커지지 않고, 인덱스 bloat와 VM 비트 문제도 해소됩니다.
+Seq Scan은 테이블의 모든 페이지를 순서대로 읽습니다. dead tuple이 차지하는 페이지까지 전부 읽게 되므로, 논리적으로 필요한 것보다 더 많은 I/O를 씁니다. 위 실험에서 13MB가 된 테이블에 `SELECT COUNT(*)`를 걸면, 살아있는 10만 행을 세는 데 13MB를 전부 읽어야 합니다. VACUUM을 돌려도 파일 끝쪽이 통째로 비지 않는 한 물리적 페이지 수는 줄지 않으므로(뒤에서 다룹니다) Seq Scan I/O 자체는 그대로지만, dead tuple이 줄어들면 이후 INSERT가 빈 공간을 재사용해 테이블이 더 커지지 않고, 인덱스 bloat와 VM 비트 문제도 해소됩니다.
 
 ### 인덱스 bloat
 
@@ -152,13 +152,13 @@ VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID**(bl
 </svg>
 </div>
 
-수집할 수 있는 TID 수의 상한은 `maintenance_work_mem`에 의해 결정됩니다. PG 17부터는 TID를 radix tree 기반의 TidStore에 저장해서 메모리 효율이 크게 개선되었고, 이전 버전에 있던 1GB 상한 제한도 제거되었습니다. 테이블이 매우 크면 이 한도를 넘겨서 여러 패스로 나뉩니다. 한 패스가 끝나면 2-3단계를 수행하고 다시 남은 구간을 스캔합니다.
+수집할 수 있는 TID 수의 상한은 `maintenance_work_mem`에 의해 결정됩니다. autovacuum worker는 `autovacuum_work_mem`이 설정되어 있으면 그 값을 대신 쓰고, 기본값 -1일 때만 `maintenance_work_mem`을 따릅니다. PG 17부터는 TID를 radix tree 기반의 TidStore에 저장해서 메모리 효율이 크게 개선되었고, 이전 버전에 있던 1GB 상한 제한도 제거되었습니다. 테이블이 매우 크면 이 한도를 넘겨서 여러 패스로 나뉩니다. 한 패스가 끝나면 2-3단계를 수행하고 다시 남은 구간을 스캔합니다.
 
 ### 2단계: 인덱스 정리
 
 수집한 TID 목록을 가지고 해당 테이블의 **모든 인덱스**를 순회합니다. 각 인덱스에서 dead tuple의 ctid를 가리키는 엔트리를 찾아 제거합니다. 인덱스가 5개 있으면 이 단계를 5번 반복합니다. 큰 테이블에 인덱스가 많으면 이 단계가 VACUUM 시간의 대부분을 차지하기도 합니다.
 
-PG 12부터는 dead tuple 수가 적을 때 인덱스 정리를 생략하는 최적화가 들어갔습니다. `INDEX_CLEANUP` 옵션으로 제어할 수 있고, autovacuum도 자체적으로 dead tuple이 적으면 인덱스 패스를 건너뛸 수 있습니다.
+PG 12에서 인덱스 정리를 끄고 켜는 `INDEX_CLEANUP` 옵션이 생겼고, PG 14부터는 기본값이 `AUTO`가 되어 dead tuple이 적으면 VACUUM이 알아서 인덱스 패스를 건너뜁니다. LP_DEAD 항목이 있는 페이지가 전체의 2% 이하일 때가 그 조건입니다.
 
 ### 3단계: 힙 정리
 
@@ -267,7 +267,7 @@ SELECT pg_size_pretty(pg_relation_size('bloat_demo'));
 |----------------|
 | 13 MB |
 
-크기는 여전히 13MB입니다. 일반 VACUUM은 **dead tuple이 차지하던 공간을 OS에 돌려주지 않습니다**. 해당 공간을 "재사용 가능"으로만 표시합니다. 이후에 INSERT가 들어오면 이 빈 공간부터 채우므로, 테이블이 더 커지지는 않습니다. 하지만 당장의 디스크 사용량은 줄지 않습니다. 이 차이가 뒤에서 다룰 VACUUM FULL과의 핵심 차이입니다.
+크기는 여전히 13MB입니다. 일반 VACUUM은 **dead tuple이 차지하던 공간을 OS에 돌려주지 않습니다**. 해당 공간을 "재사용 가능"으로만 표시합니다. 이후에 INSERT가 들어오면 이 빈 공간부터 채우므로, 테이블이 더 커지지는 않습니다. 하지만 당장의 디스크 사용량은 줄지 않습니다. 예외가 하나 있는데, 파일 끝쪽 페이지가 통째로 비어 있으면 일반 VACUUM도 그만큼을 잘라냅니다. 이때만 잠깐 AccessExclusiveLock을 잡으며, `vacuum_truncate`로 끌 수 있습니다. 실제 테이블에서는 dead tuple이 파일 전체에 흩어져 있어 이 조건이 거의 성립하지 않습니다. 이 차이가 뒤에서 다룰 VACUUM FULL과의 핵심 차이입니다.
 
 세 시점의 파일 구성을 나란히 놓으면 이렇습니다.
 
@@ -330,7 +330,7 @@ HOT update의 조건을 충족시키려면 페이지에 빈 공간이 필요하�
 
 ### 프로세스 구조
 
-`autovacuum launcher`가 상주하면서 주기적으로 각 테이블의 상태를 확인합니다. VACUUM이 필요한 테이블을 발견하면 `autovacuum worker`를 띄워 그 테이블에 VACUUM을 실행합니다. 동시에 띄울 수 있는 worker 수는 `autovacuum_max_workers`(기본 3)로 제한됩니다.
+`autovacuum launcher`가 상주하면서 `autovacuum_naptime`을 데이터베이스 수로 나눈 간격마다 대상 데이터베이스를 하나 골라 `autovacuum worker`를 띄웁니다. 어느 테이블에 VACUUM이 필요한지는 launcher가 아니라 접속을 마친 worker가 판정합니다. 동시에 띄울 수 있는 worker 수는 `autovacuum_max_workers`(기본 3)로 제한됩니다.
 
 ### 트리거 공식
 
@@ -402,7 +402,7 @@ ORDER BY n_dead_tup DESC;
 | 구분 | VACUUM | VACUUM FULL | pg_repack |
 |------|--------|-------------|-----------|
 | 공간 반환 | 재사용 가능으로 표시 (OS에 반환 안 함) | 테이블을 새로 써서 OS에 반환 | 테이블을 새로 써서 OS에 반환 |
-| 락 수준 | ShareUpdateExclusiveLock (읽기/쓰기 가능) | AccessExclusiveLock (모든 접근 차단) | 마지막 swap 순간만 짧은 배타 락 |
+| 락 수준 | ShareUpdateExclusiveLock (읽기/쓰기 가능) | AccessExclusiveLock (모든 접근 차단) | 시작과 마지막 swap 순간에만 짧은 배타 락 |
 | 운영 중 사용 | 가능 (일상적) | 사실상 불가 (서비스 중단) | 가능 (온라인) |
 | 동작 원리 | dead tuple 정리, FSM/VM 갱신 | 살아있는 튜플만 새 파일에 복사, 옛 파일 삭제 | 살아있는 튜플을 새 테이블로 복사하면서 트리거로 변경분 추적, 완료 후 swap |
 | 디스크 필요량 | 추가 없음 | 테이블 크기만큼 임시 공간 | 테이블 크기만큼 임시 공간 |

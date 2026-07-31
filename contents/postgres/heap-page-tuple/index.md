@@ -156,7 +156,7 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
 | 필드 | 크기 | 역할 |
 |------|------|------|
 | `pd_lsn` | 8B | 이 페이지를 마지막으로 변경한 WAL 레코드의 LSN. crash recovery에서 redo 적용 여부 판단 |
-| `pd_checksum` | 2B | 페이지 체크섬(`initdb -k`로 활성화 시) |
+| `pd_checksum` | 2B | 페이지 체크섬(PG 18부터 기본 활성화, `initdb --no-data-checksums`로 해제) |
 | `pd_flags` | 2B | 페이지 상태 비트 (`PD_HAS_FREE_LINES`, `PD_PAGE_FULL`, `PD_ALL_VISIBLE` 등) |
 | `pd_lower` | 2B | line pointer 배열 끝 오프셋 |
 | `pd_upper` | 2B | tuple 영역 시작 오프셋 |

@@ -318,7 +318,7 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
 
 | 인자 | 무엇을 정하나 | 키우면 |
 |---|---|---|
-| **`max_num_batched_tokens`** | 한 스텝에 처리할 총 토큰 수. prefill 청크가 커질 수 있는 상한이기도 함 | prefill을 크게 삼켜 TTFT·처리량이 올라가고, 대신 decode 끊김(ITL)이 커질 여지가 생김 |
+| **`max_num_batched_tokens`** | 한 스텝에 처리할 총 토큰 수. prefill 청크가 커질 수 있는 상한이기도 함 | prefill을 크게 삼켜 TTFT가 짧아지고 처리량이 올라가며, 대신 decode 끊김(ITL)이 커질 여지가 생김 |
 | **`max_num_seqs`** | 한 스텝에 올릴 수 있는 최대 시퀀스(요청) 수 | 동시 처리량이 올라감. 단 블록 예산 한도 안에서만 |
 
 `max_num_batched_tokens`는 곧 청크 크기의 상한입니다. 이 값을 작게(예: 2,048) 잡으면 긴 prefill이 잘게 쪼개져 기존 요청의 ITL이 매끄러워지고, 크게 잡으면 prefill을 한 번에 많이 삼켜 TTFT와 전체 처리량이 좋아집니다. TTFT와 ITL 사이의 긴장을 조절하는 손잡이가 바로 이 값입니다.

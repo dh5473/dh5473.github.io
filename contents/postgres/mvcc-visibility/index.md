@@ -79,7 +79,7 @@ xid만 가지고는 가시성을 판정할 수 없습니다. "xid 748이 이 튜
 snapshot은 트랜잭션이 "지금 세상의 상태"를 사진처럼 저장해둔 자료구조이고, 세 가지 핵심 필드로 구성됩니다.
 
 - **xmin**: 이 snapshot 생성 시점에 활성 중이던 가장 작은 xid. 이보다 작은 xid의 트랜잭션은 모두 완료되어 더 이상 활성 상태가 아닙니다. committed인지 aborted인지는 CLOG에서 개별 확인합니다
-- **xmax**: 가장 최근에 할당된 xid + 1. 이 값 이상의 xid는 snapshot 생성 시점에 아직 시작조차 하지 않은 미래
+- **xmax**: 가장 최근에 완료된 xid + 1. 이 값 이상의 xid는 snapshot 생성 시점에 아직 완료되지 않은 것들입니다. 아직 시작하지 않았을 수도 있고, 이미 시작해서 진행 중일 수도 있습니다
 - **xip[]**: xmin과 xmax 사이에서 snapshot 생성 시점에 아직 진행 중이었던 xid들의 목록
 
 이 세 필드를 xid 번호선 위에 올려보면 이렇습니다. xmin이 748, xmax가 752이고 xip[]에 748과 750이 들어 있는 snapshot을 예로 들었습니다.
@@ -313,7 +313,7 @@ SELECT balance FROM accounts WHERE id = 1;
 
 | balance |
 |---------|
-| 1000 |
+| 2000 |
 
 ```sql
 -- Session B (별도 터미널)
@@ -337,13 +337,13 @@ Serializable 격리 수준은 Repeatable Read의 snapshot에 SSI(Serializable Sn
 
 ## xid Wraparound와 Freeze
 
-xid가 32비트이므로 전체 공간은 약 42.9억입니다. modular arithmetic으로 과거/미래를 구분하기 때문에 실제로 사용 가능한 "과거" 범위는 약 21억(2^31)입니다. write가 잦은 서비스에서 하루에 수백만\~수천만 xid를 소비한다면, 수백 일이면 21억에 도달합니다.
+xid가 32비트이므로 전체 공간은 약 42.9억입니다. modular arithmetic으로 과거/미래를 구분하기 때문에 실제로 사용 가능한 "과거" 범위는 약 21억(2^31)입니다. write가 잦은 서비스에서 하루에 수천만 xid를 소비한다면 200일대에 21억에 도달합니다.
 
 그 시점에 아무런 조치가 없으면 **wraparound**가 일어납니다. 과거에 committed된 트랜잭션의 xid가 modular arithmetic 상 "미래"로 뒤집어지면서, 해당 트랜잭션이 만든 모든 튜플이 갑자기 안 보이게 됩니다. 데이터가 실제로 사라지는 건 아니지만, 가시성 판정에서 "미래의 트랜잭션이 만든 것"으로 분류되면 SELECT 결과에 나오지 않습니다. 사실상의 데이터 유실입니다.
 
 이걸 막기 위해 PostgreSQL은 **freeze**라는 메커니즘을 사용합니다. VACUUM이 충분히 오래된 튜플을 찾으면, 그 튜플의 `t_infomask`에 `HEAP_XMIN_FROZEN` 비트를 세팅합니다. 이 비트가 세팅된 튜플은 xmin 값과 무관하게 "영원히 과거, 항상 보임"으로 판정됩니다. 원래의 xmin 값은 지워지지 않고 보존되므로, 디버깅용으로 여전히 조회할 수 있습니다.
 
-freeze가 제때 일어나지 않으면 PostgreSQL은 방어 장치를 작동시킵니다. `autovacuum_freeze_max_age` 파라미터(기본값 2억)는 "테이블의 relfrozenxid가 현재 xid에서 이 값 이상 뒤처지면 anti-wraparound VACUUM을 강제 발동한다"는 임계치입니다. 심지어 autovacuum이 꺼져 있어도 이 임계치에 도달하면 강제로 VACUUM이 실행됩니다. 그래도 VACUUM이 진행되지 못하면(idle in transaction이 xmin horizon을 잡고 있거나, replication slot의 xmin/catalog_xmin이 xmin horizon을 고정하여 오래된 튜플 정리를 막고 있거나) PostgreSQL은 더 이상의 write를 거부하고 서버가 read-only 모드로 전환됩니다. 이 상태가 되면 수동으로 `VACUUM FREEZE`를 돌릴 수밖에 없습니다.
+freeze가 제때 일어나지 않으면 PostgreSQL은 방어 장치를 작동시킵니다. `autovacuum_freeze_max_age` 파라미터(기본값 2억)는 "테이블의 relfrozenxid가 현재 xid에서 이 값 이상 뒤처지면 anti-wraparound VACUUM을 강제 발동한다"는 임계치입니다. 심지어 autovacuum이 꺼져 있어도 이 임계치에 도달하면 강제로 VACUUM이 실행됩니다. 그래도 VACUUM이 진행되지 못하면(idle in transaction이 xmin horizon을 잡고 있거나, replication slot의 xmin/catalog_xmin이 xmin horizon을 고정하여 오래된 튜플 정리를 막고 있거나) wraparound까지 300만 트랜잭션이 남은 시점에 PostgreSQL은 새 xid 할당이 필요한 명령을 전부 거부합니다. `ERROR: database is not accepting commands to avoid wraparound data loss`가 그것이고, 이 상태가 되면 수동으로 `VACUUM FREEZE`를 돌릴 수밖에 없습니다.
 
 ### freeze 상태 모니터링
 
