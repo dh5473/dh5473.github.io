@@ -17,18 +17,76 @@ thumbnail: './redis-pub-sub-background.png'
 
 가장 직관적인 방법은 주문 처리 코드에서 각각의 시스템을 순차적으로 호출하는 것입니다. 하지만 특정 단계에서 문제가 생기면 전체 주문 과정이 멈춰버리고, 새로운 기능을 추가할 때마다 기존 주문 코드를 수정해야 하는 번거로움도 있습니다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 320" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="순차 호출은 한 단계가 막히면 뒤가 멈추고 Pub Sub은 브로커가 여러 구독자에게 동시에 전달하는 대비">
+<style>
+.ps-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.ps-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
+.ps-l { fill: var(--text, #1c1917); font-size: 14px; }
+.ps-w { fill: #ffffff; font-size: 14px; }
+.ps-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.ps-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.ps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.ps-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+.ps-hub { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.ps-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#psArrow); }
+.ps-x { stroke: var(--text-danger, #dc2626); stroke-width: 2; fill: none; }
+.ps-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<defs>
+<marker id="psArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<text class="ps-t" x="200" y="22" text-anchor="middle">순차 호출과 팬아웃</text>
+<text class="ps-h" x="20" y="48">순차 호출</text>
+<rect class="ps-box" x="16" y="58" width="76" height="32" rx="5"/>
+<text class="ps-l" x="54" y="79" text-anchor="middle">주문</text>
+<path class="ps-a" d="M92 74 L106 74"/>
+<rect class="ps-box" x="110" y="58" width="76" height="32" rx="5"/>
+<text class="ps-l" x="148" y="79" text-anchor="middle">결제</text>
+<path class="ps-a" d="M186 74 L200 74"/>
+<rect class="ps-bad" x="204" y="58" width="76" height="32" rx="5"/>
+<text class="ps-l" x="242" y="79" text-anchor="middle">재고</text>
+<path class="ps-x" d="M290 68 L302 80 M302 68 L290 80"/>
+<rect class="ps-box" x="308" y="58" width="76" height="32" rx="5"/>
+<text class="ps-n" x="346" y="79" text-anchor="middle">배송</text>
+<text class="ps-d" x="200" y="118" text-anchor="middle">뒤 단계 전부 중단</text>
+<line class="ps-div" x1="20" y1="142" x2="380" y2="142"/>
+<text class="ps-h" x="20" y="170">Pub/Sub</text>
+<rect class="ps-box" x="16" y="196" width="76" height="32" rx="5"/>
+<text class="ps-l" x="54" y="217" text-anchor="middle">주문</text>
+<path class="ps-a" d="M92 212 L106 212"/>
+<rect class="ps-hub" x="110" y="196" width="86" height="32" rx="5"/>
+<text class="ps-w" x="153" y="217" text-anchor="middle">브로커</text>
+<path class="ps-a" d="M196 208 L272 184"/>
+<path class="ps-a" d="M196 212 L272 212"/>
+<path class="ps-a" d="M196 216 L272 240"/>
+<rect class="ps-box" x="276" y="164" width="98" height="30" rx="5"/>
+<text class="ps-l" x="325" y="184" text-anchor="middle">결제</text>
+<rect class="ps-box" x="276" y="197" width="98" height="30" rx="5"/>
+<text class="ps-l" x="325" y="217" text-anchor="middle">재고</text>
+<rect class="ps-box" x="276" y="230" width="98" height="30" rx="5"/>
+<text class="ps-l" x="325" y="250" text-anchor="middle">배송</text>
+<text class="ps-n" x="200" y="292" text-anchor="middle">한 구독자가 죽어도</text>
+<text class="ps-n" x="200" y="312" text-anchor="middle">나머지는 그대로 받음</text>
+</svg>
+</div>
+
 **"이벤트를 발생시키기만 하면, 관심 있는 시스템들이 알아서 처리하게 할 수는 없을까?"**
 
 바로 이런 고민에서 나온 해결책이 **Publish-Subscribe 패턴**입니다. 이벤트를 '발행(Publish)'하면, 해당 이벤트에 관심 있는 시스템들이 '구독(Subscribe)'해서 각자 필요한 작업을 처리하는 방식입니다.
 
-# Publish-Subscribe
+## Publish-Subscribe
+
 분산 시스템이나 마이크로서비스 아키텍처에서는 서로 다른 컴포넌트 간의 메시지 교환 방식을 메시징 패턴으로 정의합니다. 메시징 패턴에는 Request-Reply, Publish-Subscribe, Push-Pull 등 다양한 패턴이 있는데, 그중에서도 Publish-Subscribe 패턴에 대해 자세히 알아보겠습니다.
 
-<br>
-
 ![Pub-Sub 패턴 개념도](./pub-sub-pattern.png)
-<p align="center" style="color: #666; font-size: 14px;"><em>Publish-Subscribe 패턴 (출처: <a href="https://aws.amazon.com/what-is/pub-sub-messaging/" target="_blank">AWS</a>)</em></p>
 
+*출처: [AWS](https://aws.amazon.com/what-is/pub-sub-messaging/)*
 
 - **Publisher**: 메시지를 생성해 특정 토픽에 발행
 - **Broker**: 발행된 메시지를 받아 구독자들에게 전달하는 중개자
@@ -36,37 +94,39 @@ thumbnail: './redis-pub-sub-background.png'
 
 Publish-Subscribe는 특정한 주제(Topic)에 대하여 해당 토픽을 구독한 모든 구독자에게 메시지를 발행하는 방식입니다. 발행자와 구독자는 서로를 모르는 상태에서 통신하기 때문에 서비스 간 의존도를 낮출 수 있고, 토픽을 늘리는 방식으로 수평 확장이 가능하다는 장점이 있습니다.
 
-<br>
-
 이러한 특성 덕분에 다음과 같은 상황에서 유용하게 활용됩니다.
+
 - 여러 서비스가 **하나의 이벤트를 동시에 반응**해야 할 때
 - **실시간 브로드캐스트**가 필요한 채팅, 알림, 모니터링 시스템
 - 이벤트 기반 마이크로서비스 구조에서 **서비스 간 직접 호출 없이** 데이터를 전파하고자 할 때
 
-물론 장점만 있는 것은 아닙니다. 메시지를 활용해 통신을 주고 받는 만큼, 메시지를 실제로 수신했는지, 중복해서 수신하지는 않았는지 등에 대한 상태 관리가 필요합니다. 따라서 신뢰성 혹은 순서 보장 등 추가적인 요구 사항이 필요한 경우에는 Apache Kafka와 같은 더 정교한 메시징 시스템을 활용하여야 합니다.
+물론 장점만 있는 것은 아닙니다. 메시지를 활용해 통신을 주고 받는 만큼, 메시지를 실제로 수신했는지, 중복해서 수신하지는 않았는지 등에 대한 상태 관리가 필요합니다. 따라서 신뢰성이나 재처리 같은 추가 요구 사항이 있다면 Apache Kafka와 같은 더 정교한 메시징 시스템을 활용하여야 합니다.
 
-
-# Redis Pub / Sub
+## Redis Pub / Sub
 
 ![Redis Pub/Sub 구조도](./redis-pub-sub.png)
 
-<p align="center" style="color: #666; font-size: 14px;"><em>Redis Pub/Sub 구조 (출처: <a href="https://pompitzz.github.io/blog/Redis/LocalCacheSyncWithRedisPubSub.html" target="_blank">pompitzz 블로그</a>)</em></p>
+*출처: [pompitzz 블로그](https://pompitzz.github.io/blog/Redis/LocalCacheSyncWithRedisPubSub.html)*
 
-<br>
 Redis Pub/Sub은 Redis가 제공하는 메시징 기능으로 매우 단순한 구조로 되어 있습니다. 메시지를 publish하면 해당 채널을 구독하고 있는 모든 subscriber에게 메시지를 전달합니다. Redis Pub/Sub은 단순하고 구현이 쉬운 만큼 다음과 같은 특징을 주의해야 합니다.
 
 - **메시지 유실 가능성**: Subscriber가 존재하지 않으면, 메시지는 사라집니다.
 - **전송 보장 없음**: 네트워크 장애 시 메시지가 전달되지 않을 수 있습니다.
-- **메시지 순서**: 여러 Publisher가 동시에 메시지를 보낼 때 순서가 보장되지 않을 수 있습니다.
+- **느린 구독자는 잘립니다**: 구독자가 메시지를 제때 소비하지 못해 출력 버퍼가 한도를 넘으면, 서버가 그 연결을 끊어버립니다. 기본 한도는 하드 32MB, 소프트 60초간 8MB입니다. 실무에서는 네트워크 장애보다 이쪽이 더 자주 발생합니다.
 - **재시도 메커니즘 부재**: 실패한 메시지에 대한 재처리 기능이 없습니다.
 
-결국 보내는 쪽도 보내고 끝, 받는 쪽도 받고 끝인 단순한 구조 때문에 일반적인 메시지 큐로 취급되지 않습니다. 이렇듯 단점이 명확하지만, Redis는 In-Memory 기반인 만큼 매우 빠르게 메시지를 주고받을 수 있기 때문에, 짧고 간단한 메시지를 빠르게 보내고 싶을 때는 유용하게 사용할 수 있습니다.
+메시지 순서에 대해서는 오해가 흔한데, Redis는 명령을 단일 스레드로 처리하므로 **서버가 받은 순서 그대로 모든 구독자에게 동일한 순서로 전달합니다.** 정해져 있지 않은 것은 서로 다른 클라이언트가 동시에 보낸 두 메시지 중 어느 쪽이 먼저 서버에 접수되는가뿐이고, 이건 어떤 메시징 시스템이든 마찬가지입니다.
 
-# 코드 예시
+결국 보내는 쪽도 보내고 끝, 받는 쪽도 받고 끝인 단순한 구조입니다. Redis Pub/Sub이 메시지 큐로 취급되지 않는 더 근본적인 이유는 전달 모양이 다르기 때문입니다. Pub/Sub은 **하나의 메시지가 모든 구독자에게 가는 팬아웃**이고, 메시지 큐는 **하나의 메시지를 정확히 한 소비자가 가져가는 작업 분배**입니다. 애초에 풀려는 문제가 다릅니다.
+
+단점이 명확하지만, Redis는 In-Memory 기반인 만큼 매우 빠르게 메시지를 주고받을 수 있기 때문에, 짧고 간단한 메시지를 빠르게 보내고 싶을 때는 유용하게 사용할 수 있습니다.
+
+## 코드 예시
 
 Redis Pub/Sub을 실제로 사용하려면 Redis 서버를 실행해야 합니다.
 
 ### Publisher (발행자)
+
 ```python
 import redis
 
@@ -81,11 +141,11 @@ for i in range(5):
 print("발행 완료. Publisher 종료.")
 ```
 
-
 - `redis.Redis()`: Redis 서버에 연결합니다. 기본적으로 localhost:6379에 연결됩니다.
-- `client.publish()`: 지정된 채널에 메시지를 발행합니다. 메시지를 받은 구독자 수를 반환합니다.
+- `client.publish()`: 지정된 채널에 메시지를 발행하고, **메시지를 전달한 클라이언트 수**를 반환합니다(패턴 구독자 포함). 수신 확인이 아니라 보낸 대상의 수라는 점에 주의해야 합니다. 클러스터 모드에서는 발행 클라이언트와 같은 노드에 붙은 클라이언트만 집계됩니다.
 
 ### Subscriber (구독자)
+
 ```python
 import redis
 
@@ -109,40 +169,50 @@ for message in pubsub.listen():
 - `pubsub.listen()`: 블로킹 방식으로 메시지를 대기합니다. 메시지가 오면 즉시 반환됩니다.
 - `message["type"]`: Redis는 구독 확인, 메시지 수신 등 다양한 타입의 메시지를 보내므로 "message" 타입만 처리합니다.
 
-<br>
+`type` 검사를 빼면 안 되는 이유가 있습니다. 구독 확인 메시지(`type`이 `"subscribe"`)의 `data`는 bytes가 아니라 현재 구독 중인 채널 수를 담은 **정수**입니다. 그대로 `.decode()`를 부르면 `AttributeError`가 납니다. 확인 메시지를 아예 받고 싶지 않다면 `client.pubsub(ignore_subscribe_messages=True)`로 만들면 됩니다.
 
-**💡 주요 포인트**
+:::tip
+
+**주요 포인트**
+
 - 구독자가 먼저 실행되어야 메시지를 받을 수 있습니다. 구독자가 없으면 메시지는 사라집니다.
 - `listen()`은 무한 루프로 동작하므로 Ctrl+C로 종료할 수 있습니다.
 - 하나의 채널에 여러 구독자가 있으면 모든 구독자가 동일한 메시지를 받습니다.
+- 실제 서비스에서는 `listen()`으로 스레드를 붙잡아두기보다 `get_message()`나 `run_in_thread()`를 쓰는 쪽이 다루기 쉽습니다.
 
-## 실행 결과
+:::
+
+### 실행 결과
 
 터미널을 2개 열고, 먼저 Subscriber(구독자)를 실행합니다.
-```bash
+
+```text
 [SUBSCRIBE] 'news' 채널을 구독하였습니다. 메시지를 기다립니다...
 ```
-    
+
 다른 터미널에서는 Publisher(발행자)를 실행합니다.
-```bash
+
+```text
 [PUBLISH] (news) -> 안녕하세요, Redis Pub/Sub 테스트입니다! (1)
 [PUBLISH] (news) -> 안녕하세요, Redis Pub/Sub 테스트입니다! (2)
 ...
 [PUBLISH] (news) -> 안녕하세요, Redis Pub/Sub 테스트입니다! (5)
 발행 완료. Publisher 종료.
 ```
-    
+
 Subscriber 터미널에서 발행된 메시지가 순서대로 출력되는 것을 확인할 수 있습니다.
-```bash
+
+```text
 [RECEIVE] (news) <- 안녕하세요, Redis Pub/Sub 테스트입니다! (1)
 [RECEIVE] (news) <- 안녕하세요, Redis Pub/Sub 테스트입니다! (2)
 ...
 [RECEIVE] (news) <- 안녕하세요, Redis Pub/Sub 테스트입니다! (5)
 ```
 
-이처럼 Redis Pub/Sub은 매우 간단한 구조로 동작합니다. 발행자는 메시지를 보내고, 구독자는 실시간으로 메시지를 받아볼 수 있습니다. 
+이처럼 Redis Pub/Sub은 매우 간단한 구조로 동작합니다. 발행자는 메시지를 보내고, 구독자는 실시간으로 메시지를 받아볼 수 있습니다.
 
 ### 패턴 매칭을 활용한 구독
+
 ```python
 import redis
 
@@ -161,22 +231,21 @@ for message in pubsub.listen():
         print(f"[RECEIVE] ({channel}) <- {data}")
 ```
 
-**코드 설명:**
 - `pubsub.psubscribe()`: 패턴 기반 구독을 시작합니다. 와일드카드(`*`)를 사용해 여러 채널을 한 번에 구독할 수 있습니다.
 - `"news:*"`: `news:`로 시작하는 모든 채널을 의미합니다. 예를 들어 `news:korea`, `news:world`, `news:tech` 등이 모두 매칭됩니다.
 - `message["type"] == "pmessage"`: 패턴 구독에서는 메시지 타입이 "pmessage"입니다.
 - `message["channel"]`: 실제 메시지가 발행된 채널명을 알 수 있습니다.
 
-
-
-# 마무리
+## 마무리
 
 Redis Pub/Sub은 **빠르고 간단한 실시간 메시징**이 필요할 때 매우 유용한 도구입니다. 복잡한 설정 없이도 몇 줄의 코드만으로 이벤트 기반 아키텍처를 구축할 수 있어서, 실시간 알림이나 채팅 시스템, 간단한 마이크로서비스 간 통신에 적합합니다.
 
-다만 메시지 유실 가능성과 순서 보장의 한계가 있으므로, 중요한 비즈니스 로직에는 신중하게 사용해야 합니다. 만약 메시지 지속성과 순서 보장이 중요하다면 **Redis Streams**를, 대용량 메시지 처리와 복잡한 라우팅이 필요하다면 **Apache Kafka**를 고려해볼 수 있습니다.
+다만 메시지가 저장되지 않고 재전달도 되지 않으므로, 중요한 비즈니스 로직에는 신중하게 사용해야 합니다. 발행 시점에 구독자가 없었다면 그 메시지는 그대로 사라집니다. 메시지 지속성과 재처리, 컨슈머 그룹이 필요하다면 **Redis Streams**를, 대용량 메시지 처리와 복잡한 라우팅이 필요하다면 **Apache Kafka**를 고려해볼 수 있습니다.
 
+참고로 Redis 7.0부터는 클러스터 환경에서 메시지를 전 노드에 퍼뜨리지 않고 샤드 단위로 전달하는 `SPUBLISH` / `SSUBSCRIBE`도 쓸 수 있습니다.
 
 ## 참고 자료
 
-- [Redis 공식 문서 - Pub/Sub](https://redis.io/docs/manual/pubsub/)
-- [REDIS의 PUB/SUB 기능](https://inpa.tistory.com/entry/REDIS-%F0%9F%93%9A-PUBSUB-%EA%B8%B0%EB%8A%A5-%EC%86%8C%EA%B0%9C-%EC%B1%84%ED%8C%85-%EA%B5%AC%EB%8F%85-%EC%95%8C%EB%A6%BC)
+- [Redis 공식 문서 - Pub/Sub](https://redis.io/docs/latest/develop/pubsub/)
+- [Redis 공식 문서 - PUBLISH](https://redis.io/docs/latest/commands/publish/)
+- [Redis 공식 문서 - Client handling](https://redis.io/docs/latest/develop/reference/clients/)

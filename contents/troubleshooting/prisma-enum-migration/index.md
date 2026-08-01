@@ -7,15 +7,27 @@ thumbnail: './thumbnail.png'
 tags: ['Prisma', 'PostgreSQL', 'Migration', 'Shadow Database']
 ---
 
-사내 인증 시스템에 SSO를 붙이면서, 기존 `Role` enum에 `PENDING` 값을 추가하는 마이그레이션을 작성했습니다. (웬만하면 enum은 쓰지 않는게 좋습니다.) 로컬 개발 DB에는 문제없이 적용됐고, 스테이징에도 잘 올라갔습니다. 그런데 며칠 뒤 다른 스키마 변경을 하려고 `prisma migrate dev`를 실행하는 순간, 전혀 예상하지 못한 에러가 터졌습니다.
+사내 인증 시스템에 SSO를 붙이면서, 기존 `Role` enum에 `PENDING` 값을 추가하고 그 값을 컬럼 기본값으로 거는 마이그레이션을 작성했습니다. 흔한 변경이고, Prisma가 SQL도 알아서 만들어 줍니다. 그런데 이 조합은 처음 적용할 때부터 깨지고, 한 번 깨진 뒤로는 이후의 모든 `prisma migrate dev`가 막혀버립니다.
 
-<br>
+## 두 개의 에러 코드
 
-## 에러 상황: P3006 Migration failed to apply cleanly
+이 문제는 에러 코드가 두 번 바뀌면서 나타납니다. 순서를 헷갈리면 원인을 엉뚱한 곳에서 찾게 되므로 먼저 정리하고 시작하겠습니다.
 
-`prisma migrate dev`를 실행하자 다음과 같은 에러가 발생했습니다.
+**처음 적용할 때는 P3018입니다.** 마이그레이션 파일 자체가 실행되지 못하고 그 자리에서 실패합니다.
 
+```text
+Applying migration `20260319074550_add_pending_role`
+
+Error: P3018
+Database error code: 55P04
+
+ERROR: unsafe use of new value "PENDING" of enum type "Role"
+HINT: New enum values must be committed before they can be used.
 ```
+
+**그 실패를 수동으로 수습해 마이그레이션 히스토리에 남긴 뒤부터는 P3006입니다.** 이제는 새 마이그레이션을 만들려고 할 때마다 Shadow DB 재실행 단계에서 같은 파일이 다시 걸립니다.
+
+```text
 Error: P3006
 
 Migration `20260319074550_add_pending_role` failed to apply cleanly
@@ -28,7 +40,7 @@ HINT: New enum values must be committed before they can be used.
    at schema-engine/core/src/state.rs:314
 ```
 
-문제의 마이그레이션 파일(`20260319074550_add_pending_role/migration.sql`)을 열어보면, Prisma가 자동 생성한 SQL은 이렇게 생겼습니다.
+문제의 마이그레이션 파일을 열어보면, Prisma가 자동 생성한 SQL은 이렇게 생겼습니다.
 
 ```sql
 -- 1) enum에 PENDING 값 추가
@@ -40,130 +52,132 @@ ALTER TABLE "user" ALTER COLUMN "role" SET DEFAULT 'PENDING';
 
 언뜻 보면 자연스러운 흐름입니다. enum에 값을 추가하고, 그 값을 기본값으로 설정하는 것이니까요. 하지만 이 두 SQL문이 **하나의 트랜잭션** 안에서 실행되면 PostgreSQL이 거부합니다.
 
-이미 성공적으로 적용된 마이그레이션인데 왜 갑자기 에러가 나는 걸까요? 그 답은 Prisma의 **Shadow Database** 메커니즘에 있습니다.
+## 원인: PostgreSQL enum과 트랜잭션의 제약
 
-<br>
+### 새 enum 값은 커밋 전까지 쓸 수 없습니다
 
-## 원인 분석: PostgreSQL enum과 트랜잭션의 제약
+PostgreSQL에서 enum 타입은 시스템 카탈로그(`pg_enum`)에 저장되는 특수한 데이터 타입입니다. `ALTER TYPE ... ADD VALUE`는 이 카탈로그에 새 행을 삽입하는데, 그 행은 트랜잭션이 커밋되기 전까지 확정된 값으로 취급되지 않습니다. 만약 트랜잭션이 롤백되었는데 이미 그 값을 참조하는 데이터가 남아 있다면 정합성이 깨지기 때문입니다.
 
-### ALTER TYPE ... ADD VALUE의 트랜잭션 제약
+버전에 따라 제약의 모양이 다릅니다. 이 구분이 중요합니다.
 
-PostgreSQL에서 enum 타입은 시스템 카탈로그(`pg_enum`)에 저장되는 특수한 데이터 타입입니다. 일반 테이블 데이터와 달리, enum 값의 추가는 **카탈로그 수준의 DDL 변경**이기 때문에 트랜잭션 처리에 특별한 제약이 따릅니다.
+| PostgreSQL | `ADD VALUE`를 트랜잭션 안에서 실행 | 같은 트랜잭션에서 그 값을 사용 |
+|---|---|---|
+| 11 이하 | 불가 | 불가 |
+| 12 이상 | **가능** | 여전히 불가 |
 
-핵심은 이겁니다: `ALTER TYPE ... ADD VALUE`로 추가된 enum 값은 **해당 트랜잭션이 커밋된 후에야 사용 가능**합니다. PostgreSQL이 이런 제약을 두는 이유는 enum 값의 OID(Object Identifier) 할당과 관련이 있습니다.
+PostgreSQL 12부터는 트랜잭션 블록 안에서 `ADD VALUE`를 실행하는 것 자체는 허용됩니다. 현재 공식 문서의 문장도 이렇게 바뀌어 있습니다.
+
+> If `ALTER TYPE ... ADD VALUE` (the form that adds a new value to an enum type) is executed inside a transaction block, the new value cannot be used until after the transaction has been committed.
+
+즉 지금 문제가 되는 것은 `ADD VALUE` 자체가 아니라 **그 다음 줄의 `SET DEFAULT 'PENDING'`** 입니다. 새로 만든 값을 같은 트랜잭션에서 참조했기 때문입니다.
 
 ```sql
--- 트랜잭션 시작 (Prisma가 마이그레이션 파일 전체를 하나의 트랜잭션으로 실행)
 BEGIN;
 
--- 새 enum 값 'PENDING'에 OID가 할당됨
--- 하지만 이 OID는 아직 다른 세션/문맥에서 "보이지 않는" 상태
+-- PG 12 이상에서는 이 문장 자체는 통과합니다
 ALTER TYPE "Role" ADD VALUE 'PENDING';
 
--- 같은 트랜잭션에서 'PENDING'을 참조하려 하면?
--- PostgreSQL: "이 값은 아직 커밋되지 않았으므로 사용할 수 없습니다"
+-- 문제는 여기입니다. 아직 커밋되지 않은 값을 참조합니다
 ALTER TABLE "user" ALTER COLUMN "role" SET DEFAULT 'PENDING';
 -- ERROR: unsafe use of new value "PENDING" of enum type "Role"
 
 COMMIT;
 ```
 
-PostgreSQL 내부적으로, `ADD VALUE`는 `pg_enum` 카탈로그에 새 행을 삽입하면서 `enumsortorder` 값을 할당합니다. 하지만 **트랜잭션 격리(Transaction Isolation)** 규칙에 의해, 이 새 행은 트랜잭션이 커밋되기 전까지는 "확정된 값"으로 취급되지 않습니다. 만약 트랜잭션이 롤백되면 그 enum 값도 사라져야 하는데, 이미 그 값을 참조하는 행이 있다면 정합성이 깨지기 때문입니다.
+예외가 하나 있습니다. **같은 트랜잭션 안에서 그 enum 타입을 `CREATE`했다면** 커밋 전에도 값을 쓸 수 있습니다. 새로 만든 타입은 아직 아무도 참조하지 않으므로 롤백해도 정합성이 깨질 일이 없기 때문입니다.
 
-이것은 PostgreSQL의 의도된 동작이며, [공식 문서](https://www.postgresql.org/docs/current/sql-altertype.html)에도 명시되어 있습니다.
+### 트랜잭션은 누가 여는 걸까
 
-> `ADD VALUE` (the form that adds a new value to an enum type) cannot be executed inside a transaction block.
+여기서 짚어둘 것이 있습니다. Prisma가 마이그레이션 파일에 `BEGIN`을 써넣는 것이 아닙니다. Prisma는 파일 내용을 한 번에 보내고, **PostgreSQL이 여러 문장으로 된 쿼리를 하나의 암묵적 트랜잭션으로 처리합니다.**
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고: PostgreSQL 12 이후의 변화</strong><br>
-  PostgreSQL 12부터 <code>ALTER TYPE ... ADD VALUE</code>를 트랜잭션 내에서 실행하는 것 자체는 허용되었습니다. 하지만 <strong>같은 트랜잭션 안에서 그 새 값을 참조하는 것</strong>은 여전히 금지됩니다. 즉, <code>ADD VALUE</code>와 그 값을 사용하는 <code>ALTER TABLE</code>을 별도의 트랜잭션(또는 별도의 마이그레이션 파일)으로 분리해야 합니다.
-</div>
+이 구분이 중요한 이유는 뒤에 나옵니다. "Shadow DB를 안 거치면 괜찮다"는 식의 해결책이 왜 성립하지 않는지가 여기서 갈립니다.
 
-### Prisma Shadow Database가 문제를 증폭시키는 구조
+## 왜 한 번 깨지면 계속 막히는가
 
-여기서 한 가지 의문이 생깁니다. "이 마이그레이션은 며칠 전에 이미 성공적으로 적용됐는데, 왜 지금 에러가 나는 거지?"
+`prisma migrate dev`를 실행하면, Prisma는 단순히 새 마이그레이션만 적용하는 게 아닙니다. **Shadow Database**라는 빈 임시 데이터베이스를 만들고, `prisma/migrations/` 폴더의 모든 마이그레이션을 처음부터 순차적으로 재실행합니다.
 
-답은 Prisma의 **Shadow Database** 메커니즘에 있습니다. `prisma migrate dev`를 실행하면, Prisma는 단순히 새 마이그레이션만 적용하는 게 아닙니다. 내부적으로 다음과 같은 과정을 거칩니다.
-
-<div style="text-align: center; margin: 24px 0;">
-<svg width="520" height="680" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif">
-  <rect width="520" height="680" fill="#fafbfc" rx="12"/>
-  <text x="260" y="36" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2937">prisma migrate dev 내부 동작</text>
-  <rect x="145" y="56" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>
-  <text x="260" y="83" text-anchor="middle" font-size="13" font-weight="600" fill="#065f46">① prisma migrate dev 실행</text>
-  <line x1="260" y1="100" x2="260" y2="130" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrowGray)"/>
-  <rect x="145" y="130" width="230" height="44" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>
-  <text x="260" y="149" text-anchor="middle" font-size="13" font-weight="600" fill="#065f46">② Shadow DB 생성</text>
-  <text x="260" y="165" text-anchor="middle" font-size="11" fill="#6b7280">(빈 임시 데이터베이스)</text>
-  <line x1="260" y1="174" x2="260" y2="204" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrowGray)"/>
-  <rect x="50" y="204" width="420" height="280" rx="8" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="6 3"/>
-  <text x="260" y="228" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">③ 모든 마이그레이션 순차 Replay</text>
-  <rect x="90" y="244" width="340" height="36" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
-  <text x="120" y="267" font-size="12" fill="#065f46">Migration 1: init</text>
-  <text x="390" y="267" text-anchor="end" font-size="12" font-weight="600" fill="#10b981">✓ OK</text>
-  <rect x="90" y="288" width="340" height="36" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
-  <text x="120" y="311" font-size="12" fill="#065f46">Migration 2: add_user_table</text>
-  <text x="390" y="311" text-anchor="end" font-size="12" font-weight="600" fill="#10b981">✓ OK</text>
-  <text x="260" y="340" text-anchor="middle" font-size="14" fill="#9ca3af">···</text>
-  <rect x="90" y="352" width="340" height="56" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
-  <text x="120" y="372" font-size="12" font-weight="600" fill="#991b1b">Migration N: add_pending_role</text>
-  <text x="390" y="372" text-anchor="end" font-size="13" font-weight="700" fill="#ef4444">✗ FAIL</text>
-  <text x="120" y="396" font-size="10.5" fill="#991b1b" font-family="JetBrains Mono, monospace">ALTER TYPE + SET DEFAULT → 같은 트랜잭션</text>
-  <rect x="90" y="420" width="340" height="52" rx="6" fill="#ef4444" stroke="#dc2626" stroke-width="1.5"/>
-  <text x="260" y="440" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">P3006: unsafe use of new value "PENDING"</text>
-  <text x="260" y="458" text-anchor="middle" font-size="11" fill="#fecaca">Shadow DB에서 재실행할 때마다 반복 실패!</text>
-  <rect x="145" y="510" width="230" height="44" rx="8" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="260" y="537" text-anchor="middle" font-size="13" fill="#9ca3af">④ schema.prisma와 diff 비교</text>
-  <text x="395" y="538" font-size="16" fill="#d1d5db">✗</text>
-  <text x="395" y="554" font-size="9" fill="#d1d5db">도달 불가</text>
-  <line x1="260" y1="554" x2="260" y2="584" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowLightGray)"/>
-  <rect x="145" y="584" width="230" height="44" rx="8" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="260" y="611" text-anchor="middle" font-size="13" fill="#9ca3af">⑤ Shadow DB 삭제</text>
-  <text x="395" y="612" font-size="16" fill="#d1d5db">✗</text>
-  <text x="395" y="628" font-size="9" fill="#d1d5db">도달 불가</text>
-  <text x="260" y="660" text-anchor="middle" font-size="11" fill="#9ca3af">③에서 실패하면 이후 모든 prisma migrate dev가 차단됨</text>
-  <defs>
-    <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af"/>
-    </marker>
-    <marker id="arrowLightGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d1d5db"/>
-    </marker>
-  </defs>
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 376" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="migrate dev가 빈 shadow DB에 모든 마이그레이션을 재실행하다 문제의 파일에서 매번 실패하는 경로">
+<style>
+.sh-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.sh-l { fill: var(--text, #1c1917); font-size: 14px; }
+.sh-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.sh-ok { fill: var(--text-success, #16a34a); font-size: 14px; }
+.sh-bad { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.sh-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.sh-fail { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 2; }
+.sh-wrap { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 6 3; }
+.sh-dim { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.sh-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#shArrow); }
+</style>
+<defs>
+<marker id="shArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+</marker>
+</defs>
+<text class="sh-t" x="200" y="22" text-anchor="middle">migrate dev가 매번 밟는 경로</text>
+<rect class="sh-box" x="60" y="36" width="280" height="32" rx="5"/>
+<text class="sh-l" x="200" y="57" text-anchor="middle">migrate dev 실행</text>
+<path class="sh-a" d="M200 68 L200 80"/>
+<rect class="sh-box" x="60" y="84" width="280" height="32" rx="5"/>
+<text class="sh-l" x="200" y="105" text-anchor="middle">빈 Shadow DB 생성</text>
+<path class="sh-a" d="M200 116 L200 128"/>
+<rect class="sh-wrap" x="20" y="132" width="360" height="140" rx="8"/>
+<text class="sh-n" x="200" y="154" text-anchor="middle">모든 마이그레이션 순차 재실행</text>
+<rect class="sh-box" x="36" y="164" width="328" height="28" rx="5"/>
+<text class="sh-l" x="50" y="183">init</text>
+<text class="sh-ok" x="350" y="183" text-anchor="end">OK</text>
+<rect class="sh-box" x="36" y="198" width="328" height="28" rx="5"/>
+<text class="sh-l" x="50" y="217">add_user_table</text>
+<text class="sh-ok" x="350" y="217" text-anchor="end">OK</text>
+<rect class="sh-fail" x="36" y="232" width="328" height="28" rx="5"/>
+<text class="sh-l" x="50" y="251">add_pending_role</text>
+<text class="sh-bad" x="350" y="251" text-anchor="end">FAIL</text>
+<path class="sh-a" d="M200 272 L200 288"/>
+<rect class="sh-dim" x="60" y="292" width="280" height="32" rx="5"/>
+<text class="sh-n" x="200" y="313" text-anchor="middle">schema.prisma와 diff 비교</text>
+<text class="sh-bad" x="200" y="352" text-anchor="middle">새 마이그레이션 생성 불가</text>
 </svg>
 </div>
 
-<p align="center" style="color: #888; font-size: 14px;">
-  <em>prisma migrate dev의 Shadow DB 워크플로우 — ③에서 enum 트랜잭션 제약에 걸려 실패한다</em>
-</p>
-
-1. **Shadow DB 생성**: 완전히 빈 임시 데이터베이스를 생성합니다.
-2. **전체 마이그레이션 재실행**: `prisma/migrations/` 폴더에 있는 **모든 마이그레이션을 처음부터 순차적으로** 실행합니다.
-3. **스키마 비교**: Shadow DB의 최종 스키마와 현재 `schema.prisma` 파일을 비교하여 새로 필요한 마이그레이션을 생성합니다.
-4. **Shadow DB 삭제**: 임시 데이터베이스를 제거합니다.
-
 Shadow DB가 존재하는 이유는 **마이그레이션 히스토리의 무결성 검증**입니다. 모든 마이그레이션을 처음부터 재실행해서, 마이그레이션 파일들이 정확하게 현재 스키마를 재현할 수 있는지 확인하는 것이죠. 실제 개발 DB는 수동 변경이나 직접 SQL 실행으로 인해 마이그레이션 히스토리와 어긋날 수 있기 때문에, "깨끗한 상태에서의 재현"이 필요합니다.
 
-문제는 2단계에 있습니다. Shadow DB에서 마이그레이션을 재실행할 때, Prisma는 **각 마이그레이션 파일의 SQL을 하나의 트랜잭션으로 실행**합니다. 그래서 `add_pending_role` 마이그레이션의 두 SQL문이 같은 트랜잭션에 묶이고, PostgreSQL의 enum 트랜잭션 제약에 걸리는 겁니다.
+문제는 재실행 단계입니다. 실패한 마이그레이션 파일이 히스토리에 남아 있는 한, 그 파일은 **매번** 재실행되고 **매번** 같은 지점에서 걸립니다. 개발 DB에는 이미 적용이 끝나 있어도 소용없습니다. Shadow DB는 언제나 빈 상태에서 출발하기 때문입니다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 핵심 포인트</strong><br>
-  최초 <code>prisma migrate dev</code> 실행 시에는 개발 DB에 직접 적용되므로 성공할 수 있습니다(이미 커밋된 상태에서 이어서 실행). 하지만 <strong>이후 모든 <code>prisma migrate dev</code> 호출</strong>에서 Shadow DB가 이 마이그레이션을 재실행할 때마다 실패합니다. 결과적으로 <strong>새로운 마이그레이션을 전혀 생성할 수 없는</strong> 상태가 됩니다.
-</div>
+:::warning
 
-이것은 Prisma가 자동 생성하는 SQL의 알려진 한계입니다. Prisma는 enum 값 추가와 해당 값 사용을 트랜잭션 분리 없이 단일 마이그레이션 파일에 넣어버립니다. [Prisma GitHub 이슈](https://github.com/prisma/prisma/issues/7815)에서도 꾸준히 보고되고 있는 문제입니다.
+**한 번 히스토리에 남으면 계속 막힙니다**
 
-<br>
+이 상태가 되면 새로운 마이그레이션을 아예 생성할 수 없습니다. `prisma migrate dev`는 물론이고, 파일만 만들어 주는 `prisma migrate dev --create-only`도 Shadow DB를 쓰기 때문에 똑같이 P3006으로 막힙니다.
 
-## 해결 방법: Shadow DB를 우회하는 수동 마이그레이션
+:::
 
-`prisma migrate dev`가 Shadow DB를 사용하기 때문에 문제가 발생하므로, Shadow DB를 거치지 않는 수동 마이그레이션 방식으로 우회할 수 있습니다. Prisma 공식 문서에서도 이런 상황에 대해 3단계 수동 적용 방식을 권장합니다.
+이것은 Prisma가 자동 생성하는 SQL의 알려진 한계입니다. Prisma는 enum 값 추가와 해당 값 사용을 트랜잭션 분리 없이 단일 마이그레이션 파일에 넣어버립니다. [Prisma GitHub 이슈 #8424](https://github.com/prisma/prisma/issues/8424)에 같은 증상이 보고되어 있습니다.
+
+## 우회: 수동 마이그레이션 3단계
+
+`prisma migrate dev`가 막혀 있어도, 스키마 변경을 계속 반영해야 하는 상황이 있습니다. Prisma 공식 문서가 실패한 마이그레이션을 수습할 때 쓰는 절차를 이 상황에도 응용할 수 있습니다.
+
+:::warning
+
+**이 절차는 `migrate dev`를 되살리지 않습니다**
+
+문제의 마이그레이션 파일이 `prisma/migrations/`에 그대로 남아 있는 한 Shadow DB 재실행은 계속 실패합니다. 아래 3단계는 앞으로의 모든 스키마 변경을 손으로 처리하겠다는 뜻입니다. 근본 복구는 마지막 절에서 다룹니다.
+
+:::
 
 ### Step 1: prisma migrate diff로 SQL 생성
 
 현재 데이터베이스 상태와 `schema.prisma` 파일의 차이를 SQL로 생성합니다. 이 명령은 Shadow DB를 사용하지 않고, 실제 DB의 현재 스키마를 직접 읽어서 비교합니다.
 
+리다이렉션은 디렉터리를 만들어주지 않으므로 먼저 만들어야 합니다.
+
 ```bash
+$ mkdir -p prisma/migrations/<timestamp>_<migration_name>
+
 $ npx prisma migrate diff \
     --from-schema-datasource prisma/schema.prisma \
     --to-schema-datamodel prisma/schema.prisma \
@@ -174,7 +188,7 @@ $ npx prisma migrate diff \
 
 ### Step 2: prisma db execute로 직접 실행
 
-생성된 SQL을 데이터베이스에 직접 실행합니다. 이 과정은 Shadow DB를 거치지 않으므로, enum 트랜잭션 문제의 영향을 받지 않습니다.
+생성된 SQL을 데이터베이스에 직접 실행합니다.
 
 ```bash
 $ npx prisma db execute \
@@ -182,69 +196,69 @@ $ npx prisma db execute \
     --schema prisma/schema.prisma
 ```
 
+:::warning
+
+**db execute도 트랜잭션 제약을 피해가지 못합니다**
+
+이 단계가 무사히 넘어가는 이유는 "Shadow DB를 거치지 않아서"가 아닙니다. 이번 diff에 enum 조작이 들어 있지 않아서일 뿐입니다. `db execute`도 파일 내용을 한 번에 보내므로 앞서 설명한 암묵적 트랜잭션에 그대로 묶입니다. 스크립트 안에 `ADD VALUE`와 그 값을 쓰는 문장이 함께 있으면 여기서도 똑같이 실패합니다. enum이 섞이면 파일을 나눠 `db execute`를 두 번 실행해야 합니다.
+
+:::
+
 ### Step 3: prisma migrate resolve로 히스토리 등록
 
-마지막으로, 방금 수동으로 적용한 마이그레이션을 Prisma의 마이그레이션 히스토리(`_prisma_migrations` 테이블)에 "적용됨"으로 등록합니다.
+마지막으로, 방금 수동으로 적용한 마이그레이션을 Prisma의 마이그레이션 히스토리(`_prisma_migrations` 테이블)에 "적용됨"으로 등록합니다. 인자로는 타임스탬프를 포함한 **디렉터리 이름 전체**를 넘겨야 합니다. 이름만 넘기면 P3017이 납니다.
 
 ```bash
-$ npx prisma migrate resolve --applied <migration_name>
+$ npx prisma migrate resolve --applied <timestamp>_<migration_name>
 ```
 
 모든 과정이 끝나면 `prisma migrate status`로 상태를 확인합니다.
 
-```bash
+```text
 $ npx prisma migrate status
 
 Prisma schema loaded from prisma/schema.prisma
-Datasource "db": PostgreSQL database
+Datasource "db": PostgreSQL database "devdb", schema "public" at "localhost:5432"
 
-20260101000000_init
-20260215120000_add_user_table
-20260319074550_add_pending_role
-20260323100000_new_migration
+4 migrations found in prisma/migrations
 
 Database schema is up to date!
 ```
 
-모든 마이그레이션이 정상 적용된 것으로 표시되면 성공입니다.
+## 근본 복구와 재발 방지
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 팁</strong><br>
-  이 방식은 prod/dev 히스토리를 깨뜨리지 않습니다. <code>prisma migrate resolve</code>는 마이그레이션 히스토리 테이블에 기록만 남기므로, 기존에 적용된 마이그레이션과 충돌하지 않습니다.
-</div>
+### 마이그레이션 파일을 둘로 나누기
 
-<br>
-
-## 재발 방지
-
-### 방법 1: 마이그레이션 파일 수동 분리
-
-Prisma가 생성한 마이그레이션 SQL에서 enum 값 추가와 사용이 같은 파일에 있다면, 수동으로 두 개의 마이그레이션으로 분리할 수 있습니다.
+문제의 원인은 한 파일 안에 `ADD VALUE`와 그 값의 사용이 같이 들어간 것이므로, 둘을 별도 마이그레이션으로 나누면 해결됩니다.
 
 ```sql
--- ❌ Before: 하나의 마이그레이션 파일
-ALTER TYPE "Role" ADD VALUE 'PENDING';
-ALTER TABLE "user" ALTER COLUMN "role" SET DEFAULT 'PENDING';
-```
-
-```sql
--- ✅ After: 마이그레이션 1 (add_pending_value)
+-- 마이그레이션 1 (add_pending_value)
 ALTER TYPE "Role" ADD VALUE 'PENDING';
 ```
 
 ```sql
--- ✅ After: 마이그레이션 2 (set_pending_default)
+-- 마이그레이션 2 (set_pending_default)
 ALTER TABLE "user" ALTER COLUMN "role" SET DEFAULT 'PENDING';
 ```
 
-`prisma migrate dev --create-only`로 마이그레이션 파일만 생성한 뒤 SQL을 직접 편집하고, 필요하다면 폴더를 분리하면 됩니다.
+:::warning
 
-### 방법 2: enum 대신 String 타입 사용
+**적용된 마이그레이션 파일은 함부로 고칠 수 없습니다**
 
-근본적으로, PostgreSQL의 enum은 값 추가/삭제 시 이런 종류의 제약이 계속 따라옵니다. 값이 자주 변하는 컬럼이라면 **String(TEXT) 타입 + 애플리케이션 레벨 검증**으로 전환하는 것이 실용적입니다.
+Prisma는 각 마이그레이션의 체크섬을 `_prisma_migrations` 테이블에 저장해 둡니다. 이미 적용된 파일의 내용을 바꾸면 체크섬이 어긋나고, Prisma는 `The migration was modified after it was applied`라며 스키마 리셋을 요구합니다. 그러니 파일 분리는 **아직 적용하기 전**에 하는 것이 원칙입니다.
+
+이미 히스토리에 남아버린 뒤라면 선택지는 둘입니다. 개발 DB를 버려도 되는 상황이면 `prisma migrate reset`으로 히스토리를 다시 쌓는 것이 가장 간단합니다. 그럴 수 없다면 파일을 나눈 뒤 `_prisma_migrations` 테이블의 해당 행까지 손으로 맞춰야 합니다.
+
+:::
+
+애초에 이 상황을 만들지 않는 방법은 `prisma migrate dev --create-only`로 파일만 먼저 생성해 SQL을 확인하는 것입니다. 다만 이 옵션도 Shadow DB를 쓰므로, **이미 P3006에 빠진 뒤에는 쓸 수 없습니다.** 사고 예방용이지 사후 복구용이 아닙니다.
+
+### enum 대신 String 타입 사용
+
+근본적으로, PostgreSQL의 enum은 값 추가나 삭제 때 이런 종류의 제약이 계속 따라옵니다. 값이 자주 변하는 컬럼이라면 **String(TEXT) 타입과 애플리케이션 레벨 검증**으로 전환하는 것이 실용적입니다.
 
 ```prisma
-// ❌ Before: Prisma enum
+// Before: Prisma enum
 enum Role {
   ADMIN
   USER
@@ -252,40 +266,47 @@ enum Role {
 }
 
 model User {
-  role Role @default(PENDING)
+  id   Int    @id @default(autoincrement())
+  role Role   @default(PENDING)
 }
+```
 
-// ✅ After: String 타입 + 애플리케이션 레벨 검증
+```prisma
+// After: String 타입 + 애플리케이션 레벨 검증
 model User {
+  id   Int    @id @default(autoincrement())
   role String @default("PENDING")
 }
 ```
 
-실제로 이번 프로젝트에서도 SSO 전환 과정에서 `Role`을 enum에서 TEXT 컬럼으로 변경했습니다(`remove_role_enum` 마이그레이션). 이후로는 같은 문제가 발생하지 않고 있습니다.
+한 줄 바꾸면 끝나는 일은 아닙니다. 컬럼 타입 변경과 기존 행의 데이터 마이그레이션이 따라오고, 애플리케이션 쪽에도 허용 값을 검증하는 코드가 필요합니다. 그래도 값이 계속 늘어날 컬럼이라면 한 번에 치르는 편이 낫습니다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li>PostgreSQL에서 <code>ALTER TYPE ... ADD VALUE</code>로 추가한 enum 값은 같은 트랜잭션 내에서 사용할 수 없다</li>
-    <li>Prisma의 Shadow DB는 모든 마이그레이션을 처음부터 재실행하므로, 이 문제가 한 번 발생하면 이후 모든 <code>migrate dev</code>가 막힌다</li>
-    <li><code>prisma migrate diff</code> → <code>db execute</code> → <code>migrate resolve</code> 3단계로 Shadow DB를 우회할 수 있다</li>
-    <li>장기적으로는 자주 변하는 enum을 String 타입으로 전환하는 것이 안전하다</li>
-  </ul>
-</div>
+:::summary
 
-<br>
+**핵심 요약**
+
+- PostgreSQL 12부터 `ALTER TYPE ... ADD VALUE`를 트랜잭션 안에서 실행하는 것 자체는 가능하지만, 같은 트랜잭션에서 그 값을 사용하는 것은 여전히 막힙니다.
+- Prisma는 파일 내용을 한 번에 보내고, PostgreSQL이 그것을 하나의 암묵적 트랜잭션으로 처리합니다. `db execute`도 마찬가지입니다.
+- 처음 적용할 때는 P3018로 깨지고, 그 파일이 히스토리에 남으면 이후 모든 `migrate dev`가 Shadow DB 재실행 단계에서 P3006으로 막힙니다.
+- `migrate diff`, `db execute`, `migrate resolve` 3단계는 우회일 뿐입니다. 근본 복구는 마이그레이션 파일을 나누는 것입니다.
+- 값이 자주 변하는 컬럼이라면 enum 대신 String 타입을 고려하는 편이 낫습니다.
+
+:::
 
 ## 마치며
 
-Prisma는 대부분의 마이그레이션을 깔끔하게 자동 생성해주지만, PostgreSQL의 enum 트랜잭션 제약과 만나면 이런 함정에 빠질 수 있습니다. 특히 Shadow DB 때문에 "이미 적용된 마이그레이션이 갑자기 실패하는" 상황은 처음 겪으면 상당히 당황스럽습니다.
+Prisma는 대부분의 마이그레이션을 깔끔하게 자동 생성해주지만, PostgreSQL의 enum 트랜잭션 제약과 만나면 이런 함정에 빠질 수 있습니다. 특히 에러 코드가 P3018에서 P3006으로 바뀌면서 증상이 "마이그레이션 실패"에서 "새 마이그레이션 생성 불가"로 옮겨가기 때문에, 처음 겪으면 원인을 엉뚱한 곳에서 찾기 쉽습니다.
 
 경험상, enum에 새 값을 추가하는 마이그레이션을 작성할 때는 `--create-only` 옵션으로 먼저 SQL을 확인하고, 필요하다면 수동으로 분리하는 습관을 들이는 것이 좋습니다. 혹은 애초에 값 변동이 잦은 컬럼은 String 타입으로 설계하는 것도 실용적인 선택입니다.
 
-<br>
+## 함께 보면 좋은 글
+
+- [MySQL SELECT가 변경을 못 읽는 이유](/troubleshooting/mysql-repeatable-read-autocommit/) : 트랜잭션 경계를 오해했을 때 벌어지는 또 다른 사고
 
 ## 참고자료
 
 - [PostgreSQL ALTER TYPE 공식 문서](https://www.postgresql.org/docs/current/sql-altertype.html)
-- [Prisma — Production troubleshooting](https://www.prisma.io/docs/orm/prisma-migrate/workflows/production-troubleshooting)
-- [Prisma GitHub Issue #7815 — Enum migration transaction issue](https://github.com/prisma/prisma/issues/7815)
-- [Prisma — prisma migrate diff](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#migrate-diff)
+- [PostgreSQL 12 릴리스 노트](https://www.postgresql.org/docs/release/12.0/)
+- [Prisma: Shadow database](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/shadow-database)
+- [Prisma: Patching and hotfixing](https://www.prisma.io/docs/orm/prisma-migrate/workflows/patching-and-hotfixing)
+- [Prisma GitHub Issue #8424](https://github.com/prisma/prisma/issues/8424)
