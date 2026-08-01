@@ -5,13 +5,13 @@ category: 'FastAPI'
 series: 'fastapi'
 seriesOrder: 5
 tags: ['FastAPI', 'Pydantic', 'Pydantic V2', 'Python', 'Validation']
-summary: 'FastAPI의 데이터 검증과 직렬화를 담당하는 Pydantic V2의 핵심 기능을 실무 관점에서 정리한다. validator, model_dump, computed_field, BaseSettings까지 실전 패턴을 코드와 함께 다룬다.'
+summary: 'FastAPI의 데이터 검증과 직렬화를 담당하는 Pydantic V2의 핵심 기능을 실무 관점에서 정리합니다. validator, model_dump, computed_field, BaseSettings까지 실전 패턴을 코드와 함께 다룹니다.'
 thumbnail: './fastapi-logo.png'
 ---
 
-FastAPI 시리즈 1편에서 FastAPI의 3대 장점으로 **속도, 타입, 문서**를 꼽았습니다. 이 중 타입과 관련된 거의 모든 것을 담당하는 것이 바로 **Pydantic**입니다. 요청 데이터 검증, 응답 직렬화, 환경 변수 관리까지 — FastAPI를 쓴다는 것은 결국 Pydantic을 쓴다는 것과 같습니다.
+FastAPI의 장점으로 흔히 속도, 타입, 문서 세 가지가 꼽힙니다. 이 중 타입과 관련된 거의 모든 것을 담당하는 것이 바로 **Pydantic**입니다. 요청 데이터 검증, 응답 직렬화, 환경 변수 관리까지 전부 Pydantic의 일이라, FastAPI를 쓴다는 것은 결국 Pydantic을 쓴다는 것과 같습니다.
 
-Pydantic V2는 내부 코어를 Rust(pydantic-core)로 재작성하면서 V1 대비 **5~50배 빠른 성능**을 달성했고, API도 상당히 변경되었습니다. FastAPI 0.100 이상에서는 Pydantic V2가 기본입니다. 이번 글에서는 FastAPI 개발자가 실무에서 자주 사용하게 될 Pydantic V2의 핵심 기능들을 정리해보겠습니다.
+Pydantic V2는 내부 코어를 Rust(pydantic-core)로 재작성하면서 V1 대비 **4~50배 빠른 성능**(일반적인 모델 기준 약 17배)을 달성했고, API도 상당히 변경되었습니다. FastAPI 0.100 이상에서는 Pydantic V2가 기본입니다. 이번 글에서는 FastAPI 개발자가 실무에서 자주 사용하게 될 Pydantic V2의 핵심 기능들을 정리해보겠습니다.
 
 ## BaseModel 기본기
 
@@ -92,8 +92,6 @@ class StrictUser(BaseModel):
 | `populate_by_name` | `False` | alias와 원래 필드명 모두 허용 |
 | `use_enum_values` | `False` | Enum 필드에서 `.value`를 자동 추출 |
 
-<br>
-
 `strict=True`는 전역으로 걸 수도 있고, 특정 필드에만 적용할 수도 있습니다. FastAPI에서는 보통 전역 strict보다는 **필요한 필드에만** strict를 거는 것이 실용적입니다. 예를 들어, 쿼리 파라미터는 항상 문자열로 들어오기 때문에 전역 strict를 걸면 타입 변환이 안 되어 오히려 불편해집니다.
 
 ```python
@@ -137,9 +135,25 @@ class UserCreate(BaseModel):
 
 V1의 `@validator`와 비교하면 몇 가지 중요한 차이가 있습니다.
 
-- `@classmethod` 데코레이터를 **반드시 함께** 사용해야 합니다
+- 첫 인자가 `cls`인 **클래스 메서드**로 동작합니다. `self`를 쓰면 에러입니다
 - `values` 딕셔너리 대신 `info` 파라미터로 다른 필드에 접근합니다
 - `pre=True` 대신 `mode="before"`를 사용합니다
+
+`@classmethod`를 붙이는 관례가 널리 퍼져 있는데, 실은 필수가 아닙니다. Pydantic 소스의 `field_validator`는 시그니처를 보고 클래스 메서드로 자동 변환합니다.
+
+```python
+# pydantic/functional_validators.py
+if _decorators.is_instance_method_from_sig(f):
+    raise PydanticUserError(
+        'The `@field_validator` decorator cannot be applied to instance methods',
+        code='validator-instance-method',
+    )
+
+# auto apply the @classmethod decorator
+f = _decorators.ensure_classmethod_based_on_signature(f)
+```
+
+진짜 규칙은 그 위의 `raise`입니다. 첫 인자를 `self`로 쓰면 `PydanticUserError`가 나고, `cls`로 쓰면 `@classmethod`가 있든 없든 동작합니다. 그럼에도 붙이는 이유는 mypy나 IDE가 `cls`를 제대로 인식하게 하기 위해서입니다. 관례를 따르되, 빠뜨렸다고 동작이 깨지지는 않습니다.
 
 ```python
 class UserProfile(BaseModel):
@@ -156,6 +170,54 @@ class UserProfile(BaseModel):
 ```
 
 `mode="before"`는 Pydantic의 타입 변환이 일어나기 **전에** 실행됩니다. 원시 입력값을 전처리할 때 유용합니다. 기본값인 `mode="after"`는 타입 변환이 완료된 이후에 실행되므로, 이미 올바른 타입임이 보장된 상태에서 검증 로직만 작성하면 됩니다.
+
+before와 after가 헷갈린다면, 무엇을 기준으로 앞뒤인지를 붙잡으면 됩니다. 기준은 **타입 강제 변환**입니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 388" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="요청 JSON이 mode before 검증, 타입 강제 변환, mode after 검증을 차례로 지나 모델 인스턴스가 되고 field_serializer를 거쳐 응답으로 나가는 순서도">
+<style>
+.pv-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
+.pv-io { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.pv-hook { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.6; }
+.pv-core { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; }
+.pv-obj { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
+.pv-iot { font-size: 15px; fill: var(--text, #1c1917); }
+.pv-ht { font-size: 15px; font-weight: 600; fill: var(--primary, #0d9488); }
+.pv-ct { font-size: 15px; font-weight: 700; fill: var(--accent, #d97706); }
+.pv-ot { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
+.pv-note { font-size: 14px; fill: var(--text-muted, #78716c); }
+.pv-edge { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+</style>
+<defs>
+<marker id="pvArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
+</defs>
+<text class="pv-title" x="200" y="20" text-anchor="middle">검증이 지나가는 순서</text>
+<path class="pv-edge" d="M122,82 L122,94" marker-end="url(#pvArrow)"/>
+<path class="pv-edge" d="M122,140 L122,152" marker-end="url(#pvArrow)"/>
+<path class="pv-edge" d="M122,198 L122,210" marker-end="url(#pvArrow)"/>
+<path class="pv-edge" d="M122,256 L122,268" marker-end="url(#pvArrow)"/>
+<path class="pv-edge" d="M122,314 L122,326" marker-end="url(#pvArrow)"/>
+<rect class="pv-io" x="8" y="38" width="228" height="44" rx="8"/>
+<text class="pv-iot" x="122" y="66" text-anchor="middle">요청 JSON</text>
+<rect class="pv-hook" x="8" y="96" width="228" height="44" rx="8"/>
+<text class="pv-ht" x="122" y="124" text-anchor="middle">mode="before"</text>
+<text class="pv-note" x="246" y="124" text-anchor="start">raw 값 그대로</text>
+<rect class="pv-core" x="8" y="154" width="228" height="44" rx="8"/>
+<text class="pv-ct" x="122" y="182" text-anchor="middle">타입 강제 변환</text>
+<text class="pv-note" x="246" y="182" text-anchor="start">Rust 코어</text>
+<rect class="pv-hook" x="8" y="212" width="228" height="44" rx="8"/>
+<text class="pv-ht" x="122" y="240" text-anchor="middle">mode="after"</text>
+<text class="pv-note" x="246" y="240" text-anchor="start">타입 보장됨</text>
+<rect class="pv-obj" x="8" y="270" width="228" height="44" rx="8"/>
+<text class="pv-ot" x="122" y="298" text-anchor="middle">모델 인스턴스</text>
+<text class="pv-note" x="246" y="298" text-anchor="start">self 접근 가능</text>
+<rect class="pv-hook" x="8" y="328" width="228" height="44" rx="8"/>
+<text class="pv-ht" x="122" y="356" text-anchor="middle">field_serializer</text>
+<text class="pv-note" x="246" y="356" text-anchor="start">응답 JSON으로</text>
+</svg>
+</div>
+
+`model_validator`의 before/after도 같은 선을 기준으로 갈리는데, 다만 이쪽은 필드 하나가 아니라 모델 전체를 놓고 앞뒤가 나뉩니다.
 
 ### model_validator: 모델 전체 검증
 
@@ -289,7 +351,7 @@ profile.model_dump()
 #  'full_name': '강돈혁', 'age': 31}  # age는 현재 연도 기준 계산
 ```
 
-`@computed_field`는 `@property`와 함께 사용해야 하며, `model_dump()`와 JSON Schema 모두에 포함됩니다. 즉, FastAPI의 Swagger 문서에도 자동으로 나타납니다.
+`@computed_field`는 `@property`와 함께 사용해야 하며, `model_dump()`에 포함됩니다. JSON Schema에는 **직렬화 스키마에만** 들어갑니다. `model_json_schema()`의 기본값인 검증 스키마에는 나타나지 않고 `mode="serialization"`에서만 `readOnly`로 보입니다. FastAPI로 치면 응답 모델 스키마에는 있고 요청 본문 스키마에는 없다는 뜻입니다.
 
 V1에서는 `@property`를 사용하면 직렬화에 포함되지 않아서 `@validator`로 우회하거나, `dict()` 이후 수동으로 추가해야 했습니다. `@computed_field`는 이 문제를 근본적으로 해결합니다.
 
@@ -328,6 +390,7 @@ class AdminCreate(BaseModel):
 세 모델 모두 동일한 검증 규칙을 공유합니다. 검증 규칙을 바꿀 때도 타입 정의 한 곳만 수정하면 됩니다. 이 패턴은 FastAPI의 쿼리 파라미터에서도 동일하게 적용됩니다.
 
 ```python
+from typing import Annotated
 from fastapi import FastAPI, Query
 
 app = FastAPI()
@@ -394,11 +457,11 @@ FastAPI의 Swagger 문서에서도 각 타입이 별도의 스키마로 표시�
 
 FastAPI 프로젝트에서 환경 변수를 관리할 때 `os.environ`을 직접 읽는 것은 타입 안전성이 없고 유효성 검증도 불가능합니다. Pydantic의 `BaseSettings`를 사용하면 환경 변수도 모델처럼 관리할 수 있습니다.
 
+V2에서 `BaseSettings`는 별도 패키지로 분리되었으므로 따로 설치해야 합니다.
+
 ```bash
 pip install pydantic-settings
 ```
-
-V2에서 `BaseSettings`는 별도 패키지(`pydantic-settings`)로 분리되었습니다.
 
 ```python
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -419,7 +482,7 @@ class Settings(BaseSettings):
 
 `.env` 파일에서 자동으로 값을 읽고, 타입 변환과 검증까지 처리합니다.
 
-```
+```bash
 # .env
 DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
 DEBUG=true
@@ -466,12 +529,15 @@ class DatabaseConfig(BaseModel):
     name: str = "mydb"
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_nested_delimiter="__")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_nested_delimiter="__",
+    )
 
     database: DatabaseConfig = DatabaseConfig()
 ```
 
-```
+```bash
 # .env
 DATABASE__HOST=prod-db.example.com
 DATABASE__PORT=5432
@@ -536,7 +602,7 @@ users = users_adapter.validate_json(json_str)
 | `.json()` | `.model_dump_json()` | 메서드명 변경 |
 | `.parse_obj(data)` | `.model_validate(data)` | 메서드명 변경 |
 | `.parse_raw(json_str)` | `.model_validate_json(json_str)` | 메서드명 변경 |
-| `@validator` | `@field_validator` | `@classmethod` 필수 |
+| `@validator` | `@field_validator` | 첫 인자는 `cls` (`@classmethod`는 관례) |
 | `@root_validator` | `@model_validator` | 이름 변경 + `pre=True/False` → `mode="before"/"after"` |
 | `from pydantic import BaseSettings` | `from pydantic_settings import BaseSettings` | 별도 패키지 분리 |
 | `schema_extra` | `json_schema_extra` | JSON Schema 커스터마이징 |
@@ -556,7 +622,7 @@ class UserResponse(BaseModel):
 user_response = UserResponse.model_validate(db_user)
 ```
 
-## 정리
+## 마치며
 
 Pydantic V2의 핵심을 요약하면 다음과 같습니다.
 
@@ -571,4 +637,16 @@ Pydantic V2의 핵심을 요약하면 다음과 같습니다.
 
 Pydantic은 FastAPI에서 "데이터가 들어오고 나가는" 모든 지점을 관장합니다. V2의 기능들을 잘 활용하면, 검증 로직을 엔드포인트 바깥으로 밀어내고 비즈니스 로직에만 집중할 수 있습니다.
 
-다음 글에서는 FastAPI 애플리케이션의 **생명 주기(Lifespan)**를 다룹니다. DB 커넥션 풀 초기화, ML 모델 로딩, 리소스 정리 같은 작업을 어디서 어떻게 처리하는지 살펴보겠습니다.
+## 함께 보면 좋은 글
+
+- [FastAPI를 선택해야만 하는 이유](/fastapi/why-fastapi/)
+- [FastAPI Lifespan으로 앱의 시작과 끝을 관리하는 법](/fastapi/fastapi-lifespan/)
+- [FastAPI 422? 라우팅 순서부터 확인하기](/fastapi/fastapi-routing-pitfalls/)
+
+## 참고자료
+
+- [Pydantic V2 발표 글](https://docs.pydantic.dev/latest/blog/pydantic-v2/) - 4~50배 성능 수치의 출처
+- [Pydantic 공식 문서: Validators](https://docs.pydantic.dev/latest/concepts/validators/)
+- [Pydantic 공식 문서: Serialization](https://docs.pydantic.dev/latest/concepts/serialization/)
+- [pydantic-settings 공식 문서](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)
+- [Pydantic V1 to V2 Migration Guide](https://docs.pydantic.dev/latest/migration/)

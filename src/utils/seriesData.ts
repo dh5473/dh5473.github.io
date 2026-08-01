@@ -15,7 +15,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'fastapi': {
     title: 'FastAPI',
-    description: '구조화, DI, 인증, 배포까지',
+    description: '구조화, DI, Pydantic, Lifespan까지',
     color: '#099889',
   },
   'ml': {
