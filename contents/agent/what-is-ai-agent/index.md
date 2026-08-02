@@ -120,7 +120,7 @@ Anthropic은 이를 **"Augmented LLM"**이라는 개념으로 설명합니다. �
   <line x1="380" y1="136" x2="304" y2="194" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
   <!-- 코어 -->
   <rect x="150" y="198" width="180" height="66" rx="12" fill="var(--primary, #0d9488)" />
-  <text x="240" y="239" font-size="22" font-weight="700" text-anchor="middle" fill="#ffffff">LLM (Core)</text>
+  <text x="240" y="239" font-size="22" font-weight="700" text-anchor="middle" fill="var(--on-fill, #14100e)">LLM (Core)</text>
 </svg>
 </div>
 
@@ -174,7 +174,7 @@ Claude Code는 약 26개의 내장 도구를 가지고 있고, Codex도 유사�
   <line x1="161" y1="60" x2="161" y2="80" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
   <!-- 모델 판단 -->
   <rect x="46" y="84" width="230" height="58" rx="10" fill="var(--primary, #0d9488)" />
-  <text x="161" y="120" font-size="20" font-weight="700" text-anchor="middle" fill="#ffffff">모델: 다음 행동 결정</text>
+  <text x="161" y="120" font-size="20" font-weight="700" text-anchor="middle" fill="var(--on-fill, #14100e)">모델: 다음 행동 결정</text>
   <line x1="161" y1="142" x2="161" y2="160" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
   <!-- 분기 -->
   <polygon points="161,166 243,210 161,254 79,210" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />

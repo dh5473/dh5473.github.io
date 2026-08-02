@@ -24,6 +24,11 @@ const defaultStyle = css`
     --bg-danger:    #fef2f2;
     --text-warn:    #d97706;
     --bg-warn:      #fffbeb;
+
+    /* --primary·--accent처럼 진하게 칠한 도형 위에 얹는 글자색.
+       두 테마 모두 중간 밝기의 색으로 칠하므로 값이 같다. 흰 글자는
+       다크에서 2.49:1까지 떨어지지만 이 잉크는 5.05~8.81을 유지한다. */
+    --on-fill:      #14100e;
   }
 
   [data-theme='dark'] {

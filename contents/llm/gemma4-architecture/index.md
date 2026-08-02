@@ -49,7 +49,7 @@ Gemma 4의 어텐션은 로컬 레이어와 글로벌 레이어를 정해진 비
 <style>
 .ga-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .ga-l { fill: var(--text, #1c1917); font-size: 14px; }
-.ga-w { fill: #ffffff; font-size: 14px; }
+.ga-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .ga-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .ga-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ga-g { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
@@ -196,7 +196,7 @@ Gemma 4의 5개 변형 중 가장 아키텍처적으로 실험적인 모델이 �
 .mm-t { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .mm-l { fill: var(--text, #1c1917); font-size: 14px; }
 .mm-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.mm-w { fill: #ffffff; font-size: 14px; }
+.mm-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .mm-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .mm-heavy { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
 .mm-lite { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
@@ -294,7 +294,6 @@ Gemma 4의 5개 변형 중 가장 아키텍처적으로 실험적인 모델이 �
 .mo-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .mo-l { fill: var(--text, #1c1917); font-size: 14px; }
 .mo-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.mo-w { fill: #ffffff; font-size: 14px; }
 .mo-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .mo-route { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }
 .mo-share { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #78716c); stroke-width: 1.5; stroke-dasharray: 5 3; }

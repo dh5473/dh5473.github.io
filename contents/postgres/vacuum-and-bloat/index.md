@@ -177,7 +177,7 @@ PG 12에서 인덱스 정리를 끄고 켜는 `INDEX_CLEANUP` 옵션이 생겼�
 <style>
 .vb1-ttl { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
 .vb1-sub { font-size: 17.5px; fill: var(--text-muted, #78716c); }
-.vb1-num { font-size: 18px; fill: #ffffff; font-weight: 700; }
+.vb1-num { font-size: 18px; fill: var(--on-fill, #14100e); font-weight: 700; }
 .vb1-dec-t { font-size: 19px; fill: var(--text, #1c1917); }
 .vb1-chip-t { font-size: 17px; fill: var(--text-muted, #78716c); }
 .vb1-yn { font-size: 17px; fill: var(--text-warn, #d97706); font-weight: 600; }

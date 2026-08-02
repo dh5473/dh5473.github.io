@@ -31,7 +31,7 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
     .mn-mesh { stroke: var(--text-danger, #dc2626); stroke-width: 1; opacity: 0.5; }
     .mn-spoke { stroke: var(--primary, #0d9488); stroke-width: 1.8; }
     .mn-hub { fill: var(--primary, #0d9488); }
-    .mn-hub-text { font-size: 20px; font-weight: 700; fill: #ffffff; }
+    .mn-hub-text { font-size: 20px; font-weight: 700; fill: var(--on-fill, #14100e); }
     .mn-divider { stroke: var(--border, #e7e5e4); stroke-width: 1; }
   </style>
   <!-- 위: 표준 없음 -->

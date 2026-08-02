@@ -33,7 +33,7 @@ Part 이름에는 이력이 담겨 있습니다. 1,000만 행을 한 번에 INSE
 <style>
 .pn-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .pn-name { font-size: 28px; fill: var(--text, #1c1917); }
-.pn-num { font-size: 17px; fill: #ffffff; font-weight: 600; }
+.pn-num { font-size: 17px; fill: var(--on-fill, #14100e); font-weight: 600; }
 .pn-key { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
 .pn-desc { font-size: 18px; fill: var(--text-muted, #78716c); }
 .pn-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
@@ -483,7 +483,7 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 <style>
 .qf-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .qf-q { font-size: 17px; fill: var(--text, #1c1917); }
-.qf-num { font-size: 17px; fill: #ffffff; font-weight: 600; }
+.qf-num { font-size: 17px; fill: var(--on-fill, #14100e); font-weight: 600; }
 .qf-main { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
 .qf-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
 .qf-notet { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }

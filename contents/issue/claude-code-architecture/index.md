@@ -32,7 +32,7 @@ thumbnail: './thumbnail.png'
 <style>
 .qe-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .qe-l { fill: var(--text, #1c1917); font-size: 14px; }
-.qe-w { fill: #ffffff; font-size: 14px; }
+.qe-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .qe-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .qe-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .qe-core { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
@@ -290,7 +290,7 @@ Claude Code의 가장 야심찬 설계는 **Coordinator Mode**입니다. 하나�
 <style>
 .cd-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .cd-l { fill: var(--text, #1c1917); font-size: 14px; }
-.cd-w { fill: #ffffff; font-size: 14px; }
+.cd-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .cd-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .cd-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .cd-top { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }

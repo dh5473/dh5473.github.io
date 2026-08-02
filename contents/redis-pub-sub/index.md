@@ -26,7 +26,7 @@ thumbnail: './redis-pub-sub-background.png'
 .ps-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .ps-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .ps-l { fill: var(--text, #1c1917); font-size: 14px; }
-.ps-w { fill: #ffffff; font-size: 14px; }
+.ps-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .ps-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .ps-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
 .ps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }

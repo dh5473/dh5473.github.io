@@ -26,7 +26,7 @@ Python 개발을 하다 보면 누구나 한 번쯤 가상환경이나 패키지
 .uv-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .uv-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .uv-l { fill: var(--text, #1c1917); font-size: 14px; }
-.uv-w { fill: #ffffff; font-size: 16px; font-weight: 700; }
+.uv-w { fill: var(--on-fill, #14100e); font-size: 16px; font-weight: 700; }
 .uv-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .uv-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .uv-one { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }

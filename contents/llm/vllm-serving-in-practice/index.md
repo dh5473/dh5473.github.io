@@ -94,6 +94,7 @@ vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니�
     .vm1-act    { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
     .vm1-kv     { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
     .vm1-in     { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
+    .vm1-on     { fill: var(--on-fill, #14100e); }
     .vm1-legend { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }
   </style>
   <text x="240" y="28" class="vm1-title">80GB GPU × 0.92 = 73.6GB 예산</text>
@@ -102,7 +103,7 @@ vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니�
   <rect x="170" y="46" width="90" height="52" class="vm1-act"/>
   <text x="215" y="78" class="vm1-in">활성값</text>
   <rect x="260" y="46" width="200" height="52" rx="4" class="vm1-kv"/>
-  <text x="360" y="78" class="vm1-in" fill="#ffffff">KV Cache 풀</text>
+  <text x="360" y="78" class="vm1-in vm1-on">KV Cache 풀</text>
   <rect x="20" y="118" width="16" height="16" rx="3" class="vm1-fixed"/>
   <text x="46" y="131" class="vm1-legend">모델 가중치 (고정)</text>
   <rect x="20" y="152" width="16" height="16" rx="3" class="vm1-act"/>

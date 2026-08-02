@@ -131,7 +131,7 @@ def factorial(n):
 .vm-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .vm-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .vm-l { fill: var(--text, #1c1917); font-size: 14px; }
-.vm-w { fill: #ffffff; font-size: 14px; }
+.vm-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .vm-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .vm-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .vm-badge { fill: var(--primary, #0d9488); }

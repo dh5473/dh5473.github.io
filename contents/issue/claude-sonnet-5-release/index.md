@@ -115,7 +115,7 @@ Sonnet 5의 정규 토큰 단가는 Sonnet 4.6과 동일합니다(\$3/\$15). 그
 <style>
 .cs-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .cs-l { fill: var(--text, #1c1917); font-size: 14px; }
-.cs-w { fill: #ffffff; font-size: 14px; }
+.cs-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .cs-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .cs-op { fill: var(--text-muted, #78716c); font-size: 16px; font-weight: 700; }
 .cs-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }

@@ -32,7 +32,7 @@ GPT-5.1에서는 아예 추론을 하지 않는 **none** 옵션이 추가되었�
 .re-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .re-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .re-l { fill: var(--text, #1c1917); font-size: 14px; }
-.re-w { fill: #ffffff; font-size: 14px; }
+.re-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .re-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .re-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .re-def { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }

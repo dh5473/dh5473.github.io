@@ -116,7 +116,7 @@ const undercoverPrompt = `
 <style>
 .at-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .at-l { fill: var(--text, #1c1917); font-size: 14px; }
-.at-w { fill: #ffffff; font-size: 14px; }
+.at-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .at-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .at-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .at-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }

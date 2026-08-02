@@ -281,7 +281,7 @@ ORDER BY 설계에서 컬럼 순서가 중요한 근본적인 이유입니다.
 .pf5-d { fill: var(--text-danger, #dc2626); }
 .pf5-use { fill: var(--primary, #0d9488); }
 .pf5-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.2; }
-.pf5-w { fill: #ffffff; }
+.pf5-w { fill: var(--on-fill, #14100e); }
 </style>
 <text class="pf5-t" x="240" y="24" text-anchor="middle" font-size="19">ORDER BY (a, b, c) 테이블</text>
 <!-- 열 머리글 -->

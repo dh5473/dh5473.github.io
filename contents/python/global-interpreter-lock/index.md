@@ -22,7 +22,7 @@ CPython에서 GIL은 인터프리터 내부 상태를 보호하는 뮤텍스로,
 <style>
 .gl-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .gl-l { fill: var(--text, #1c1917); font-size: 14px; }
-.gl-w { fill: #ffffff; font-size: 14px; }
+.gl-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .gl-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .gl-run { fill: var(--primary, #0d9488); }
 .gl-wait { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }

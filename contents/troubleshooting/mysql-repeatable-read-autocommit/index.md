@@ -26,7 +26,7 @@ MySQL에서 분명히 데이터를 UPDATE하고 COMMIT까지 했는데, 다른 �
 .ms-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .ms-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .ms-l { fill: var(--text, #1c1917); font-size: 14px; }
-.ms-w { fill: #ffffff; font-size: 14px; }
+.ms-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .ms-n { fill: var(--text-muted, #78716c); font-size: 14px; }
 .ms-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
 .ms-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }

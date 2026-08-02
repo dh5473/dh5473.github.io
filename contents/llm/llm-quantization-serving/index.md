@@ -31,7 +31,7 @@ thumbnail: './thumbnail.png'
   <style>
     .q1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .q1-badge { fill: var(--primary, #0d9488); }
-    .q1-num   { fill: #ffffff; font-size: 19px; text-anchor: middle; }
+    .q1-num   { fill: var(--on-fill, #14100e); font-size: 19px; text-anchor: middle; }
     .q1-label { fill: var(--text, #1c1917); font-size: 21px; }
     .q1-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>

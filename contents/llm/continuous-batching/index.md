@@ -32,7 +32,7 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
     .cb1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb1-run   { fill: var(--primary, #0d9488); }
     .cb1-waste { fill: url(#cb1Hatch); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .cb1-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb1-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
     .cb1-warn  { fill: var(--text-danger, #dc2626); font-size: 17px; text-anchor: middle; }
   </style>
   <defs>
@@ -167,7 +167,7 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
     .cb3-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb3-dec   { fill: var(--primary, #0d9488); }
     .cb3-pre   { fill: var(--accent, #d97706); }
-    .cb3-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb3-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
     .cb3-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb3-title">Chunked prefill이 없다면</text>
@@ -213,7 +213,7 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
     .cb4-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
     .cb4-dec   { fill: var(--primary, #0d9488); }
     .cb4-pre   { fill: var(--accent, #d97706); }
-    .cb4-in    { fill: #ffffff; font-size: 17px; text-anchor: middle; }
+    .cb4-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
     .cb4-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb4-title">Chunked prefill</text>
