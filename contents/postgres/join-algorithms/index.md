@@ -139,7 +139,7 @@ WHERE u.id = 42;
 
 ```text
  Nested Loop  (cost=0.42..45.23 rows=10 width=36)
-              (actual time=0.021..0.089 rows=9 loops=1)
+              (actual time=0.021..0.089 rows=9.00 loops=1)
    ->  Index Scan using users_pkey on users u
          (cost=0.29..8.31 rows=1 width=32)
          Index Cond: (id = 42)
@@ -268,12 +268,15 @@ cost는 `build_rows + probe_rows`로, 양쪽 크기에 선형입니다. Nested L
 
 ### work_mem 경계: batch split
 
-문제는 해시 테이블이 메모리에 다 안 들어갈 때입니다. `work_mem`(기본 4MB)을 초과하면 PostgreSQL은 양쪽을 해시 값 기준으로 여러 **batch**로 쪼개 디스크에 내려둔 뒤, 한 batch씩 올려가며 처리합니다. batch 수가 늘수록 디스크 I/O가 배로 붙습니다.
+문제는 해시 테이블이 메모리에 다 안 들어갈 때입니다. 한도를 넘으면 PostgreSQL은 양쪽을 해시 값 기준으로 여러 **batch**로 쪼개 디스크에 내려둔 뒤, 한 batch씩 올려가며 처리합니다. batch 수가 늘수록 디스크 I/O가 배로 붙습니다.
 
-`EXPLAIN ANALYZE`에서 직접 확인할 수 있습니다.
+여기서 한도는 `work_mem`(기본 4MB) 그 자체가 아닙니다. 해시 테이블에는 `work_mem × hash_mem_multiplier`가 적용되고, 이 배수의 기본값은 PG 15부터 2.0입니다. 즉 기본 설정에서 해시 노드가 쓸 수 있는 메모리는 8MB입니다. 같은 `work_mem`을 쓰는 Sort 노드와 한도가 다르다는 뜻이라, 해시 쪽만 여유를 주고 싶을 때 배수를 올리는 선택지가 따로 있습니다.
+
+`EXPLAIN ANALYZE`에서 직접 확인할 수 있습니다. 아래 예시는 계산을 단순하게 보려고 배수를 1.0으로 되돌린 상태입니다.
 
 ```sql
 SET work_mem = '64kB';
+SET hash_mem_multiplier = 1.0;
 
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT u.email, o.amount
@@ -400,7 +403,7 @@ Merge Join도 조인 조건은 등가(`=`)여야 합니다. 정확히는 B-tree 
 | Hash Join | `build + probe` (덧셈) | 양쪽 다 커도 무방 | 전제 없음. 해시 테이블이 `work_mem`에 들어가면 유리 | `=` 만 |
 | Merge Join | `sort + sort + merge` | 양쪽 다 커도 무방 | 양쪽이 조인 키로 정렬돼 있어야 이득. 보통 B-tree 인덱스가 공급 | `=` 만 |
 
-`work_mem` 의존도도 다릅니다. Hash Join은 해시 테이블이 `work_mem`을 넘으면 batch로 쪼개지고, Merge Join은 Sort가 `work_mem`을 넘으면 외부 정렬로 디스크를 씁니다. Nested Loop만 `work_mem`과 무관합니다.
+`work_mem` 의존도도 다릅니다. Hash Join은 해시 테이블이 `work_mem × hash_mem_multiplier`를 넘으면 batch로 쪼개지고, Merge Join은 Sort가 `work_mem`을 넘으면 외부 정렬로 디스크를 씁니다. Nested Loop만 `work_mem`과 무관합니다.
 
 ## 플래너는 어떻게 고르는가
 

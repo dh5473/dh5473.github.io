@@ -341,15 +341,16 @@ Logical Replication에서 UPDATE/DELETE를 subscriber에 적용하려면, "어�
 | `USING INDEX` | 지정한 unique index 컬럼 값 | 아니오 |
 | `NOTHING` | 식별 정보 미전송(UPDATE/DELETE 복제 불가) | 아니오 |
 
-기본값(DEFAULT)에서는 PK로 row를 식별합니다. 문제는 **PK가 없는 테이블**입니다. REPLICA IDENTITY가 DEFAULT인데 PK가 없으면 publisher 측의 walsender가 UPDATE/DELETE를 디코딩할 수 없어서 에러를 발생시키고 복제가 멈춥니다.
+기본값(DEFAULT)에서는 PK로 row를 식별합니다. 문제는 **PK가 없는 테이블**입니다. REPLICA IDENTITY가 DEFAULT인데 PK가 없으면, PostgreSQL은 UPDATE/DELETE를 **실행하는 시점에** 그 문장을 거부합니다. 나중에 디코딩하다가 막히는 것이 아니라 publisher에서 쓰기 자체가 실패합니다.
 
 ```sql
--- publisher 측에서 발생하는 에러
+-- publisher에서 UPDATE를 실행하는 순간 돌아오는 에러
+UPDATE events SET processed = true WHERE id = 91204;
 ERROR: cannot update table "events" because it does not have
        a replica identity and publishes updates
 ```
 
-실무에서 자주 빠지는 함정입니다. 복제 대상 테이블의 PK 유무를 사전에 반드시 점검해야 합니다.
+증상이 복제 지연이 아니라 애플리케이션 쓰기 실패로 나타난다는 점이 중요합니다. 잘 돌던 서비스가 publication에 테이블을 추가한 직후부터 UPDATE에서 에러를 뱉기 시작합니다. 복제 대상 테이블의 PK 유무를 사전에 반드시 점검해야 하는 이유입니다.
 
 ## pg_basebackup과 pg_rewind
 
