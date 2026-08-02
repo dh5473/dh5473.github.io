@@ -1,0 +1,204 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "isolation-and-locks-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "SELECT ... FOR UPDATE로 10만 행을 한 번에 잠갔습니다. 이때 서버에서 벌어지는 일로 맞는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "lock table에 10만 개 엔트리가 만들어지고, 상한을 넘으면 테이블 락으로 승격됩니다.",
+          "why": "그것은 다른 여러 RDBMS의 방식이고 PostgreSQL은 다릅니다. 행마다 별도 엔트리를 만들지 않으므로 승격이라는 개념 자체가 row-level lock에는 없습니다."
+        },
+        {
+          "text": "각 튜플의 xmax에 잠근 트랜잭션의 xid가 기록되고, 별도의 락 메모리는 늘지 않습니다.",
+          "correct": true,
+          "why": "PostgreSQL은 행 락을 튜플 헤더의 xmax와 infomask 비트로 표현합니다. 락 상태를 확인하려면 힙 페이지를 읽어야 하지만 그 행을 수정하려면 어차피 페이지를 읽어야 하므로 추가 비용이 거의 없습니다. 100만 행을 잠가도 락 테이블이 넘치지 않는 이유입니다."
+        },
+        {
+          "text": "다른 세션은 그 행들을 SELECT할 수도 없게 됩니다.",
+          "why": "행 락은 읽기를 막지 않습니다. 다른 세션의 일반 SELECT는 자기 snapshot에서 보이는 버전을 그대로 읽습니다. 막히는 것은 UPDATE, DELETE, 그리고 충돌하는 SELECT ... FOR 계열뿐입니다."
+        },
+        {
+          "text": "잠긴 행들은 VACUUM이 회수하지 못하도록 표시됩니다.",
+          "why": "회수 여부를 정하는 것은 락이 아니라 그 튜플이 어느 트랜잭션에게도 보이지 않는가입니다. 락은 동시 수정을 조율할 뿐 그 판정에 직접 관여하지 않습니다."
+        }
+      ],
+      "explanation": "PostgreSQL의 행 락에는 별도의 저장소가 없습니다. UPDATE나 DELETE가 튜플의 xmax에 자기 xid를 적는 행위 자체가 잠갔다는 표시이고, 다른 트랜잭션은 그 값을 보고 대기 여부를 정합니다. 이 설계의 이점은 잠근 행 수와 무관하게 메모리가 늘지 않는다는 것입니다. 대량 갱신이 락 자원 때문에 실패하는 일이 없습니다. 여러 트랜잭션이 같은 행에 공유 락을 걸어야 할 때는 xid 하나로 표현할 수 없으므로 여러 xid를 묶은 MultiXactId를 쓰고, infomask 비트로 그 사실을 표시합니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#row-level-lock"
+    },
+    {
+      "id": "isolation-and-locks-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단", "운영"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 배포 중 ALTER TABLE 한 줄을 실행했더니 users를 읽는 모든 요청이 멈췄습니다.\n\nSELECT pid, state, wait_event_type, wait_event,\n       now() - xact_start AS open_for, LEFT(query, 26) AS query\nFROM pg_stat_activity WHERE state <> 'idle';\n--   pid  | state  | wait_event_type | wait_event | open_for | query\n-- -------+--------+-----------------+------------+----------+----------------------------\n--   4102 | active |                 |            | 00:41:12 | SELECT ... FROM users ...\n--   5511 | active | Lock            | relation   | 00:00:38 | ALTER TABLE users ADD COL\n--   5610 | active | Lock            | relation   | 00:00:31 | SELECT id FROM users WHERE\n--   5644 | active | Lock            | relation   | 00:00:12 | SELECT id FROM users WHERE"
+      },
+      "question": "ALTER는 아직 시작도 못 했는데 그 뒤에 들어온 SELECT까지 멈췄습니다. 왜 그렇습니까?",
+      "choices": [
+        {
+          "text": "락 큐가 FIFO라서 대기 중인 AccessExclusive를 뒤에 온 요청이 앞지를 수 없습니다.",
+          "correct": true,
+          "why": "새로 온 SELECT의 AccessShare는 이미 실행 중인 41분짜리 SELECT와 완전히 호환됩니다. 그런데 그 사이에 AccessExclusive가 줄을 서 있고 큐는 순서를 지키므로, 호환되는 상대가 앞에 있어도 넘어갈 수 없습니다. 한 줄짜리 ALTER가 서비스 전체를 멈추는 사고가 이 구조에서 나옵니다."
+        },
+        {
+          "text": "ALTER가 이미 AccessExclusive를 획득해 모든 읽기를 막고 있습니다.",
+          "why": "획득했다면 wait_event가 Lock으로 남아 있지 않습니다. 5511은 아직 기다리는 중이고, 실제로 락을 쥔 것은 41분째 열려 있는 4102입니다."
+        },
+        {
+          "text": "ALTER TABLE이 테이블을 다시 쓰기 시작해 그동안 데이터를 읽을 수 없습니다.",
+          "why": "컬럼을 추가하는 ALTER는 기본값이 없거나 상수 기본값이면 테이블을 다시 쓰지 않습니다. 그리고 세 세션 모두 재작성이 아니라 락을 기다리는 상태입니다."
+        },
+        {
+          "text": "SELECT끼리도 AccessShare를 서로 배타적으로 잡기 때문입니다.",
+          "why": "AccessShare는 자기들끼리 완전히 호환됩니다. 8단계 행렬에서 AccessShare 줄에 X가 있는 곳은 AccessExclusive 한 칸뿐입니다."
+        }
+      ],
+      "explanation": "ALTER TABLE이 위험한 이유는 락이 세서가 아니라 락을 기다리는 동안에도 뒤를 막기 때문입니다. 앞에 긴 트랜잭션 하나만 있으면 그 뒤로 오는 모든 요청이 함께 멈춥니다. 그래서 DDL을 돌리기 전에 lock_timeout을 3초에서 5초 정도로 짧게 걸어두는 것이 표준 관행입니다. 그 안에 락을 못 잡으면 에러로 빠져나오므로 뒤에 줄이 길게 늘어서기 전에 상황이 정리되고, 긴 트랜잭션을 먼저 정리한 뒤 다시 시도하면 됩니다. 같은 이유로 idle_in_transaction_session_timeout을 걸어 열어둔 채 방치된 트랜잭션을 자동으로 끊는 설정도 함께 씁니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#alter-table은-왜-서비스를-멈추는가"
+    },
+    {
+      "id": "isolation-and-locks-03",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["판정"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- accounts에는 id=1, balance=1000 한 행이 있습니다.\n\n-- Session A                       -- Session B\nBEGIN;                             BEGIN;\nUPDATE accounts                    -- 아래 문장은 A가 끝날 때까지 대기합니다\n   SET balance = balance - 100     UPDATE accounts\n WHERE id = 1;                        SET balance = balance + 500\n                                    WHERE id = 1;\nCOMMIT;"
+      },
+      "question": "두 세션이 모두 Read Committed일 때 B가 풀린 뒤 balance는 얼마가 되고, 둘 다 Repeatable Read였다면 무엇이 달라집니까?",
+      "choices": [
+        {
+          "text": "두 경우 모두 1400입니다. 격리 수준은 읽기에만 영향을 줍니다.",
+          "why": "격리 수준은 충돌이 생긴 뒤 어떻게 진행할지도 정합니다. Read Committed는 최신 버전으로 갈아타고 Repeatable Read는 포기합니다."
+        },
+        {
+          "text": "Read Committed면 1500이 되고, Repeatable Read면 1400이 됩니다.",
+          "why": "1500은 B가 원래 값 1000 위에 계산했다는 뜻이라 A의 변경이 통째로 사라집니다. 그런 결과가 나오려면 대기 자체가 없어야 하는데 같은 행이라 반드시 대기합니다."
+        },
+        {
+          "text": "두 경우 모두 B가 abort됩니다. 같은 행을 동시에 수정했기 때문입니다.",
+          "why": "Read Committed는 대기한 뒤 진행하는 것이 정상 동작입니다. 이 재평가 덕분에 한 문장 안에서 벌어지는 lost update가 막힙니다."
+        },
+        {
+          "text": "Read Committed면 1400이 되고, Repeatable Read면 B가 직렬화 에러로 abort됩니다.",
+          "correct": true,
+          "why": "Read Committed의 UPDATE는 대기에서 풀린 뒤 자기가 처음 읽은 버전이 아니라 최신 커밋 버전을 다시 읽고 WHERE를 다시 평가합니다. 900 위에 500을 더해 1400입니다. Repeatable Read는 트랜잭션 시작 시점의 snapshot을 고수하므로, 그 버전이 이미 갱신된 것을 발견하는 순간 could not serialize access due to concurrent update로 끝냅니다."
+        }
+      ],
+      "explanation": "같은 충돌에서 두 격리 수준이 정반대로 반응합니다. Read Committed는 현실에 맞춰 갈아타고, Repeatable Read는 자기가 본 세상과 어긋나면 포기합니다. 어느 쪽이 옳은가는 무엇을 쓰는지에 달려 있습니다. balance = balance - 100처럼 계산이 데이터베이스 안에서 끝나면 Read Committed의 재평가로 충분합니다. 반대로 값을 애플리케이션으로 가져와 계산한 뒤 그 결과를 상수로 쓰는 코드라면, 재평가가 일어나도 이미 낡은 값으로 만든 결과를 쓰게 되므로 SELECT ... FOR UPDATE로 먼저 잠그거나 Repeatable Read로 올려 재시도하는 쪽을 택해야 합니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#read-committed-최신-버전을-다시-읽고-진행"
+    },
+    {
+      "id": "isolation-and-locks-04",
+      "type": "single",
+      "difficulty": 3,
+      "source": "extended",
+      "tags": ["진단", "면접"],
+      "scenario": {
+        "kind": "text",
+        "body": "예약 테이블에 창고별 예약이 행 단위로 쌓입니다. 규칙은 한 창고의 예약 합계가 보유 수량을 넘지 않는 것입니다. 예약 처리는 그 창고의 합계를 SELECT해서 여유를 확인한 뒤, 여유가 있으면 자기 예약 행을 INSERT합니다. Repeatable Read로 돌리고 있는데 동시 요청이 몰리는 시간대에만 가끔 합계가 보유 수량을 넘습니다."
+      },
+      "question": "이 현상의 이름과, Repeatable Read가 막지 못하는 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "write skew입니다. 서로 다른 행을 쓰므로 행 락이 충돌하지 않고, 상대의 미커밋 변경도 보이지 않습니다.",
+          "correct": true,
+          "why": "각 트랜잭션은 자기가 읽은 합계 위에서 판단하고 자기 행만 씁니다. 읽은 것과 쓴 것이 어긋나 있어 어느 쪽도 충돌로 감지되지 않습니다. Repeatable Read는 자기가 읽은 행이 그 사이에 바뀌었을 때만 에러를 내므로, 읽지 않은 새 행이 끼어드는 이 패턴은 원리적으로 걸러내지 못합니다."
+        },
+        {
+          "text": "phantom read입니다. Repeatable Read는 표준상 phantom을 허용합니다.",
+          "why": "표준은 허용하지만 PostgreSQL의 Repeatable Read는 트랜잭션 시작 시점의 snapshot을 끝까지 유지해 phantom read까지 막습니다. 여기서 새는 것은 읽기의 일관성이 아니라 읽은 값을 근거로 한 쓰기입니다."
+        },
+        {
+          "text": "lost update입니다. 두 예약이 같은 값을 읽고 서로 덮어썼습니다.",
+          "why": "lost update는 같은 행을 덮어쓸 때 생기고, 그 경우라면 Repeatable Read가 직렬화 에러로 잡아냅니다. 여기서는 서로 다른 행을 INSERT하므로 덮어쓴 것이 없습니다."
+        },
+        {
+          "text": "dirty read입니다. 상대의 미커밋 INSERT가 합계에 섞여 들어갔습니다.",
+          "why": "방향이 반대입니다. 미커밋 변경이 보였다면 여유가 없다고 판단해 오히려 막혔을 것입니다. 보이지 않았기 때문에 둘 다 통과한 것입니다."
+        }
+      ],
+      "explanation": "read-modify-write 패턴에서 읽는 대상과 쓰는 대상이 다르면 snapshot isolation의 사각지대에 들어갑니다. 규칙은 여러 행에 걸쳐 성립하는데 검사는 각자 따로 하고, 쓰기는 서로 다른 행에 하기 때문입니다. 해결책은 세 가지입니다. Serializable로 올리고 40001 에러에 재시도를 붙이거나, 검사 대상을 하나의 행으로 만들어 그 행에 SELECT ... FOR UPDATE를 걸거나, 규칙 자체를 데이터베이스 제약으로 표현하는 것입니다. 세 번째가 가능하면 가장 튼튼하지만 합계 상한 같은 규칙은 제약으로 옮기기 어려워서, 실무에서는 두 번째가 가장 자주 쓰입니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#write-skew-repeatable-read가-못-잡는-이상-현상"
+    },
+    {
+      "id": "isolation-and-locks-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "Serializable로 바꾼 뒤 실행 중에는 아무도 대기하지 않는데 커밋에서 실패하는 트랜잭션이 생깁니다. 이 동작을 설명하는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "커밋 시점에 뒤늦게 행 락을 잡으려다 실패한 것입니다.",
+          "why": "Serializable에서도 쓰기에 대한 행 락은 실행 시점에 잡습니다. 커밋에서 나는 실패는 락 획득 실패가 아니라 의존 구조 판정의 결과입니다."
+        },
+        {
+          "text": "SIRead lock이 너무 많이 쌓여 메모리가 부족해진 것입니다.",
+          "why": "행 단위 SIRead lock이 많아지면 페이지나 테이블 단위로 묶여 관리되지 메모리 부족 에러로 이어지지 않습니다. 다만 그렇게 묶이면 감시 범위가 넓어져 굳이 취소하지 않아도 될 트랜잭션까지 취소될 수는 있습니다."
+        },
+        {
+          "text": "읽은 범위를 기록하는 SIRead lock은 대기를 만들지 않고, 위험한 의존 구조가 드러나는 커밋 시점에 한쪽이 취소됩니다.",
+          "correct": true,
+          "why": "SIRead lock은 무엇을 읽었는지 표시만 남기는 장치라 다른 트랜잭션을 멈추지 않습니다. 나중에 그 데이터를 누군가 수정하면 읽기와 쓰기 사이의 의존 관계가 기록되고, 그 관계가 한 트랜잭션으로 들어왔다가 다시 나가는 모양을 이루면 직렬 실행으로 설명할 수 없는 조합이라 판정해 취소합니다."
+        },
+        {
+          "text": "Serializable은 트랜잭션을 실제로 하나씩 순서대로 실행하므로 뒤늦게 순서가 밀린 것입니다.",
+          "why": "직렬로 실행하는 것이 아니라 동시에 실행하되 그 결과가 어떤 직렬 순서로 설명되는지를 검사합니다. 설명되지 않는 조합만 취소하므로 대부분의 트랜잭션은 그대로 통과합니다."
+        }
+      ],
+      "explanation": "SSI가 다른 격리 수준과 크게 다른 점은 비용을 실행 중이 아니라 커밋 시점에 청구한다는 것입니다. 읽기는 아무도 막지 않고 대기도 만들지 않으므로 처리량이 크게 떨어지지 않지만, 대신 어떤 트랜잭션은 다 해놓고 마지막에 취소됩니다. 판정은 안전한 쪽으로 기울어 있어서, 실제로는 문제가 없었을 조합도 취소될 수 있습니다. 놓치는 경우는 없으므로 커밋에 성공한 것들만 놓고 보면 결과는 반드시 어떤 직렬 실행으로 설명됩니다. 그래서 Serializable을 쓰기로 했다면 40001을 잡아 트랜잭션 전체를 처음부터 다시 실행하는 재시도 wrapper가 선택이 아니라 전제 조건입니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#siread-lock"
+    },
+    {
+      "id": "isolation-and-locks-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["설계"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 계좌 이체 로직입니다. 하루에 몇 건씩 deadlock detected가 찍힙니다.\n\nBEGIN;\nUPDATE accounts SET balance = balance - :amt WHERE id = :from_id;\nUPDATE accounts SET balance = balance + :amt WHERE id = :to_id;\nCOMMIT;"
+      },
+      "question": "이 코드를 어떻게 고치면 deadlock이 애초에 만들어지지 않습니까?",
+      "choices": [
+        {
+          "text": "격리 수준을 Serializable로 올려 SSI가 미리 막게 합니다.",
+          "why": "SSI는 읽기와 쓰기 사이의 의존 구조를 보는 장치라 락 대기 순환과는 다른 문제를 다룹니다. Serializable에서도 잠그는 순서가 엇갈리면 deadlock은 그대로 발생합니다."
+        },
+        {
+          "text": "두 UPDATE를 항상 id가 작은 쪽부터 실행하도록 순서를 고정합니다.",
+          "correct": true,
+          "why": "deadlock은 두 세션이 서로가 쥔 행을 기다릴 때 생깁니다. 모든 트랜잭션이 같은 순서로 잠그면 먼저 온 쪽이 두 행을 다 잡고 뒤에 온 쪽은 첫 행에서 멈추므로 대기 그래프에 순환이 만들어지지 않습니다. 이체는 다루는 행이 둘뿐이라 이 원칙을 적용하기 쉬운 편입니다."
+        },
+        {
+          "text": "deadlock_timeout을 늘려 한쪽이 먼저 끝나기를 기다립니다.",
+          "why": "순환이 닫혀 있으면 아무리 기다려도 저절로 풀리지 않습니다. 이 값을 늘리면 감지가 늦어져 두 세션이 더 오래 묶여 있게 될 뿐입니다."
+        },
+        {
+          "text": "두 UPDATE를 각각 별도 트랜잭션으로 쪼갭니다.",
+          "why": "deadlock은 사라지지만 이체의 원자성이 깨집니다. 첫 트랜잭션만 커밋되고 두 번째가 실패하면 어느 계좌에도 없는 돈이 생깁니다."
+        }
+      ],
+      "explanation": "deadlock은 버그가 아니라 동시성이 있는 시스템의 정상적인 가능성이고, PostgreSQL의 감지 기능은 그것을 처리하는 정상 메커니즘입니다. 그래도 만들지 않을 수 있으면 만들지 않는 편이 낫고, 가장 단순한 원칙이 잠그는 순서를 전역에서 하나로 고정하는 것입니다. 문제는 비즈니스 로직이 복잡해지면 어떤 행을 어떤 순서로 잠그게 될지 코드만 보고 알기 어려워진다는 점입니다. 그래서 현실적인 대응은 순서 고정과 재시도를 함께 두는 것입니다. 간헐적으로 나는 deadlock은 재시도로 흡수하고, 초당 수십 건씩 난다면 트랜잭션 범위와 잠금 순서를 다시 설계합니다.",
+      "postSlug": "/postgres/isolation-and-locks/",
+      "anchor": "#deadlock"
+    }
+  ]
+}

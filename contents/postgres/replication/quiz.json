@@ -1,0 +1,204 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "replication-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "major version 업그레이드 다운타임을 줄이려고 새 버전 서버로 데이터를 옮기려 합니다. Streaming Replication으로는 안 되고 Logical Replication이어야 하는 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "Streaming은 테이블 단위로 고를 수 없어 전체를 옮겨야 하기 때문입니다.",
+          "why": "전체를 옮기는 것이 목적이라면 그 자체는 걸림돌이 아닙니다. 막히는 지점은 복제 범위가 아니라 받는 쪽이 물리적으로 동일해야 한다는 제약입니다."
+        },
+        {
+          "text": "Streaming standby는 읽기만 되므로 전환 후 쓰기를 받을 수 없습니다.",
+          "why": "승격하면 쓰기를 받을 수 있으므로 이것만으로는 이유가 되지 않습니다. HA 구성이 실제로 그 방식으로 동작합니다."
+        },
+        {
+          "text": "Streaming은 WAL 바이트를 그대로 적용하므로 양쪽이 같은 major version이어야 합니다.",
+          "correct": true,
+          "why": "standby는 primary의 물리적 복제본이라 데이터 파일이 바이트 단위로 같아집니다. 버전이 다르면 이 전제가 성립하지 않습니다. Logical Replication은 WAL을 행 단위 변경으로 디코딩해 보내므로 받는 쪽이 독립된 데이터베이스이고, 다른 major version이어도 적용할 수 있습니다."
+        },
+        {
+          "text": "Streaming은 wal_level이 replica라 업그레이드에 필요한 정보를 남기지 않습니다.",
+          "why": "wal_level은 어떤 방식을 쓸 수 있는지를 정하는 설정이고 logical로 올리면 두 방식을 함께 쓸 수 있습니다. 버전 차이를 막는 것은 이 설정이 아닙니다."
+        }
+      ],
+      "explanation": "두 복제 방식의 차이는 무엇을 보내느냐 하나에서 전부 파생됩니다. 바이트를 그대로 보내면 받는 쪽은 물리적 복제본이 되어야 하고, 그래서 버전이 같아야 하고, 테이블을 골라 받을 수 없고, 쓰기도 못 합니다. 디코딩해서 행 단위로 보내면 받는 쪽은 그 변경을 자기 방식으로 적용하는 독립된 데이터베이스가 되므로, 버전이 달라도 되고 테이블을 고를 수 있고 자체 인덱스나 추가 컬럼도 가질 수 있습니다. 대신 디코딩 비용이 붙고, 행을 식별할 수단이 필요해지고, 스키마 변경은 따라오지 않습니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#두-가지-방식의-차이"
+    },
+    {
+      "id": "replication-02",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단", "운영"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- primary의 pg_wal이 400GB까지 불어나 디스크 경보가 울렸습니다.\n-- max_wal_size는 4GB입니다.\n\nSELECT slot_name, slot_type, active, wal_status,\n       pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)) AS retained\nFROM pg_replication_slots;\n--  slot_name | slot_type | active | wal_status |  retained\n-- -----------+-----------+--------+------------+-----------\n--  standby1  | physical  | t      | reserved   | 12 MB\n--  analytics | logical   | f      | extended   | 391 GB"
+      },
+      "question": "max_wal_size가 4GB인데 pg_wal이 400GB입니다. 무슨 일이 벌어지고 있습니까?",
+      "choices": [
+        {
+          "text": "비활성 논리 슬롯이 391GB 구간의 WAL을 붙잡고 있어 checkpoint가 그것을 지우지 못합니다.",
+          "correct": true,
+          "why": "슬롯은 이 소비자가 어디까지 읽었는지를 LSN으로 기록하고, primary는 그 지점 이후의 WAL을 지우지 않습니다. 구독자가 사라져도 슬롯이 남아 있으면 보존은 계속됩니다. max_wal_size는 checkpoint를 언제 트리거할지를 정하는 값이지 pg_wal의 크기 상한이 아니라서 이 상황을 막아주지 못합니다."
+        },
+        {
+          "text": "max_wal_size 설정이 아직 적용되지 않은 것이므로 재시작이 필요합니다.",
+          "why": "max_wal_size는 재시작 없이 적용되는 값이고 애초에 pg_wal 총량의 상한이 아닙니다. 값이 제대로 적용되었더라도 슬롯이 붙잡은 세그먼트는 지워지지 않습니다."
+        },
+        {
+          "text": "checkpoint가 돌지 않아 오래된 세그먼트가 재활용되지 못했습니다.",
+          "why": "checkpoint가 멈췄다면 physical 슬롯 쪽 retained도 함께 커졌을 것입니다. 12MB로 정상이라는 것은 checkpoint가 돌고 있고 정리도 되고 있다는 뜻입니다."
+        },
+        {
+          "text": "논리 슬롯은 디코딩을 위해 WAL을 두 벌 보관하므로 크기가 두 배가 됩니다.",
+          "why": "디코딩은 기존 WAL을 읽어 변환하는 작업이라 사본을 따로 두지 않습니다. 391GB는 두 배로 불어난 것이 아니라 소비되지 않은 채 쌓인 결과입니다."
+        }
+      ],
+      "explanation": "슬롯은 복제를 안전하게 만드는 장치이면서 동시에 가장 흔한 장애 원인입니다. 소비자가 잠시 끊겼다 돌아와도 필요한 WAL이 남아 있게 해주지만, 소비자가 영영 돌아오지 않으면 그 보존이 끝나지 않습니다. 대응은 두 갈래입니다. max_slot_wal_keep_size로 보존 상한을 걸어 한도를 넘으면 슬롯이 무효화되게 하고, 쓰지 않는 슬롯은 지우는 것입니다. 논리 슬롯은 여기에 하나가 더 붙습니다. catalog_xmin을 붙잡고 있으면 시스템 카탈로그의 dead tuple도 회수되지 못하므로, 디스크뿐 아니라 bloat 쪽으로도 영향이 번집니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#slot이-해결하는-문제"
+    },
+    {
+      "id": "replication-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판단"],
+      "scenario": {
+        "kind": "log",
+        "body": "-- read replica에서 분석 쿼리가 자주 죽습니다.\nERROR:  canceling statement due to conflict with recovery\nDETAIL:  User query might have needed to see row versions that must be removed.\n\n-- 같은 standby에서\n--  confl_snapshot | confl_bufferpin | confl_lock\n-- ----------------+-----------------+------------\n--            1842 |              37 |          0"
+      },
+      "question": "이 상황에서 hot_standby_feedback을 켜기로 했습니다. 무엇을 얻고 무엇을 내주게 됩니까?",
+      "choices": [
+        {
+          "text": "standby가 WAL 적용을 미루게 되어 충돌이 사라지고 primary는 영향을 받지 않습니다.",
+          "why": "적용을 미루는 것은 max_standby_streaming_delay가 하는 일이고 그 대가는 lag입니다. feedback은 반대로 primary 쪽 동작을 바꾸는 설정이라 영향이 primary에 갑니다."
+        },
+        {
+          "text": "standby 쿼리의 xmin을 primary가 알게 되어 충돌이 줄지만, 그만큼 primary의 회수가 밀립니다.",
+          "correct": true,
+          "why": "confl_snapshot이 압도적이라는 것은 primary에서 회수된 행 버전을 standby 쿼리가 아직 보려 한다는 뜻입니다. feedback을 켜면 primary의 VACUUM이 그 xmin 이후 것을 남겨두므로 충돌이 사라집니다. 대신 standby에서 오래 도는 쿼리가 primary의 회수 기준선을 붙잡게 되어, 열어둔 트랜잭션이 VACUUM을 막는 것과 같은 상태를 원격으로 만들어냅니다."
+        },
+        {
+          "text": "충돌이 나면 쿼리를 죽이는 대신 자동으로 재시도하게 됩니다.",
+          "why": "재시도는 애플리케이션의 몫입니다. 이 설정은 충돌이 애초에 덜 생기게 만드는 쪽이지 충돌이 난 뒤의 처리를 바꾸지 않습니다."
+        },
+        {
+          "text": "buffer pin 충돌까지 함께 사라집니다.",
+          "why": "feedback이 다루는 것은 어느 행 버전을 남길지이지 페이지를 누가 붙잡고 있는지가 아닙니다. confl_bufferpin 쪽은 여전히 max_standby_streaming_delay의 영역으로 남습니다."
+        }
+      ],
+      "explanation": "hot standby에서 쿼리가 취소되는 이유는 redo와 조회가 같은 데이터를 놓고 부딪히기 때문입니다. 조율 수단은 세 가지이고 대가가 각각 다릅니다. max_standby_streaming_delay를 늘리면 redo가 기다려주지만 lag이 쌓이고, hot_standby_feedback을 켜면 충돌이 줄지만 primary의 bloat가 늘고, 아무것도 하지 않으면 쿼리가 취소됩니다. 어느 쪽이 맞는지는 이 standby의 용도가 정합니다. 짧은 조회를 받는 read replica라면 기본값으로 충분한 경우가 많고, 몇 분씩 도는 분석 쿼리를 받는 용도라면 feedback을 켜되 primary의 dead tuple 추이를 함께 봐야 합니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#hot_standby_feedback"
+    },
+    {
+      "id": "replication-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- events 테이블을 publication에 추가한 직후부터 이 에러가 납니다.\n\nUPDATE events SET processed = true WHERE id = 91204;\n-- ERROR:  cannot update table \"events\" because it does not have\n--         a replica identity and publishes updates"
+      },
+      "question": "이 에러가 알려주는 것으로 맞는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "subscriber가 어떤 행을 바꿀지 못 찾아 apply worker가 멈춘 것입니다.",
+          "why": "에러가 UPDATE를 던진 쪽에서 즉시 돌아오고 있습니다. 변경이 subscriber까지 가지도 못한 상황입니다."
+        },
+        {
+          "text": "PK는 있지만 REPLICA IDENTITY를 FULL로 바꾸지 않아서입니다.",
+          "why": "PK가 있으면 기본값 DEFAULT로 충분합니다. FULL은 PK가 없거나 모든 컬럼의 이전 값이 필요할 때 쓰는 설정이고, 대신 전송량이 크게 늘어납니다."
+        },
+        {
+          "text": "publication에 넣기 전에 초기 동기화를 마치지 않아서입니다.",
+          "why": "초기 동기화는 기존 데이터를 복사하는 단계이고, 이 검사는 그것과 무관하게 매 UPDATE마다 일어납니다. 동기화가 끝나도 같은 에러가 계속됩니다."
+        },
+        {
+          "text": "publisher에서 UPDATE 문 자체가 거부됩니다. 복제가 밀리는 것이 아니라 원본 쓰기가 막힌 상태입니다.",
+          "correct": true,
+          "why": "PostgreSQL은 UPDATE와 DELETE를 실행하는 시점에 이 테이블이 어떤 행을 바꿨는지 구독자에게 알릴 수단이 있는지 확인합니다. REPLICA IDENTITY가 DEFAULT인데 PK가 없으면 알릴 방법이 없으므로 문장을 거부합니다. 그래서 증상이 복제 지연이 아니라 애플리케이션 쓰기 실패로 나타납니다."
+        }
+      ],
+      "explanation": "이 함정이 위험한 이유는 증상이 복제 쪽이 아니라 서비스 쪽에 나타나기 때문입니다. publication에 테이블을 하나 추가했을 뿐인데 잘 돌던 UPDATE가 실패하기 시작합니다. 대응은 PK를 만들거나, 유일한 인덱스가 있다면 REPLICA IDENTITY USING INDEX로 지정하거나, 둘 다 없으면 FULL로 두는 것입니다. FULL은 모든 컬럼의 이전 값을 WAL에 실어 보내므로 전송량과 subscriber의 탐색 비용이 함께 커지고, 인덱스가 없으면 행을 찾느라 전체 스캔을 하게 되므로 최후의 선택으로 봐야 합니다. 세팅의 첫 단계가 대상 테이블의 PK 유무 점검인 이유입니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#replica-identity"
+    },
+    {
+      "id": "replication-05",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "SELECT client_addr, state,\n       pg_wal_lsn_diff(sent_lsn, write_lsn)   AS sent_write,\n       pg_wal_lsn_diff(write_lsn, flush_lsn)  AS write_flush,\n       pg_wal_lsn_diff(flush_lsn, replay_lsn) AS flush_replay\nFROM pg_stat_replication;\n--  client_addr | state     | sent_write | write_flush | flush_replay\n-- -------------+-----------+------------+-------------+--------------\n--  10.0.2.31   | streaming |      98304 |       16384 |   4127195136"
+      },
+      "question": "이 standby의 replay가 약 3.8GB 뒤처져 있습니다. 어디를 봐야 합니까?",
+      "choices": [
+        {
+          "text": "standby의 redo 처리 속도입니다. WAL은 디스크까지 도착했는데 적용만 밀려 있습니다.",
+          "correct": true,
+          "why": "sent와 write, write와 flush의 차이는 각각 96KB와 16KB로 사실상 붙어 있습니다. 네트워크도 디스크 쓰기도 따라오고 있다는 뜻입니다. 남은 구간은 startup process가 WAL을 읽어 페이지에 적용하는 단계 하나뿐입니다. redo는 단일 프로세스라 primary의 여러 backend가 만든 변경을 혼자 감당해야 하고, standby에서 도는 긴 쿼리와 충돌해 대기 중일 수도 있습니다."
+        },
+        {
+          "text": "네트워크 대역폭입니다. 3.8GB가 아직 전송되지 못했습니다.",
+          "why": "전송은 sent와 write 사이 구간이고 그 차이가 96KB뿐입니다. 전송이 막혔다면 이 값이 먼저 커졌을 것입니다."
+        },
+        {
+          "text": "standby의 디스크 쓰기 성능입니다. flush가 따라가지 못하고 있습니다.",
+          "why": "write와 flush의 차이가 16KB로 거의 붙어 있습니다. 받은 것을 디스크에 내리는 일은 병목이 아닙니다."
+        },
+        {
+          "text": "primary의 WAL 생성량입니다. 슬롯을 늘려 분산해야 합니다.",
+          "why": "슬롯을 늘려도 같은 WAL을 같은 standby가 적용해야 합니다. 슬롯은 어디까지 보존할지를 추적하는 장치이지 부하를 나누는 장치가 아닙니다."
+        }
+      ],
+      "explanation": "pg_stat_replication이 LSN을 네 단계로 나눠 보여주는 이유가 여기에 있습니다. 어느 구간에서 벌어지는지를 보면 병목의 위치가 바로 나옵니다. sent와 write 사이가 벌어지면 네트워크, write와 flush 사이면 standby의 디스크, flush와 replay 사이면 redo 처리입니다. 마지막 구간이 특히 자주 문제가 되는 이유는 redo가 단일 프로세스이기 때문입니다. primary에서는 수십 개의 backend가 병렬로 만들어낸 변경을 standby에서는 하나가 순서대로 적용합니다. 여기에 hot standby 충돌로 대기까지 걸리면 격차가 빠르게 벌어지므로, 시간 기반 컬럼인 replay_lag과 함께 추이로 봐야 합니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#streaming-replication-lag"
+    },
+    {
+      "id": "replication-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영", "오개념"],
+      "question": "logical replication으로 새 버전 서버를 동기화해두고 전환을 준비하는 중입니다. 이 기간에 스키마를 바꿔야 한다면 무엇을 주의해야 합니까?",
+      "choices": [
+        {
+          "text": "DDL도 WAL에 기록되므로 자동으로 함께 적용됩니다.",
+          "why": "WAL에 기록되는 것과 논리 복제로 전달되는 것은 다릅니다. output plugin이 만들어내는 것은 행 변경 스트림이고 스키마 변경은 그 안에 담기지 않습니다."
+        },
+        {
+          "text": "DDL은 복제되지 않으므로 양쪽에 직접 적용해야 하고, 순서를 잘못 잡으면 복제가 깨집니다.",
+          "correct": true,
+          "why": "복제되는 것은 행 단위 변경뿐입니다. publisher에만 컬럼을 추가하고 subscriber에 반영하지 않으면, 그 컬럼이 들어간 변경이 도착하는 순간 apply worker가 멈춥니다. 그래서 컬럼 추가는 subscriber에 먼저, 컬럼 삭제는 publisher에 먼저 적용하는 순서를 지킵니다."
+        },
+        {
+          "text": "publication을 다시 만들면 스키마까지 재동기화됩니다.",
+          "why": "publication을 다시 만들면 초기 동기화가 다시 돌 수는 있지만 그것은 데이터를 복사하는 단계이고, subscriber의 테이블 정의를 바꿔주지는 않습니다."
+        },
+        {
+          "text": "스키마가 달라지면 apply worker가 자동으로 매핑을 조정합니다.",
+          "why": "컬럼 이름과 타입이 맞아야 적용됩니다. 맞지 않으면 조정하는 것이 아니라 에러를 내고 멈추며, 그 지점부터 lag이 계속 쌓입니다."
+        }
+      ],
+      "explanation": "logical replication을 쓸 때 가장 자주 발이 걸리는 지점이 스키마입니다. 데이터는 알아서 따라오는데 정의는 따라오지 않으므로, 배포 절차가 데이터베이스 두 곳을 함께 다루는 형태로 바뀌어야 합니다. 순서 규칙은 어느 쪽이 먼저 몰라도 되는가로 정하면 기억하기 쉽습니다. 컬럼을 더할 때는 받는 쪽이 먼저 알고 있어야 하고, 컬럼을 뺄 때는 보내는 쪽이 먼저 그만 보내야 합니다. 같은 이유로 복제는 백업을 대신하지 못한다는 점도 함께 봐야 합니다. 실수로 지운 데이터는 그 삭제까지 그대로 복제되므로, 시점 복구가 필요하면 WAL 아카이빙과 base backup을 따로 갖춰야 합니다.",
+      "postSlug": "/postgres/replication/",
+      "anchor": "#흔한-오해"
+    }
+  ]
+}

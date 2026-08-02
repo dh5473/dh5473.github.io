@@ -1,0 +1,202 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "join-algorithms-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "outer 조건을 u.id = 42에서 u.id < 10000으로 바꾸자 계획이 Nested Loop에서 Hash Join으로 넘어갔습니다. 두 알고리즘의 cost는 입력 크기에 어떻게 다르게 반응합니까?",
+      "choices": [
+        {
+          "text": "둘 다 양쪽 행 수의 곱에 비례하지만 Hash Join 쪽 상수가 더 작습니다.",
+          "why": "Hash Join은 build에서 작은 쪽을 한 번, probe에서 큰 쪽을 한 번 훑고 끝납니다. 상수의 크기가 아니라 곱셈이냐 덧셈이냐가 두 알고리즘을 가르는 지점입니다."
+        },
+        {
+          "text": "Hash Join은 outer 크기와 무관하게 항상 같은 비용이 듭니다.",
+          "why": "probe 단계에서 큰 쪽 전체를 훑으므로 그쪽 행 수에 비례해 늘어납니다. 무관한 것이 아니라 선형으로 늘어난다는 것이 요점입니다."
+        },
+        {
+          "text": "Nested Loop는 outer 행 수만큼 곱해지고, Hash Join은 양쪽을 한 번씩 훑는 덧셈입니다.",
+          "correct": true,
+          "why": "outer가 1행이면 안쪽 인덱스를 한 번만 타므로 Nested Loop가 압도적으로 쌉니다. outer가 1만 행이면 같은 조회가 1만 번 반복되지만, Hash Join은 해시 테이블을 한 번 짓고 큰 쪽을 한 번 훑는 것으로 끝납니다. 어느 지점에서 뒤집힐지는 양쪽 크기와 안쪽 조회 단가가 정합니다."
+        },
+        {
+          "text": "Nested Loop는 outer가 커지면 안쪽 인덱스가 캐시에서 밀려나 느려집니다.",
+          "why": "캐시 효과가 실제로 있을 수는 있지만 플래너는 캐시 상태를 cost에 넣지 않습니다. 계획이 바뀐 것은 추정 비용이 뒤집혔기 때문이지 실제 캐시 거동 때문이 아닙니다."
+        }
+      ],
+      "explanation": "세 알고리즘의 성격은 cost 공식의 모양에 다 들어 있습니다. Nested Loop는 outer 행 수와 안쪽 조회 비용의 곱, Hash Join은 build와 probe의 합, Merge Join은 양쪽 정렬 비용에 병합 비용을 더한 값입니다. 곱셈인 Nested Loop는 outer가 작을 때 무적이고 커질수록 급격히 나빠집니다. 덧셈인 Hash Join은 양쪽이 아무리 커도 선형으로만 늘어나는 대신 등가 조건에서만 쓸 수 있고 메모리를 요구합니다. 어떤 알고리즘이 좋고 나쁜 것이 아니라, 어느 구간에 있느냐로 승자가 바뀝니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#nested-loop-바깥-안쪽"
+    },
+    {
+      "id": "join-algorithms-02",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "plan",
+        "body": "Nested Loop  (cost=0.71..16.87 rows=1 width=44)\n             (actual time=0.043..41203.882 rows=78412.00 loops=1)\n  ->  Index Scan using addresses_country_city_idx on addresses a\n        (cost=0.42..8.44 rows=1 width=20)\n        (actual time=0.019..38.204 rows=78412.00 loops=1)\n        Index Cond: ((country = 'KR'::text) AND (city = 'Seoul'::text))\n  ->  Index Scan using orders_addr_id_idx on orders o\n        (cost=0.29..8.31 rows=1 width=24)\n        (actual time=0.000..0.000 rows=1.00 loops=78412)\n        Index Cond: (addr_id = a.id)\n Execution Time: 41209.334 ms"
+      },
+      "question": "41초가 걸렸습니다. 가장 먼저 손댈 곳은 어디입니까?",
+      "choices": [
+        {
+          "text": "안쪽 Index Scan이 병목이므로 orders에 더 나은 인덱스를 만들어야 합니다.",
+          "why": "안쪽 한 번의 actual time은 0.000ms입니다. 이보다 빠른 인덱스를 만들 여지가 없습니다. 문제는 한 번의 비용이 아니라 그것을 몇 번 반복하느냐입니다."
+        },
+        {
+          "text": "outer 추정이 1행인데 실제 78,412행입니다. 그 숫자부터 통계로 바로잡아야 합니다.",
+          "correct": true,
+          "why": "안쪽 노드의 loops가 78,412입니다. 한 번은 0.000ms로 끝나도 그만큼 반복하면 40초가 됩니다. 플래너는 outer가 1행이라 믿었기에 이 반복을 1회분으로만 계산했고, 그래서 Nested Loop가 가장 싸 보였습니다. country와 city처럼 서로 종속된 조건이라면 CREATE STATISTICS가, 통계가 낡았다면 ANALYZE가 먼저입니다."
+        },
+        {
+          "text": "enable_nestloop를 off로 두어 Hash Join을 강제합니다.",
+          "why": "증상은 사라지지만 원인은 남습니다. 잘못된 행 수 추정은 이 쿼리 말고 다른 계획에서도 계속 나쁜 선택을 만들고, 전역으로 끄면 Nested Loop가 정말 유리한 쿼리까지 함께 망가집니다. 원인을 확인하는 동안 임시로 쓰는 수단입니다."
+        },
+        {
+          "text": "work_mem을 올려 Nested Loop가 안쪽 결과를 재사용하게 합니다.",
+          "why": "Nested Loop는 세 알고리즘 중 유일하게 work_mem과 무관합니다. 안쪽 결과를 기억해 반복 조회를 건너뛰는 것은 Memoize 노드의 일이고, 이 계획에는 그 노드가 없습니다."
+        }
+      ],
+      "explanation": "Nested Loop가 위험해지는 지점은 알고리즘 자체가 아니라 outer 크기를 잘못 추정했을 때입니다. 추정이 1행이면 안쪽 조회 비용이 1회분으로만 잡혀 어떤 대안보다 싸 보이고, 실제로 수만 행이 들어오면 그 조회가 수만 번 돌아갑니다. 같은 오차가 Hash Join에서는 훨씬 덜 아픕니다. 덧셈 구조라 입력이 커진 만큼만 선형으로 늘어나기 때문입니다. 그래서 계획을 읽을 때 안쪽 노드의 loops와 바깥 노드의 추정 대 실측을 함께 보는 습관이 중요합니다. 한 번의 시간이 0에 가까워도 loops가 크면 그 곱이 전체를 지배합니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#nested-loop가-위험해지는-지점"
+    },
+    {
+      "id": "join-algorithms-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영"],
+      "scenario": {
+        "kind": "plan",
+        "body": "Hash Join  (cost=71510.00..312884.00 rows=1841203 width=64)\n           (actual time=2104.912..9877.244 rows=1841203.00 loops=1)\n  Hash Cond: (o.user_id = u.id)\n  ->  Seq Scan on orders o  (actual time=0.008..1204.331 rows=8000000.00 loops=1)\n  ->  Hash  (cost=48210.00..48210.00 rows=2000000 width=48)\n        (actual time=2100.774..2100.775 rows=2000000.00 loops=1)\n        Buckets: 65536  Batches: 32  Memory Usage: 3521kB\n        Buffers: shared hit=48210, temp read=18404 written=18404"
+      },
+      "question": "이 계획에서 가장 먼저 시도할 조정과 그 대가는 무엇입니까?",
+      "choices": [
+        {
+          "text": "build 쪽이 200만 행이나 되므로 Nested Loop로 바꿉니다.",
+          "why": "양쪽이 모두 큰 조인에서 Nested Loop로 가면 안쪽 조회가 바깥 행 수만큼 반복됩니다. Hash Join이 덧셈으로 끝낼 일을 곱셈으로 되돌리는 방향입니다."
+        },
+        {
+          "text": "Buckets가 65,536뿐이라 해시 충돌이 잦습니다. 버킷 수를 직접 늘립니다.",
+          "why": "버킷 수는 사용자가 정하는 값이 아니라 주어진 메모리 예산 안에서 자동으로 결정됩니다. 그리고 여기서 디스크를 오가게 만든 것은 충돌이 아니라 예산 초과입니다."
+        },
+        {
+          "text": "temp의 read와 written이 같으니 정상 동작입니다. 손댈 곳이 없습니다.",
+          "why": "쓴 만큼 읽는 것은 batch 처리의 당연한 결과이지 건강하다는 신호가 아닙니다. 이 왕복 자체가 없앨 수 있는 비용입니다."
+        },
+        {
+          "text": "이 세션의 메모리 한도를 올려 Batches를 1로 내립니다. 대가는 그 값이 곱해진다는 점입니다.",
+          "correct": true,
+          "why": "Batches 32는 해시 테이블을 32조각으로 쪼개 양쪽을 디스크에 내렸다가 다시 읽었다는 뜻이고, temp의 read와 written이 그 왕복입니다. 한 조각에 다 담기면 이 왕복이 통째로 사라집니다. 다만 해시 노드의 한도는 work_mem × hash_mem_multiplier이고 노드마다 따로 잡히므로, 전역으로 올리면 동시 커넥션 수까지 곱해진 값이 최악의 상한이 됩니다."
+        }
+      ],
+      "explanation": "Hash Join에서 Batches가 2 이상이면 그 자리에 없앨 수 있는 디스크 왕복이 있다는 신호입니다. 확인은 쉽습니다. 세션에서만 한도를 올려 다시 찍어보고 Batches가 1로 떨어지는지, temp 지표가 사라지는지 보면 됩니다. 어려운 쪽은 그 다음입니다. work_mem은 세션 하나에 하나씩 주어지는 값이 아니라 정렬과 해시 노드마다 따로 잡히는 값이라, 노드가 셋인 쿼리를 커넥션 100개가 동시에 돌리면 상한이 그만큼 곱해집니다. 그래서 전역으로 올리기보다 문제가 확인된 쿼리나 배치 세션에만 걸어주는 편이 안전합니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#work_mem-경계-batch-split"
+    },
+    {
+      "id": "join-algorithms-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["선택"],
+      "question": "Merge Join은 셋 중 가장 드물게 보이지만 특정 상황에서는 Hash Join을 이깁니다. 어떤 상황입니까?",
+      "choices": [
+        {
+          "text": "양쪽이 조인 키로 이미 정렬돼 있고 결과에도 그 정렬이 필요한 경우입니다.",
+          "correct": true,
+          "why": "정렬을 인덱스가 공급하면 Merge Join의 cost에서 Sort 두 개가 통째로 빠집니다. 게다가 출력이 이미 정렬된 상태로 나오므로 위쪽의 ORDER BY도 공짜가 됩니다. Hash Join은 출력 순서를 보장하지 않아 같은 쿼리에서 Sort 노드가 하나 더 붙습니다."
+        },
+        {
+          "text": "조인 키에 중복이 많아 해시 버킷이 한쪽에 몰리는 경우입니다.",
+          "why": "그 상황에서 Hash Join이 나빠지는 것은 맞지만, 중복이 많으면 Merge Join도 같은 값 구간을 되감아 반복해야 해서 함께 나빠집니다. 스큐는 어느 한쪽의 강점이 아닙니다."
+        },
+        {
+          "text": "조인 조건이 등가가 아니라 범위 비교인 경우입니다.",
+          "why": "Merge Join도 등가 조건에만 쓸 수 있습니다. 정확히는 B-tree 연산자 패밀리에 등록된 등가 연산자여야 병합 조건이 됩니다. 범위 조인은 Merge와 Hash 둘 다 못 쓰고 Nested Loop로 떨어집니다."
+        },
+        {
+          "text": "메모리가 부족해 해시 테이블이 한도 안에 들어가지 않는 경우입니다.",
+          "why": "메모리가 부족하면 Merge Join의 Sort도 외부 정렬로 디스크를 씁니다. 두 알고리즘이 함께 나빠지는 조건이라 이것만으로 승부가 갈리지 않습니다."
+        }
+      ],
+      "explanation": "Merge Join의 cost는 정렬 둘에 병합 하나입니다. 정렬 비용이 살아 있으면 Hash Join의 덧셈에 밀리지만, 그 비용이 0이 되는 순간 경쟁력이 생깁니다. 0이 되는 경로는 두 가지입니다. 양쪽 조인 키에 B-tree 인덱스가 있어 인덱스 스캔이 정렬된 순서를 그대로 내보내는 경우, 그리고 아래쪽 노드가 이미 정렬을 만들어 올려보내는 경우입니다. 여기에 결과가 정렬된 상태로 필요한 쿼리라면 이득이 한 번 더 붙습니다. Hash Join으로 갔다면 마지막에 Sort를 얹어야 하는데 Merge Join은 그대로 내보내면 됩니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#merge-join-정렬된-두-스트림-맞물리기"
+    },
+    {
+      "id": "join-algorithms-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- ip_ranges는 5만 행, access_log는 800만 행입니다.\n-- enable_nestloop를 꺼도 계획이 바뀌지 않습니다.\n\nEXPLAIN\nSELECT l.ip, r.org\nFROM access_log l\nJOIN ip_ranges r ON l.ip_num BETWEEN r.lo AND r.hi;\n--  Nested Loop  (cost=0.00..28412030.00 rows=4000000 width=40)\n--    Join Filter: ((l.ip_num >= r.lo) AND (l.ip_num <= r.hi))"
+      },
+      "question": "양쪽 다 큰데 플래너가 Nested Loop만 내놓습니다. 다른 두 알고리즘이 후보에 오르지 못하는 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "양쪽에 인덱스가 없어 Merge Join이 정렬을 얻지 못했습니다.",
+          "why": "정렬이 없으면 Sort 노드를 붙여서라도 Merge Join을 후보에 올릴 수는 있습니다. 여기서 막힌 것은 정렬 유무가 아니라 조건의 종류입니다."
+        },
+        {
+          "text": "Hash Join과 Merge Join은 등가 조건에만 쓸 수 있습니다.",
+          "correct": true,
+          "why": "해시는 같은 값이 같은 버킷으로 간다는 성질에 기대므로 크고 작음을 물을 수 없습니다. Merge도 B-tree 연산자 패밀리의 등가 연산자에만 붙습니다. 범위 조인은 두 알고리즘의 전제 자체를 벗어나기 때문에 Nested Loop만 남고, enable_nestloop를 꺼도 대안이 없어 계획이 그대로입니다."
+        },
+        {
+          "text": "결과 행이 400만으로 추정되어 해시 테이블이 메모리 한도를 넘어서기 때문입니다.",
+          "why": "한도를 넘으면 batch로 쪼개서라도 Hash Join을 씁니다. 후보에 오르지도 못한 것은 비용을 견주기 이전 단계의 문제입니다."
+        },
+        {
+          "text": "access_log가 800만 행이라 build 쪽으로 쓰기에 너무 큽니다.",
+          "why": "build 쪽은 둘 중 작은 쪽을 고르므로 5만 행짜리 ip_ranges가 쓰였을 것입니다. 크기는 이 상황에서 걸림돌이 아닙니다."
+        }
+      ],
+      "explanation": "조인 알고리즘의 선택은 비용 비교 이전에 자격 심사를 통과해야 합니다. Hash Join과 Merge Join은 등가 조건 전용이고, 범위나 비등가 조건은 Nested Loop만 처리할 수 있습니다. IP 대역 매칭, 유효 기간 매칭, 구간별 요율표 조인이 실무에서 이 함정에 자주 걸립니다. 해법은 조건을 등가로 바꿔줄 무언가를 만드는 것입니다. 범위를 고정 크기 버킷으로 쪼개 버킷 키를 등가 조인에 쓰거나, range 타입과 GiST 인덱스를 써서 안쪽 조회 단가를 낮추는 방향입니다. 안쪽이 인덱스로 싸지면 Nested Loop 자체는 나쁜 선택이 아닙니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#조인은-결국-두-집합을-어떻게-짝짓는가"
+    },
+    {
+      "id": "join-algorithms-06",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["운영"],
+      "scenario": {
+        "kind": "text",
+        "body": "테이블 11개를 명시적 JOIN으로 이어붙인 리포트 쿼리입니다. 어느 날부터 3초짜리가 40초가 됐습니다. 통계는 최신이고 각 노드의 추정과 실측도 크게 어긋나지 않습니다. 다만 조인 순서가 사람이 보기에 납득하기 어려운 모양입니다."
+      },
+      "question": "여기서 먼저 확인할 설정은 무엇입니까?",
+      "choices": [
+        {
+          "text": "work_mem입니다. 조인 순서는 중간 결과가 메모리에 들어가는지로 결정됩니다.",
+          "why": "work_mem은 각 노드가 쓸 수 있는 메모리 상한이지 조인 순서를 정하는 기준이 아닙니다. 순서는 중간 결과의 추정 행 수와 그로부터 나오는 cost로 정해집니다."
+        },
+        {
+          "text": "default_statistics_target입니다. 조인 순서는 MCV 개수를 보고 결정됩니다.",
+          "why": "통계 정밀도가 추정 행 수를 통해 간접적으로 영향을 주기는 하지만, 지문은 추정과 실측이 크게 어긋나지 않는다고 못 박고 있습니다. 추정이 맞는데도 순서가 이상하다면 다른 축을 봐야 합니다."
+        },
+        {
+          "text": "join_collapse_limit과 geqo_threshold입니다. 테이블 수에 따라 탐색 범위와 탐색 방식이 달라집니다.",
+          "correct": true,
+          "why": "테이블 수가 geqo_threshold(기본 12) 미만이면 동적 프로그래밍으로 조합을 전부 견주지만, 넘어서면 유전자 알고리즘이 근사해를 찾아 최적을 놓칠 수 있습니다. 그리고 명시적 JOIN 트리를 몇 개까지 펼쳐 탐색 대상에 넣을지는 join_collapse_limit(기본 8)이 정하므로, 11개를 이어붙였어도 일부는 쓴 순서에 묶인 채로 남습니다."
+        },
+        {
+          "text": "random_page_cost입니다. 이 값이 낮으면 플래너가 조인 순서를 뒤집습니다.",
+          "why": "이 상수는 인덱스 경로와 순차 경로 중 무엇을 고를지에 영향을 주지, 어느 테이블을 먼저 붙일지를 직접 정하지 않습니다. 스캔 방식이 바뀌면 순서가 따라 바뀔 수는 있지만 지문의 증상은 순서 쪽에 있습니다."
+        }
+      ],
+      "explanation": "조인 순서는 알고리즘 선택과 별개의 축이고, 테이블이 늘수록 조합이 폭발하므로 플래너는 탐색을 스스로 제한합니다. 그래서 테이블 수가 어느 선을 넘는 순간 계획의 성격이 달라질 수 있습니다. 12개를 넘으면 전수 비교에서 근사 탐색으로 바뀌고, 명시적 JOIN을 쓴 쿼리는 8개를 넘는 부분이 작성 순서에 묶입니다. 사람이 보기에 이상한 순서가 나왔다면 이 두 한계선부터 확인하는 것이 순서입니다. 한계를 올리면 탐색 시간이 늘어나므로 무한정 키울 수는 없고, 대안으로 쿼리를 CTE로 쪼개 조인 블록을 나누는 방법이 있습니다.",
+      "postSlug": "/postgres/join-algorithms/",
+      "anchor": "#플래너는-어떻게-고르는가"
+    }
+  ]
+}

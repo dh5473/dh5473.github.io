@@ -1,0 +1,200 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "architecture-overview-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "커넥션이 하나 더 열려 backend가 fork될 때, 그 backend만을 위해 새로 확보되는 메모리는 무엇입니까?",
+      "choices": [
+        {
+          "text": "shared_buffers를 살아있는 커넥션 수로 나눈 몫이 배정됩니다.",
+          "why": "shared_buffers는 커넥션과 무관하게 서버 시작 시 한 덩어리로 잡히고 모든 프로세스가 같은 페이지 캐시를 함께 씁니다. 커넥션별로 잘라 쓴다면 같은 테이블 페이지가 커넥션 수만큼 중복 적재될 것입니다."
+        },
+        {
+          "text": "work_mem과 catalog cache처럼 그 프로세스 안에서만 쓰이는 private 메모리입니다.",
+          "correct": true,
+          "why": "backend는 부모에게서 shared memory 매핑을 물려받아 시작하지만, 정렬 버퍼나 카탈로그 캐시처럼 자기 쿼리를 처리하는 데 필요한 공간은 따로 확보합니다. 커넥션 1,000개가 각각 수 MB를 들고 있으면 그 합만으로 수 GB가 되는 이유가 여기입니다."
+        },
+        {
+          "text": "proc array가 한 칸 늘어나면서 shared memory 전체 크기가 커집니다.",
+          "why": "proc array는 max_connections를 보고 서버 시작 시점에 미리 다 잡아둡니다. 그래서 max_connections를 바꾸려면 재시작이 필요하고, 커넥션이 붙고 떨어지는 동안 배열 크기 자체는 변하지 않습니다."
+        },
+        {
+          "text": "없습니다. fork된 자식은 부모의 메모리를 그대로 물려받아 계속 공유합니다.",
+          "why": "fork 직후에는 copy-on-write로 같은 물리 페이지를 보지만, 쓰기가 일어나는 순간 그 페이지는 각자의 것으로 갈라집니다. 끝까지 공유가 유지되는 쪽은 명시적으로 attach한 shared memory입니다."
+        }
+      ],
+      "explanation": "backend가 쓰는 메모리는 두 갈래입니다. shared memory는 서버 시작 시 한 번 잡혀 모든 프로세스가 attach하는 공용 영역이고, private 메모리는 fork된 각 backend가 자기 쿼리를 처리하려고 따로 쓰는 영역입니다. 이 구분이 커넥션 비용의 실체입니다. 커넥션을 늘려도 shared_buffers는 그대로지만 private 메모리는 커넥션 수에 비례해 늘어납니다. pooler가 하는 일이 바로 이 비례 관계를 끊는 것입니다. 클라이언트 연결 수천 개를 backend 수십 개로 접어서, 늘어나는 쪽이 프로세스가 아니라 대기 큐가 되게 만듭니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#backend-process-내-연결이-사는-곳"
+    },
+    {
+      "id": "architecture-overview-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단"],
+      "chain": { "id": "pg-connection-cost", "order": 1 },
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 애플리케이션 서버를 20대로 늘리면서 각 서버의 커넥션 풀 상한을 40으로 두었습니다.\n-- 쿼리도 데이터도 그대로인데 모든 종류의 쿼리가 함께 느려졌습니다.\n\nSELECT state, count(*) FROM pg_stat_activity\nWHERE backend_type = 'client backend' GROUP BY state;\n--        state         | count\n-- ---------------------+-------\n--  active              |    23\n--  idle                |   742\n--  idle in transaction |     6"
+      },
+      "question": "실제로 일하는 backend는 23개뿐입니다. 놀고 있는 742개가 성능을 갉아먹는 경로는 무엇입니까?",
+      "choices": [
+        {
+          "text": "스냅샷을 뜰 때마다 살아있는 backend 전부가 담긴 proc array를 훑으므로, 일하지 않는 backend도 그 비용에 그대로 기여합니다.",
+          "correct": true,
+          "why": "스냅샷 생성은 proc array를 선형으로 훑어 지금 진행 중인 트랜잭션 명단을 만드는 일입니다. 이 배열의 길이는 살아있는 backend 수이지 일하는 backend 수가 아닙니다. 스냅샷은 문장마다 새로 뜨므로 이 비용은 쿼리 수만큼 반복되고, 같은 배열에 걸리는 락 경합도 함께 커집니다."
+        },
+        {
+          "text": "idle backend가 shared_buffers를 붙잡고 있어 active 쿼리가 쓸 캐시가 줄어듭니다.",
+          "why": "버퍼는 커넥션이 아니라 페이지 단위로 관리되고, 쿼리를 돌리지 않는 backend는 어떤 버퍼도 고정해두지 않습니다. 캐시가 부족해진 상황이었다면 hit 비율이 떨어지고 read가 늘었을 텐데 그 방향의 증상이 아닙니다."
+        },
+        {
+          "text": "postmaster가 모든 쿼리를 backend에 중계하므로 커넥션이 늘면 postmaster에서 병목이 생깁니다.",
+          "why": "postmaster는 커넥션을 받아 fork할 때만 관여하고, 그 뒤로는 backend가 클라이언트와 직접 메시지를 주고받습니다. 이미 붙어 있는 742개는 postmaster를 전혀 건드리지 않습니다."
+        },
+        {
+          "text": "idle 커넥션은 트랜잭션을 열어둔 상태이므로 xmin horizon을 붙잡아 VACUUM을 막습니다.",
+          "why": "트랜잭션을 열어둔 것은 idle in transaction 6개이고, 그냥 idle은 트랜잭션 밖이라 xmin을 들고 있지 않습니다. 게다가 회수가 밀리면 bloat로 나타나지 모든 쿼리의 즉각적인 지연 상승으로 먼저 나타나지 않습니다."
+        }
+      ],
+      "explanation": "커넥션 수가 성능에 미치는 영향은 동시 실행량과 별개입니다. Postgres는 커넥션마다 프로세스를 두고, 살아있는 모든 프로세스의 상태를 proc array라는 공유 배열에 모아둡니다. 트랜잭션이 시작될 때 뜨는 스냅샷은 이 배열 전체를 훑어 진행 중인 xid 명단을 만드는 작업이라, 배열이 길어지면 아무 일도 하지 않는 커넥션이 모든 쿼리의 앞단에 비용을 붙입니다. 여기에 커넥션당 private 메모리까지 더해지면, 커넥션 수를 늘려도 처리량이 더는 늘지 않고 오히려 꺾이는 구간이 생깁니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#postgres는-왜-프로세스-덩어리로-돌아갈까"
+    },
+    {
+      "id": "architecture-overview-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영"],
+      "chain": { "id": "pg-connection-cost", "order": 2 },
+      "question": "앞의 서버 앞단에 pooler를 두어 backend를 60개로 줄였습니다. 커넥션을 재사용하게 되면서 쿼리 한 번이 건너뛰는 구간은 어디까지입니까?",
+      "choices": [
+        {
+          "text": "planner까지입니다. 같은 커넥션에서 같은 SQL을 다시 던지면 앞서 고른 plan이 재사용됩니다.",
+          "why": "plan이 재사용되려면 prepared statement로 준비해두어야 하고 그마저도 세션에 묶입니다. pooler를 트랜잭션 단위로 돌리면 다음 쿼리가 다른 backend로 갈 수 있어 세션에 캐시해둔 plan을 기대할 수 없습니다."
+        },
+        {
+          "text": "executor의 storage 접근까지입니다. 그 backend가 앞서 읽어둔 페이지는 다음 쿼리에서 hit이 됩니다.",
+          "why": "페이지 재사용은 커넥션 유지가 아니라 shared_buffers가 만들어내는 효과라 커넥션을 새로 열어도 그대로 얻습니다. 방금 다른 backend가 올려둔 페이지도 똑같이 hit으로 잡힙니다."
+        },
+        {
+          "text": "TCP 연결과 postmaster의 fork, 인증, 세션 초기화까지입니다. parser부터는 쿼리마다 다시 탑니다.",
+          "correct": true,
+          "why": "이미 맺어진 커넥션에서는 postmaster를 다시 거치지 않고 같은 backend가 다음 쿼리를 곧장 받습니다. 절약되는 것은 연결 하나를 세우는 데 드는 고정 비용이지 쿼리를 처리하는 비용이 아닙니다."
+        },
+        {
+          "text": "아무것도 건너뛰지 않습니다. pooler는 동시에 도는 backend 수를 제한할 뿐입니다.",
+          "why": "동시 실행을 제한하는 것도 pooler의 핵심 효과가 맞지만, 연결을 재사용한다는 사실 자체가 fork와 인증 비용을 매 요청에서 걷어냅니다. 짧은 요청을 많이 처리하는 서비스에서는 이쪽이 먼저 체감됩니다."
+        }
+      ],
+      "explanation": "pooler의 이득은 두 갈래이고 성격이 다릅니다. 하나는 연결 재사용입니다. fork와 인증, 세션 초기화는 커넥션 하나당 한 번만 내면 되는 비용이라, 요청마다 연결을 열고 닫는 애플리케이션에서 곧바로 사라집니다. 다른 하나는 동시 backend 수 제한입니다. proc array 스캔과 private 메모리, 락 경합처럼 살아있는 프로세스 수에 비례하는 비용을 눌러줍니다. 반면 parser부터 executor까지는 어느 쪽으로도 줄어들지 않습니다. 쿼리 자체가 느린 문제를 pooler로 풀려고 하면 여기서 막힙니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#쿼리-한-줄이-지나가는-경로"
+    },
+    {
+      "id": "architecture-overview-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["오개념"],
+      "question": "checkpoint마다 디스크 쓰기가 몰리는 것을 보고 background writer를 더 공격적으로 돌리기로 했습니다. 이 설정으로 실제로 얻게 되는 효과는 무엇입니까?",
+      "choices": [
+        {
+          "text": "checkpoint가 flush할 dirty page가 줄어 checkpoint 구간의 쓰기 스파이크가 사라집니다.",
+          "why": "미리 쓴 만큼 checkpoint가 할 일이 줄기는 하지만 부수 효과입니다. 같은 페이지가 checkpoint 전에 또 더러워지면 두 번 쓰게 되어 총 write는 오히려 늘 수 있습니다. 스파이크 자체를 다루는 손잡이는 checkpoint_completion_target 쪽입니다."
+        },
+        {
+          "text": "쿼리를 처리하던 backend가 빈 버퍼를 못 찾아 직접 디스크에 쓰는 상황이 줄어듭니다.",
+          "correct": true,
+          "why": "background writer의 본래 목적은 clean buffer를 미리 확보해두는 것입니다. 버퍼 풀이 전부 dirty면 새 페이지를 올리려는 backend가 쫓아낼 페이지를 자기 쿼리 도중에 직접 write해야 하고, 그 지연이 사용자 응답 시간에 그대로 실립니다."
+        },
+        {
+          "text": "WAL이 디스크로 flush되는 주기가 짧아져 커밋 지연이 줄어듭니다.",
+          "why": "WAL flush는 walwriter와 커밋하는 backend가 맡고, background writer는 데이터 파일 쪽 dirty buffer만 다룹니다. 둘 다 더러워진 것을 내려보내지만 대상이 완전히 다릅니다."
+        },
+        {
+          "text": "dirty buffer를 내리는 일 전체를 넘겨받아 checkpointer가 할 일이 없어집니다.",
+          "why": "checkpointer는 단순히 페이지를 쓰는 프로세스가 아니라, 어느 시점까지의 변경이 디스크에 반영되었는지를 WAL에 checkpoint 레코드로 못 박는 역할을 합니다. 복구를 어디서부터 시작할지 정하는 일이라 대체할 수 없습니다."
+        }
+      ],
+      "explanation": "background writer를 checkpoint 부담을 나눠 지는 프로세스로 설명하는 경우가 있는데, 공식 문서가 말하는 주 목적은 clean buffer 확보입니다. 노리는 것은 사용자 쿼리를 처리하던 backend가 버퍼를 비우느라 디스크 쓰기를 기다리는 일을 없애는 것이고, checkpoint가 쓸 페이지가 줄어드는 것은 그 결과로 따라오는 부수 효과에 가깝습니다. 이 구분이 중요한 이유는 진단 방향이 달라지기 때문입니다. checkpoint 구간에서만 지연이 튄다면 checkpoint 쪽 파라미터를 봐야 하고, 특정 구간과 무관하게 쓰기가 많은 쿼리의 응답이 들쭉날쭉하다면 clean buffer가 모자란 것을 의심해야 합니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#postmaster와-background-프로세스들"
+    },
+    {
+      "id": "architecture-overview-05",
+      "type": "single",
+      "difficulty": 3,
+      "source": "extended",
+      "tags": ["튜닝", "면접"],
+      "scenario": {
+        "kind": "text",
+        "body": "물리 메모리 128GB의 전용 DB 서버입니다. 데이터는 약 300GB로 메모리에 다 올라가지 않고, 워크로드는 읽기가 대부분입니다. shared_buffers를 32GB(25%)에서 76GB(60%)로 올리고 재시작했더니 캐시를 더 준 쪽인데도 p99가 눈에 띄게 나빠졌습니다."
+      },
+      "question": "이 결과를 가장 잘 설명하는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "shared_buffers가 커지면 그 안을 뒤지는 탐색 비용이 버퍼 개수에 비례해 늘어납니다.",
+          "why": "버퍼 조회는 buffer tag를 키로 하는 해시 테이블로 이루어져 버퍼 개수에 선형으로 끌려가지 않습니다. 크기 자체가 조회를 느리게 만드는 구조가 아닙니다."
+        },
+        {
+          "text": "shared_buffers를 늘린 만큼 각 backend의 work_mem이 줄어 정렬이 디스크로 넘어갑니다.",
+          "why": "work_mem은 shared_buffers와 독립된 파라미터라 서로의 값을 깎지 않습니다. 둘을 합쳐 물리 메모리를 넘기는 일은 생길 수 있지만 그건 설정한 사람이 만드는 상황이지 자동으로 조정되는 관계가 아닙니다."
+        },
+        {
+          "text": "checkpoint가 훑어야 할 버퍼가 늘어 체크포인트마다 서버가 멈춥니다.",
+          "why": "버퍼가 늘면 checkpoint가 스캔할 대상이 늘어나는 것은 맞지만, 그 영향은 checkpoint 구간에 몰린 쓰기 부하로 나타납니다. 읽기가 대부분인 워크로드에서 p99 전반이 나빠진 것을 설명하기 어렵습니다."
+        },
+        {
+          "text": "OS 페이지 캐시가 얇아져, shared_buffers에서 밀린 페이지를 다시 읽을 때 곧장 디스크까지 내려갑니다.",
+          "correct": true,
+          "why": "Postgres는 자기 버퍼에서 못 찾으면 OS에 read()를 겁니다. 이전에는 그 요청의 상당수를 OS 페이지 캐시가 받아줬는데, 76GB를 Postgres가 가져가면 남는 캐시가 얇아져 같은 read가 실제 디스크 I/O가 됩니다. 데이터가 메모리보다 크면 이 두 번째 캐시의 적중률이 꼬리 지연을 좌우합니다."
+        }
+      ],
+      "explanation": "Postgres는 자기 버퍼 풀과 OS 페이지 캐시라는 두 겹의 캐시 위에서 동작합니다. shared_buffers를 키우면 첫 겹은 두꺼워지지만 두 번째 겹은 그만큼 얇아집니다. 데이터가 메모리에 다 들어가는 규모라면 첫 겹만으로 끝나므로 키울수록 이득이지만, 데이터가 메모리보다 크면 어느 쪽에서도 못 찾는 요청이 남고 그 요청은 디스크까지 갑니다. 두 겹에 같은 페이지가 중복으로 올라가는 낭비까지 겹치면 전체 적중률은 오히려 떨어질 수 있습니다. 공식 문서가 40%를 넘겨 잡는 것이 더 작게 잡는 것보다 나을 가능성은 낮다고 못 박은 배경이 이것입니다. 값을 정하기 전에 데이터 크기와 메모리 크기의 관계를 먼저 봐야 합니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#shared-memory-프로세스들이-만나는-광장"
+    },
+    {
+      "id": "architecture-overview-06",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단", "오개념"],
+      "scenario": {
+        "kind": "plan",
+        "body": "Aggregate  (cost=19222.51..19222.52 rows=1 width=8) (actual time=31.204..31.206 rows=1 loops=1)\n  Buffers: shared hit=210 read=8136\n  ->  Seq Scan on demo  (cost=0.00..19197.51 rows=9995 width=0) (actual time=0.086..30.112 rows=9999)\n        Filter: (id < 10000)\n        Buffers: shared hit=210 read=8136\n\n-- 이 쿼리가 도는 동안 pg_stat_activity의 wait_event를 반복 표집했지만\n-- IO / DataFileRead 대기는 거의 관측되지 않았습니다."
+      },
+      "question": "8,136개 페이지를 read했는데 디스크 대기는 잡히지 않았습니다. 두 관측은 서로 모순입니까?",
+      "choices": [
+        {
+          "text": "모순이 아닙니다. read는 OS에 요청했다는 뜻이고, OS 페이지 캐시가 답을 주면 디스크까지 가지 않습니다.",
+          "correct": true,
+          "why": "Postgres가 긋는 경계는 shared_buffers 바깥입니다. 그 바깥에 OS 페이지 캐시가 한 겹 더 있어서, read로 집계된 요청이 실제로 디스크에 닿았는지는 Postgres 통계만으로는 알 수 없습니다. 8,136개 페이지가 약 65MB이고 31ms에 끝났다는 점도 메모리에서 왔다는 쪽을 가리킵니다."
+        },
+        {
+          "text": "모순입니다. read는 디스크에서 읽어온 블록 수이므로 그만큼의 I/O 대기가 반드시 잡혀야 합니다.",
+          "why": "이 해석이 가장 흔한 오독입니다. Postgres는 디스크에 닿았는지가 아니라 자기 버퍼에서 찾았는지를 셉니다. read를 디스크 I/O로 곧장 번역하면 캐시가 잘 도는 서버를 I/O 병목으로 오진하게 됩니다."
+        },
+        {
+          "text": "모순이 아닙니다. BUFFERS가 보여주는 값은 실제 접근이 아니라 planner가 추정한 페이지 수입니다.",
+          "why": "hit과 read는 실행 중에 실제로 센 값이라 ANALYZE 없이는 나오지도 않습니다. 추정치는 같은 줄의 cost와 rows 쪽이고, 그래서 estimated와 actual을 나란히 놓고 비교할 수 있는 것입니다."
+        },
+        {
+          "text": "모순입니다. read가 이만큼 잡혔다면 버퍼가 부족했다는 뜻이므로 버퍼 확보 대기가 관측되어야 합니다.",
+          "why": "버퍼가 모자라 dirty page를 쫓아내야 했다면 쓰기 대기로 나타났겠지만, read 자체는 버퍼가 넉넉해도 발생합니다. 처음 읽는 페이지는 정의상 버퍼에 없기 때문입니다."
+        }
+      ],
+      "explanation": "hit과 read는 executor가 storage 경계를 넘은 횟수이지 디스크에 닿은 횟수가 아닙니다. 경계는 shared_buffers 바깥에 그어져 있고 그 너머에 OS 페이지 캐시가 한 겹 더 있습니다. 그래서 read가 크게 잡혀도 지연은 작을 수 있고, 반대로 서버를 막 재시작해 두 캐시가 모두 비어 있으면 같은 read 수치에 훨씬 큰 지연이 붙습니다. 같은 쿼리가 어떤 날은 빠르고 어떤 날은 느린 현상 대부분이 이 두 겹의 상태 차이입니다. read 수치만 보고 shared_buffers를 키우는 진단으로 넘어가기 전에, 그 read가 실제로 기다림을 만들고 있는지를 대기 이벤트나 track_io_timing으로 확인해야 합니다.",
+      "postSlug": "/postgres/architecture-overview/",
+      "anchor": "#실험-3-shared_buffers-hit-vs-read"
+    }
+  ]
+}

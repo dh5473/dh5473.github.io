@@ -1,0 +1,208 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "operations-tuning-01",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["튜닝"],
+      "scenario": {
+        "kind": "text",
+        "body": "동시 활성 쿼리가 대략 40개이고, 각 쿼리의 실행 계획에는 평균적으로 해시 연산 두 개와 정렬 하나가 들어 있습니다. 서버 메모리는 32GB, shared_buffers는 8GB이며 hash_mem_multiplier는 기본값입니다. 여기서 work_mem을 4MB에서 64MB로 올리자는 제안이 나왔습니다."
+      },
+      "question": "이 제안이 최악의 경우 요구하는 backend 메모리는 대략 얼마입니까?",
+      "choices": [
+        {
+          "text": "약 12.8GB입니다. 해시 연산에는 배수 2.0이 붙어 쿼리 하나가 320MB를 쓸 수 있습니다.",
+          "correct": true,
+          "why": "해시 노드 둘이 각각 128MB, 정렬 하나가 64MB라 쿼리 하나가 320MB입니다. 여기에 동시 40개를 곱하면 12.8GB이고, shared_buffers 8GB와 합치면 20GB를 넘습니다. OS page cache에 남을 몫까지 생각하면 32GB 서버에서 감당하기 어려운 설정입니다."
+        },
+        {
+          "text": "약 2.6GB입니다. work_mem은 커넥션당 한 번만 할당됩니다.",
+          "why": "work_mem은 커넥션이 아니라 정렬이나 해시 연산 하나당 붙습니다. 한 계획에 그런 노드가 셋이면 셋이 각자 할당받을 수 있습니다."
+        },
+        {
+          "text": "약 7.7GB입니다. 연산 세 개에 각각 64MB씩이라 쿼리당 192MB입니다.",
+          "why": "곱셈 구조는 맞게 봤지만 해시 연산에 붙는 배수를 빠뜨렸습니다. PG 15부터 hash_mem_multiplier 기본값이 2.0이라 해시 노드는 work_mem의 두 배까지 쓸 수 있고, 정렬에는 이 배수가 적용되지 않습니다."
+        },
+        {
+          "text": "상한이 없습니다. work_mem은 목표치라 필요한 만큼 늘어납니다.",
+          "why": "work_mem은 그 값을 넘으면 디스크의 임시 파일로 내려가게 만드는 경계선입니다. 넘어서 계속 메모리를 잡는 것이 아니라 넘는 순간 처리 방식이 바뀝니다."
+        }
+      ],
+      "explanation": "work_mem은 두 번 곱해집니다. 한 번은 계획 안의 연산 개수만큼, 또 한 번은 동시에 도는 쿼리 수만큼입니다. 여기에 해시 노드는 hash_mem_multiplier까지 곱해집니다. 그래서 전역 값을 올리는 판단은 한 자리 숫자를 바꾸는 일이 아니라 세 개의 곱을 바꾸는 일입니다. 실무에서 쓰는 방식은 전역은 4MB에서 16MB 사이로 묶어두고, 대량 정렬이 필요한 배치 세션에서만 SET으로 크게 올리는 것입니다. 어느 쿼리가 그 대상인지는 EXPLAIN ANALYZE에서 Batches가 1보다 크거나 정렬이 external merge로 나오는지를 보고 고르면 됩니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#work_mem"
+    },
+    {
+      "id": "operations-tuning-02",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "effective_cache_size를 4GB에서 24GB로 올렸습니다. 이 변경이 서버에 미치는 영향은 무엇입니까?",
+      "choices": [
+        {
+          "text": "shared_buffers와 별개로 24GB의 캐시 공간이 추가로 확보됩니다.",
+          "why": "이 파라미터는 메모리를 요청하지 않습니다. 실제 캐시는 shared_buffers와 OS page cache 둘뿐이고, 이 값은 그 둘의 크기를 짐작해 적어주는 숫자입니다."
+        },
+        {
+          "text": "메모리는 한 바이트도 더 잡히지 않고, 플래너가 인덱스 경로를 더 싸게 평가하게 됩니다.",
+          "correct": true,
+          "why": "할당이 아니라 플래너에게 주는 정보입니다. OS page cache까지 합쳐 이 정도가 메모리에 있을 것이라고 알려주면, 반복 접근이 캐시에서 해결될 것이라 보고 index scan의 cost가 내려갑니다. 값이 너무 작으면 디스크를 자주 만질 것이라 판단해 순차 스캔 쪽으로 기울어집니다."
+        },
+        {
+          "text": "OS page cache의 크기가 그만큼으로 조정됩니다.",
+          "why": "OS page cache는 커널이 남는 메모리로 알아서 관리합니다. PostgreSQL이 그 크기를 지정할 수단은 없습니다."
+        },
+        {
+          "text": "설정을 반영하려면 서버를 재시작해야 합니다.",
+          "why": "세션에서 SET으로도 바꿀 수 있는 파라미터입니다. 실제 자원을 잡지 않으므로 재시작이 필요할 이유가 없습니다."
+        }
+      ],
+      "explanation": "메모리 파라미터를 정리할 때 세 부류로 나눠 두면 헷갈리지 않습니다. shared_buffers처럼 서버당 한 번 잡히는 것, work_mem처럼 커넥션과 연산 수만큼 곱해지는 것, 그리고 effective_cache_size처럼 아무것도 잡지 않는 것입니다. 마지막 부류는 값이 틀려도 메모리 사고를 내지 않지만 계획 선택을 조용히 왜곡합니다. 기본값 4GB는 요즘 서버 기준으로 대체로 너무 작아서, 그대로 두면 인덱스가 있어도 순차 스캔이 선택되는 쪽으로 기울 수 있습니다. 전용 서버라면 물리 메모리의 50%에서 75% 사이를 적어주는 것이 출발점입니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#effective_cache_size"
+    },
+    {
+      "id": "operations-tuning-03",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["함정", "운영"],
+      "scenario": {
+        "kind": "text",
+        "body": "dead tuple이 계속 쌓여 autovacuum_max_workers를 3에서 8로 올렸습니다. 그런데 테이블 하나가 정리되는 데 걸리는 시간이 오히려 늘었고, 전체 dead tuple도 줄지 않았습니다. 나머지 설정은 기본값 그대로입니다."
+      },
+      "question": "왜 이런 결과가 나왔습니까?",
+      "choices": [
+        {
+          "text": "worker 8개가 같은 테이블을 동시에 잡으려다 락 경합이 생겼습니다.",
+          "why": "autovacuum worker는 테이블 하나를 하나만 맡습니다. 같은 테이블에 여러 worker가 함께 붙는 구조가 아닙니다."
+        },
+        {
+          "text": "autovacuum_max_workers는 재시작해야 적용되므로 아직 3개로 돌고 있습니다.",
+          "why": "PG 18부터는 reload만으로 적용됩니다. 그리고 적용이 안 됐다면 결과가 이전과 같아야지 더 나빠질 이유가 없습니다."
+        },
+        {
+          "text": "worker가 늘면서 maintenance_work_mem을 나눠 쓰게 되어 한 번에 처리할 양이 줄었습니다.",
+          "why": "이 메모리는 worker마다 따로 잡히지 나눠 쓰지 않습니다. 오히려 worker를 늘리면 메모리 총량이 함께 늘어나서, 그것을 제한하려고 autovacuum_work_mem을 따로 두는 것입니다."
+        },
+        {
+          "text": "cost 한도가 실행 중인 worker들에게 나눠 배분되므로, worker를 늘리면 한 명이 쓸 몫이 줄어듭니다.",
+          "correct": true,
+          "why": "전역 cost_limit 200을 8명이 나눠 쓰면 한 명은 25입니다. 3명일 때의 약 67에서 크게 줄어든 값이라 각 worker가 더 자주 멈춰 섭니다. 총 I/O 예산은 그대로인데 나누는 사람만 늘린 셈이라 전체 처리량도 거의 그대로입니다. worker를 늘릴 때는 cost_limit도 비례해 올려야 합니다."
+        }
+      ],
+      "explanation": "autovacuum이 느린 이유는 대개 일꾼 수가 아니라 예산입니다. 각 worker는 페이지를 처리하며 cost를 누적하고 한도에 닿으면 잠시 쉽니다. 기본 설정에서는 dirty page 열 장마다 2밀리초를 쉬는 셈이라, 이 한도가 곧 초당 처리량의 천장이 됩니다. 그리고 그 천장은 서버 전체가 나눠 쓰는 값입니다. 그래서 worker를 늘리는 조정은 단독으로는 효과가 없고 cost_limit과 짝으로 움직여야 합니다. 반대로 특정 테이블만 급하다면 그 테이블에 autovacuum_vacuum_cost_limit을 따로 걸어 전역 배분에서 떼어내는 방법도 있습니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#autovacuum_max_workers"
+    },
+    {
+      "id": "operations-tuning-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정"],
+      "scenario": {
+        "kind": "code",
+        "lang": "python",
+        "body": "# PgBouncer는 transaction 모드로 돌고 있습니다.\nconn = pool.getconn()\nwith conn.cursor() as cur:\n    cur.execute(\"SET statement_timeout = '5s'\")\nconn.commit()\n\nfor job in jobs:          # 각 반복이 별도 트랜잭션입니다\n    run(conn, job)        # 어떤 반복은 5초를 훨씬 넘겨도 멈추지 않습니다"
+      },
+      "question": "statement_timeout이 어떤 때는 듣고 어떤 때는 듣지 않습니다. 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "트랜잭션이 끝날 때마다 커넥션이 풀로 반환되어, 다음 트랜잭션은 그 SET을 모르는 커넥션으로 갈 수 있습니다.",
+          "correct": true,
+          "why": "transaction 모드는 트랜잭션 경계에서 서버 커넥션을 회수합니다. SET으로 바꾼 세션 상태는 그 커넥션에 남아 있으므로, 다음 트랜잭션이 다른 커넥션에 배정되면 기본값으로 돌아갑니다. 매 트랜잭션 안에서 SET LOCAL로 걸거나 서버 쪽 기본값으로 설정해야 일관되게 적용됩니다."
+        },
+        {
+          "text": "statement_timeout은 트랜잭션 전체가 아니라 문장 하나에만 적용되므로 긴 트랜잭션에서는 무력합니다.",
+          "why": "문장 단위로 적용되는 것은 맞지만 그것으로는 어떤 때는 듣고 어떤 때는 안 듣는 현상이 설명되지 않습니다. 지문의 증상은 일관성이 없다는 쪽입니다."
+        },
+        {
+          "text": "PgBouncer가 SET 명령을 가로채 서버로 보내지 않습니다.",
+          "why": "SET은 그대로 서버로 전달되어 그 커넥션에 적용됩니다. 문제는 전달 여부가 아니라 그 커넥션이 다음에도 나에게 온다는 보장이 없다는 점입니다."
+        },
+        {
+          "text": "session 모드가 아니면 SET이 아예 에러를 냅니다.",
+          "why": "에러가 나지는 않습니다. 조용히 적용되었다가 조용히 사라지기 때문에 오히려 발견하기 어렵습니다."
+        }
+      ],
+      "explanation": "transaction 모드가 pooling 효과가 가장 크지만 그 대가로 세션이라는 개념이 흐려집니다. 트랜잭션 사이에 커넥션이 바뀔 수 있으므로 세션에 걸어둔 상태는 언제 사라져도 이상하지 않습니다. SET으로 바꾼 파라미터, LISTEN으로 걸어둔 알림 구독, 세션 임시 테이블, 이름 붙인 prepared statement가 모두 여기에 해당합니다. 대응은 두 갈래입니다. 트랜잭션 안에서만 유효하면 되는 설정은 SET LOCAL로 걸고, 정말 세션이 유지되어야 하는 기능이 있으면 그 경로만 session 모드로 분리하거나 pooler를 거치지 않는 별도 연결을 씁니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#pgbouncer-connection-pooling이-거의-필수인-이유"
+    },
+    {
+      "id": "operations-tuning-05",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 서버 로그\n-- WARNING:  database \"mydb\" must be vacuumed within 9842113 transactions\n\nSELECT c.oid::regclass AS tbl, age(c.relfrozenxid) AS xid_age\nFROM pg_class c WHERE c.relkind = 'r' ORDER BY 2 DESC LIMIT 2;\n--    tbl   |  xid_age\n-- ---------+------------\n--  events  | 2137245183\n--  orders  |   84120044\n\n-- 열려 있는 트랜잭션은 하나도 없습니다\nSELECT count(*) FROM pg_stat_activity WHERE backend_xmin IS NOT NULL;  -- 0\n\nSELECT slot_name, slot_type, active, xmin FROM pg_replication_slots;\n--  slot_name  | slot_type | active |   xmin\n-- ------------+-----------+--------+-----------\n--  dr_standby | physical  | f      | 741029113"
+      },
+      "question": "autovacuum은 계속 실행되고 있는데 events의 xid 나이가 21억을 넘겼습니다. 무엇이 freeze를 막고 있습니까?",
+      "choices": [
+        {
+          "text": "autovacuum_freeze_max_age가 2억이라 21억까지는 아무 조치도 하지 않습니다.",
+          "why": "그 나이를 넘으면 테이블 크기와 무관하게 강제로 VACUUM이 돌기 시작합니다. 21억까지 갔다는 것은 강제 실행이 걸렸는데도 진전이 없었다는 뜻입니다."
+        },
+        {
+          "text": "cost throttling 때문에 속도가 느린 것뿐이므로 기다리면 해결됩니다.",
+          "why": "16억을 넘기면 failsafe가 발동해 throttling과 인덱스 정리를 건너뛰고 freeze에만 집중합니다. 그 상태로도 진전이 없다면 원인은 속도가 아니라 회수 기준선 쪽에 있습니다."
+        },
+        {
+          "text": "비활성 복제 슬롯이 xmin을 붙잡고 있어 회수와 freeze의 기준선이 그 지점에 멈춰 있습니다.",
+          "correct": true,
+          "why": "슬롯의 xmin은 이 지점보다 최근의 행 버전은 아직 필요할 수 있다고 선언하는 값입니다. VACUUM은 그 기준선보다 오래된 것만 정리하고 얼릴 수 있으므로, 기준선이 멈춰 있으면 아무리 자주 돌아도 relfrozenxid가 전진하지 않습니다. 열린 트랜잭션이 없음을 확인했으니 남은 후보는 슬롯과 prepared transaction이었고, 슬롯이 xmin을 들고 있는 것이 그대로 보입니다."
+        },
+        {
+          "text": "events 테이블이 너무 커서 maintenance_work_mem이 부족한 것입니다.",
+          "why": "메모리가 부족하면 한 번에 처리할 양이 줄어 여러 번 나눠 돌 뿐 진전은 있습니다. 나이가 21억까지 밀렸다는 것은 한 걸음도 못 나갔다는 뜻이라 다른 원인을 찾아야 합니다."
+        }
+      ],
+      "explanation": "wraparound 경고를 만나면 순서는 정해져 있습니다. 먼저 회수 기준선을 누가 붙잡고 있는지 찾습니다. 후보는 열린 트랜잭션, 복제 슬롯, 그리고 커밋되지 않은 채 남은 prepared transaction 셋뿐입니다. pg_stat_activity와 pg_replication_slots, pg_prepared_xacts를 차례로 보면 금방 갈립니다. 붙잡은 것을 풀어야 그다음 조치가 의미를 가집니다. 기준선이 멈춰 있는 동안에는 VACUUM FREEZE를 아무리 돌려도 relfrozenxid가 움직이지 않기 때문입니다. 풀고 나서 밀린 구간을 따라잡고, 재발을 막으려면 슬롯 활성 여부를 상시 감시 대상에 넣어야 합니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#시나리오-2-wraparound-경고"
+    },
+    {
+      "id": "operations-tuning-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "ALTER SYSTEM SET shared_buffers = '8GB';\nALTER SYSTEM SET work_mem = '32MB';\nALTER SYSTEM SET autovacuum_vacuum_cost_limit = 600;\nSELECT pg_reload_conf();\n\nSELECT name, setting, unit, pending_restart FROM pg_settings\nWHERE name IN ('shared_buffers','work_mem','autovacuum_vacuum_cost_limit');\n--             name             | setting | unit | pending_restart\n-- ------------------------------+---------+------+-----------------\n--  autovacuum_vacuum_cost_limit | 600     |      | f\n--  shared_buffers               | 16384   | 8kB  | t\n--  work_mem                     | 32768   | kB   | f"
+      },
+      "question": "세 값을 함께 바꿨습니다. 지금 실제로 적용된 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "셋 다 적용됐습니다. pg_reload_conf()가 모든 변경을 반영합니다.",
+          "why": "reload가 반영할 수 있는 것은 재시작이 필요 없는 파라미터뿐입니다. 그래서 어떤 값이 아직 반영되지 않았는지 알려주는 pending_restart 컬럼이 따로 있습니다."
+        },
+        {
+          "text": "work_mem과 cost_limit만 적용됐습니다. shared_buffers는 pending_restart가 t입니다.",
+          "correct": true,
+          "why": "setting 컬럼은 지금 동작 중인 값입니다. shared_buffers의 16384에 단위 8kB를 곱하면 128MB로 여전히 기본값이고, pending_restart가 t라는 것은 새 값이 파일에는 적혔지만 아직 반영되지 않았다는 표시입니다. 이 파라미터는 서버가 시작할 때 공유 메모리를 통째로 잡으므로 재시작해야 바뀝니다."
+        },
+        {
+          "text": "셋 다 적용되지 않았습니다. ALTER SYSTEM은 다음 재시작에만 반영됩니다.",
+          "why": "ALTER SYSTEM은 설정 파일에 값을 적는 명령이고, 그 뒤 reload를 하면 재시작이 필요 없는 항목은 곧바로 적용됩니다. cost_limit이 600으로 보이는 것이 그 증거입니다."
+        },
+        {
+          "text": "cost_limit만 적용됐습니다. work_mem은 세션마다 SET으로 다시 걸어야 합니다.",
+          "why": "세션에서 SET으로 덮어쓸 수 있다는 것과 전역 기본값이 바뀌지 않는다는 것은 다릅니다. reload 이후 새로 들어오는 세션은 32MB를 기본값으로 받습니다."
+        }
+      ],
+      "explanation": "파라미터를 바꾼 뒤에는 값이 적혔는지가 아니라 적용됐는지를 확인해야 합니다. pg_settings의 setting은 지금 동작 중인 값이고 pending_restart는 아직 반영되지 않았음을 알려줍니다. 이 확인을 건너뛰면 shared_buffers를 올렸다고 믿은 채 몇 주를 지나는 일이 생깁니다. 그리고 튜닝에는 규칙이 하나 더 붙습니다. 한 번에 하나만 바꾸고 전후를 재는 것입니다. 이 예처럼 셋을 한꺼번에 바꾸면 나중에 성능이 달라졌을 때 무엇 덕분인지 알 수 없습니다. 변경 전에 pg_stat_statements를 리셋해두면 같은 워크로드의 전후를 비교할 기준이 생깁니다.",
+      "postSlug": "/postgres/operations-tuning/",
+      "anchor": "#파라미터-변경의-실전-규칙"
+    }
+  ]
+}

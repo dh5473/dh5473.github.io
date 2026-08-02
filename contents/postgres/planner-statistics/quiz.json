@@ -1,0 +1,204 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "planner-statistics-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "status(고유값 3개)와 amount(값이 거의 다 다름)에 ANALYZE가 남기는 통계는 어떻게 갈립니까?",
+      "choices": [
+        {
+          "text": "두 컬럼 모두 MCV와 histogram이 함께 만들어지고, 플래너가 조건에 따라 둘 중 하나를 골라 씁니다.",
+          "why": "histogram은 MCV에 뽑힌 값을 빼고 계산합니다. MCV가 컬럼 전체를 덮어버리면 남는 값이 없어 histogram은 아예 만들어지지 않습니다. 둘은 선택지가 아니라 서로의 빈자리를 메우는 관계입니다."
+        },
+        {
+          "text": "status는 MCV가 세 값을 다 담아 histogram이 비고, amount는 반대로 histogram이 분포를 맡습니다.",
+          "correct": true,
+          "why": "MCV는 특정 값이 자주 나올 때 위력을 발휘하므로 카디널리티가 낮은 범주형이 주 무대입니다. 반대로 값이 거의 다 다른 컬럼은 어느 값도 자주 나오지 않아 MCV가 비고, 경계선 101개가 만든 버킷 100개가 분포를 대신합니다."
+        },
+        {
+          "text": "status는 고유값이 적어 n_distinct만 저장되고, MCV는 고유값이 많은 컬럼에만 만들어집니다.",
+          "why": "방향이 반대입니다. 고유값이 적을수록 각 값의 빈도가 높아 MCV에 담을 가치가 커지고, 고유값이 거의 다 다르면 MCV에 걸릴 값 자체가 없습니다."
+        },
+        {
+          "text": "amount는 숫자 타입이라 최솟값과 최댓값만 저장하고 그 사이는 균등분포로 가정합니다.",
+          "why": "그렇게 하면 값이 한쪽에 몰린 분포에서 추정이 크게 어긋납니다. histogram은 버킷마다 담긴 행 수를 같게 맞추므로, 값이 몰린 구간일수록 경계선이 촘촘해져 분포의 모양을 따라갑니다."
+        }
+      ],
+      "explanation": "플래너가 selectivity를 구하는 경로는 두 갈래이고 컬럼의 성격에 따라 어느 쪽이 일하는지가 갈립니다. 등치 조건의 값이 MCV에 있으면 저장된 빈도를 그대로 씁니다. MCV 밖이면 MCV가 덮지 못한 나머지 비율을 MCV에 없는 고유값 개수로 나눠 추정합니다. 범위 조건은 histogram 경계선 배열에서 그 값이 어디쯤인지를 보간해 비율을 계산합니다. 그래서 범주형 컬럼의 등치 조건은 MCV가, 연속형 컬럼의 범위 조건은 histogram이 받쳐줍니다. 어느 쪽도 없는 경우가 문제가 되는데, 표현식으로 감싼 컬럼이 대표적입니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#pg_statistic-cost의-원료"
+    },
+    {
+      "id": "planner-statistics-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- orders 10만 행. status는 completed 85%, pending 13%, refunded 2%.\n-- status에 인덱스가 걸려 있습니다.\n\nEXPLAIN SELECT * FROM orders WHERE status = 'completed';\n--  Seq Scan on orders  (cost=0.00..1972.00 rows=85023 width=23)\n--    Filter: (status = 'completed'::text)\n\nEXPLAIN SELECT * FROM orders WHERE status = 'refunded';\n--  Bitmap Heap Scan on orders  (cost=23.64..770.39 rows=1980 width=23)\n--    Recheck Cond: (status = 'refunded'::text)\n--    ->  Bitmap Index Scan on orders_status_idx  (cost=0.00..23.15 rows=1980 width=0)"
+      },
+      "question": "같은 컬럼에 같은 인덱스인데 조건 값에 따라 계획이 갈립니다. 이 선택을 지배하는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "completed는 MCV에 있고 refunded는 MCV 밖이라, MCV에 없는 값만 인덱스로 처리됩니다.",
+          "why": "세 값 모두 MCV에 들어 있습니다. MCV 안팎은 빈도를 어떤 방식으로 구하느냐를 가를 뿐이고, 계획을 가르는 것은 그렇게 구해낸 행 수입니다."
+        },
+        {
+          "text": "Bitmap Index Scan은 결과가 적을 때만 쓸 수 있는 노드라 completed에는 적용할 수 없습니다.",
+          "why": "Bitmap 스캔은 오히려 결과가 많고 힙 여기저기 흩어져 있을 때 쓰라고 만든 노드입니다. 행이 많아도 실행 자체는 되고, 다만 그 경우 cost가 Seq Scan을 넘어서 선택되지 않을 뿐입니다."
+        },
+        {
+          "text": "MCV에 기록된 그 값의 빈도입니다. 읽을 행이 테이블의 큰 비중이면 인덱스에서 힙으로 오가는 왕복이 순차 읽기보다 비싸집니다.",
+          "correct": true,
+          "why": "85,023과 1,980이라는 추정치가 그대로 cost 계산에 들어갑니다. 전체의 85%를 뽑는다면 어차피 거의 모든 페이지를 만지게 되므로 인덱스를 거치는 만큼이 순수한 추가 비용입니다. 2%라면 대부분의 페이지를 건드리지 않아도 되어 인덱스가 압도합니다. 13%인 pending도 이 계산에서는 여전히 인덱스 쪽이 이깁니다."
+        },
+        {
+          "text": "통계가 낡아 completed 쪽 추정만 틀어졌습니다.",
+          "why": "추정 85,023은 85%라는 실제 분포와 맞아떨어집니다. 통계가 낡았다면 두 조건 모두에서 추정이 어긋났을 것입니다."
+        }
+      ],
+      "explanation": "인덱스가 있으면 항상 인덱스를 타는 것이 아니라, 읽어야 할 행의 비중이 어느 선을 넘으면 순차 읽기가 이깁니다. 그 선을 계산하는 재료가 통계입니다. 그래서 같은 SQL의 파라미터만 바꿔도 계획이 뒤집힐 수 있고, 이는 버그가 아니라 설계된 동작입니다. 실무에서 이 성질이 문제가 되는 지점은 prepared statement입니다. 파라미터 값이 정해지지 않은 채 만들어진 일반 계획은 특정 값의 빈도를 반영하지 못하므로, 값의 분포가 심하게 치우친 컬럼에서는 어느 쪽 값에도 최적이 아닌 계획이 굳어질 수 있습니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#pg_statistic-cost의-원료"
+    },
+    {
+      "id": "planner-statistics-03",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "chain": { "id": "correlated-columns", "order": 1 },
+      "scenario": {
+        "kind": "plan",
+        "body": "-- addresses 8만 행. pg_stats에는 country의 'KR'이 0.3765,\n-- city의 'Seoul'이 0.1266으로 잡혀 있습니다.\n\nSeq Scan on addresses  (cost=0.00..1700.00 rows=3813 width=17)\n                       (actual time=0.003..3.240 rows=10000.00 loops=1)\n  Filter: ((country = 'KR'::text) AND (city = 'Seoul'::text))\n  Rows Removed by Filter: 70000\n  Buffers: shared hit=500"
+      },
+      "question": "추정 3,813에 실제 10,000입니다. 플래너가 3,813이라는 숫자를 만들어낸 경로는 무엇입니까?",
+      "choices": [
+        {
+          "text": "두 조건의 선택도를 서로 독립이라 보고 곱했습니다. 0.3765 × 0.1266에 8만 행을 곱한 값입니다.",
+          "correct": true,
+          "why": "0.3765 × 0.1266 = 0.04767이고 여기에 80,000을 곱하면 3,813입니다. 실제로는 Seoul이 KR에만 존재해서 두 번째 조건이 첫 번째 조건을 하나도 더 걸러내지 못하고, city = 'Seoul'인 10,000행이 그대로 남습니다."
+        },
+        {
+          "text": "MCV 슬롯 100개를 넘는 값이 있어 나머지 값들을 균등하게 나눠 잡았습니다.",
+          "why": "country는 세 값, city는 여덟 값이라 둘 다 MCV에 여유 있게 들어갑니다. 슬롯이 모자라 생기는 오차가 아닙니다."
+        },
+        {
+          "text": "표본이 8만 행 중 3만 행뿐이라 그 비율만큼 추정이 줄었습니다.",
+          "why": "표본에서 구하는 것은 비율이고, 추정 행 수는 그 비율에 전체 행 수를 곱해 만듭니다. 표본 크기가 결과 행 수를 직접 깎지 않습니다."
+        },
+        {
+          "text": "city 조건에 쓸 통계가 없어 등치 조건의 기본 선택도 0.5%가 적용됐습니다.",
+          "why": "0.5%를 8만 행에 곱하면 400행이라 3,813과 맞지 않습니다. 그 기본값은 통계가 아예 없을 때 쓰이는 값이고, 여기서는 두 컬럼 모두 MCV가 있습니다."
+        }
+      ],
+      "explanation": "플래너는 여러 조건이 붙으면 각각의 선택도를 구해 곱합니다. 이 곱셈은 두 조건이 서로 무관하다는 가정 위에 서 있고, 그 가정이 깨지는 순간 추정이 어긋납니다. 도시와 나라, 우편번호와 시도, 제품 코드와 카테고리처럼 한쪽이 다른 쪽을 결정하는 관계가 실무에 흔합니다. 이런 컬럼 쌍에서는 조건을 하나 더 붙여도 실제로는 걸러지는 행이 거의 없는데, 플래너는 매번 곱하므로 조건을 붙일수록 추정이 실제보다 작아집니다. 어긋나는 방향이 항상 과소 추정이라는 점이 특히 위험합니다. 작게 잡힌 행 수가 위쪽 노드의 알고리즘 선택을 좌우하기 때문입니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#2-상관된-두-컬럼"
+    },
+    {
+      "id": "planner-statistics-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["판단"],
+      "chain": { "id": "correlated-columns", "order": 2 },
+      "question": "이 오차를 CREATE STATISTICS로 고치기로 했습니다. 이 조치가 노드 하나를 넘어 중요한 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "확장 통계를 만들면 두 컬럼에 대한 복합 인덱스가 함께 생성되어 스캔 자체가 빨라집니다.",
+          "why": "CREATE STATISTICS는 통계만 만들고 인덱스를 만들지 않습니다. 계획을 고르는 근거를 고칠 뿐 데이터를 읽는 경로를 직접 바꾸지 않습니다."
+        },
+        {
+          "text": "Seq Scan의 cost가 1,700에서 내려가 다른 계획이 선택됩니다.",
+          "why": "Seq Scan의 cost는 페이지 수와 행 수로 정해지므로 추정이 고쳐져도 1,700 그대로입니다. 실제로 통계를 붙인 뒤에도 이 쿼리는 여전히 Seq Scan입니다. 달라지는 것은 이 노드를 재료로 쓰는 위쪽의 결정입니다."
+        },
+        {
+          "text": "Rows Removed by Filter가 줄어 필터를 평가하는 비용이 절약됩니다.",
+          "why": "추정이 바뀌어도 실제로 읽고 버리는 행 수는 그대로입니다. 통계는 무엇을 어떻게 읽을지 정하는 데 쓰이지 이미 정해진 스캔의 실행량을 바꾸지 않습니다."
+        },
+        {
+          "text": "행 수 추정이 위쪽 노드의 입력이 되어, 그 숫자로 고른 Nested Loop가 2.6배 반복됩니다.",
+          "correct": true,
+          "why": "이 노드가 조인의 바깥이면 플래너는 안쪽을 3,813번 돌리는 비용으로 Nested Loop를 저울질합니다. 실제로 10,000행이 들어오면 안쪽 조회가 2.6배 돌아가고, 조인이 두세 단 겹치면 이 배수가 곱해집니다. 단일 노드에서 3,813 대 10,000은 대수롭지 않아 보이지만 위로 올라갈수록 벌어집니다."
+        }
+      ],
+      "explanation": "추정 오차를 판단할 때 그 노드에서 시간이 얼마나 더 걸리는지가 아니라 그 숫자가 위쪽에서 무엇을 결정하는지를 봐야 합니다. dependencies 통계는 city 값을 알면 country가 정해진다는 함수 종속을 표본에서 찾아내, 두 조건의 선택도를 곱하지 않도록 막아줍니다. 강하게 연관된 컬럼 쌍에서는 거의 항상 효과가 있습니다. 다만 확장 통계도 만들어두면 자동으로 갱신되는 것이 아니라 ANALYZE가 다시 지나가야 채워지고, 컬럼 조합마다 따로 만들어야 하므로 조합이 많으면 관리 대상이 늘어납니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#2-상관된-두-컬럼"
+    },
+    {
+      "id": "planner-statistics-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정"],
+      "scenario": {
+        "kind": "plan",
+        "body": "-- users는 1만 행이고 email에는 UNIQUE 제약이 걸려 있습니다.\n\nSeq Scan on users  (cost=0.00..224.00 rows=50 width=28)\n  Filter: (lower(email) = 'admin@example.com'::text)"
+      },
+      "question": "email이 UNIQUE라 많아야 한 행일 텐데 추정이 50행입니다. 이 숫자는 어디서 나왔습니까?",
+      "choices": [
+        {
+          "text": "MCV 슬롯 100개에 이 값이 없어 나머지 값들로 균등하게 나눈 결과입니다.",
+          "why": "그 계산은 컬럼 통계가 있을 때 쓰는 경로입니다. 여기서는 표현식에 대한 통계가 아예 없어 그 계산까지 가지도 못합니다."
+        },
+        {
+          "text": "lower(email)의 분포가 통계에 없어 등치 조건의 기본 선택도 0.5%가 적용됐습니다.",
+          "correct": true,
+          "why": "pg_statistic에는 email 원본 컬럼의 분포만 있습니다. 플래너는 lower를 거친 값이 어떤 분포인지 알 방법이 없어 타입별 기본 상수로 후퇴하고, 1만 행의 0.5%인 50이 나옵니다. lower(email)에 표현식 인덱스를 만들면 ANALYZE가 그 표현식 값의 통계를 따로 수집하면서 추정이 1로 내려갑니다."
+        },
+        {
+          "text": "UNIQUE가 email에만 걸려 있고 lower(email)에는 없어, 플래너가 중복 가능성을 50배로 잡았습니다.",
+          "why": "유일성을 모른다는 지적은 맞지만 그 결과로 배수를 곱하는 것은 아닙니다. 분포 정보가 아예 없어 통계를 쓰지 않는 기본값으로 후퇴한 것이고, 50은 그 기본값에서 바로 나온 숫자입니다."
+        },
+        {
+          "text": "표본으로 뽑은 3만 행 안에서 이 값이 50번 나왔습니다.",
+          "why": "users는 1만 행이라 표본이 3만 행일 수 없습니다. 애초에 표본에서 실제로 센 값이었다면 그만큼 정확했을 것입니다. 추정 50은 데이터를 본 적 없는 상수에서 나왔습니다."
+        }
+      ],
+      "explanation": "통계는 컬럼 단위로 수집되므로 컬럼을 함수로 감싸는 순간 참조할 것이 사라집니다. 그러면 플래너는 연산자마다 정해둔 기본 선택도로 후퇴하고, 등치 조건의 기본값은 0.5%입니다. 이 값은 데이터를 전혀 반영하지 않으므로 어떤 방향으로든 크게 틀릴 수 있습니다. 해법은 그 표현식 자체에 인덱스를 만드는 것입니다. 표현식 인덱스가 있으면 ANALYZE가 그 표현식을 평가한 값으로 별도의 통계를 수집합니다. 인덱스를 실제로 타지 않더라도 통계만으로 추정이 제자리를 찾는 경우가 있고, 같은 이유로 통계를 얻으려고 표현식 인덱스를 만드는 것이 정당한 선택이 되기도 합니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#4-표현식에-감싼-컬럼"
+    },
+    {
+      "id": "planner-statistics-06",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "plan",
+        "body": "-- 같은 서버, 같은 데이터, 같은 계획입니다.\n-- 낮에 손으로 돌리면 1.2초, 새벽 배치 안에서는 24초가 걸립니다.\n\n-- 낮\nSeq Scan on orders  (cost=0.00..246860.00 rows=49948 width=23)\n                    (actual time=0.021..1180.334 rows=49948.00 loops=1)\n  Filter: (amount > '500'::numeric)\n  Buffers: shared hit=90360\n\n-- 새벽 배치\nSeq Scan on orders  (cost=0.00..246860.00 rows=49948 width=23)\n                    (actual time=0.314..23904.701 rows=49948.00 loops=1)\n  Filter: (amount > '500'::numeric)\n  Buffers: shared hit=412 read=89948"
+      },
+      "question": "계획도 cost도 추정 행 수도 같은데 실행 시간만 20배 차이가 납니다. 어디에서 갈렸습니까?",
+      "choices": [
+        {
+          "text": "새벽에 통계가 갱신되면서 같은 계획이라도 다른 경로를 타게 됐습니다.",
+          "why": "계획이 글자 그대로 같고 cost와 추정 행 수까지 동일합니다. 통계가 바뀌었다면 그중 하나는 달라졌을 것입니다."
+        },
+        {
+          "text": "새벽 배치는 트랜잭션 안에서 돌아 MVCC 가시성 판정 비용이 추가로 붙습니다.",
+          "why": "가시성 판정은 두 경우 모두 튜플마다 일어납니다. 트랜잭션을 명시적으로 열었는지 여부가 그 비용을 바꾸지 않습니다."
+        },
+        {
+          "text": "버퍼 적중입니다. 낮에는 90,360페이지가 전부 메모리에 있었고 새벽에는 그중 89,948페이지를 다시 읽어와야 했습니다.",
+          "correct": true,
+          "why": "cost 모델은 페이지가 메모리에 있는지 없는지를 아예 다루지 않습니다. 읽어야 할 페이지 수가 같으면 캐시 상태와 무관하게 같은 cost가 나옵니다. 그래서 계획이 같은데 시간만 다른 상황은 대부분 hit과 read의 비율에서 갈립니다. 새벽 배치가 앞서 다른 대량 스캔을 돌려 shared_buffers를 밀어낸 것이 흔한 원인입니다."
+        },
+        {
+          "text": "cost가 246,860으로 이미 높으니 24초 쪽이 정상이고 낮의 1.2초가 예외적으로 빨랐던 것입니다.",
+          "why": "cost는 seq_page_cost를 1로 놓은 상대값이라 밀리초로 번역되지 않습니다. 숫자의 크기만 보고 어느 쪽이 정상인지 말할 수 없고, 애초에 다른 쿼리의 cost와 견주는 것도 의미가 없습니다."
+        }
+      ],
+      "explanation": "cost가 낮은데 실제로 느리다면 계획을 더 들여다보기 전에 Buffers의 read 값을 먼저 봐야 합니다. cost 모델이 캐시 상태를 모른다는 사실이 이 진단의 근거입니다. 플래너는 페이지를 몇 장 읽어야 하는지까지만 계산하고, 그 페이지가 메모리에 있는지 디스크에서 와야 하는지는 계산에 넣지 않습니다. 그래서 같은 계획이 캐시가 더운 상태와 찬 상태에서 전혀 다른 시간을 보입니다. 이 경우 손댈 곳은 계획이 아니라 shared_buffers 크기, 배치 순서, 또는 대량 스캔이 캐시를 밀어내지 않도록 작업을 분리하는 쪽입니다.",
+      "postSlug": "/postgres/planner-statistics/",
+      "anchor": "#실전에서는"
+    }
+  ]
+}

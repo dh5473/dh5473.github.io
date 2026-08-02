@@ -1,0 +1,209 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "gin-gist-brin-hash-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["구조"],
+      "question": "tags jsonb 컬럼에 B-tree 인덱스를 만들어도 tags @> '[\"urgent\"]' 조건이 인덱스를 타지 못하는 구조적 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "jsonb는 가변 길이 타입이라 B-tree 키로 넣을 수 없습니다.",
+          "why": "jsonb에도 정렬 순서가 정의되어 있어 B-tree 인덱스를 만들 수 있고, tags = '[\"urgent\",\"p1\"]' 같은 완전 일치 조회는 실제로 그 인덱스를 탑니다. 길이가 아니라 질문의 모양이 걸림돌입니다."
+        },
+        {
+          "text": "B-tree는 행 하나를 키 하나로 저장하므로 값 안에 든 원소를 따로 찾을 자리가 없습니다.",
+          "correct": true,
+          "why": "리프에는 tags 값 전체가 통째로 한 자리를 차지하고 정렬 순서도 그 전체 값 기준입니다. 그래서 'urgent'를 담은 행들이 인덱스에서 붙어 있지 않고 사방에 흩어집니다. GIN은 같은 행을 원소마다 하나씩 키로 쪼개 넣어 이 문제를 풉니다."
+        },
+        {
+          "text": "@> 연산자가 B-tree opclass에 등록되어 있지 않을 뿐, 등록만 하면 됩니다.",
+          "why": "등록할 수 없는 이유가 곧 구조입니다. B-tree opclass가 요구하는 것은 두 값의 크고 작음을 정하는 비교 함수인데, 포함 관계는 그런 순서로 환원되지 않습니다."
+        },
+        {
+          "text": "jsonb 값이 TOAST로 떨어져 나가 인덱스에서 원본을 읽을 수 없습니다.",
+          "why": "인덱스는 TOAST 이전의 값을 받아 저장하므로 TOAST 여부는 인덱싱 가능성과 무관합니다. 다만 키가 페이지의 3분의 1을 넘으면 B-tree가 거부하는 별개의 제약은 있습니다."
+        }
+      ],
+      "explanation": "B-tree의 전제는 한 행이 하나의 키로 결정된다는 것입니다. 이 전제가 깨지는 질문이 두 종류 있습니다. 하나는 한 행이 여러 조각으로 쪼개져야 하는 경우입니다. 문서 안의 단어, 배열의 원소, JSON의 경로가 전부 여기에 해당하고 GIN이 담당합니다. 다른 하나는 값끼리 크고 작음으로 줄을 세울 수 없는 경우입니다. 도형이 겹치는지, 시간 범위가 겹치는지 같은 질문이고 GiST가 담당합니다. 어떤 인덱스를 고를지는 데이터 타입이 아니라 던지는 질문의 모양에서 결정됩니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#b-tree가-손대지-못하는-영역"
+    },
+    {
+      "id": "gin-gist-brin-hash-02",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 문서 테이블 docs의 body(tsvector)에 GIN 인덱스가 걸려 있습니다.\n-- 평소 전문 검색은 20ms 안쪽인데 하루에 몇 번씩 400ms를 넘깁니다.\n-- 지연이 튀는 시각에 CPU도 디스크도 한가합니다.\n\nSELECT n_pending_pages, n_pending_tuples\nFROM gin_metapage_info(get_raw_page('docs_body_gin', 0));\n--  n_pending_pages | n_pending_tuples\n-- -----------------+------------------\n--              512 |            38104"
+      },
+      "question": "검색 지연이 간헐적으로 튀는 원인은 무엇입니까?",
+      "choices": [
+        {
+          "text": "아직 병합되지 않은 pending list를 검색이 선형으로 함께 훑고 있습니다.",
+          "correct": true,
+          "why": "fastupdate가 켜져 있으면 새 엔트리는 정렬되지 않은 pending list에 먼저 쌓입니다. 검색은 답을 놓치지 않으려고 엔트리 트리와 pending list를 모두 봐야 하는데, pending list는 정렬돼 있지 않아 처음부터 끝까지 읽습니다. 리스트가 부풀어 있는 구간에서만 지연이 튀는 이유입니다."
+        },
+        {
+          "text": "인덱스가 bloat되어 엔트리 트리의 깊이가 깊어졌습니다.",
+          "why": "트리가 깊어져도 한두 단계 늘어나는 정도라 20배 차이를 만들지 못합니다. 게다가 깊이는 상시 조건이라 지연이 늘 높게 유지되지 특정 시점에만 튀지 않습니다."
+        },
+        {
+          "text": "autovacuum이 그 시각에 같은 테이블을 잠그고 있습니다.",
+          "why": "VACUUM은 검색을 막는 락을 잡지 않습니다. 오히려 VACUUM이 지나가면서 pending list가 메인 구조로 병합되므로, 이 상황에서는 지연을 없애는 편에 섭니다."
+        },
+        {
+          "text": "GIN은 정렬을 지원하지 않아 결과를 매번 다시 정렬해야 합니다.",
+          "why": "정렬이 필요한 쿼리라면 그 비용은 매 실행에 똑같이 붙습니다. 어떤 때는 20ms이고 어떤 때는 400ms라는 관측을 설명하지 못합니다."
+        }
+      ],
+      "explanation": "GIN은 쓰기가 비쌉니다. 문서 하나를 넣을 때 그 안의 단어 수백 개 각각의 posting list를 건드려야 하기 때문입니다. fastupdate는 이 비용을 뒤로 미루는 장치라, 새 엔트리를 정렬되지 않은 pending list에 모아두었다가 나중에 한꺼번에 병합합니다. 병합은 VACUUM이나 autoanalyze가 지나갈 때, gin_clean_pending_list()를 직접 부를 때, 리스트가 gin_pending_list_limit(기본 4MB)을 넘을 때 일어납니다. 그래서 쓰기가 몰리는 구간에 리스트가 부풀고 검색이 그만큼 느려집니다. 쓰기 폭주가 상시라면 해당 테이블의 autovacuum 주기를 줄이거나, 검색 지연의 일관성이 더 중요하면 fastupdate를 끄고 쓰기 쪽에서 비용을 내는 선택이 있습니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#쓰기가-비싸다는-약점과-fastupdate"
+    },
+    {
+      "id": "gin-gist-brin-hash-03",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["선택"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "CREATE INDEX users_name_trgm ON users USING gin (name gin_trgm_ops);\n\n-- (A) 인덱스를 탑니다\nSELECT * FROM users WHERE name LIKE '%kim%';\n\n-- (B) 200만 행을 전부 읽고 정렬합니다\nSELECT name FROM users ORDER BY name <-> 'kim' LIMIT 10;"
+      },
+      "question": "같은 컬럼, 같은 확장인데 (B)만 인덱스를 못 씁니다. (B)를 인덱스로 풀려면 무엇이 필요합니까?",
+      "choices": [
+        {
+          "text": "gin_trgm_ops 인덱스를 REINDEX해서 정렬 가능한 상태로 되돌립니다.",
+          "why": "REINDEX는 같은 구조를 다시 만들 뿐입니다. GIN은 어떤 상태에서도 거리순 스캔을 제공하지 않으므로 재구축으로는 달라지지 않습니다."
+        },
+        {
+          "text": "name에 B-tree 인덱스를 추가해 정렬을 그쪽으로 넘깁니다.",
+          "why": "B-tree가 아는 순서는 사전순이지 'kim'과의 거리순이 아닙니다. ORDER BY 식이 인덱스의 정렬 기준과 다르면 그 인덱스는 정렬에 쓰이지 않습니다."
+        },
+        {
+          "text": "pg_trgm.similarity_threshold를 낮춰 후보 행을 줄입니다.",
+          "why": "그 설정은 % 연산자가 유사하다고 판정하는 기준선이라 <-> 정렬에는 관여하지 않습니다. 후보를 줄인다 해도 정렬 자체를 인덱스가 대신해주지는 않습니다."
+        },
+        {
+          "text": "같은 컬럼에 gist_trgm_ops로 GiST 인덱스를 하나 더 만듭니다.",
+          "correct": true,
+          "why": "거리순 상위 N개는 트리를 거리 기준으로 가지치기하며 내려갈 수 있어야 풀립니다. GiST는 내부 노드가 자식들의 trigram 집합을 감싸는 요약을 들고 있어 그 가지치기가 가능하지만, GIN은 키에 달린 ctid 묶음을 모아 비트맵을 만드는 구조라 순서를 만들어내지 못합니다."
+        }
+      ],
+      "explanation": "pg_trgm은 GIN과 GiST 양쪽에 opclass를 제공해서 둘 중 무엇을 골라야 하는지가 헷갈리는 대표 지점입니다. 기준은 질문이 들어있냐 없냐인지, 얼마나 가까운지인지입니다. LIKE '%kim%'은 포함 여부만 묻고 결과에 순서가 필요 없으므로 역색인에서 ctid를 긁어모아 비트맵을 만드는 GIN이 빠릅니다. ORDER BY name <-> 'kim' LIMIT 10은 거리라는 순서를 요구하므로, 요약을 들고 있는 노드부터 거리를 재며 가지를 쳐낼 수 있는 GiST가 필요합니다. 두 쿼리를 다 써야 한다면 인덱스를 두 개 두게 되고, 그때는 쓰기 비용이 두 배로 드는 것을 감수할 만한지가 판단 기준이 됩니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#gin-vs-gist-언제-뭘-고르나"
+    },
+    {
+      "id": "gin-gist-brin-hash-04",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단", "함정"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 주문 테이블 3억 행. created_at 기준 최근 구간을 자주 조회합니다.\n-- B-tree 인덱스가 6GB를 넘어 BRIN으로 교체했더니 쿼리가 오히려 느려졌습니다.\n\nSELECT attname, correlation FROM pg_stats\nWHERE tablename = 'orders' AND attname IN ('created_at', 'updated_at');\n--   attname   | correlation\n-- ------------+-------------\n--  created_at |        0.31\n--  updated_at |        0.04"
+      },
+      "question": "BRIN이 제 몫을 못 하는 이유로 맞는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "pages_per_range를 128에서 1024로 키우면 요약이 촘촘해져 해결됩니다.",
+          "why": "방향이 반대입니다. 값을 키우면 한 묶음이 더 넓어져 요약은 더 뭉뚱그려지고 정밀도는 나빠집니다. 게다가 겹침의 원인이 물리 순서라 어느 쪽으로 조정해도 근본은 그대로입니다."
+        },
+        {
+          "text": "BRIN 인덱스를 만든 뒤 ANALYZE를 하지 않아 요약이 비어 있습니다.",
+          "why": "BRIN 요약은 인덱스를 만들 때 채워지고, 이후 새로 추가된 블록 범위는 brin_summarize_new_values()나 autosummarize 옵션이 채웁니다. ANALYZE가 만드는 것은 플래너용 통계이지 인덱스 내용이 아닙니다."
+        },
+        {
+          "text": "블록 범위마다 min과 max 구간이 서로 크게 겹쳐 건너뛸 묶음이 남지 않습니다.",
+          "correct": true,
+          "why": "correlation 0.31은 같은 시간대의 행이 파일 전체에 흩어져 있다는 뜻입니다. 그러면 어느 묶음의 요약도 조회 범위와 겹쳐서 결국 전부 읽게 되고, 정밀도가 낮은 만큼 B-tree보다 나쁜 결과가 나옵니다. 시간 기준 파티셔닝이나 CLUSTER로 물리 순서를 맞추면 살아나고, 그럴 수 없으면 B-tree로 돌아가는 것이 맞습니다."
+        },
+        {
+          "text": "updated_at의 correlation이 0.04로 낮아 created_at BRIN까지 함께 무력해졌습니다.",
+          "why": "BRIN 요약은 인덱싱한 컬럼 하나만 봅니다. 다른 컬럼의 분포는 이 인덱스가 묶음을 배제하는 능력에 영향을 주지 않습니다."
+        }
+      ],
+      "explanation": "BRIN은 인덱스가 작아지는 대신 정밀도를 포기하는 거래입니다. 그 거래가 성립하려면 디스크 저장 순서와 값의 순서가 거의 일치해야 합니다. 일치하면 각 묶음의 min과 max 구간이 서로 겹치지 않아 조건에 걸린 몇 개만 읽고 나머지를 통째로 버릴 수 있습니다. 어긋나면 모든 묶음의 구간이 전체 범위를 덮어버려 어느 것도 배제하지 못하고, 결국 순차 스캔에 요약 읽기 비용만 얹은 꼴이 됩니다. 판단 지표가 pg_stats.correlation이고 절댓값 0.9 이상이 실질 하한선입니다. append-only 로그는 이 조건을 자연스럽게 만족하지만, 갱신이 잦은 OLTP 테이블은 시간이 지나며 이 값이 떨어지므로 주기적으로 다시 봐야 합니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#치명적-함정-값이-섞여-있으면-무용지물"
+    },
+    {
+      "id": "gin-gist-brin-hash-05",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "CREATE INDEX events_tags_gin ON events USING gin (tags jsonb_path_ops);\n\n-- 이 조건은 인덱스를 탑니다\nEXPLAIN SELECT * FROM events WHERE tags @> '[\"urgent\"]';\n--  Bitmap Heap Scan on events\n--    Recheck Cond: (tags @> '[\"urgent\"]'::jsonb)\n--    ->  Bitmap Index Scan on events_tags_gin\n\n-- 이 조건만 Seq Scan입니다\nEXPLAIN SELECT * FROM events WHERE tags ? 'urgent';\n--  Seq Scan on events\n--    Filter: (tags ? 'urgent'::text)"
+      },
+      "question": "같은 인덱스인데 두 번째 조건만 후보에 오르지 못합니다. 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "tags가 객체가 아니라 배열이라 ? 연산자를 쓸 수 없습니다.",
+          "why": "? 연산자는 객체의 키뿐 아니라 배열의 문자열 원소도 확인합니다. 조건 자체는 유효하고 Filter로 정상 평가되어 결과도 나옵니다. 인덱스만 못 쓰고 있는 상황입니다."
+        },
+        {
+          "text": "결과 행이 많아 플래너가 인덱스보다 Seq Scan이 싸다고 판단했습니다.",
+          "why": "그런 판단이 내려질 때는 Bitmap Heap Scan과 Seq Scan의 cost를 견주게 되고, 인덱스가 후보로 등장한 흔적이 계획에 남습니다. 여기서는 아예 후보에 오르지 못했습니다."
+        },
+        {
+          "text": "? 가 드라이버의 파라미터 자리표시자와 충돌해 조건이 상수로 바뀌었습니다.",
+          "why": "드라이버 수준의 이스케이프 문제는 실제로 존재하지만, 그 경우 쿼리가 에러를 내거나 다른 조건으로 실행됩니다. 여기서는 Filter에 원래 조건이 그대로 남아 있습니다."
+        },
+        {
+          "text": "jsonb_path_ops가 키 존재 연산자를 지원하지 않기 때문입니다.",
+          "correct": true,
+          "why": "jsonb_path_ops는 경로와 값을 함께 해싱해 담기 때문에 키 이름만 따로 찾아낼 수 없습니다. 지원하는 연산자는 @>, @?, @@ 셋뿐입니다. ? 계열까지 쓰려면 기본 jsonb_ops로 만들어야 하고, 대신 인덱스가 커지고 흔한 키가 섞인 조건에서 후보를 넓게 잡습니다."
+        }
+      ],
+      "explanation": "인덱스가 있는데도 계획에 등장조차 하지 않는다면 cost 비교 이전에 자격 문제입니다. 어떤 연산자를 인덱스로 처리할 수 있는지는 opclass가 정합니다. jsonb에는 두 가지가 있습니다. 기본 jsonb_ops는 키와 값을 모두 별도 엔트리로 넣어 포함 관계와 키 유무를 다 지원하고, jsonb_path_ops는 경로와 값을 묶어 해싱해서 포함 관계 계열만 지원하는 대신 인덱스가 작습니다. 어느 쪽을 고를지는 앞으로 던질 조건에 ? 계열이 들어가는지로 갈립니다. 이미 만들어둔 뒤에 조건이 늘어나면 이 문제가 나타나므로, Seq Scan이 나왔을 때 opclass부터 확인하는 습관이 진단 시간을 줄여줍니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#gin-걸었는데-왜-느리지의-단골-원인"
+    },
+    {
+      "id": "gin-gist-brin-hash-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "extended",
+      "tags": ["선택", "면접"],
+      "scenario": {
+        "kind": "text",
+        "body": "세션 저장 테이블입니다. 컬럼은 token text(평균 180바이트), payload jsonb, expires_at timestamptz이고, token은 애플리케이션이 난수로 만들며 DB 제약은 걸려 있지 않습니다. 조회는 token 완전 일치 하나뿐이고 만료 정리는 expires_at 기준 배치로 따로 돕니다. 행 수는 300만 선에서 크게 늘지 않습니다."
+      },
+      "question": "token 인덱스를 B-tree에서 Hash로 바꾸는 판단에 대한 설명으로 맞는 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "부적절합니다. Hash는 crash 이후 복구되지 않아 운영에 쓸 수 없습니다.",
+          "why": "PG 10에서 WAL 로깅이 들어가면서 crash-safe해졌고 복제 대상에도 정상적으로 전달됩니다. 그 이전 시절의 인상이 오래 남아 있을 뿐 지금은 사실이 아닙니다."
+        },
+        {
+          "text": "적절합니다. 키가 크고 equality만 쓰므로 해시값만 담는 Hash가 인덱스를 크게 줄입니다.",
+          "correct": true,
+          "why": "B-tree는 180바이트 키를 리프에 그대로 담지만 Hash는 4바이트 해시값만 담습니다. 300만 행이면 이 차이만으로 수백 MB가 갈립니다. 행 수가 안정적이라 버킷 확장이 잦지 않다는 점, 정렬이나 범위 조회가 없다는 점도 이 선택에 유리합니다. 다만 Hash로는 UNIQUE 제약을 걸 수 없으므로 유일성은 애플리케이션이 계속 책임져야 합니다."
+        },
+        {
+          "text": "부적절합니다. text 타입에는 Hash 인덱스를 만들 수 없습니다.",
+          "why": "text에도 hash opclass가 있어 인덱스를 만들 수 있습니다. Hash가 못 하는 것은 타입이 아니라 연산입니다. 부등호 비교, 정렬, prefix 조회가 전부 안 됩니다."
+        },
+        {
+          "text": "적절합니다. Hash는 조회가 상수 시간이라 힙을 다시 읽을 필요도 없습니다.",
+          "why": "Hash 인덱스는 실제 컬럼 값을 저장하지 않고 해시값만 담아서, 충돌 가능성 때문에 힙에서 조건을 반드시 다시 확인합니다. 스캔이 항상 lossy라는 것이 이 인덱스의 성질입니다."
+        }
+      ],
+      "explanation": "Hash가 B-tree를 이기는 구간은 좁고 분명합니다. 키가 커서 저장 비용 차이가 크고, 조회가 equality 하나뿐이고, 유일성 제약이 필요 없고, 행 수가 급격히 늘지 않는 경우입니다. 네 조건 중 하나만 어긋나도 B-tree가 낫습니다. 키가 작으면 아끼는 공간이 얼마 안 되고, 범위나 정렬이 하나라도 있으면 인덱스를 하나 더 만들어야 하며, UNIQUE가 필요하면 Hash로는 애초에 불가능하고, 행 수가 빠르게 늘면 버킷을 늘리는 작업이 사용자 INSERT와 같은 흐름에서 일어나 쓰기 지연을 키웁니다. 한번 커진 Hash 인덱스는 REINDEX 말고는 줄일 방법이 없다는 점도 함께 봐야 합니다.",
+      "postSlug": "/postgres/gin-gist-brin-hash/",
+      "anchor": "#hash-다시-쓸-만해진-인덱스"
+    }
+  ]
+}

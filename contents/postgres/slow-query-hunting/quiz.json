@@ -1,0 +1,209 @@
+{
+  "v": 1,
+  "questions": [
+    {
+      "id": "slow-query-hunting-01",
+      "type": "single",
+      "difficulty": 1,
+      "source": "post",
+      "tags": ["판단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "SELECT substr(query, 1, 44) AS q, calls,\n       round(total_exec_time::numeric) AS total_ms,\n       round(mean_exec_time::numeric, 2) AS mean_ms\nFROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 3;\n--                      q                       | calls  | total_ms | mean_ms\n-- ---------------------------------------------+--------+----------+----------\n--  UPDATE user_sessions SET last_active_at = $1 | 941200 |   282360 |     0.30\n--  SELECT * FROM reports WHERE period = $1      |     14 |   201600 | 14400.00\n--  SELECT u.*, p.* FROM users u JOIN posts p    |  62800 |    97340 |     1.55"
+      },
+      "question": "서버 전체의 여유를 만드는 것이 목표일 때, 어느 줄부터 손대야 합니까?",
+      "choices": [
+        {
+          "text": "총 시간이 가장 큰 쪽부터 봅니다. 한 번이 0.3ms여도 94만 번이면 비중이 가장 큽니다.",
+          "correct": true,
+          "why": "회수할 수 있는 시간의 총량이 기준입니다. 0.3ms를 절반으로 줄이면 141초가 돌아오고, 호출 자체를 줄이면 그만큼 더 돌아옵니다. 평균이 낮다는 이유로 목록에서 지나치기 쉬운 것이 바로 이런 쿼리입니다."
+        },
+        {
+          "text": "평균이 가장 큰 쪽부터 봅니다. 14.4초짜리 쿼리가 명백한 문제입니다.",
+          "why": "한 번이 오래 걸린다는 것과 서버 시간을 많이 쓴다는 것은 다릅니다. 14번만 도는 배치라면 고쳐도 전체 부하는 거의 그대로입니다. 다만 그 14번이 사용자 요청이라면 체감 측면에서 우선순위가 달라지므로 호출 맥락을 함께 봐야 합니다."
+        },
+        {
+          "text": "호출 수가 가장 많은 쪽부터 봅니다. 94만 번은 그 자체로 비정상입니다.",
+          "why": "호출이 많다는 사실만으로는 판단할 수 없습니다. 세션 갱신처럼 원래 자주 일어나는 작업일 수 있습니다. 호출 수는 총 시간과 함께 볼 때 의미가 생깁니다."
+        },
+        {
+          "text": "쿼리 텍스트가 가장 복잡한 쪽부터 봅니다. 조인이 들어간 세 번째 줄입니다.",
+          "why": "복잡도와 비용은 비례하지 않습니다. 인덱스가 잘 걸린 조인은 단순한 전체 스캔보다 훨씬 쌉니다. 눈으로 보이는 복잡함이 아니라 측정된 숫자로 골라야 합니다."
+        }
+      ],
+      "explanation": "pg_stat_statements를 처음 열었을 때 total_exec_time으로 정렬하는 이유는 이 목록의 목적이 어디에 시간이 쌓여 있는지를 보는 것이기 때문입니다. 평균만 보면 자주 도는 작은 쿼리가 통째로 안 보이고, 호출 수만 보면 원래 자주 도는 정상 작업이 상위를 채웁니다. 총 시간으로 후보를 좁힌 다음 같은 줄의 calls와 mean을 함께 읽으면 어느 쪽을 손볼지가 갈립니다. mean이 크면 쿼리 하나를 고치고, calls가 크면 호출 패턴을 고칩니다. 앞의 것은 실행 계획의 문제이고 뒤의 것은 애플리케이션의 문제라 손대는 곳이 다릅니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#상위-쿼리-뽑기"
+    },
+    {
+      "id": "slow-query-hunting-02",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정"],
+      "scenario": {
+        "kind": "text",
+        "body": "결제 로직 대부분이 PL/pgSQL 함수 안에 들어 있습니다. 애플리케이션 로그에서는 결제 API가 평균 800ms인데, pg_stat_statements 상위 목록에는 SELECT process_payment($1, $2) 한 줄만 보이고 그 함수 안의 SQL은 하나도 보이지 않습니다."
+      },
+      "question": "함수 내부의 SQL이 목록에 보이지 않는 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "PL/pgSQL 안의 SQL은 prepared statement로 실행되어 정규화 대상이 아닙니다.",
+          "why": "정규화는 파라미터를 자리표시자로 바꾸는 작업이라 prepared statement여도 그대로 적용됩니다. 여기서 걸린 것은 정규화가 아니라 추적 범위입니다."
+        },
+        {
+          "text": "pg_stat_statements.max를 넘어서 오래된 항목이 밀려났습니다.",
+          "why": "그 경우라면 일부는 남았을 것이고 함수 호출 줄도 함께 밀려날 수 있습니다. 내부 SQL이 하나도 안 보인다면 밀려난 것이 아니라 애초에 수집되지 않은 것입니다."
+        },
+        {
+          "text": "기본 설정이 최상위 문장만 추적하기 때문입니다. track을 all로 바꾸면 내부 SQL도 잡힙니다.",
+          "correct": true,
+          "why": "pg_stat_statements.track의 기본값은 top이라 클라이언트가 직접 보낸 문장만 셉니다. 함수 안에서 도는 SQL은 그 함수 호출 한 줄에 시간이 뭉쳐서 잡히고 개별 항목으로 남지 않습니다. all로 바꾸면 보이지만 항목 수가 크게 늘어나므로 max 설정과 함께 봐야 합니다."
+        },
+        {
+          "text": "함수 안의 SQL은 WAL을 남기지 않아 통계에 잡히지 않습니다.",
+          "why": "WAL 기록 여부와 실행 통계 수집은 무관합니다. 조회 쿼리는 WAL을 남기지 않지만 pg_stat_statements에는 정상적으로 잡힙니다."
+        }
+      ],
+      "explanation": "관측 도구를 쓸 때는 그 도구가 무엇을 보지 않는지를 함께 알아야 합니다. pg_stat_statements의 기본 추적 범위는 클라이언트가 보낸 최상위 문장이라, 로직이 함수나 프로시저 안에 들어 있으면 안쪽이 통째로 가려집니다. 800ms가 어디서 쓰였는지 알 수 없는 상태가 되는 것입니다. track을 all로 올리면 보이지만 항목 수와 수집 오버헤드가 함께 늘어나므로, 문제를 파악하는 동안만 올렸다가 되돌리는 방식이 무난합니다. 함수 내부까지 계획 단위로 봐야 한다면 auto_explain을 세션에 걸어 그 함수를 한 번 호출해보는 방법도 있습니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#pg_stat_statements-전체-워크로드를-한눈에"
+    },
+    {
+      "id": "slow-query-hunting-03",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 1초 간격으로 다섯 번 표집한 결과를 합친 것입니다.\n\nSELECT wait_event_type, wait_event, count(*)\nFROM pg_stat_activity WHERE state = 'active'\nGROUP BY 1, 2 ORDER BY 3 DESC;\n--  wait_event_type |  wait_event   | count\n-- -----------------+---------------+-------\n--                  |               |    61\n--  IO              | DataFileRead  |     9\n--  Lock            | transactionid |     2"
+      },
+      "question": "활성 세션 대부분이 wait_event 없이 잡힙니다. 이것은 무엇을 뜻합니까?",
+      "choices": [
+        {
+          "text": "표집이 잘못된 것입니다. 활성 세션은 항상 어떤 wait_event를 가집니다.",
+          "why": "실행 중인 세션이 아무것도 기다리지 않는 것은 정상이고 오히려 바람직한 상태입니다. 값이 비어 있다는 것 자체가 하나의 정보입니다."
+        },
+        {
+          "text": "기다리는 것 없이 CPU에서 실행 중이라는 뜻입니다. 병목이 락이나 디스크에 있지 않습니다.",
+          "correct": true,
+          "why": "이 상태가 반복 표집에서 계속 잡히면 쿼리 자체가 하는 일이 많다는 신호입니다. 다음 단계는 pg_stat_statements로 시간을 많이 쓰는 쿼리를 고르고 그 실행 계획을 보는 것이지, 락을 풀거나 디스크를 바꾸는 것이 아닙니다. IO 9건과 Lock 2건은 이 규모에서 배경 잡음에 가깝습니다."
+        },
+        {
+          "text": "그 세션들이 응답을 클라이언트로 보내는 중이라 대기로 잡히지 않습니다.",
+          "why": "클라이언트를 기다리는 상태는 ClientWrite나 ClientRead 같은 별도의 wait_event로 나타납니다. 비어 있는 것과는 다릅니다."
+        },
+        {
+          "text": "통계 수집이 꺼져 있어 wait_event가 채워지지 않았습니다.",
+          "why": "같은 표집에서 IO와 Lock 항목은 정상적으로 채워져 있습니다. 수집이 꺼졌다면 그것들도 함께 비어 있어야 합니다."
+        }
+      ],
+      "explanation": "wait_event는 한 순간의 사진이라 한 번만 찍어서는 쓸모가 적고, 짧은 간격으로 여러 번 찍어 분포를 봐야 의미가 생깁니다. 그 분포에서 무엇이 많은지가 다음 행동을 정합니다. Lock이 많으면 누가 막고 있는지를 찾고, IO가 많으면 캐시와 bloat와 checkpoint 시점을 보고, 비어 있는 것이 많으면 도구를 바꿔 쿼리 자체를 봅니다. 마지막 경우가 특히 헷갈리기 쉽습니다. 아무 대기도 없다는 관측이 곧 정상이라는 뜻은 아니고, 일하는 양 자체가 많다는 뜻일 수 있습니다. 이때는 서버 설정을 만지는 방향이 아니라 계획과 인덱스를 보는 방향으로 가야 합니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#wait_event-읽는-법"
+    },
+    {
+      "id": "slow-query-hunting-04",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["운영"],
+      "question": "느린 쿼리를 잡으려고 EXPLAIN ANALYZE를 손으로 돌려봤는데 언제 돌려도 빠릅니다. auto_explain이 이 상황에서 유효한 이유는 무엇입니까?",
+      "choices": [
+        {
+          "text": "auto_explain이 쿼리를 자동으로 재실행해 평균 계획을 만들어줍니다.",
+          "why": "재실행하지 않습니다. 실제로 실행된 그 한 번을 계측해서 기록할 뿐이고, 그래서 운영 환경에 붙일 수 있는 것입니다."
+        },
+        {
+          "text": "EXPLAIN ANALYZE보다 오버헤드가 없어 운영에서 마음껏 켤 수 있습니다.",
+          "why": "log_analyze를 켜면 노드마다 계측이 붙어 오버헤드가 생깁니다. 그래서 임계값을 1초처럼 보수적으로 잡고 시작하고, 필요하면 log_timing만 꺼서 시간 측정 비용을 덜어냅니다."
+        },
+        {
+          "text": "느린 쿼리를 자동으로 취소해 서비스 영향을 줄여줍니다.",
+          "why": "취소는 statement_timeout의 일입니다. auto_explain은 기록만 하고 실행에 개입하지 않습니다."
+        },
+        {
+          "text": "문제가 난 그 순간의 계획을 서버가 대신 기록해주기 때문입니다.",
+          "correct": true,
+          "why": "같은 SQL이라도 바인딩된 값의 빈도, 통계가 갱신된 시점, 그때의 동시성에 따라 다른 계획으로 풀립니다. 손으로 다시 돌리면 그 조건이 재현되지 않아 늘 빠릅니다. auto_explain은 지정한 시간을 넘긴 실행에 대해 그때의 계획을 로그에 남기므로, 재현하지 못한 순간을 사후에 확인할 수 있습니다."
+        }
+      ],
+      "explanation": "운영에서 느린 쿼리를 못 잡는 가장 흔한 이유는 재현이 안 된다는 것입니다. 파라미터 값에 따라 계획이 갈리고, 통계가 갱신되면 또 갈리고, 동시성이 높을 때만 대기가 붙습니다. 그래서 사람이 나중에 돌려보는 방식으로는 그 순간을 잡을 수 없습니다. auto_explain은 이 문제를 관측 시점을 옮겨서 풉니다. 서버가 실행하는 그때 계측해서 남기므로 나중에 로그만 보면 됩니다. 대가는 계측 오버헤드와 로그 볼륨이라, 임계값을 크게 잡고 시작해 병목을 하나씩 걷어내며 낮추는 순서가 안전합니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#explain만으로는-왜-부족한가"
+    },
+    {
+      "id": "slow-query-hunting-05",
+      "type": "single",
+      "difficulty": 3,
+      "source": "post",
+      "tags": ["진단"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "SELECT substr(query, 1, 40) AS q, calls,\n       round(mean_exec_time::numeric, 1) AS mean_ms,\n       shared_blks_hit, shared_blks_read\nFROM pg_stat_statements WHERE queryid = 8813029471;\n--                    q                    | calls | mean_ms | shared_blks_hit | shared_blks_read\n-- -----------------------------------------+-------+---------+-----------------+------------------\n--  SELECT * FROM orders WHERE user_id = $1 | 31400 |    47.2 |          204100 |         38620400"
+      },
+      "question": "user_id로 조회하는 쿼리가 호출마다 평균 1,200페이지 넘게 읽어오고 있습니다. 가장 먼저 확인할 것은 무엇입니까?",
+      "choices": [
+        {
+          "text": "user_id에 인덱스가 있는지, 있다면 그 인덱스를 실제로 타는지입니다.",
+          "correct": true,
+          "why": "호출당 1,200장이 넘고 그중 대부분이 shared_buffers 밖에서 온다는 것은, 소수의 행을 찾으려고 테이블을 넓게 훑고 있다는 뜻입니다. 인덱스가 없거나, 있어도 통계 문제로 선택되지 않았거나, user_id 분포가 치우쳐 특정 값에서만 넓게 읽는 경우가 후보입니다. EXPLAIN (ANALYZE, BUFFERS)로 계획과 buffers를 함께 보면 셋 중 어느 쪽인지 갈립니다."
+        },
+        {
+          "text": "shared_buffers를 늘려 read를 hit으로 바꾸는 것입니다.",
+          "why": "캐시를 키우면 같은 페이지를 다시 읽을 때는 이득이지만, 애초에 읽지 않아도 될 페이지를 읽는 문제는 그대로 남습니다. 읽는 양 자체를 줄이는 쪽을 먼저 보고, 그러고도 read가 크면 그때 캐시를 논의합니다."
+        },
+        {
+          "text": "호출 수가 31,400회이므로 애플리케이션의 N+1 패턴을 먼저 고치는 것입니다.",
+          "why": "호출 수를 줄이는 것도 유효한 방향이지만, 한 번에 1,200페이지를 읽는다는 사실은 그대로 남습니다. 단가가 비정상인 상황에서는 횟수보다 단가를 먼저 봅니다."
+        },
+        {
+          "text": "이 쿼리를 prepared statement로 바꿔 계획 수립 비용을 줄이는 것입니다.",
+          "why": "계획 수립은 보통 밀리초 미만이고 47ms의 대부분은 페이지를 읽는 데 쓰였습니다. planning이 병목이었다면 total_plan_time 쪽에 흔적이 남았을 것입니다."
+        }
+      ],
+      "explanation": "pg_stat_statements의 블록 카운터는 그 쿼리가 무엇을 하고 있는지를 간접적으로 보여줍니다. hit과 read의 절대값보다 호출당 값이 중요합니다. 조건에 맞는 행이 몇 건인데 페이지를 수천 장 읽고 있다면 접근 경로가 잘못된 것이고, 인덱스 누락이 첫 번째 후보입니다. 인덱스가 이미 있는데도 이 수치가 나온다면 그다음 후보는 두 가지입니다. 통계가 낡아 플래너가 그 인덱스를 안 고르는 경우, 그리고 테이블이 bloat되어 살아 있는 행 하나를 위해 죽은 행이 가득한 페이지들을 함께 읽는 경우입니다. 셋을 가르는 방법은 같습니다. 그 쿼리 하나를 EXPLAIN (ANALYZE, BUFFERS)로 찍어 계획과 실제 읽은 블록을 나란히 보는 것입니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#어떤-컬럼을-봐야-하나"
+    },
+    {
+      "id": "slow-query-hunting-06",
+      "type": "single",
+      "difficulty": 2,
+      "source": "post",
+      "tags": ["함정", "운영"],
+      "scenario": {
+        "kind": "sql",
+        "lang": "sql",
+        "body": "-- 오늘은 2026-05-05입니다.\n\nSELECT indexrelname, idx_scan,\n       pg_size_pretty(pg_relation_size(indexrelid)) AS size\nFROM pg_stat_user_indexes WHERE idx_scan = 0\nORDER BY pg_relation_size(indexrelid) DESC;\n--      indexrelname      | idx_scan |  size\n-- -----------------------+----------+---------\n--  orders_settled_at_idx |        0 | 2841 MB\n--  orders_legacy_ref_idx |        0 | 1204 MB\n\nSELECT stats_reset FROM pg_stat_database WHERE datname = current_database();\n--          stats_reset\n-- ------------------------------\n--  2026-05-04 09:12:33+09"
+      },
+      "question": "이 목록만 보고 두 인덱스를 삭제해도 됩니까?",
+      "choices": [
+        {
+          "text": "됩니다. idx_scan이 0이면 플래너가 후보로도 올리지 않았다는 뜻입니다.",
+          "why": "그 기간 동안 쓰이지 않았다는 사실만 알려줄 뿐입니다. 관측 구간이 짧으면 아직 오지 않은 워크로드를 통째로 놓칩니다."
+        },
+        {
+          "text": "됩니다. 크기가 큰 인덱스부터 지우면 쓰기 성능이 곧바로 좋아집니다.",
+          "why": "쓰기 비용이 줄어드는 것은 맞지만 그것은 이 인덱스가 정말 쓰이지 않을 때의 이야기입니다. 잘못 지우면 어느 날 그 쿼리가 순차 스캔으로 떨어집니다."
+        },
+        {
+          "text": "안 됩니다. 통계가 어제 리셋되어 관측 구간이 하루뿐입니다.",
+          "correct": true,
+          "why": "idx_scan은 통계가 리셋된 이후의 누적입니다. 하루치로는 주간 배치나 월말 정산에서만 쓰이는 인덱스를 구분할 수 없고, settled_at이라는 이름 자체가 정산 주기를 연상시킵니다. 최소 한두 주, 월간 작업이 있는 시스템이라면 한 달 이상의 기록을 놓고 판단해야 합니다."
+        },
+        {
+          "text": "안 됩니다. 유일성 제약을 뒷받침하는 인덱스일 수 있습니다.",
+          "why": "고려할 만한 지적이지만 제약을 뒷받침하는 인덱스는 제약을 먼저 지우지 않으면 삭제 자체가 거부되므로 실수로 사라지지 않습니다. 여기서 더 큰 위험은 관측 기간입니다."
+        }
+      ],
+      "explanation": "누적 통계를 읽을 때는 그 값이 언제부터 쌓인 것인지를 먼저 봐야 합니다. idx_scan이 0이라는 관측은 언제부터 세었는지를 모르면 아무 의미가 없고, pg_stat_statements의 상위 목록도 마찬가지입니다. 인덱스 정리는 특히 되돌리기 어려운 쪽이라 관측 기간을 넉넉히 잡는 것이 맞습니다. 확신이 서지 않으면 지우기 전에 인덱스를 비활성으로 두고 지켜보는 방법도 있습니다. pg_index의 indisvalid를 직접 손대는 방식은 위험하므로, 스테이징에서 같은 쿼리 세트를 돌려 계획이 바뀌는지 확인하는 편이 안전합니다.",
+      "postSlug": "/postgres/slow-query-hunting/",
+      "anchor": "#사용하지-않는-인덱스-찾기"
+    }
+  ]
+}
