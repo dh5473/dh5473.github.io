@@ -30,7 +30,7 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
   },
   'stats': {
     title: '확률과 통계',
-    description: '확률론, 통계적 추론, 응용 통계 — ML/DL의 수학적 기반',
+    description: '확률론부터 통계적 추론과 응용 통계까지, ML/DL의 수학적 기반',
     color: '#6366f1',
   },
   'airflow': {
