@@ -59,3 +59,36 @@ export const seriesMetadata: Record<string, SeriesMetadata> = {
     color: '#0ea5e9',
   },
 }
+
+const INK_LIGHT = '#ffffff'
+const INK_DARK = '#14100e'
+
+/** sRGB 상대 휘도. hex가 아니면 NaN. */
+function relativeLuminance(color: string): number {
+  const m = /^#([0-9a-f]{6})$/i.exec(color.trim())
+  if (!m) return NaN
+  const n = parseInt(m[1], 16)
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/**
+ * 시리즈 브랜드색 위에 얹을 글자색.
+ *
+ * 브랜드색은 밝기가 제각각이라(ClickHouse #FFCC00부터 PostgreSQL #336791까지)
+ * 잉크를 하나로 고정하면 한쪽은 반드시 깨진다. 흰 글자로 고정했을 때
+ * ClickHouse는 1.51:1, LLM Serving은 2.77:1이었다. 대비가 큰 쪽을 고른다.
+ * 토큰 참조처럼 hex가 아닌 값이 오면 테마가 알아서 뒤집는 --on-fill에 맡긴다.
+ */
+export function inkOn(background: string): string {
+  const bg = relativeLuminance(background)
+  if (Number.isNaN(bg)) return 'var(--on-fill)'
+  const contrast = (a: number, b: number) =>
+    (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+  return contrast(1, bg) >= contrast(relativeLuminance(INK_DARK), bg)
+    ? INK_LIGHT
+    : INK_DARK
+}
