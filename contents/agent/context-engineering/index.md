@@ -68,7 +68,7 @@ Anthropic은 이 원칙을 한 문장으로 요약합니다. "원하는 결과�
   <style>
     .ce1-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
     .ce1-label { fill: var(--text, #1c1917); font-size: 20px; }
-    .ce1-value { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .ce1-value { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .ce1-track { fill: var(--bg-muted, #eeecea); }
   </style>
   <text x="20" y="30" class="ce1-title">200K 토큰 윈도우 구성 비율 (50턴 시점)</text>
@@ -76,22 +76,22 @@ Anthropic은 이 원칙을 한 문장으로 요약합니다. "원하는 결과�
   <text x="20" y="72" class="ce1-label">시스템 프롬프트 + CLAUDE.md</text>
   <text x="460" y="72" text-anchor="end" class="ce1-value">~5% (10K)</text>
   <rect x="20" y="82" width="440" height="20" rx="3" class="ce1-track" />
-  <rect x="20" y="82" width="22" height="20" rx="3" fill="var(--primary, #0d9488)" />
+  <rect x="20" y="82" width="22" height="20" rx="3" fill="var(--primary, #0a756c)" />
   <!-- row 2: tool definitions -->
   <text x="20" y="140" class="ce1-label">도구 정의 (스키마)</text>
   <text x="460" y="140" text-anchor="end" class="ce1-value">~10% (20K)</text>
   <rect x="20" y="150" width="440" height="20" rx="3" class="ce1-track" />
-  <rect x="20" y="150" width="44" height="20" rx="3" fill="var(--accent, #d97706)" />
+  <rect x="20" y="150" width="44" height="20" rx="3" fill="var(--accent, #9d5604)" />
   <!-- row 3: conversation messages -->
   <text x="20" y="208" class="ce1-label">대화 메시지 (user / assistant)</text>
   <text x="460" y="208" text-anchor="end" class="ce1-value">~15% (30K)</text>
   <rect x="20" y="218" width="440" height="20" rx="3" class="ce1-track" />
-  <rect x="20" y="218" width="66" height="20" rx="3" fill="var(--text-muted, #78716c)" />
+  <rect x="20" y="218" width="66" height="20" rx="3" fill="var(--text-muted, #6d6762)" />
   <!-- row 4: tool results, the dominant consumer -->
   <text x="20" y="276" class="ce1-label">도구 반환값 (누적)</text>
   <text x="460" y="276" text-anchor="end" class="ce1-value">~70% (140K)</text>
   <rect x="20" y="286" width="440" height="20" rx="3" class="ce1-track" />
-  <rect x="20" y="286" width="308" height="20" rx="3" fill="var(--text-danger, #dc2626)" />
+  <rect x="20" y="286" width="308" height="20" rx="3" fill="var(--text-danger, #cb2121)" />
 </svg>
 </div>
 
@@ -115,12 +115,12 @@ Claude Code는 이 원칙을 시스템 프롬프트와 CLAUDE.md의 분리로 �
 <svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="시스템 프롬프트 아래에 루트 CLAUDE.md가 놓이고, 그 아래 src와 tests 디렉터리의 CLAUDE.md가 해당 디렉터리에 접근할 때만 로딩되는 계층 구조.">
   <style>
     .ce2-main { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
-    .ce2-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .ce2-note { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .ce2-rail { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+    .ce2-sub { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .ce2-note { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .ce2-rail { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
   </style>
   <!-- level 0: system prompt, always loaded -->
-  <rect x="20" y="16" width="440" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <rect x="20" y="16" width="440" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5" />
   <text x="36" y="45" class="ce2-main">시스템 프롬프트</text>
   <text x="444" y="45" text-anchor="end" class="ce2-sub">핵심 행동 규칙 (항상 로드)</text>
   <!-- level 1: root CLAUDE.md, loaded at session start -->
@@ -172,29 +172,29 @@ Few-shot 예시에도 같은 관점이 적용됩니다. Anthropic은 예시의 �
   <style>
     .ce3-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
     .ce3-name { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
-    .ce3-desc { fill: var(--text-muted, #78716c); font-size: 18px; }
+    .ce3-desc { fill: var(--text-muted, #6d6762); font-size: 18px; }
     .ce3-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .ce3-num { font-size: 20px; font-weight: 700; }
   </style>
   <text x="20" y="32" class="ce3-title">컨텍스트를 관리하는 네 가지 전략</text>
   <!-- strategy 1: just-in-time retrieval -->
   <rect x="20" y="50" width="440" height="104" rx="8" class="ce3-card" />
-  <circle cx="50" cy="84" r="18" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2" />
-  <text x="50" y="91" text-anchor="middle" class="ce3-num" fill="var(--primary, #0d9488)">1</text>
+  <circle cx="50" cy="84" r="18" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2" />
+  <text x="50" y="91" text-anchor="middle" class="ce3-num" fill="var(--primary, #0a756c)">1</text>
   <text x="82" y="92" class="ce3-name">JIT 검색</text>
   <text x="36" y="122" class="ce3-desc">경량 식별자만 들고 있다가</text>
   <text x="36" y="144" class="ce3-desc">필요할 때 도구로 조회</text>
   <!-- strategy 2: compaction -->
   <rect x="20" y="166" width="440" height="104" rx="8" class="ce3-card" />
-  <circle cx="50" cy="200" r="18" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2" />
-  <text x="50" y="207" text-anchor="middle" class="ce3-num" fill="var(--accent, #d97706)">2</text>
+  <circle cx="50" cy="200" r="18" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)" stroke-width="2" />
+  <text x="50" y="207" text-anchor="middle" class="ce3-num" fill="var(--accent, #9d5604)">2</text>
   <text x="82" y="208" class="ce3-name">컴팩션</text>
   <text x="36" y="238" class="ce3-desc">대화 기록을 요약으로 압축해</text>
   <text x="36" y="260" class="ce3-desc">윈도우 공간을 회수</text>
   <!-- strategy 3: structured note-taking -->
   <rect x="20" y="282" width="440" height="104" rx="8" class="ce3-card" />
-  <circle cx="50" cy="316" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
-  <text x="50" y="323" text-anchor="middle" class="ce3-num" fill="var(--text-success, #16a34a)">3</text>
+  <circle cx="50" cy="316" r="18" fill="var(--bg, #fafaf8)" stroke="var(--text-success, #107836)" stroke-width="2" />
+  <text x="50" y="323" text-anchor="middle" class="ce3-num" fill="var(--text-success, #107836)">3</text>
   <text x="82" y="324" class="ce3-name">구조화된 노트</text>
   <text x="36" y="354" class="ce3-desc">핵심 사실을 윈도우 바깥</text>
   <text x="36" y="376" class="ce3-desc">파일에 기록</text>
@@ -255,33 +255,33 @@ Claude Code가 대규모 데이터베이스 분석을 할 때의 패턴이 좋�
 <svg viewBox="0 0 480 282" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에는 180K 토큰 중 150K가 도구 결과 누적분이고, 컴팩션 후에는 전체가 20K로 줄어 160K의 공간이 확보되는 비교. 두 막대는 같은 축척으로 그렸습니다.">
   <defs>
     <marker id="ce4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
   </defs>
   <style>
     .ce4-title { fill: var(--text, #1c1917); font-size: 22px; font-weight: 700; }
-    .ce4-note { fill: var(--text-muted, #78716c); font-size: 18px; }
+    .ce4-note { fill: var(--text-muted, #6d6762); font-size: 18px; }
     .ce4-small { font-size: 17px; }
   </style>
   <!-- before compaction: 180K total, 150K of it tool results -->
   <text x="20" y="28" class="ce4-title">컴팩션 전: 180K 토큰</text>
   <rect x="20" y="42" width="73" height="38" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
-  <text x="56" y="67" text-anchor="middle" class="ce4-small" fill="var(--text-muted, #78716c)">30K</text>
-  <rect x="93" y="42" width="367" height="38" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5" />
-  <text x="276" y="67" text-anchor="middle" font-size="18" fill="var(--text-danger, #dc2626)">도구 결과 누적 150K</text>
+  <text x="56" y="67" text-anchor="middle" class="ce4-small" fill="var(--text-muted, #6d6762)">30K</text>
+  <rect x="93" y="42" width="367" height="38" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5" />
+  <text x="276" y="67" text-anchor="middle" font-size="18" fill="var(--text-danger, #cb2121)">도구 결과 누적 150K</text>
   <!-- compaction step -->
-  <path d="M 240 92 L 240 122" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none" marker-end="url(#ce4Arrow)" />
+  <path d="M 240 92 L 240 122" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" fill="none" marker-end="url(#ce4Arrow)" />
   <text x="252" y="113" class="ce4-note">컴팩션</text>
   <!-- after compaction: 20K total, drawn at the same scale -->
   <text x="20" y="152" class="ce4-title">컴팩션 후: 20K 토큰</text>
-  <rect x="20" y="166" width="49" height="38" rx="4" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
-  <text x="44" y="191" text-anchor="middle" class="ce4-small" fill="var(--text-success, #16a34a)">20K</text>
+  <rect x="20" y="166" width="49" height="38" rx="4" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="1.5" />
+  <text x="44" y="191" text-anchor="middle" class="ce4-small" fill="var(--text-success, #107836)">20K</text>
   <rect x="69" y="166" width="391" height="38" rx="4" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5 4" />
   <text x="264" y="191" text-anchor="middle" class="ce4-note">확보된 공간 160K</text>
   <!-- what survives inside the 20K -->
-  <rect x="20" y="228" width="8" height="8" fill="var(--text-success, #16a34a)" />
+  <rect x="20" y="228" width="8" height="8" fill="var(--text-success, #107836)" />
   <text x="38" y="236" class="ce4-note">요약: 아키텍처 결정, 미해결 이슈, 남은 작업</text>
-  <rect x="20" y="256" width="8" height="8" fill="var(--text-success, #16a34a)" />
+  <rect x="20" y="256" width="8" height="8" fill="var(--text-success, #107836)" />
   <text x="38" y="264" class="ce4-note">최근 접근한 파일 5개 내용</text>
 </svg>
 </div>
@@ -314,14 +314,14 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
 <svg viewBox="0 0 480 252" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 전에 대화 기록에서 핵심 사실을 노트로 추출해 두면, 대화 기록이 요약으로 교체되며 일부 정보가 손실되더라도 컴팩션 후에 요약과 노트를 합쳐 핵심 사실을 복원할 수 있습니다.">
   <defs>
     <marker id="ce5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
   </defs>
   <style>
-    .ce5-head { fill: var(--text-muted, #78716c); font-size: 18px; font-weight: 600; }
+    .ce5-head { fill: var(--text-muted, #6d6762); font-size: 18px; font-weight: 600; }
     .ce5-main { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
-    .ce5-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .ce5-flow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+    .ce5-sub { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .ce5-flow { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
   </style>
   <!-- timeline headers -->
   <text x="78" y="26" text-anchor="middle" class="ce5-head">컴팩션 전</text>
@@ -332,17 +332,17 @@ Claude Code에서 이 패턴은 CLAUDE.md의 읽기/쓰기와 자동 메모리 �
   <text x="78" y="70" text-anchor="middle" class="ce5-main">대화 기록</text>
   <text x="78" y="92" text-anchor="middle" class="ce5-sub">150K</text>
   <path d="M 147 73 L 169 73" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <rect x="171" y="44" width="137" height="58" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5" />
+  <rect x="171" y="44" width="137" height="58" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="1.5" />
   <text x="240" y="70" text-anchor="middle" class="ce5-main">요약</text>
   <text x="240" y="92" text-anchor="middle" class="ce5-sub">일부 정보 손실</text>
   <path d="M 308 73 L 330 73" class="ce5-flow" marker-end="url(#ce5Arrow)" />
-  <rect x="332" y="44" width="137" height="58" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
+  <rect x="332" y="44" width="137" height="58" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="1.5" />
   <text x="400" y="70" text-anchor="middle" class="ce5-main">요약 + 노트</text>
   <text x="400" y="92" text-anchor="middle" class="ce5-sub">핵심 사실 복원</text>
   <!-- lower lane: the note lives outside the context window -->
   <path d="M 78 102 L 78 152" class="ce5-flow" marker-end="url(#ce5Arrow)" />
   <text x="90" y="133" class="ce5-sub">핵심 사실 추출</text>
-  <rect x="10" y="154" width="137" height="82" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5" />
+  <rect x="10" y="154" width="137" height="82" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5" />
   <text x="78" y="182" text-anchor="middle" class="ce5-main">노트</text>
   <text x="78" y="204" text-anchor="middle" class="ce5-sub">윈도우 바깥에</text>
   <text x="78" y="228" text-anchor="middle" class="ce5-sub">따로 보존</text>

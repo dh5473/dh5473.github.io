@@ -99,15 +99,15 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
      role="img" aria-label="8KB 힙 페이지의 레이아웃. 오프셋 0부터 24까지는 PageHeaderData, 그 뒤로 앞에서 뒤로 자라는 ItemId 배열이 pd_lower까지, 가운데는 free space, pd_upper부터 페이지 끝 방향으로 뒤에서 앞으로 자라는 튜플 데이터, 마지막 pd_special 뒤의 special space는 힙에서 크기가 0이고 페이지 끝은 8192입니다.">
 <style>
 .hp1-t { fill: var(--text, #1c1917); }
-.hp1-m { fill: var(--text-muted, #78716c); }
-.hp1-meta { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.hp1-m { fill: var(--text-muted, #6d6762); }
+.hp1-meta { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 .hp1-empty { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.hp1-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
-.hp1-ar { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
+.hp1-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
+.hp1-ar { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
 </style>
 <defs>
 <marker id="hp1Arrow" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text x="240" y="28" text-anchor="middle" font-size="20" class="hp1-t">8KB 힙 페이지 레이아웃</text>
@@ -177,10 +177,10 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
      role="img" aria-label="ItemIdData 4바이트를 32비트 막대로 나타낸 그림. 왼쪽부터 lp_off 15비트, lp_flags 2비트, lp_len 15비트가 실제 비트 수에 비례한 폭으로 나뉘어 있습니다.">
 <style>
 .hp2-t { fill: var(--text, #1c1917); }
-.hp2-m { fill: var(--text-muted, #78716c); }
+.hp2-m { fill: var(--text-muted, #6d6762); }
 .hp2-pos { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.hp2-flag { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.hp2-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.hp2-flag { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.hp2-lead { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 </style>
 <text x="240" y="28" text-anchor="middle" font-size="20" class="hp2-t">ItemIdData (4 bytes = 32 bits)</text>
 <!-- lp_off: 15 bits -->
@@ -221,12 +221,12 @@ main fork는 8KB 페이지의 연속입니다. 0번 페이지, 1번 페이지, 2
      role="img" aria-label="HeapTupleHeaderData의 필드 배치. 오프셋 0부터 t_xmin 4바이트, 4부터 t_xmax 4바이트, 8부터 t_cid와 t_xvac의 union 4바이트, 12부터 t_ctid 6바이트, 18부터 t_infomask2 2바이트, 20부터 t_infomask 2바이트, 22부터 t_hoff 1바이트로 구조체 23바이트가 끝나고, 이어서 NULL bitmap과 정렬 패딩, t_hoff 오프셋부터 사용자 데이터가 옵니다.">
 <style>
 .hp3-t { fill: var(--text, #1c1917); }
-.hp3-m { fill: var(--text-muted, #78716c); }
-.hp3-mvcc { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.hp3-m { fill: var(--text-muted, #6d6762); }
+.hp3-mvcc { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 .hp3-plain { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .hp3-var { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.hp3-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
-.hp3-br { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.hp3-data { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
+.hp3-br { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 </style>
 <text x="240" y="30" text-anchor="middle" font-size="20" class="hp3-t">HeapTupleHeaderData</text>
 <!-- t_xmin, 4 bytes -->

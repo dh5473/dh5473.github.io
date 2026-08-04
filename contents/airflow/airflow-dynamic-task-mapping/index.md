@@ -42,13 +42,13 @@ extract_kc_per_page.expand(page_config=pages["page_configs"])
      role="img" aria-label="DAG 정의에는 Task가 하나뿐이지만 DAG Run이 만들어질 때 map_index 0번부터 19번까지 Task Instance 20개로 펼쳐지는 모습">
   <defs>
     <marker id="dtm1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <style>
     .dtm1-h { font-size: 15px; fill: var(--text, #1c1917); font-weight: 700; }
-    .dtm1-code { font-size: 15px; fill: var(--primary, #0d9488); font-family: "JetBrains Mono", monospace; }
-    .dtm1-sub { font-size: 14px; fill: var(--text-muted, #78716c); }
+    .dtm1-code { font-size: 15px; fill: var(--primary, #0a756c); font-family: "JetBrains Mono", monospace; }
+    .dtm1-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
     .dtm1-mid { font-size: 15px; fill: var(--text, #1c1917); }
     .dtm1-idx { font-size: 15px; fill: var(--text, #1c1917); }
   </style>
@@ -58,54 +58,54 @@ extract_kc_per_page.expand(page_config=pages["page_configs"])
   <text class="dtm1-code" x="200" y="60" text-anchor="middle">extract.expand(page_config=pages)</text>
   <text class="dtm1-sub" x="200" y="82" text-anchor="middle">Task 정의는 언제나 1개</text>
   <!-- 펼침 화살표 -->
-  <line x1="200" y1="100" x2="200" y2="132" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#dtm1Arrow)"/>
+  <line x1="200" y1="100" x2="200" y2="132" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#dtm1Arrow)"/>
   <text class="dtm1-mid" x="200" y="154" text-anchor="middle">입력 길이가 정해지면 펼쳐짐</text>
   <!-- 2단계: DAG Run -->
   <text class="dtm1-h" x="20" y="182">2. DAG Run (실행 시점)</text>
   <rect x="20" y="192" width="360" height="196" rx="8" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)"/>
   <!-- map_index 0-4 -->
-  <rect x="50" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="50" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="76" y="233" text-anchor="middle">0</text>
-  <rect x="112" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="112" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="138" y="233" text-anchor="middle">1</text>
-  <rect x="174" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="174" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="200" y="233" text-anchor="middle">2</text>
-  <rect x="236" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="236" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="262" y="233" text-anchor="middle">3</text>
-  <rect x="298" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="298" y="212" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="324" y="233" text-anchor="middle">4</text>
   <!-- map_index 5-9 -->
-  <rect x="50" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="50" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="76" y="274" text-anchor="middle">5</text>
-  <rect x="112" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="112" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="138" y="274" text-anchor="middle">6</text>
-  <rect x="174" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="174" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="200" y="274" text-anchor="middle">7</text>
-  <rect x="236" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="236" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="262" y="274" text-anchor="middle">8</text>
-  <rect x="298" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="298" y="253" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="324" y="274" text-anchor="middle">9</text>
   <!-- map_index 10-14 -->
-  <rect x="50" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="50" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="76" y="315" text-anchor="middle">10</text>
-  <rect x="112" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="112" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="138" y="315" text-anchor="middle">11</text>
-  <rect x="174" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="174" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="200" y="315" text-anchor="middle">12</text>
-  <rect x="236" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="236" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="262" y="315" text-anchor="middle">13</text>
-  <rect x="298" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="298" y="294" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="324" y="315" text-anchor="middle">14</text>
   <!-- map_index 15-19 -->
-  <rect x="50" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="50" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="76" y="356" text-anchor="middle">15</text>
-  <rect x="112" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="112" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="138" y="356" text-anchor="middle">16</text>
-  <rect x="174" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="174" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="200" y="356" text-anchor="middle">17</text>
-  <rect x="236" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="236" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="262" y="356" text-anchor="middle">18</text>
-  <rect x="298" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)"/>
+  <rect x="298" y="335" width="52" height="32" rx="5" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)"/>
   <text class="dtm1-idx" x="324" y="356" text-anchor="middle">19</text>
   <!-- 하단 캡션 -->
   <text class="dtm1-sub" x="200" y="410" text-anchor="middle">숫자는 map_index. 제한이 없으면 20개가 동시에 실행</text>
@@ -127,44 +127,44 @@ extract_kc_per_page.expand(page_config=pages["page_configs"])
      role="img" aria-label="펼침 층에서는 max_map_length가 만들 수 있는 Task 수를 제한하고, 조임 층에서는 max_active_tis_per_dag, max_active_tis_per_dagrun, Pool, parallelism이 차례로 동시 실행 수를 제한하는 구조">
   <defs>
     <marker id="dtm2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <style>
     .dtm2-h { font-size: 15px; fill: var(--text, #1c1917); font-weight: 700; }
-    .dtm2-name { font-size: 17px; fill: var(--primary, #0d9488); font-family: "JetBrains Mono", monospace; }
-    .dtm2-sub { font-size: 14px; fill: var(--text-muted, #78716c); }
+    .dtm2-name { font-size: 17px; fill: var(--primary, #0a756c); font-family: "JetBrains Mono", monospace; }
+    .dtm2-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
     .dtm2-mid { font-size: 15px; fill: var(--text, #1c1917); }
-    .dtm2-goal { font-size: 16px; fill: var(--text-success, #16a34a); font-weight: 700; }
+    .dtm2-goal { font-size: 16px; fill: var(--text-success, #107836); font-weight: 700; }
   </style>
   <!-- 펼침 층 -->
   <text class="dtm2-h" x="20" y="20">펼침 층: 몇 개를 만들 것인가</text>
   <rect x="14" y="28" width="372" height="102" rx="10" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
-  <rect x="28" y="40" width="344" height="78" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)"/>
+  <rect x="28" y="40" width="344" height="78" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)"/>
   <text class="dtm2-name" x="44" y="64">max_map_length</text>
   <text class="dtm2-sub" x="44" y="86">배포 전역 · 기본값 1024</text>
   <text class="dtm2-sub" x="44" y="106">넘으면 소스 Task가 실패</text>
   <!-- 연결 -->
-  <line x1="200" y1="132" x2="200" y2="158" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#dtm2Arrow)"/>
+  <line x1="200" y1="132" x2="200" y2="158" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#dtm2Arrow)"/>
   <text class="dtm2-mid" x="200" y="180" text-anchor="middle">Task Instance N개</text>
   <!-- 조임 층 -->
   <text class="dtm2-h" x="20" y="208">조임 층: 한 번에 몇 개를 돌릴 것인가</text>
   <rect x="14" y="216" width="372" height="300" rx="10" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
-  <rect x="28" y="228" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)"/>
+  <rect x="28" y="228" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)"/>
   <text class="dtm2-name" x="44" y="253">max_active_tis_per_dag</text>
   <text class="dtm2-sub" x="44" y="275">그 DAG의 활성 Run 전체에서 셈</text>
-  <rect x="28" y="300" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)"/>
+  <rect x="28" y="300" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)"/>
   <text class="dtm2-name" x="44" y="325">max_active_tis_per_dagrun</text>
   <text class="dtm2-sub" x="44" y="347">DAG Run 하나 안에서만 셈</text>
-  <rect x="28" y="372" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)"/>
+  <rect x="28" y="372" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)"/>
   <text class="dtm2-name" x="44" y="397">Pool (pool_slots)</text>
   <text class="dtm2-sub" x="44" y="419">배포 전역 · 여러 DAG가 슬롯을 나눠 씀</text>
-  <rect x="28" y="444" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)"/>
+  <rect x="28" y="444" width="344" height="60" rx="6" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)"/>
   <text class="dtm2-name" x="44" y="469">parallelism</text>
   <text class="dtm2-sub" x="44" y="491">스케줄러 하나당 상한 · 기본 32</text>
   <!-- 실행 -->
-  <line x1="200" y1="518" x2="200" y2="544" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#dtm2Arrow)"/>
-  <rect x="100" y="552" width="200" height="46" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)"/>
+  <line x1="200" y1="518" x2="200" y2="544" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#dtm2Arrow)"/>
+  <rect x="100" y="552" width="200" height="46" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)"/>
   <text class="dtm2-goal" x="200" y="581" text-anchor="middle">Worker에서 실제 실행</text>
 </svg>
 </div>
@@ -208,11 +208,11 @@ def extract_kc_per_page(page_config):
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="활성 DAG Run이 3개일 때 max_active_tis_per_dag를 4로 두면 세 Run 합쳐서 4개만 실행되고, max_active_tis_per_dagrun을 4로 두면 Run마다 4개씩 모두 12개가 실행되는 비교">
   <style>
-    .dtm3-name { font-size: 16px; fill: var(--primary, #0d9488); font-family: "JetBrains Mono", monospace; }
-    .dtm3-sub { font-size: 14px; fill: var(--text-muted, #78716c); }
+    .dtm3-name { font-size: 16px; fill: var(--primary, #0a756c); font-family: "JetBrains Mono", monospace; }
+    .dtm3-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
     .dtm3-row { font-size: 14px; fill: var(--text, #1c1917); }
     .dtm3-tot { font-size: 15px; fill: var(--text, #1c1917); font-weight: 700; }
-    .dtm3-run { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); }
+    .dtm3-run { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); }
     .dtm3-wait { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-dasharray: 3 2; }
   </style>
   <!-- 위 패널: per_dag -->
@@ -401,14 +401,14 @@ results = process_chunk.expand(chunk=chunks)
     .dtm4-t { font-size: 15px; fill: var(--text, #1c1917); font-weight: 700; }
     .dtm4-l { font-size: 15px; fill: var(--text, #1c1917); }
     .dtm4-v { font-size: 17px; fill: var(--text, #1c1917); font-weight: 700; }
-    .dtm4-n { font-size: 14px; fill: var(--text-muted, #78716c); }
+    .dtm4-n { font-size: 14px; fill: var(--text-muted, #6d6762); }
   </style>
   <text class="dtm4-t" x="20" y="24">1,000건을 처리할 때 만들어지는 Task 수</text>
   <text class="dtm4-l" x="20" y="54">개별 처리</text>
-  <rect x="20" y="62" width="280" height="36" rx="5" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)"/>
+  <rect x="20" y="62" width="280" height="36" rx="5" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)"/>
   <text class="dtm4-v" x="380" y="87" text-anchor="end">1,000개</text>
   <text class="dtm4-l" x="20" y="134">5건씩 청크로 묶기</text>
-  <rect x="20" y="142" width="56" height="36" rx="5" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)"/>
+  <rect x="20" y="142" width="56" height="36" rx="5" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)"/>
   <text class="dtm4-v" x="380" y="167" text-anchor="end">200개</text>
   <text class="dtm4-n" x="20" y="202">막대 길이는 Task 수에 비례</text>
   <text class="dtm4-n" x="20" y="222">처리하는 데이터는 양쪽 다 1,000건</text>

@@ -27,16 +27,16 @@ MySQL에서 분명히 데이터를 UPDATE하고 COMMIT까지 했는데, 다른 �
 .ms-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .ms-l { fill: var(--text, #1c1917); font-size: 14px; }
 .ms-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.ms-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ms-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.ms-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ms-d { fill: var(--text-danger, #cb2121); font-size: 14px; }
 .ms-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ms-hit { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.ms-tick { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
-.ms-up { stroke: var(--text-danger, #dc2626); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#msArrow); }
+.ms-hit { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.ms-tick { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
+.ms-up { stroke: var(--text-danger, #cb2121); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#msArrow); }
 </style>
 <defs>
 <marker id="msArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-danger, #dc2626)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-danger, #cb2121)"/>
 </marker>
 </defs>
 <text class="ms-t" x="200" y="22" text-anchor="middle">끝나지 않는 트랜잭션</text>
@@ -145,12 +145,12 @@ conn = pymysql.connect(
 .ac-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .ac-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .ac-l { fill: var(--text, #1c1917); font-size: 14px; }
-.ac-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ac-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
-.ac-s { fill: var(--text-success, #16a34a); font-size: 14px; }
+.ac-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ac-d { fill: var(--text-danger, #cb2121); font-size: 14px; }
+.ac-s { fill: var(--text-success, #107836); font-size: 14px; }
 .ac-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ac-br { stroke: var(--text-danger, #dc2626); stroke-width: 1.5; fill: none; }
-.ac-bg { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; }
+.ac-br { stroke: var(--text-danger, #cb2121); stroke-width: 1.5; fill: none; }
+.ac-bg { stroke: var(--text-success, #107836); stroke-width: 1.5; fill: none; }
 .ac-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <text class="ac-t" x="200" y="22" text-anchor="middle">트랜잭션 경계와 스냅샷</text>

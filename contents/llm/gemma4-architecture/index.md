@@ -50,10 +50,10 @@ Gemma 4의 어텐션은 로컬 레이어와 글로벌 레이어를 정해진 비
 .ga-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .ga-l { fill: var(--text, #1c1917); font-size: 14px; }
 .ga-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.ga-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.ga-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .ga-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ga-g { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.ga-br { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.ga-g { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.ga-br { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 </style>
 <text class="ga-t" x="200" y="22" text-anchor="middle">로컬 5개마다 글로벌 1개</text>
 <rect class="ga-box" x="20" y="40" width="196" height="28" rx="5"/>
@@ -120,18 +120,18 @@ E2B와 E4B 엣지 모델에는 **Per-Layer Embeddings(PLE)**라는 독특한 임
 <style>
 .pl-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .pl-l { fill: var(--text, #1c1917); font-size: 14px; }
-.pl-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.pl-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .pl-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.pl-emb { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+.pl-emb { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
 .pl-flow { stroke: var(--text, #1c1917); stroke-width: 2; fill: none; marker-end: url(#plArrow); }
-.pl-inj { stroke: var(--accent, #d97706); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#plArrowA); }
+.pl-inj { stroke: var(--accent, #9d5604); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#plArrowA); }
 </style>
 <defs>
 <marker id="plArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
 <path d="M0 0 L10 5 L0 10 z" fill="var(--text, #1c1917)"/>
 </marker>
 <marker id="plArrowA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #d97706)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #9d5604)"/>
 </marker>
 </defs>
 <text class="pl-t" x="200" y="22" text-anchor="middle">레이어마다 더해지는 보조 임베딩</text>
@@ -195,18 +195,18 @@ Gemma 4의 5개 변형 중 가장 아키텍처적으로 실험적인 모델이 �
 <style>
 .mm-t { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .mm-l { fill: var(--text, #1c1917); font-size: 14px; }
-.mm-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.mm-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .mm-w { fill: var(--on-fill, #14100e); font-size: 14px; }
 .mm-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.mm-heavy { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
-.mm-lite { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-.mm-llm { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.mm-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#mmArrow); }
+.mm-heavy { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
+.mm-lite { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+.mm-llm { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.mm-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#mmArrow); }
 .mm-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <defs>
 <marker id="mmArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="mm-t" x="200" y="20" text-anchor="middle">인코더 기반 (12B 외 네 변형)</text>
@@ -293,17 +293,17 @@ Gemma 4의 5개 변형 중 가장 아키텍처적으로 실험적인 모델이 �
 <style>
 .mo-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .mo-l { fill: var(--text, #1c1917); font-size: 14px; }
-.mo-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.mo-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .mo-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.mo-route { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }
-.mo-share { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #78716c); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.mo-route { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
+.mo-share { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #6d6762); stroke-width: 1.5; stroke-dasharray: 5 3; }
 .mo-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.mo-fill { fill: var(--primary, #0d9488); }
-.mo-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#moArrow); }
+.mo-fill { fill: var(--primary, #0a756c); }
+.mo-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#moArrow); }
 </style>
 <defs>
 <marker id="moArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="mo-t" x="200" y="22" text-anchor="middle">26B A4B MoE 레이어</text>

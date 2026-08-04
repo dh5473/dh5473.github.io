@@ -107,22 +107,22 @@ car2.drive()
 <svg viewBox="0 0 400 406" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="DIP 적용 전에는 Car가 구체 클래스 Engine을 직접 가리키고, 적용 후에는 Car와 GasEngine, ElectricEngine이 모두 가운데의 Engine Protocol을 향하도록 화살표 방향이 바뀌는 그림">
 <style>
 .di-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
-.di-panel { font-size: 15px; font-weight: 600; fill: var(--text-muted, #78716c); }
+.di-panel { font-size: 15px; font-weight: 600; fill: var(--text-muted, #6d6762); }
 .di-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
 .di-solid { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.di-proto { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.di-proto { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; stroke-dasharray: 5 3; }
 .di-main { font-size: 16px; font-weight: 600; fill: var(--text, #1c1917); }
-.di-pmain { font-size: 16px; font-weight: 600; fill: var(--primary, #0d9488); }
-.di-sub { font-size: 14px; fill: var(--text-muted, #78716c); }
+.di-pmain { font-size: 16px; font-weight: 600; fill: var(--primary, #0a756c); }
+.di-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
 .di-impl { font-size: 15px; fill: var(--text, #1c1917); }
-.di-note { font-size: 14px; fill: var(--text-muted, #78716c); }
-.di-lineA { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.di-lineB { stroke: var(--primary, #0d9488); stroke-width: 1.8; fill: none; }
-.di-conform { stroke: var(--primary, #0d9488); stroke-width: 1.8; fill: none; stroke-dasharray: 5 3; }
+.di-note { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.di-lineA { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.di-lineB { stroke: var(--primary, #0a756c); stroke-width: 1.8; fill: none; }
+.di-conform { stroke: var(--primary, #0a756c); stroke-width: 1.8; fill: none; stroke-dasharray: 5 3; }
 </style>
 <defs>
-<marker id="diArrowA" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
-<marker id="diArrowB" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--primary, #0d9488)"/></marker>
+<marker id="diArrowA" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
+<marker id="diArrowB" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--primary, #0a756c)"/></marker>
 </defs>
 <text class="di-title" x="200" y="20" text-anchor="middle">의존 방향이 뒤집히는 지점</text>
 <!-- 적용 전 -->

@@ -31,16 +31,16 @@ thumbnail: './thumbnail.png'
 <style>
 .mv1-t{fill:var(--text,#1c1917);font-size:19px}
 .mv1-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
-.mv1-m{fill:var(--text-muted,#78716c);font-size:18px}
-.mv1-p{fill:var(--primary,#0d9488);font-size:19px;font-weight:700}
+.mv1-m{fill:var(--text-muted, #6d6762);font-size:18px}
+.mv1-p{fill:var(--primary, #0a756c);font-size:19px;font-weight:700}
 .mv1-b{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.mv1-e{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
-.mv1-l{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv1-e{fill:var(--bg-muted,#eeecea);stroke:var(--primary, #0a756c);stroke-width:1.5}
+.mv1-l{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}
 .mv1-d{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
 </style>
 <defs>
 <marker id="mv1Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- panel 1: 기본 MergeTree -->
@@ -127,20 +127,20 @@ ORDER BY order_id;
      role="img" aria-label="ReplacingMergeTree 머지 전에는 Part A와 Part B에 order_id 1이 각각 존재하지만, 머지 후에는 ver 값이 큰 행 하나만 남는다는 비교 그림">
 <style>
 .mv2-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
-.mv2-m{fill:var(--text-muted,#78716c);font-size:18px}
-.mv2-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv2-m{fill:var(--text-muted, #6d6762);font-size:18px}
+.mv2-th{fill:var(--text-muted, #6d6762);font-size:17px}
 .mv2-td{fill:var(--text,#1c1917);font-size:19px}
-.mv2-ok{fill:var(--text-success,#16a34a);font-size:18px}
+.mv2-ok{fill:var(--text-success, #107836);font-size:18px}
 .mv2-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .mv2-hd{fill:var(--bg-muted,#eeecea)}
 .mv2-hi{fill:var(--bg-warn,#fffbeb)}
 .mv2-sc{fill:var(--bg-success,#f0fdf4)}
 .mv2-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
-.mv2-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv2-ar{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}
 </style>
 <defs>
 <marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 머지 전 -->
@@ -269,20 +269,20 @@ ORDER BY (category, sale_date);
      role="img" aria-label="SummingMergeTree 머지 전에는 도서 05-01 키가 Part A와 Part B에 나뉘어 있지만, 머지 후에는 revenue와 count가 합산된 한 행으로 합쳐진다는 비교 그림">
 <style>
 .mv3-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
-.mv3-m{fill:var(--text-muted,#78716c);font-size:18px}
-.mv3-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv3-m{fill:var(--text-muted, #6d6762);font-size:18px}
+.mv3-th{fill:var(--text-muted, #6d6762);font-size:17px}
 .mv3-td{fill:var(--text,#1c1917);font-size:19px}
-.mv3-ok{fill:var(--text-success,#16a34a);font-size:17px}
+.mv3-ok{fill:var(--text-success, #107836);font-size:17px}
 .mv3-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .mv3-hd{fill:var(--bg-muted,#eeecea)}
 .mv3-hi{fill:var(--bg-warn,#fffbeb)}
 .mv3-sc{fill:var(--bg-success,#f0fdf4)}
 .mv3-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
-.mv3-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv3-ar{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}
 </style>
 <defs>
 <marker id="mv3Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 머지 전 -->
@@ -441,16 +441,16 @@ GROUP BY event_date, category;
 <style>
 .mv4-t{fill:var(--text,#1c1917);font-size:20px}
 .mv4-s{fill:var(--text,#1c1917);font-size:19px}
-.mv4-m{fill:var(--text-muted,#78716c);font-size:18px}
-.mv4-p{fill:var(--primary,#0d9488);font-size:18px;font-weight:700}
+.mv4-m{fill:var(--text-muted, #6d6762);font-size:18px}
+.mv4-p{fill:var(--primary, #0a756c);font-size:18px;font-weight:700}
 .mv4-b{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.mv4-e{fill:var(--bg,#fafaf8);stroke:var(--primary,#0d9488);stroke-width:1.5}
+.mv4-e{fill:var(--bg,#fafaf8);stroke:var(--primary, #0a756c);stroke-width:1.5}
 .mv4-i{fill:var(--bg-muted,#eeecea);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.mv4-l{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
+.mv4-l{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}
 </style>
 <defs>
 <marker id="mv4Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <rect class="mv4-b" x="60" y="20" width="360" height="52" rx="4"/>
@@ -546,21 +546,21 @@ INSERT 흐름은 이렇습니다.
      role="img" aria-label="CollapsingMergeTree 머지 전에는 접수 상태의 sign 플러스1 행과 마이너스1 행, 배송중 행 세 개가 남아 있지만, 머지 후에는 접수 쌍이 상쇄되어 배송중 행 하나만 남는다는 비교 그림">
 <style>
 .mv5-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
-.mv5-m{fill:var(--text-muted,#78716c);font-size:18px}
-.mv5-th{fill:var(--text-muted,#78716c);font-size:17px}
+.mv5-m{fill:var(--text-muted, #6d6762);font-size:18px}
+.mv5-th{fill:var(--text-muted, #6d6762);font-size:17px}
 .mv5-td{fill:var(--text,#1c1917);font-size:19px}
-.mv5-wn{fill:var(--text-warn,#d97706);font-size:17px}
+.mv5-wn{fill:var(--text-warn, #9d5604);font-size:17px}
 .mv5-bx{fill:none;stroke:var(--border,#e7e5e4);stroke-width:1.5}
 .mv5-hd{fill:var(--bg-muted,#eeecea)}
 .mv5-hi{fill:var(--bg-warn,#fffbeb)}
 .mv5-sc{fill:var(--bg-success,#f0fdf4)}
 .mv5-gl{stroke:var(--border,#e7e5e4);stroke-width:1;fill:none}
-.mv5-ar{stroke:var(--text-muted,#78716c);stroke-width:1.5;fill:none}
-.mv5-br{stroke:var(--text-warn,#d97706);stroke-width:1.5;fill:none}
+.mv5-ar{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}
+.mv5-br{stroke:var(--text-warn, #9d5604);stroke-width:1.5;fill:none}
 </style>
 <defs>
 <marker id="mv5Arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted,#78716c)"/>
+<path d="M0,0 L8,3 L0,6 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 머지 전 -->

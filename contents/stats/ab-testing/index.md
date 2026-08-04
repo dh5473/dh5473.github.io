@@ -30,17 +30,17 @@ A/B 테스트의 구조는 단순하다. 사용자를 두 그룹으로 나누어
 <style>
 .ab-pool { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ab-ctl { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ab-trt { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-.ab-cmp { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+.ab-trt { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+.ab-cmp { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
 .ab-n { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
-.ab-g { fill: var(--text-success, #16a34a); font-size: 15px; font-weight: 600; }
-.ab-w { fill: var(--text-warn, #d97706); font-size: 15px; font-weight: 600; }
-.ab-h { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ab-l { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+.ab-g { fill: var(--text-success, #107836); font-size: 15px; font-weight: 600; }
+.ab-w { fill: var(--text-warn, #9d5604); font-size: 15px; font-weight: 600; }
+.ab-h { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ab-l { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
 </style>
 <defs>
 <marker id="abArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 사용자 풀 -->

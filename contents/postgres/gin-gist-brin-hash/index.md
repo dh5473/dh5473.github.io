@@ -39,10 +39,10 @@ GIN 내부에는 키를 정렬해 담은 B-tree가 하나 있고, 이것을 **en
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 B-tree가 한 행의 문자열 전체를 키 하나로 저장해 문자열 안의 단어를 찾지 못하는 구조. 아래쪽은 GIN이 한 행을 여러 토큰으로 쪼개 엔트리 트리에 키를 한 번만 두고, 각 키 아래에 그 키를 가진 행 ID 목록인 posting list를 붙여 두는 역색인 구조.">
-<style>.gg1-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg1-l{font-size:17px;fill:var(--text, #1c1917)}.gg1-k{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg1-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg1-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.gg1-key{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:1.8}.gg1-pl{fill:var(--bg, #fafaf8);stroke:var(--primary, #0d9488);stroke-width:1.5}.gg1-ln{stroke:var(--text-muted, #78716c);stroke-width:1.5;fill:none}</style>
+<style>.gg1-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg1-l{font-size:17px;fill:var(--text, #1c1917)}.gg1-k{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg1-m{font-size:17px;fill:var(--text-muted, #6d6762)}.gg1-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.gg1-key{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0a756c);stroke-width:1.8}.gg1-pl{fill:var(--bg, #fafaf8);stroke:var(--primary, #0a756c);stroke-width:1.5}.gg1-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.5;fill:none}</style>
 <defs>
 <marker id="gg1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 위 패널: B-tree -->
@@ -249,10 +249,10 @@ BRIN(Block Range Index)은 앞의 셋과 완전히 다른 방식입니다. 개�
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="BRIN이 연속된 힙 페이지 128개를 한 묶음으로 보고 그 묶음의 최솟값과 최댓값만 저장하는 구조. 조건과 겹치는 묶음 하나만 힙을 읽고 나머지 세 묶음은 통째로 건너뜁니다.">
-<style>.gg2-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg2-l{font-size:17px;fill:var(--text, #1c1917)}.gg2-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg2-sum{fill:var(--bg-subtle, #f5f4f2);stroke:var(--primary, #0d9488);stroke-width:1.6}.gg2-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:1.2;stroke-dasharray:3 2}.gg2-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #d97706);stroke-width:1.4}.gg2-vs{font-size:17px;font-weight:600;fill:var(--text-success, #16a34a)}.gg2-vr{font-size:17px;font-weight:600;fill:var(--accent, #d97706)}.gg2-ln{stroke:var(--accent, #d97706);stroke-width:1.6;fill:none}</style>
+<style>.gg2-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg2-l{font-size:17px;fill:var(--text, #1c1917)}.gg2-m{font-size:17px;fill:var(--text-muted, #6d6762)}.gg2-sum{fill:var(--bg-subtle, #f5f4f2);stroke:var(--primary, #0a756c);stroke-width:1.6}.gg2-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #107836);stroke-width:1.2;stroke-dasharray:3 2}.gg2-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #9d5604);stroke-width:1.4}.gg2-vs{font-size:17px;font-weight:600;fill:var(--text-success, #107836)}.gg2-vr{font-size:17px;font-weight:600;fill:var(--accent, #9d5604)}.gg2-ln{stroke:var(--accent, #9d5604);stroke-width:1.6;fill:none}</style>
 <defs>
 <marker id="gg2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #d97706)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #9d5604)"/>
 </marker>
 </defs>
 <text x="240" y="26" text-anchor="middle" class="gg2-t">BRIN: 128 페이지마다 요약 한 줄</text>
@@ -359,7 +359,7 @@ BRIN의 힘은 "디스크 저장 순서와 값의 크기 순서가 거의 일치
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 상관관계가 0.998일 때 각 블록 범위의 최솟값과 최댓값 구간이 서로 겹치지 않아 조건에 걸린 범위 하나만 읽고 나머지는 건너뛰는 모습. 아래쪽은 상관관계가 0.01일 때 모든 범위의 구간이 전체를 덮어 어느 범위도 건너뛰지 못하는 모습.">
-<style>.gg3-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg3-s{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg3-m{font-size:17px;fill:var(--text-muted, #78716c)}.gg3-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:1.6;stroke-dasharray:5 3}.gg3-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #d97706);stroke-width:1.6}.gg3-vs{font-size:17px;font-weight:600;fill:var(--text-success, #16a34a)}.gg3-vr{font-size:17px;font-weight:600;fill:var(--accent, #d97706)}.gg3-qf{fill:var(--bg-muted, #eeecea)}.gg3-qs{fill:none;stroke:var(--text-muted, #78716c);stroke-width:1.4;stroke-dasharray:4 3}.gg3-ax{stroke:var(--text-muted, #78716c);stroke-width:1.4}</style>
+<style>.gg3-t{font-size:20px;font-weight:700;fill:var(--text, #1c1917)}.gg3-s{font-size:18px;font-weight:600;fill:var(--text, #1c1917)}.gg3-m{font-size:17px;fill:var(--text-muted, #6d6762)}.gg3-skip{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #107836);stroke-width:1.6;stroke-dasharray:5 3}.gg3-read{fill:var(--bg-warn, #fffbeb);stroke:var(--accent, #9d5604);stroke-width:1.6}.gg3-vs{font-size:17px;font-weight:600;fill:var(--text-success, #107836)}.gg3-vr{font-size:17px;font-weight:600;fill:var(--accent, #9d5604)}.gg3-qf{fill:var(--bg-muted, #eeecea)}.gg3-qs{fill:none;stroke:var(--text-muted, #6d6762);stroke-width:1.4;stroke-dasharray:4 3}.gg3-ax{stroke:var(--text-muted, #6d6762);stroke-width:1.4}</style>
 <text x="240" y="26" text-anchor="middle" class="gg3-t">BRIN의 성패를 가르는 correlation</text>
 <!-- 위 패널: correlation 높음 -->
 <text x="8" y="54" class="gg3-s">위: correlation 0.998, 시간순 적재</text>

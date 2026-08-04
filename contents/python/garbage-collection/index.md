@@ -69,14 +69,14 @@ gc 모듈을 활용하면 `collect()` 메서드를 통해 가비지 컬렉션(�
 <style>
 .gc-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .gc-l { fill: var(--text, #1c1917); font-size: 14px; }
-.gc-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.gc-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .gc-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.gc-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }
-.gc-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#gcArrow); }
+.gc-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
+.gc-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#gcArrow); }
 </style>
 <defs>
 <marker id="gcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="gc-t" x="200" y="22" text-anchor="middle">순환 참조 탐지 5단계</text>

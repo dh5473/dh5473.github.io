@@ -27,18 +27,18 @@ thumbnail: './redis-pub-sub-background.png'
 .ps-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .ps-l { fill: var(--text, #1c1917); font-size: 14px; }
 .ps-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.ps-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ps-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.ps-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ps-d { fill: var(--text-danger, #cb2121); font-size: 14px; }
 .ps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ps-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-.ps-hub { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.ps-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#psArrow); }
-.ps-x { stroke: var(--text-danger, #dc2626); stroke-width: 2; fill: none; }
+.ps-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+.ps-hub { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.ps-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#psArrow); }
+.ps-x { stroke: var(--text-danger, #cb2121); stroke-width: 2; fill: none; }
 .ps-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <defs>
 <marker id="psArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="ps-t" x="200" y="22" text-anchor="middle">순차 호출과 팬아웃</text>

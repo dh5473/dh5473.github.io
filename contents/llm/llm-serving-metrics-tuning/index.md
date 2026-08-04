@@ -22,34 +22,34 @@ LLM은 프롬프트 전체를 한 번에 읽어 첫 토큰을 만드는 prefill�
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 265" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="요청 하나의 시간을 쪼갠 타임라인. 요청 전송부터 첫 토큰까지가 TTFT이고, 첫 토큰 이후 토큰과 토큰 사이의 간격 하나하나가 ITL이며, 요청 전송부터 마지막 토큰까지 전체가 E2E 지연시간입니다. 토큰 간격 중 하나는 눈에 띄게 벌어져 있습니다.">
   <!-- ITL 안내 -->
-  <text x="302" y="24" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">토큰 사이 간격 하나하나가 ITL</text>
-  <path d="M151 46 H452" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none"/>
-  <path d="M151 40 V52 M189 40 V52 M227 40 V52 M265 40 V52 M338 40 V52 M376 40 V52 M414 40 V52 M452 40 V52" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none"/>
+  <text x="302" y="24" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">토큰 사이 간격 하나하나가 ITL</text>
+  <path d="M151 46 H452" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" fill="none"/>
+  <path d="M151 40 V52 M189 40 V52 M227 40 V52 M265 40 V52 M338 40 V52 M376 40 V52 M414 40 V52 M452 40 V52" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" fill="none"/>
   <path d="M151 54 V78 M189 54 V78 M227 54 V78 M265 54 V78 M338 54 V78 M376 54 V78 M414 54 V78 M452 54 V78" stroke="var(--border, #e7e5e4)" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
   <!-- 요청 전송 시점 라벨 -->
   <text x="29" y="66" font-size="20" fill="var(--text, #1c1917)">요청 전송</text>
   <!-- 타임라인: TTFT 구간(accent) + decode 구간(primary) -->
-  <path d="M29 90 H151" stroke="var(--accent, #d97706)" stroke-width="3" fill="none"/>
-  <path d="M151 90 H452" stroke="var(--primary, #0d9488)" stroke-width="3" fill="none"/>
-  <path d="M29 78 V102" stroke="var(--accent, #d97706)" stroke-width="3" fill="none"/>
+  <path d="M29 90 H151" stroke="var(--accent, #9d5604)" stroke-width="3" fill="none"/>
+  <path d="M151 90 H452" stroke="var(--primary, #0a756c)" stroke-width="3" fill="none"/>
+  <path d="M29 78 V102" stroke="var(--accent, #9d5604)" stroke-width="3" fill="none"/>
   <!-- 토큰 도착 지점 -->
-  <circle cx="151" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="189" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="227" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="265" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="338" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="376" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="414" cy="90" r="6" fill="var(--primary, #0d9488)"/>
-  <circle cx="452" cy="90" r="6" fill="var(--primary, #0d9488)"/>
+  <circle cx="151" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="189" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="227" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="265" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="338" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="376" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="414" cy="90" r="6" fill="var(--primary, #0a756c)"/>
+  <circle cx="452" cy="90" r="6" fill="var(--primary, #0a756c)"/>
   <!-- 이벤트 라벨 -->
   <text x="151" y="122" text-anchor="middle" font-size="20" fill="var(--text, #1c1917)">첫 토큰</text>
   <text x="452" y="122" text-anchor="end" font-size="20" fill="var(--text, #1c1917)">마지막 토큰</text>
   <!-- TTFT 브래킷 -->
-  <path d="M29 140 V152 H151 V140" stroke="var(--accent, #d97706)" stroke-width="2" fill="none"/>
-  <text x="90" y="176" text-anchor="middle" font-size="20" fill="var(--accent, #d97706)">TTFT</text>
-  <text x="90" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">큐 대기 + prefill</text>
+  <path d="M29 140 V152 H151 V140" stroke="var(--accent, #9d5604)" stroke-width="2" fill="none"/>
+  <text x="90" y="176" text-anchor="middle" font-size="20" fill="var(--accent, #9d5604)">TTFT</text>
+  <text x="90" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">큐 대기 + prefill</text>
   <!-- E2E 브래킷 -->
-  <path d="M29 218 V230 H452 V218" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none"/>
+  <path d="M29 218 V230 H452 V218" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none"/>
   <text x="240" y="254" text-anchor="middle" font-size="18" fill="var(--text, #1c1917)">E2E 지연시간</text>
 </svg>
 </div>
@@ -155,25 +155,25 @@ vllm bench serve ... --goodput ttft:250 tpot:100
   <rect x="175" y="45" width="135" height="175" fill="var(--bg-subtle, #f5f4f2)"/>
   <rect x="310" y="45" width="148" height="175" fill="var(--bg-muted, #eeecea)"/>
   <!-- 축 -->
-  <path d="M60 38 V220 H458" stroke="var(--text-muted, #78716c)" stroke-width="1.5" fill="none"/>
+  <path d="M60 38 V220 H458" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" fill="none"/>
   <text x="46" y="26" font-size="20" fill="var(--text, #1c1917)">전체 처리량</text>
   <!-- 구간 경계 -->
   <path d="M175 45 V220 M310 45 V220" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
   <!-- 처리량 곡선 -->
-  <path d="M60 220 L175 140 C215 112 250 90 300 82 C350 74 400 71 450 70" stroke="var(--primary, #0d9488)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M60 220 L175 140 C215 112 250 90 300 82 C350 74 400 71 450 70" stroke="var(--primary, #0a756c)" stroke-width="3" fill="none" stroke-linecap="round"/>
   <!-- 선형 구간 설명 -->
-  <text x="118" y="70" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">동시성만큼</text>
-  <text x="118" y="91" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">처리량 증가</text>
-  <text x="118" y="112" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">지연은 그대로</text>
+  <text x="118" y="70" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">동시성만큼</text>
+  <text x="118" y="91" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">처리량 증가</text>
+  <text x="118" y="112" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">지연은 그대로</text>
   <!-- 포화 구간 설명 -->
-  <text x="384" y="110" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">처리량 정체</text>
-  <text x="384" y="131" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">큐잉으로</text>
-  <text x="384" y="152" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">TTFT 증가</text>
+  <text x="384" y="110" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">처리량 정체</text>
+  <text x="384" y="131" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">큐잉으로</text>
+  <text x="384" y="152" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">TTFT 증가</text>
   <!-- knee 강조 -->
-  <circle cx="175" cy="140" r="7" fill="var(--primary, #0d9488)"/>
-  <path d="M181 146 L212 158" stroke="var(--primary, #0d9488)" stroke-width="1.5" fill="none"/>
-  <text x="242" y="176" text-anchor="middle" font-size="17" fill="var(--primary, #0d9488)">knee: 지연 상승</text>
-  <text x="242" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #78716c)">SLO 한도 부근</text>
+  <circle cx="175" cy="140" r="7" fill="var(--primary, #0a756c)"/>
+  <path d="M181 146 L212 158" stroke="var(--primary, #0a756c)" stroke-width="1.5" fill="none"/>
+  <text x="242" y="176" text-anchor="middle" font-size="17" fill="var(--primary, #0a756c)">knee: 지연 상승</text>
+  <text x="242" y="197" text-anchor="middle" font-size="17" fill="var(--text-muted, #6d6762)">SLO 한도 부근</text>
   <!-- 구간 이름 -->
   <text x="117" y="248" text-anchor="middle" font-size="20" fill="var(--text, #1c1917)">선형 구간</text>
   <text x="242" y="248" text-anchor="middle" font-size="20" fill="var(--text, #1c1917)">knee 구간</text>

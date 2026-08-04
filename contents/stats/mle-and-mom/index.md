@@ -178,12 +178,12 @@ $$I(\theta) = -E\left[\frac{\partial^2}{\partial\theta^2}\log f(X;\theta)\right]
      role="img" aria-label="같은 지점에서 최댓값을 갖는 두 로그우도 곡선. 뾰족한 곡선은 곡률이 커서 피셔 정보가 크고, 평평한 곡선은 곡률이 작아 피셔 정보가 작다.">
 <style>
 .fi-ax { stroke: var(--border, #e7e5e4); stroke-width: 1.5; fill: none; }
-.fi-sharp { stroke: var(--primary, #0d9488); stroke-width: 2.4; fill: none; }
-.fi-flat { stroke: var(--text-muted, #78716c); stroke-width: 2.4; fill: none; stroke-dasharray: 7 4; }
-.fi-gu { stroke: var(--text-muted, #78716c); stroke-width: 1.2; fill: none; stroke-dasharray: 3 3; }
+.fi-sharp { stroke: var(--primary, #0a756c); stroke-width: 2.4; fill: none; }
+.fi-flat { stroke: var(--text-muted, #6d6762); stroke-width: 2.4; fill: none; stroke-dasharray: 7 4; }
+.fi-gu { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; fill: none; stroke-dasharray: 3 3; }
 .fi-t { fill: var(--text, #1c1917); font-size: 15px; }
-.fi-m { fill: var(--text-muted, #78716c); font-size: 14px; }
-.fi-p { fill: var(--primary, #0d9488); font-size: 14px; font-weight: 600; }
+.fi-m { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.fi-p { fill: var(--primary, #0a756c); font-size: 14px; font-weight: 600; }
 </style>
 <!-- 축 -->
 <path class="fi-ax" d="M 44 30 L 44 190 L 390 190"/>

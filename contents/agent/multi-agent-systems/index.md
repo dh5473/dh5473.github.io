@@ -89,54 +89,54 @@ Anthropic의 harness 연구가 이 토폴로지의 대표 사례입니다. Plann
 </style>
 <defs>
 <marker id="tp8Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)" />
 </marker>
 <marker id="tp8HeadR" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-<path d="M8,0 L0,3 L8,6" fill="var(--text-muted, #78716c)" />
+<path d="M8,0 L0,3 L8,6" fill="var(--text-muted, #6d6762)" />
 </marker>
 </defs>
 <!-- 1. Star topology -->
 <text x="240" y="32" class="tp8-title" fill="var(--text, #1c1917)">스타: 중앙 오케스트레이터</text>
-<rect x="150" y="46" width="180" height="46" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<rect x="150" y="46" width="180" height="46" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.15" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="240" y="76" class="tp8-text" fill="var(--text, #1c1917)">오케스트레이터</text>
-<line x1="200" y1="92" x2="90" y2="120" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
-<line x1="240" y1="92" x2="240" y2="120" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
-<line x1="280" y1="92" x2="390" y2="120" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="200" y1="92" x2="90" y2="120" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
+<line x1="240" y1="92" x2="240" y2="120" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
+<line x1="280" y1="92" x2="390" y2="120" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
 <rect x="20" y="124" width="140" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="90" y="153" class="tp8-text" fill="var(--text, #1c1917)">워커 1</text>
 <rect x="170" y="124" width="140" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="240" y="153" class="tp8-text" fill="var(--text, #1c1917)">워커 2</text>
 <rect x="320" y="124" width="140" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="390" y="153" class="tp8-text" fill="var(--text, #1c1917)">워커 3</text>
-<text x="240" y="194" class="tp8-sub" fill="var(--text-muted, #78716c)">Claude Code AgentTool, Codex spawn_agent</text>
+<text x="240" y="194" class="tp8-sub" fill="var(--text-muted, #6d6762)">Claude Code AgentTool, Codex spawn_agent</text>
 <!-- 2. Pipeline topology -->
 <text x="240" y="248" class="tp8-title" fill="var(--text, #1c1917)">파이프라인: 역할 기반 연결</text>
-<rect x="27" y="264" width="126" height="46" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<rect x="27" y="264" width="126" height="46" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.15" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="90" y="294" class="tp8-text" fill="var(--text, #1c1917)">Planner</text>
-<line x1="155" y1="287" x2="173" y2="287" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
-<rect x="177" y="264" width="126" height="46" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<line x1="155" y1="287" x2="173" y2="287" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
+<rect x="177" y="264" width="126" height="46" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.15" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="240" y="294" class="tp8-text" fill="var(--text, #1c1917)">Generator</text>
-<line x1="305" y1="287" x2="323" y2="287" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
-<rect x="327" y="264" width="126" height="46" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<line x1="305" y1="287" x2="323" y2="287" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
+<rect x="327" y="264" width="126" height="46" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.15" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="390" y="294" class="tp8-text" fill="var(--text, #1c1917)">Evaluator</text>
-<path d="M390,310 C390,344 240,344 240,312" class="tp8-arrow" stroke="var(--text-muted, #78716c)" stroke-dasharray="5,4" />
-<text x="315" y="358" class="tp8-sub" fill="var(--text-muted, #78716c)">피드백</text>
+<path d="M390,310 C390,344 240,344 240,312" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" stroke-dasharray="5,4" />
+<text x="315" y="358" class="tp8-sub" fill="var(--text-muted, #6d6762)">피드백</text>
 <rect x="115" y="368" width="250" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="240" y="397" class="tp8-text" fill="var(--text, #1c1917)">파일 기반 상태 공유</text>
-<text x="240" y="434" class="tp8-sub" fill="var(--text-muted, #78716c)">Anthropic Harness</text>
-<text x="240" y="456" class="tp8-sub" fill="var(--text-muted, #78716c)">(Planner / Generator / Evaluator)</text>
+<text x="240" y="434" class="tp8-sub" fill="var(--text-muted, #6d6762)">Anthropic Harness</text>
+<text x="240" y="456" class="tp8-sub" fill="var(--text-muted, #6d6762)">(Planner / Generator / Evaluator)</text>
 <!-- 3. Peer topology -->
 <text x="240" y="504" class="tp8-title" fill="var(--text, #1c1917)">피어: 수평 핸드오프</text>
-<rect x="170" y="520" width="140" height="46" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<rect x="170" y="520" width="140" height="46" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.15" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="240" y="550" class="tp8-text" fill="var(--text, #1c1917)">Triage</text>
-<line x1="205" y1="566" x2="130" y2="596" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
-<line x1="275" y1="566" x2="350" y2="596" class="tp8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="205" y1="566" x2="130" y2="596" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
+<line x1="275" y1="566" x2="350" y2="596" class="tp8-arrow" stroke="var(--text-muted, #6d6762)" />
 <rect x="50" y="600" width="150" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="125" y="629" class="tp8-text" fill="var(--text, #1c1917)">전문가 A</text>
 <rect x="280" y="600" width="150" height="44" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="355" y="629" class="tp8-text" fill="var(--text, #1c1917)">전문가 B</text>
-<line x1="206" y1="622" x2="274" y2="622" class="tp8-arrow-bi" stroke="var(--text-muted, #78716c)" stroke-dasharray="5,4" />
-<text x="240" y="670" class="tp8-sub" fill="var(--text-muted, #78716c)">OpenAI Triage + Handoff</text>
+<line x1="206" y1="622" x2="274" y2="622" class="tp8-arrow-bi" stroke="var(--text-muted, #6d6762)" stroke-dasharray="5,4" />
+<text x="240" y="670" class="tp8-sub" fill="var(--text-muted, #6d6762)">OpenAI Triage + Handoff</text>
 </svg>
 </div>
 
@@ -327,44 +327,44 @@ Claude Code의 퍼미션 모드 중에는 `bubble`이 있습니다. 판단을 �
 </style>
 <defs>
 <marker id="es8Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)" />
 </marker>
 <marker id="es8HeadOk" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)" />
+<path d="M0,0 L8,3 L0,6" fill="var(--text-success, #107836)" />
 </marker>
 <marker id="es8HeadNo" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-<path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #dc2626)" />
+<path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #cb2121)" />
 </marker>
 </defs>
 <!-- 1. Sub-agent -->
 <rect x="110" y="14" width="260" height="64" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="240" y="44" class="es8-text" fill="var(--text, #1c1917)">서브에이전트</text>
-<text x="240" y="68" class="es8-sub" fill="var(--text-muted, #78716c)">(bubble 모드)</text>
+<text x="240" y="68" class="es8-sub" fill="var(--text-muted, #6d6762)">(bubble 모드)</text>
 <!-- 2. Escalate to parent -->
-<line x1="240" y1="78" x2="240" y2="112" class="es8-arrow" stroke="var(--primary, #0d9488)" />
-<text x="252" y="100" class="es8-note" fill="var(--primary, #0d9488)">EscalateToParent</text>
+<line x1="240" y1="78" x2="240" y2="112" class="es8-arrow" stroke="var(--primary, #0a756c)" />
+<text x="252" y="100" class="es8-note" fill="var(--primary, #0a756c)">EscalateToParent</text>
 <!-- 3. Parent agent -->
-<rect x="95" y="116" width="290" height="64" rx="8" fill="var(--primary, #0d9488)" fill-opacity="0.15" stroke="var(--primary, #0d9488)" stroke-width="2" />
+<rect x="95" y="116" width="290" height="64" rx="8" fill="var(--primary, #0a756c)" fill-opacity="0.10" stroke="var(--primary, #0a756c)" stroke-width="2" />
 <text x="240" y="146" class="es8-text" fill="var(--text, #1c1917)">부모 에이전트</text>
-<text x="240" y="170" class="es8-sub" fill="var(--text-muted, #78716c)">(default / auto / dontAsk)</text>
+<text x="240" y="170" class="es8-sub" fill="var(--text-muted, #6d6762)">(default / auto / dontAsk)</text>
 <!-- 4. Deny-first pipeline -->
-<line x1="240" y1="180" x2="240" y2="208" class="es8-arrow" stroke="var(--text-muted, #78716c)" />
+<line x1="240" y1="180" x2="240" y2="208" class="es8-arrow" stroke="var(--text-muted, #6d6762)" />
 <rect x="25" y="212" width="430" height="94" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" />
 <text x="240" y="242" class="es8-text" fill="var(--text, #1c1917)">Deny-First 파이프라인</text>
-<text x="240" y="270" class="es8-sub" fill="var(--text-muted, #78716c)">Deny → Allow → 분류기 → 사용자</text>
-<text x="240" y="294" class="es8-sub" fill="var(--text-muted, #78716c)">(7단계 평가)</text>
+<text x="240" y="270" class="es8-sub" fill="var(--text-muted, #6d6762)">Deny → Allow → 분류기 → 사용자</text>
+<text x="240" y="294" class="es8-sub" fill="var(--text-muted, #6d6762)">(7단계 평가)</text>
 <!-- 5. Result returns to sub-agent -->
-<line x1="240" y1="306" x2="240" y2="340" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="6,4" />
-<text x="252" y="330" class="es8-note" fill="var(--text-muted, #78716c)">평가 결과 반환</text>
+<line x1="240" y1="306" x2="240" y2="340" stroke="var(--text-muted, #6d6762)" stroke-width="2" stroke-dasharray="6,4" />
+<text x="252" y="330" class="es8-note" fill="var(--text-muted, #6d6762)">평가 결과 반환</text>
 <!-- 6. Two outcomes -->
-<line x1="240" y1="340" x2="140" y2="364" class="es8-arrow-ok" stroke="var(--text-success, #16a34a)" stroke-dasharray="6,4" />
-<line x1="240" y1="340" x2="345" y2="364" class="es8-arrow-no" stroke="var(--text-danger, #dc2626)" stroke-dasharray="6,4" />
-<rect x="15" y="368" width="215" height="72" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2" />
-<path d="M32,404 L40,412 L56,394" fill="none" stroke="var(--text-success, #16a34a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<line x1="240" y1="340" x2="140" y2="364" class="es8-arrow-ok" stroke="var(--text-success, #107836)" stroke-dasharray="6,4" />
+<line x1="240" y1="340" x2="345" y2="364" class="es8-arrow-no" stroke="var(--text-danger, #cb2121)" stroke-dasharray="6,4" />
+<rect x="15" y="368" width="215" height="72" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="2" />
+<path d="M32,404 L40,412 L56,394" fill="none" stroke="var(--text-success, #107836)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
 <text x="145" y="397" class="es8-text" fill="var(--text, #1c1917)">허용 후</text>
 <text x="145" y="421" class="es8-text" fill="var(--text, #1c1917)">도구 실행</text>
-<rect x="250" y="368" width="215" height="72" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2" />
-<path d="M267,396 L281,410 M281,396 L267,410" fill="none" stroke="var(--text-danger, #dc2626)" stroke-width="2.5" stroke-linecap="round" />
+<rect x="250" y="368" width="215" height="72" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2" />
+<path d="M267,396 L281,410 M281,396 L267,410" fill="none" stroke="var(--text-danger, #cb2121)" stroke-width="2.5" stroke-linecap="round" />
 <text x="372" y="397" class="es8-text" fill="var(--text, #1c1917)">거부 후</text>
 <text x="372" y="421" class="es8-text" fill="var(--text, #1c1917)">대안 탐색</text>
 </svg>

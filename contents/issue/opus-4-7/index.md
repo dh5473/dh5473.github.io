@@ -43,11 +43,11 @@ thumbnail: './thumbnail.png'
 <style>
 .bd-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .bd-l { fill: var(--text, #1c1917); font-size: 14px; }
-.bd-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.bd-up { fill: var(--text-success, #16a34a); }
-.bd-dn { fill: var(--text-danger, #dc2626); }
-.bd-ut { fill: var(--text-success, #16a34a); font-size: 14px; }
-.bd-dt { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.bd-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.bd-up { fill: var(--text-success, #107836); }
+.bd-dn { fill: var(--text-danger, #cb2121); }
+.bd-ut { fill: var(--text-success, #107836); font-size: 14px; }
+.bd-dt { fill: var(--text-danger, #cb2121); font-size: 14px; }
 .bd-ax { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
 <text class="bd-t" x="200" y="22" text-anchor="middle">오른 항목과 떨어진 항목</text>

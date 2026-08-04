@@ -24,10 +24,10 @@ No host supplied
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="증상 하나에 원인 후보 네 개가 달린 구조. 로그 URL에 호스트가 비어 있고 task_instance의 hostname과 pid가 NULL인 증상 아래로, hostname_callable 교체와 jwt_secret 고정과 DB 커넥션 풀 증가 세 가지 가설이 모두 효과 없음으로 기각되고, 네 번째인 스케줄러 컨테이너 메모리 부족만 진짜 원인으로 확인됩니다.">
-<style>.nh1-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh1-t{font-size:21px;fill:var(--text, #1c1917)}.nh1-s{font-size:17px;fill:var(--text-muted, #78716c)}.nh1-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.nh1-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh1-ok{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:2}.nh1-x{stroke:var(--text-muted, #78716c);stroke-width:2.5;fill:none;stroke-linecap:round}.nh1-ck{stroke:var(--text-success, #16a34a);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh1-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.nh1-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh1-t{font-size:21px;fill:var(--text, #1c1917)}.nh1-s{font-size:17px;fill:var(--text-muted, #6d6762)}.nh1-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.nh1-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh1-ok{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #107836);stroke-width:2}.nh1-x{stroke:var(--text-muted, #6d6762);stroke-width:2.5;fill:none;stroke-linecap:round}.nh1-ck{stroke:var(--text-success, #107836);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh1-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="nh1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 증상 -->
@@ -79,10 +79,10 @@ No host supplied
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Airflow 3.x에서 hostname과 pid가 기록되기까지의 다섯 단계. 스케줄러가 TaskInstance를 queued로 올리고, LocalExecutor 워커가 스케줄러의 자식 프로세스로 뜨고, task supervisor가 Task 실행 프로세스를 fork하고, 그 프로세스가 Task Execution API에 state=running과 함께 hostname과 pid와 unixname을 전달하면, API 서버가 task_instance 행에 기록합니다.">
-<style>.nh2-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh2-t{font-size:21px;fill:var(--text, #1c1917)}.nh2-s{font-size:17px;fill:var(--text-muted, #78716c)}.nh2-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh2-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:2}.nh2-p{font-size:17px;fill:var(--primary, #0d9488)}.nh2-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.nh2-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh2-t{font-size:21px;fill:var(--text, #1c1917)}.nh2-s{font-size:17px;fill:var(--text-muted, #6d6762)}.nh2-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh2-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0a756c);stroke-width:2}.nh2-p{font-size:17px;fill:var(--primary, #0a756c)}.nh2-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="nh2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text x="240" y="26" text-anchor="middle" class="nh2-h">hostname과 pid가 기록되는 경로</text>
@@ -193,10 +193,10 @@ LocalExecutor는 스케줄러 노드에서 Task를 실행합니다. 워커가 **
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="OOM 시점을 기준으로 Task의 운명이 갈리는 타임라인. 위쪽은 OOM 이전에 fork되어 실행된 Task 0에서 33번으로 state=running을 보고해 hostname과 pid가 기록된 상태. 가운데는 스케줄러 컨테이너가 메모리 한도를 넘어 OOM으로 내려가며 컨테이너 안 모든 프로세스가 함께 종료되는 지점. 아래쪽은 아직 fork되지 않아 보고 자체가 없었던 Task 34번 이후로 hostname과 pid가 NULL로 남고, 스케줄러 재시작 뒤 실패로 정리됩니다.">
-<style>.nh3-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh3-t{font-size:21px;fill:var(--text, #1c1917)}.nh3-s{font-size:17px;fill:var(--text-muted, #78716c)}.nh3-ok{font-size:18px;fill:var(--text-success, #16a34a);font-family:"JetBrains Mono",monospace}.nh3-ng{font-size:18px;fill:var(--text-danger, #dc2626);font-family:"JetBrains Mono",monospace}.nh3-d{font-size:19px;fill:var(--text-danger, #dc2626)}.nh3-boxok{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:2}.nh3-boxng{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #dc2626);stroke-width:2}.nh3-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh3-band{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #dc2626);stroke-width:2;stroke-dasharray:7 5}.nh3-axis{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}.nh3-ck{stroke:var(--text-success, #16a34a);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh3-x{stroke:var(--text-danger, #dc2626);stroke-width:3;fill:none;stroke-linecap:round}</style>
+<style>.nh3-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh3-t{font-size:21px;fill:var(--text, #1c1917)}.nh3-s{font-size:17px;fill:var(--text-muted, #6d6762)}.nh3-ok{font-size:18px;fill:var(--text-success, #107836);font-family:"JetBrains Mono",monospace}.nh3-ng{font-size:18px;fill:var(--text-danger, #cb2121);font-family:"JetBrains Mono",monospace}.nh3-d{font-size:19px;fill:var(--text-danger, #cb2121)}.nh3-boxok{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #107836);stroke-width:2}.nh3-boxng{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #cb2121);stroke-width:2}.nh3-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.nh3-band{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #cb2121);stroke-width:2;stroke-dasharray:7 5}.nh3-axis{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}.nh3-ck{stroke:var(--text-success, #107836);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh3-x{stroke:var(--text-danger, #cb2121);stroke-width:3;fill:none;stroke-linecap:round}</style>
 <defs>
 <marker id="nh3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text x="240" y="26" text-anchor="middle" class="nh3-h">OOM 시점 전후로 갈리는 운명</text>
@@ -254,7 +254,7 @@ services:
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="스케줄러 컨테이너 메모리 한도를 4기가, 8기가, 12기가로 올려가며 관측한 결과를 길이에 비례하는 가로 막대로 나타낸 그림. 4기가에서는 대량 Task를 돌릴 때마다 OOM이 났고, 8기가에서는 많이 나아졌지만 간헐적으로 터졌으며, 12기가에서는 스케줄러가 죽지 않았습니다.">
-<style>.nh4-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh4-l{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.nh4-s{font-size:17px;fill:var(--text-muted, #78716c)}.nh4-bad{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #dc2626);stroke-width:2}.nh4-mid{fill:var(--bg-warn, #fffbeb);stroke:var(--text-warn, #d97706);stroke-width:2}.nh4-good{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #16a34a);stroke-width:2}.nh4-x{stroke:var(--text-danger, #dc2626);stroke-width:2.5;fill:none;stroke-linecap:round}.nh4-w{stroke:var(--text-warn, #d97706);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh4-ck{stroke:var(--text-success, #16a34a);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}</style>
+<style>.nh4-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.nh4-l{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.nh4-s{font-size:17px;fill:var(--text-muted, #6d6762)}.nh4-bad{fill:var(--bg-danger, #fef2f2);stroke:var(--text-danger, #cb2121);stroke-width:2}.nh4-mid{fill:var(--bg-warn, #fffbeb);stroke:var(--text-warn, #9d5604);stroke-width:2}.nh4-good{fill:var(--bg-success, #f0fdf4);stroke:var(--text-success, #107836);stroke-width:2}.nh4-x{stroke:var(--text-danger, #cb2121);stroke-width:2.5;fill:none;stroke-linecap:round}.nh4-w{stroke:var(--text-warn, #9d5604);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.nh4-ck{stroke:var(--text-success, #107836);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}</style>
 <text x="240" y="26" text-anchor="middle" class="nh4-h">한도와 결과</text>
 <!-- 4G -->
 <text x="20" y="70" class="nh4-l">4G</text>

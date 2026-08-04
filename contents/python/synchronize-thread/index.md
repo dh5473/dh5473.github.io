@@ -68,17 +68,17 @@ RLock(re-entrant lock)은 이러한 상황을 해결할 수 있습니다.
 .lk-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .lk-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .lk-l { fill: var(--text, #1c1917); font-size: 14px; }
-.lk-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.lk-dt { fill: var(--text-danger, #dc2626); font-size: 14px; }
-.lk-st { fill: var(--text-success, #16a34a); font-size: 14px; }
+.lk-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.lk-dt { fill: var(--text-danger, #cb2121); font-size: 14px; }
+.lk-st { fill: var(--text-success, #107836); font-size: 14px; }
 .lk-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.lk-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-.lk-ok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-.lk-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#lkArrow); }
+.lk-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+.lk-ok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+.lk-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#lkArrow); }
 </style>
 <defs>
 <marker id="lkArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="lk-t" x="200" y="22" text-anchor="middle">같은 스레드가 다시 acquire하면</text>

@@ -48,25 +48,25 @@ for each row r in outer:
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Nested Loop 조인의 동작. outer 관계의 각 행마다 inner 관계를 한 번씩 조회하는데, inner에 인덱스가 없으면 매번 전체 스캔이 되고 인덱스가 있으면 인덱스 조회 한 번으로 끝납니다. 비용이 outer 행 수에 곱해진다는 점을 함께 보여줍니다.">
 <defs>
-<marker id="nlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="nlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <style>
 .nl-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
-.nl-sub   { font-size: 18px; fill: var(--text-muted, #78716c); }
-.nl-ol    { font-size: 19px; fill: var(--primary, #0d9488); font-weight: 600; }
-.nl-il    { font-size: 19px; fill: var(--accent, #d97706); font-weight: 600; }
+.nl-sub   { font-size: 18px; fill: var(--text-muted, #6d6762); }
+.nl-ol    { font-size: 19px; fill: var(--primary, #0a756c); font-weight: 600; }
+.nl-il    { font-size: 19px; fill: var(--accent, #9d5604); font-weight: 600; }
 .nl-cellt { font-size: 18px; fill: var(--text, #1c1917); }
 .nl-lab   { font-size: 19px; fill: var(--text, #1c1917); }
-.nl-small { font-size: 17px; fill: var(--text-muted, #78716c); }
+.nl-small { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .nl-cost  { font-size: 18px; fill: var(--text, #1c1917); }
 .nl-note  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
-.nl-eg    { font-size: 18px; fill: var(--text-muted, #78716c); }
-.nl-dg    { font-size: 18px; fill: var(--text-danger, #dc2626); }
-.nl-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.nl-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.nl-eg    { font-size: 18px; fill: var(--text-muted, #6d6762); }
+.nl-dg    { font-size: 18px; fill: var(--text-danger, #cb2121); }
+.nl-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.nl-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 2; }
 .nl-cell  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .nl-plain { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.nl-arw   { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; marker-end: url(#nlArrow); }
+.nl-arw   { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; marker-end: url(#nlArrow); }
 .nl-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <text class="nl-title" x="240" y="28" text-anchor="middle">Nested Loop: 이중 루프</text>
@@ -189,27 +189,27 @@ Hash Join은 두 단계로 동작합니다.
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Hash Join의 두 단계. 1단계 build에서 작은 쪽 관계를 해시해 메모리에 해시 테이블을 만들고, 2단계 probe에서 큰 쪽 관계를 훑으며 해시 테이블을 조회해 매칭된 결과 행을 만듭니다. 해시 테이블이 work_mem을 넘으면 여러 batch로 쪼개져 디스크를 오갑니다.">
 <defs>
-<marker id="hjArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="hjArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <style>
 .hj-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
 .hj-step  { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
-.hj-ol    { font-size: 19px; fill: var(--primary, #0d9488); font-weight: 600; }
-.hj-il    { font-size: 19px; fill: var(--accent, #d97706); font-weight: 600; }
+.hj-ol    { font-size: 19px; fill: var(--primary, #0a756c); font-weight: 600; }
+.hj-il    { font-size: 19px; fill: var(--accent, #9d5604); font-weight: 600; }
 .hj-lab   { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
 .hj-body  { font-size: 17px; fill: var(--text, #1c1917); }
-.hj-small { font-size: 17px; fill: var(--text-muted, #78716c); }
-.hj-okt   { font-size: 19px; fill: var(--text-success, #16a34a); font-weight: 600; }
+.hj-small { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.hj-okt   { font-size: 19px; fill: var(--text-success, #107836); font-weight: 600; }
 .hj-note  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
-.hj-dg    { font-size: 18px; fill: var(--text-danger, #dc2626); }
-.hj-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.hj-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.hj-dg    { font-size: 18px; fill: var(--text-danger, #cb2121); }
+.hj-obox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.hj-ibox  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 2; }
 .hj-hash  { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .hj-bk    { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.hj-ok    { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
+.hj-ok    { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2; }
 .hj-ph    { fill: var(--bg-muted, #eeecea); }
-.hj-batch { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
-.hj-arw   { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; marker-end: url(#hjArrow); }
+.hj-batch { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
+.hj-arw   { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; marker-end: url(#hjArrow); }
 .hj-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <text class="hj-title" x="240" y="28" text-anchor="middle">Hash Join: build 다음 probe</text>
@@ -322,23 +322,23 @@ Merge Join은 두 입력이 모두 **조인 키로 정렬**돼 있다는 전제 
      role="img" aria-label="Merge Join의 동작. 조인 키로 정렬된 두 스트림을 앞에서부터 동시에 훑으며 값이 같은 칸끼리 매칭하고, 값이 다르면 작은 쪽 포인터만 전진시킵니다. 인덱스가 정렬을 공급하면 Sort 비용이 사라진다는 점을 함께 보여줍니다.">
 <style>
 .mj-title { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
-.mj-sub   { font-size: 18px; fill: var(--text-muted, #78716c); }
-.mj-ol    { font-size: 18px; fill: var(--primary, #0d9488); font-weight: 600; }
-.mj-il    { font-size: 18px; fill: var(--accent, #d97706); font-weight: 600; }
+.mj-sub   { font-size: 18px; fill: var(--text-muted, #6d6762); }
+.mj-ol    { font-size: 18px; fill: var(--primary, #0a756c); font-weight: 600; }
+.mj-il    { font-size: 18px; fill: var(--accent, #9d5604); font-weight: 600; }
 .mj-val   { font-size: 19px; fill: var(--text, #1c1917); }
-.mj-okv   { font-size: 19px; fill: var(--text-success, #16a34a); font-weight: 600; }
-.mj-okt   { font-size: 18px; fill: var(--text-success, #16a34a); }
+.mj-okv   { font-size: 19px; fill: var(--text-success, #107836); font-weight: 600; }
+.mj-okt   { font-size: 18px; fill: var(--text-success, #107836); }
 .mj-head  { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
 .mj-row   { font-size: 18px; fill: var(--text, #1c1917); }
-.mj-small { font-size: 17px; fill: var(--text-muted, #78716c); }
-.mj-ocell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.mj-icell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
-.mj-okc   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2.5; }
-.mj-link  { stroke: var(--text-success, #16a34a); stroke-width: 2.5; fill: none; }
+.mj-small { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.mj-ocell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.mj-icell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 2; }
+.mj-okc   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2.5; }
+.mj-link  { stroke: var(--text-success, #107836); stroke-width: 2.5; fill: none; }
 .mj-band  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.mj-bandok{ fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+.mj-bandok{ fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
 .mj-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.mj-boxok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
+.mj-boxok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2; }
 .mj-div   { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <text class="mj-title" x="240" y="28" text-anchor="middle">Merge Join: 두 포인터 전진</text>

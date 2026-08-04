@@ -126,35 +126,35 @@ AS = `ACCESS SHARE`(SELECT), RS = `ROW SHARE`(SELECT ... FOR UPDATE 계열), RE 
      role="img" aria-label="테이블 users의 락 큐. 맨 위에서 긴 SELECT가 AccessShare를 잡고 실행 중이고, 그 뒤에 ALTER TABLE이 AccessExclusive를 기다리며, 다시 그 뒤에 새 SELECT 두 개가 대기합니다. 새 SELECT는 실행 중인 SELECT와 호환되지만 FIFO 큐 때문에 앞의 AccessExclusive를 넘어설 수 없다는 것을 보여줍니다">
 <style>
 .isl1-t { fill: var(--text, #1c1917); }
-.isl1-m { fill: var(--text-muted, #78716c); }
-.isl1-d { fill: var(--text-danger, #dc2626); }
+.isl1-m { fill: var(--text-muted, #6d6762); }
+.isl1-d { fill: var(--text-danger, #cb2121); }
 </style>
 <defs>
 <marker id="isl1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text x="240" y="26" class="isl1-t" font-size="20" font-weight="700" text-anchor="middle">ALTER 하나가 만드는 연쇄 대기</text>
 <text x="240" y="50" class="isl1-m" font-size="17" text-anchor="middle">테이블 users의 락 큐. 위쪽이 큐의 머리</text>
 <!-- row 1: holder -->
-<rect x="24" y="70" width="432" height="46" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<rect x="24" y="70" width="432" height="46" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
 <text x="40" y="99" class="isl1-t" font-size="19">실행 중 · 긴 SELECT</text>
 <text x="440" y="99" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
 <!-- wait arrow 1 -->
-<line x1="240" y1="116" x2="240" y2="142" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
+<line x1="240" y1="116" x2="240" y2="142" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
 <text x="256" y="135" class="isl1-m" font-size="17">대기</text>
 <!-- row 2: ALTER -->
-<rect x="24" y="144" width="432" height="46" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<rect x="24" y="144" width="432" height="46" rx="8" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <text x="40" y="173" class="isl1-d" font-size="19">대기 · ALTER TABLE</text>
 <text x="440" y="173" class="isl1-d" font-size="17" text-anchor="end">AccessExclusive</text>
 <!-- wait arrow 2 -->
-<line x1="240" y1="190" x2="240" y2="216" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
+<line x1="240" y1="190" x2="240" y2="216" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#isl1Arrow)"/>
 <text x="256" y="209" class="isl1-m" font-size="17">대기</text>
 <!-- row 3, 4: blocked newcomers -->
-<rect x="24" y="218" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
+<rect x="24" y="218" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="2"/>
 <text x="40" y="247" class="isl1-t" font-size="19">대기 · 그 뒤에 온 SELECT</text>
 <text x="440" y="247" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
-<rect x="24" y="270" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
+<rect x="24" y="270" width="432" height="46" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="2"/>
 <text x="40" y="299" class="isl1-t" font-size="19">대기 · 그 뒤에 온 SELECT</text>
 <text x="440" y="299" class="isl1-m" font-size="17" text-anchor="end">AccessShare</text>
 </svg>
@@ -302,56 +302,56 @@ SELECT * FROM doctors;
      role="img" aria-label="write skew가 발생하는 시간 순서. Alice 세션과 Bob 세션이 각각 REPEATABLE READ로 시작해 둘 다 당직 인원을 2로 읽고, 각각 서로 다른 행을 false로 바꾼 뒤 둘 다 커밋에 성공합니다. 서로 다른 행이라 row-level lock이 충돌하지 않아 최소 1명 당직 규칙이 깨지고 당직 인원이 0이 됩니다">
 <style>
 .isl2-t { fill: var(--text, #1c1917); }
-.isl2-m { fill: var(--text-muted, #78716c); }
-.isl2-ok { fill: var(--text-success, #16a34a); }
-.isl2-bad { fill: var(--text-danger, #dc2626); }
+.isl2-m { fill: var(--text-muted, #6d6762); }
+.isl2-ok { fill: var(--text-success, #107836); }
+.isl2-bad { fill: var(--text-danger, #cb2121); }
 .isl2-b { fill: var(--text, #1c1917); font-weight: 700; }
 </style>
 <text x="240" y="26" class="isl2-t" font-size="20" font-weight="700" text-anchor="middle">Write Skew가 만들어지는 순서</text>
 <text x="240" y="50" class="isl2-m" font-size="17" text-anchor="middle">위에서 아래로 시간 순 · A = Alice, B = Bob</text>
 <!-- t1: A BEGIN -->
-<rect x="20" y="64" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="84" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<rect x="20" y="64" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<circle cx="42" cy="84" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
 <text x="42" y="90" class="isl2-b" font-size="17" text-anchor="middle">A</text>
 <text x="64" y="90" class="isl2-t" font-size="18">BEGIN REPEATABLE READ</text>
 <!-- t2: B BEGIN -->
-<rect x="172" y="112" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="132" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<rect x="172" y="112" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
+<circle cx="194" cy="132" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
 <text x="194" y="138" class="isl2-b" font-size="17" text-anchor="middle">B</text>
 <text x="216" y="138" class="isl2-t" font-size="18">BEGIN REPEATABLE READ</text>
 <!-- t3: A reads -->
-<rect x="20" y="160" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="180" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<rect x="20" y="160" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<circle cx="42" cy="180" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
 <text x="42" y="186" class="isl2-b" font-size="17" text-anchor="middle">A</text>
 <text x="64" y="186" class="isl2-t" font-size="18">SELECT count(*) → 2</text>
 <!-- t4: B reads -->
-<rect x="172" y="208" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="228" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<rect x="172" y="208" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
+<circle cx="194" cy="228" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
 <text x="194" y="234" class="isl2-b" font-size="17" text-anchor="middle">B</text>
 <text x="216" y="234" class="isl2-t" font-size="18">SELECT count(*) → 2</text>
 <!-- t5: A updates row 1 -->
-<rect x="20" y="256" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="276" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<rect x="20" y="256" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<circle cx="42" cy="276" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
 <text x="42" y="282" class="isl2-b" font-size="17" text-anchor="middle">A</text>
 <text x="64" y="282" class="isl2-t" font-size="18">UPDATE id=1 → false</text>
 <!-- t6: B updates row 2 -->
-<rect x="172" y="304" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="324" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<rect x="172" y="304" width="286" height="40" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
+<circle cx="194" cy="324" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
 <text x="194" y="330" class="isl2-b" font-size="17" text-anchor="middle">B</text>
 <text x="216" y="330" class="isl2-t" font-size="18">UPDATE id=2 → false</text>
 <text x="240" y="366" class="isl2-m" font-size="17" text-anchor="middle">서로 다른 행 → 락 충돌 없음</text>
 <!-- t7: A commits -->
-<rect x="20" y="382" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
-<circle cx="42" cy="402" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2"/>
+<rect x="20" y="382" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<circle cx="42" cy="402" r="13" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2"/>
 <text x="42" y="408" class="isl2-b" font-size="17" text-anchor="middle">A</text>
 <text x="64" y="408" class="isl2-ok" font-size="18">COMMIT 성공</text>
 <!-- t8: B commits -->
-<rect x="172" y="430" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #d97706)" stroke-width="2"/>
-<circle cx="194" cy="450" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #d97706)" stroke-width="2"/>
+<rect x="172" y="430" width="286" height="40" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
+<circle cx="194" cy="450" r="13" fill="var(--bg, #fafaf8)" stroke="var(--accent, #9d5604)" stroke-width="2"/>
 <text x="194" y="456" class="isl2-b" font-size="17" text-anchor="middle">B</text>
 <text x="216" y="456" class="isl2-ok" font-size="18">COMMIT 성공</text>
 <!-- result -->
-<rect x="16" y="486" width="448" height="44" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<rect x="16" y="486" width="448" height="44" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <text x="240" y="513" class="isl2-bad" font-size="20" font-weight="700" text-anchor="middle">결과: on_call = true 인 행 0개</text>
 </svg>
 </div>
@@ -449,13 +449,13 @@ UPDATE accounts SET balance = balance + 100 WHERE id = 1;
      role="img" aria-label="deadlock의 대기 순환. Session A는 id=1 행의 락을 쥐고 id=2를 기다리고, Session B는 id=2 행의 락을 쥐고 id=1을 기다립니다. 두 대기 화살표가 서로를 향해 순환을 이루므로 둘 다 영원히 대기하며, deadlock_timeout 기본 1초 후 한쪽이 abort됩니다">
 <style>
 .isl3-t { fill: var(--text, #1c1917); }
-.isl3-hold { fill: var(--text-success, #16a34a); }
-.isl3-wait { fill: var(--text-warn, #d97706); }
-.isl3-bad { fill: var(--text-danger, #dc2626); }
+.isl3-hold { fill: var(--text-success, #107836); }
+.isl3-wait { fill: var(--text-warn, #9d5604); }
+.isl3-bad { fill: var(--text-danger, #cb2121); }
 </style>
 <defs>
 <marker id="isl3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-warn, #d97706)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-warn, #9d5604)"/>
 </marker>
 </defs>
 <text x="240" y="26" class="isl3-t" font-size="20" font-weight="700" text-anchor="middle">Deadlock: 서로가 쥔 행을 대기</text>
@@ -470,15 +470,15 @@ UPDATE accounts SET balance = balance + 100 WHERE id = 1;
 <text x="240" y="249" class="isl3-hold" font-size="17" text-anchor="middle">쥔 락: id=2</text>
 <text x="240" y="271" class="isl3-wait" font-size="17" text-anchor="middle">대기: id=1</text>
 <!-- A waits on B, down the left side -->
-<path d="M 130 112 L 100 112 L 100 240 L 126 240" fill="none" stroke="var(--text-warn, #d97706)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
+<path d="M 130 112 L 100 112 L 100 240 L 126 240" fill="none" stroke="var(--text-warn, #9d5604)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
 <text x="52" y="166" class="isl3-wait" font-size="17" text-anchor="middle">A가 기다림</text>
 <text x="52" y="188" class="isl3-wait" font-size="17" text-anchor="middle">(id=2)</text>
 <!-- B waits on A, up the right side -->
-<path d="M 350 240 L 380 240 L 380 112 L 354 112" fill="none" stroke="var(--text-warn, #d97706)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
+<path d="M 350 240 L 380 240 L 380 112 L 354 112" fill="none" stroke="var(--text-warn, #9d5604)" stroke-width="2" marker-end="url(#isl3Arrow)"/>
 <text x="430" y="166" class="isl3-wait" font-size="17" text-anchor="middle">B가 기다림</text>
 <text x="430" y="188" class="isl3-wait" font-size="17" text-anchor="middle">(id=1)</text>
 <!-- outcome -->
-<rect x="24" y="306" width="432" height="68" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<rect x="24" y="306" width="432" height="68" rx="10" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <text x="240" y="334" class="isl3-bad" font-size="19" font-weight="700" text-anchor="middle">순환이 닫혀 둘 다 영원히 대기</text>
 <text x="240" y="360" class="isl3-bad" font-size="17" text-anchor="middle">deadlock_timeout(기본 1초) 후 한쪽을 abort</text>
 </svg>

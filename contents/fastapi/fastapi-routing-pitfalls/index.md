@@ -20,17 +20,17 @@ FastAPI는 내부적으로 Starlette의 `Router` 클래스를 사용합니다. �
 <style>
 .rt-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
 .rt-req { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.rt-hit { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.rt-hit { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
 .rt-miss { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; stroke-dasharray: 5 3; }
 .rt-rt { font-size: 15px; fill: var(--text, #1c1917); }
 .rt-path { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
-.rt-dim { font-size: 15px; fill: var(--text-muted, #78716c); }
-.rt-badge { font-size: 14px; font-weight: 600; fill: var(--primary, #0d9488); }
-.rt-bdim { font-size: 14px; fill: var(--text-muted, #78716c); }
-.rt-edge { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+.rt-dim { font-size: 15px; fill: var(--text-muted, #6d6762); }
+.rt-badge { font-size: 14px; font-weight: 600; fill: var(--primary, #0a756c); }
+.rt-bdim { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.rt-edge { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
 </style>
 <defs>
-<marker id="rtArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="rtArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text class="rt-title" x="200" y="20" text-anchor="middle">위에서 아래로, 첫 매칭에서 멈춤</text>
 <rect class="rt-req" x="60" y="34" width="280" height="38" rx="8"/>
@@ -102,21 +102,21 @@ $ curl http://localhost:8000/users/me
 <style>
 .r2-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
 .r2-req { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.r2-ok { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.6; }
-.r2-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.6; }
+.r2-ok { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.6; }
+.r2-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.6; }
 .r2-rt { font-size: 15px; fill: var(--text, #1c1917); }
 .r2-h { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
-.r2-s { font-size: 14px; fill: var(--text-muted, #78716c); }
-.r2-dt { font-size: 16px; font-weight: 700; fill: var(--text-danger, #dc2626); }
-.r2-note { font-size: 14px; fill: var(--text-muted, #78716c); }
-.r2-x { font-size: 14px; font-weight: 600; fill: var(--text-danger, #dc2626); }
-.r2-edge { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
-.r2-back { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; stroke-dasharray: 5 3; }
-.r2-cross { stroke: var(--text-danger, #dc2626); stroke-width: 2; }
+.r2-s { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.r2-dt { font-size: 16px; font-weight: 700; fill: var(--text-danger, #cb2121); }
+.r2-note { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.r2-x { font-size: 14px; font-weight: 600; fill: var(--text-danger, #cb2121); }
+.r2-edge { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.r2-back { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; stroke-dasharray: 5 3; }
+.r2-cross { stroke: var(--text-danger, #cb2121); stroke-width: 2; }
 </style>
 <defs>
-<marker id="r2Arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
-<marker id="r2Back" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="r2Arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
+<marker id="r2Back" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text class="r2-title" x="200" y="20" text-anchor="middle">매칭과 검증은 다른 단계</text>
 <rect class="r2-req" x="48" y="34" width="180" height="36" rx="8"/>

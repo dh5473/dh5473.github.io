@@ -47,14 +47,14 @@ Streaming Replication의 핵심은 두 프로세스입니다.
 <style>
 .rep1-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.rep1-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.rep1-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 .rep1-t { fill: var(--text, #1c1917); }
-.rep1-m { fill: var(--text-muted, #78716c); }
-.rep1-p { fill: var(--primary, #0d9488); font-weight: 700; }
+.rep1-m { fill: var(--text-muted, #6d6762); }
+.rep1-p { fill: var(--primary, #0a756c); font-weight: 700; }
 </style>
 <defs>
-<marker id="rep1Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
-<marker id="rep1ArrowP" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--primary, #0d9488)"/></marker>
+<marker id="rep1Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #6d6762)"/></marker>
+<marker id="rep1ArrowP" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--primary, #0a756c)"/></marker>
 </defs>
 <!-- Primary panel -->
 <rect class="rep1-panel" x="20" y="16" width="440" height="252" rx="10"/>
@@ -65,17 +65,17 @@ Streaming Replication의 핵심은 두 프로세스입니다.
 <text class="rep1-t" x="128" y="88" font-size="18" text-anchor="middle">backend</text>
 <text class="rep1-t" x="240" y="88" font-size="18" text-anchor="middle">backend</text>
 <text class="rep1-t" x="352" y="88" font-size="18" text-anchor="middle">backend</text>
-<path d="M240,102 L240,126" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<path d="M240,102 L240,126" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
 <text class="rep1-m" x="252" y="122" font-size="17">WAL 기록</text>
 <rect class="rep1-box" x="140" y="130" width="200" height="42" rx="6"/>
 <text class="rep1-t" x="240" y="157" font-size="19" text-anchor="middle">pg_wal/</text>
-<path d="M240,172 L240,196" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<path d="M240,172 L240,196" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
 <text class="rep1-m" x="252" y="192" font-size="17">읽기</text>
 <rect class="rep1-key" x="120" y="200" width="240" height="52" rx="6"/>
 <text class="rep1-t" x="240" y="224" font-size="20" text-anchor="middle">walsender</text>
 <text class="rep1-m" x="240" y="245" font-size="17" text-anchor="middle">WAL을 읽어 전송</text>
 <!-- TCP link -->
-<path d="M240,268 L240,334" stroke="var(--primary, #0d9488)" stroke-width="2.5" fill="none" marker-end="url(#rep1ArrowP)"/>
+<path d="M240,268 L240,334" stroke="var(--primary, #0a756c)" stroke-width="2.5" fill="none" marker-end="url(#rep1ArrowP)"/>
 <text class="rep1-p" x="252" y="294" font-size="18">TCP 전송</text>
 <text class="rep1-m" x="252" y="318" font-size="17">WAL 바이트 그대로</text>
 <!-- Standby panel -->
@@ -84,11 +84,11 @@ Streaming Replication의 핵심은 두 프로세스입니다.
 <rect class="rep1-key" x="120" y="382" width="240" height="52" rx="6"/>
 <text class="rep1-t" x="240" y="406" font-size="20" text-anchor="middle">walreceiver</text>
 <text class="rep1-m" x="240" y="427" font-size="17" text-anchor="middle">WAL 수신</text>
-<path d="M240,434 L240,458" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<path d="M240,434 L240,458" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
 <text class="rep1-m" x="252" y="454" font-size="17">저장</text>
 <rect class="rep1-box" x="140" y="462" width="200" height="42" rx="6"/>
 <text class="rep1-t" x="240" y="489" font-size="19" text-anchor="middle">pg_wal/</text>
-<path d="M240,504 L240,528" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
+<path d="M240,504 L240,528" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep1Arrow)"/>
 <text class="rep1-m" x="252" y="524" font-size="17">읽기</text>
 <rect class="rep1-key" x="90" y="532" width="300" height="54" rx="6"/>
 <text class="rep1-t" x="240" y="556" font-size="20" text-anchor="middle">startup process</text>
@@ -284,33 +284,33 @@ subscriber 측에서는 **apply worker** 프로세스가 수신한 변경을 적
 <style>
 .rep2-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep2-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.rep2-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 2; }
+.rep2-key { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #9d5604); stroke-width: 2; }
 .rep2-t { fill: var(--text, #1c1917); }
-.rep2-m { fill: var(--text-muted, #78716c); }
-.rep2-p { fill: var(--accent, #d97706); font-weight: 700; }
+.rep2-m { fill: var(--text-muted, #6d6762); }
+.rep2-p { fill: var(--accent, #9d5604); font-weight: 700; }
 </style>
 <defs>
-<marker id="rep2Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
-<marker id="rep2ArrowA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--accent, #d97706)"/></marker>
+<marker id="rep2Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #6d6762)"/></marker>
+<marker id="rep2ArrowA" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--accent, #9d5604)"/></marker>
 </defs>
 <!-- Publisher panel -->
 <rect class="rep2-panel" x="20" y="16" width="440" height="294" rx="10"/>
 <text class="rep2-p" x="36" y="45" font-size="21">위: Publisher</text>
 <rect class="rep2-box" x="110" y="62" width="260" height="42" rx="6"/>
 <text class="rep2-t" x="240" y="89" font-size="19" text-anchor="middle">pg_wal/ (WAL record)</text>
-<path d="M240,104 L240,128" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<path d="M240,104 L240,128" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
 <text class="rep2-m" x="252" y="124" font-size="17">읽기</text>
 <rect class="rep2-key" x="70" y="132" width="340" height="58" rx="6"/>
 <text class="rep2-t" x="240" y="156" font-size="18" text-anchor="middle">walsender + logical decoding</text>
 <text class="rep2-m" x="240" y="178" font-size="17" text-anchor="middle">output plugin: pgoutput</text>
-<path d="M240,190 L240,214" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<path d="M240,190 L240,214" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
 <text class="rep2-m" x="252" y="210" font-size="17">디코딩</text>
 <rect class="rep2-box" x="70" y="218" width="340" height="76" rx="6"/>
 <text class="rep2-t" x="240" y="241" font-size="19" text-anchor="middle">논리 변경 스트림</text>
 <text class="rep2-m" x="240" y="264" font-size="17" text-anchor="middle">INSERT public.orders: id=3</text>
 <text class="rep2-m" x="240" y="286" font-size="17" text-anchor="middle">UPDATE public.orders: id=3</text>
 <!-- TCP link -->
-<path d="M240,310 L240,376" stroke="var(--accent, #d97706)" stroke-width="2.5" fill="none" marker-end="url(#rep2ArrowA)"/>
+<path d="M240,310 L240,376" stroke="var(--accent, #9d5604)" stroke-width="2.5" fill="none" marker-end="url(#rep2ArrowA)"/>
 <text class="rep2-p" x="252" y="336" font-size="18">TCP 전송</text>
 <text class="rep2-m" x="252" y="360" font-size="17">행 단위 논리 변경</text>
 <!-- Subscriber panel -->
@@ -319,7 +319,7 @@ subscriber 측에서는 **apply worker** 프로세스가 수신한 변경을 적
 <rect class="rep2-key" x="110" y="424" width="260" height="54" rx="6"/>
 <text class="rep2-t" x="240" y="448" font-size="20" text-anchor="middle">apply worker</text>
 <text class="rep2-m" x="240" y="469" font-size="17" text-anchor="middle">수신한 변경을 적용</text>
-<path d="M240,478 L240,502" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
+<path d="M240,478 L240,502" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep2Arrow)"/>
 <text class="rep2-m" x="252" y="498" font-size="17">적용</text>
 <rect class="rep2-box" x="70" y="506" width="340" height="70" rx="6"/>
 <text class="rep2-t" x="240" y="530" font-size="19" text-anchor="middle">구독 테이블</text>
@@ -402,29 +402,29 @@ LSN이 4단계로 나뉘어 있어서 병목 위치를 진단할 수 있습니�
 <style>
 .rep3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rep3-t { fill: var(--text, #1c1917); }
-.rep3-m { fill: var(--text-muted, #78716c); }
-.rep3-w { fill: var(--text-warn, #d97706); }
+.rep3-m { fill: var(--text-muted, #6d6762); }
+.rep3-w { fill: var(--text-warn, #9d5604); }
 </style>
 <defs>
-<marker id="rep3Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="rep3Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <!-- stage 1 -->
 <rect class="rep3-box" x="70" y="20" width="280" height="48" rx="6"/>
 <text class="rep3-t" x="210" y="42" font-size="19" text-anchor="middle">sent_lsn</text>
 <text class="rep3-m" x="210" y="61" font-size="17" text-anchor="middle">primary가 전송</text>
-<path d="M210,68 L210,92" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<path d="M210,68 L210,92" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
 <text class="rep3-w" x="360" y="85" font-size="17">네트워크</text>
 <!-- stage 2 -->
 <rect class="rep3-box" x="70" y="96" width="280" height="48" rx="6"/>
 <text class="rep3-t" x="210" y="118" font-size="19" text-anchor="middle">write_lsn</text>
 <text class="rep3-m" x="210" y="137" font-size="17" text-anchor="middle">standby의 OS write</text>
-<path d="M210,144 L210,168" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<path d="M210,144 L210,168" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
 <text class="rep3-w" x="360" y="161" font-size="17">디스크 I/O</text>
 <!-- stage 3 -->
 <rect class="rep3-box" x="70" y="172" width="280" height="48" rx="6"/>
 <text class="rep3-t" x="210" y="194" font-size="19" text-anchor="middle">flush_lsn</text>
 <text class="rep3-m" x="210" y="213" font-size="17" text-anchor="middle">standby의 디스크 flush</text>
-<path d="M210,220 L210,244" stroke="var(--text-muted, #78716c)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
+<path d="M210,220 L210,244" stroke="var(--text-muted, #6d6762)" stroke-width="2" fill="none" marker-end="url(#rep3Arrow)"/>
 <text class="rep3-w" x="360" y="237" font-size="17">redo 속도</text>
 <!-- stage 4 -->
 <rect class="rep3-box" x="70" y="248" width="280" height="48" rx="6"/>

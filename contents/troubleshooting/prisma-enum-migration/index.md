@@ -104,18 +104,18 @@ COMMIT;
 <style>
 .sh-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .sh-l { fill: var(--text, #1c1917); font-size: 14px; }
-.sh-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.sh-ok { fill: var(--text-success, #16a34a); font-size: 14px; }
-.sh-bad { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.sh-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.sh-ok { fill: var(--text-success, #107836); font-size: 14px; }
+.sh-bad { fill: var(--text-danger, #cb2121); font-size: 14px; }
 .sh-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.sh-fail { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 2; }
+.sh-fail { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 2; }
 .sh-wrap { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 6 3; }
 .sh-dim { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 4 3; }
-.sh-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#shArrow); }
+.sh-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#shArrow); }
 </style>
 <defs>
 <marker id="shArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="sh-t" x="200" y="22" text-anchor="middle">migrate dev가 매번 밟는 경로</text>

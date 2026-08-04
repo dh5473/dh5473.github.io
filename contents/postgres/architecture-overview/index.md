@@ -73,12 +73,12 @@ Postgres의 프로세스 모델을 한 줄로 요약하면 이렇습니다.
 .pao1-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .pao1-root { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
 .pao1-name { font-size: 19px; fill: var(--text, #1c1917); }
-.pao1-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pao1-sub { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .pao1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.pao1-rootbox { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
-.pao1-tagb { fill: var(--primary, #0d9488); }
-.pao1-tagc { fill: var(--accent, #d97706); }
-.pao1-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.pao1-rootbox { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
+.pao1-tagb { fill: var(--primary, #0a756c); }
+.pao1-tagc { fill: var(--accent, #9d5604); }
+.pao1-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 </style>
 <!-- 부모 -->
 <rect class="pao1-rootbox" x="24" y="12" width="432" height="54" rx="8"/>
@@ -235,10 +235,10 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 .pao2-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .pao2-title { font-size: 22px; fill: var(--text, #1c1917); font-weight: 600; }
 .pao2-name { font-size: 19px; fill: var(--text, #1c1917); }
-.pao2-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
-.pao2-outer { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.pao2-desc { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.pao2-outer { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
 .pao2-row { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.pao2-tag { fill: var(--primary, #0d9488); }
+.pao2-tag { fill: var(--primary, #0a756c); }
 .pao2-tagm { fill: var(--border, #e7e5e4); }
 </style>
 <!-- 제목 -->
@@ -312,17 +312,17 @@ backend가 쓰는 메모리는 두 종류입니다. **private 메모리**는 해
 .pao3-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .pao3-head { font-size: 20px; fill: var(--text, #1c1917); font-weight: 600; }
 .pao3-name { font-size: 19px; fill: var(--text, #1c1917); }
-.pao3-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pao3-desc { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .pao3-step { font-size: 19px; fill: var(--text, #1c1917); }
 .pao3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.pao3-outer { fill: var(--bg, #fafaf8); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.pao3-arrow { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
-.pao3-hit { fill: var(--text-success, #16a34a); }
-.pao3-read { fill: var(--accent, #d97706); }
+.pao3-outer { fill: var(--bg, #fafaf8); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.pao3-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
+.pao3-hit { fill: var(--text-success, #107836); }
+.pao3-read { fill: var(--accent, #9d5604); }
 </style>
 <defs>
 <marker id="pao3Arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- client -->

@@ -66,12 +66,12 @@ PRIMARY KEY (event_date, user_id);
      role="img" aria-label="ORDER BY에 지정한 세 컬럼 중 앞의 두 컬럼만 PRIMARY KEY로 지정했을 때, 희소 인덱스에는 앞 두 컬럼만 기록되고 물리 정렬은 세 컬럼 전체를 따른다는 것을 보여주는 그림">
 <style>
 .pk5-t { fill: var(--text, #1c1917); }
-.pk5-m { fill: var(--text-muted, #78716c); }
-.pk5-p { fill: var(--primary, #0d9488); }
+.pk5-m { fill: var(--text-muted, #6d6762); }
+.pk5-p { fill: var(--primary, #0a756c); }
 .pk5-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.pk5-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.pk5-br { fill: none; stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
-.pk5-brp { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2; }
+.pk5-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.pk5-br { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
+.pk5-brp { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2; }
 </style>
 <text class="pk5-t" x="240" y="22" text-anchor="middle" font-size="18">ORDER BY (event_date, user_id, event_type)</text>
 <!-- 위쪽 괄호: primary.idx에 들어가는 접두사 -->
@@ -132,13 +132,13 @@ ORDER BY 설계에서 가장 중요한 규칙은 컬럼의 카디널리티(cardi
      role="img" aria-label="정렬 키 순서에 따른 데이터 물리 배치 차이. 위는 카디널리티가 낮은 status를 앞에 둬서 같은 값의 구간이 세 Granule에 걸치는 경우, 아래는 카디널리티가 높은 user_id를 앞에 둬서 구간이 한 Granule보다 좁아지는 경우">
 <style>
 .cd5-t { fill: var(--text, #1c1917); }
-.cd5-m { fill: var(--text-muted, #78716c); }
-.cd5-ok { fill: var(--text-success, #16a34a); }
-.cd5-no { fill: var(--text-danger, #dc2626); }
-.cd5-p { fill: var(--primary, #0d9488); }
+.cd5-m { fill: var(--text-muted, #6d6762); }
+.cd5-ok { fill: var(--text-success, #107836); }
+.cd5-no { fill: var(--text-danger, #cb2121); }
+.cd5-p { fill: var(--primary, #0a756c); }
 .cd5-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.cd5-seg { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.cd5-br { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2; }
+.cd5-seg { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.cd5-br { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2; }
 .cd5-div { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
 <!-- 위 패널: 낮은 카디널리티 컬럼이 앞 -->
@@ -276,11 +276,11 @@ ORDER BY 설계에서 컬럼 순서가 중요한 근본적인 이유입니다.
      role="img" aria-label="ORDER BY (a, b, c) 테이블에서 WHERE 조건별로 a, b, c 중 어떤 컬럼이 희소 인덱스에 쓰이는지 정리한 표. 접두사 조건만 인덱스를 타고, b나 c 단독 조건은 전체 스캔이 됩니다">
 <style>
 .pf5-t { fill: var(--text, #1c1917); }
-.pf5-m { fill: var(--text-muted, #78716c); }
-.pf5-p { fill: var(--primary, #0d9488); }
-.pf5-d { fill: var(--text-danger, #dc2626); }
-.pf5-use { fill: var(--primary, #0d9488); }
-.pf5-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.2; }
+.pf5-m { fill: var(--text-muted, #6d6762); }
+.pf5-p { fill: var(--primary, #0a756c); }
+.pf5-d { fill: var(--text-danger, #cb2121); }
+.pf5-use { fill: var(--primary, #0a756c); }
+.pf5-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.2; }
 .pf5-w { fill: var(--on-fill, #14100e); }
 </style>
 <text class="pf5-t" x="240" y="24" text-anchor="middle" font-size="19">ORDER BY (a, b, c) 테이블</text>
@@ -650,8 +650,8 @@ SELECT count() FROM prefix_test WHERE a = 5 AND b = 500;
 </defs>
 <style>
 .gr5-t { fill: var(--text, #1c1917); }
-.gr5-m { fill: var(--text-muted, #78716c); }
-.gr5-read { fill: var(--text-danger, #dc2626); }
+.gr5-m { fill: var(--text-muted, #6d6762); }
+.gr5-read { fill: var(--text-danger, #cb2121); }
 .gr5-skip { fill: var(--bg-success, #f0fdf4); }
 .gr5-out { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .gr5-sw { stroke: var(--border, #e7e5e4); stroke-width: 1.2; }

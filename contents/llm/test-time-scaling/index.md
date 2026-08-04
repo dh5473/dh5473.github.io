@@ -132,11 +132,11 @@ def factorial(n):
 .vm-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .vm-l { fill: var(--text, #1c1917); font-size: 14px; }
 .vm-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.vm-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.vm-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .vm-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.vm-badge { fill: var(--primary, #0d9488); }
+.vm-badge { fill: var(--primary, #0a756c); }
 .vm-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.vm-tick { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; }
+.vm-tick { stroke: var(--primary, #0a756c); stroke-width: 1.5; fill: none; }
 </style>
 <text class="vm-t" x="200" y="22" text-anchor="middle">채점 지점의 차이</text>
 <text class="vm-h" x="20" y="52">PRM</text>

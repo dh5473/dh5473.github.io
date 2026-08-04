@@ -108,14 +108,14 @@ app = FastAPI(lifespan=lifespan)
 <svg viewBox="0 0 400 398" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="앱 생명 주기를 세 구간으로 나눈 그림. yield 위는 startup, yield와 종료 신호 사이가 요청 처리 구간, 그 아래가 shutdown. 가운데 구간이 가장 길게 그려져 있음">
 <style>
 .ls-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
-.ls-edge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.6; }
-.ls-serve { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
-.ls-et { font-size: 16px; font-weight: 700; fill: var(--accent, #d97706); }
-.ls-st { font-size: 16px; font-weight: 700; fill: var(--text-success, #16a34a); }
-.ls-sub { font-size: 14px; fill: var(--text-muted, #78716c); }
-.ls-note { font-size: 14px; fill: var(--text-muted, #78716c); }
-.ls-mark { stroke: var(--primary, #0d9488); stroke-width: 1.6; stroke-dasharray: 5 3; fill: none; }
-.ls-mt { font-size: 14px; font-weight: 600; fill: var(--primary, #0d9488); }
+.ls-edge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.6; }
+.ls-serve { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.6; }
+.ls-et { font-size: 16px; font-weight: 700; fill: var(--accent, #9d5604); }
+.ls-st { font-size: 16px; font-weight: 700; fill: var(--text-success, #107836); }
+.ls-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.ls-note { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.ls-mark { stroke: var(--primary, #0a756c); stroke-width: 1.6; stroke-dasharray: 5 3; fill: none; }
+.ls-mt { font-size: 14px; font-weight: 600; fill: var(--primary, #0a756c); }
 </style>
 <text class="ls-title" x="200" y="20" text-anchor="middle">yield가 가르는 세 구간</text>
 <rect class="ls-edge" x="16" y="40" width="150" height="76" rx="8"/>

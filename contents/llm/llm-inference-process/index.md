@@ -28,16 +28,16 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
      role="img" aria-label="자기회귀 생성 과정. 입력 한국의 수도는에서 시작해 스텝마다 토큰을 하나씩 예측하고, 그 토큰을 시퀀스 끝에 붙여 다시 입력으로 넣는 과정을 3스텝에 걸쳐 보여줍니다. 최종 출력은 서울입니다.">
   <style>
     .sv1-chip { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .sv1-new  { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+    .sv1-new  { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
     .sv1-out  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .sv1-t    { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .sv1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .sv1-cap  { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-    .sv1-ar   { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#sv1Arrow); }
+    .sv1-sub  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .sv1-cap  { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
+    .sv1-ar   { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#sv1Arrow); }
   </style>
   <defs>
     <marker id="sv1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <text x="240" y="26" class="sv1-cap">입력: “한국의 수도는”</text>
@@ -103,22 +103,22 @@ vLLM으로 모델을 서빙하다 보면 이상한 현상을 하나 발견하게
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="KV Cache 유무 비교. 캐시가 없으면 스텝마다 재계산량을 나타내는 막대가 계속 길어지고, 캐시를 쓰면 새로 계산하는 막대 길이가 스텝마다 동일하게 유지되며 이전 토큰의 K와 V는 KV Cache에서 읽어옵니다.">
   <style>
-    .kv1-barA  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .kv1-barB  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .kv1-barA  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .kv1-barB  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
     .kv1-box   { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .kv1-hA    { fill: var(--text-danger, #dc2626); font-size: 22px; }
-    .kv1-hB    { fill: var(--primary, #0d9488); font-size: 22px; }
-    .kv1-noteA { fill: var(--text-danger, #dc2626); font-size: 17px; }
-    .kv1-noteB { fill: var(--primary, #0d9488); font-size: 17px; }
-    .kv1-lab   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .kv1-hA    { fill: var(--text-danger, #cb2121); font-size: 22px; }
+    .kv1-hB    { fill: var(--primary, #0a756c); font-size: 22px; }
+    .kv1-noteA { fill: var(--text-danger, #cb2121); font-size: 17px; }
+    .kv1-noteB { fill: var(--primary, #0a756c); font-size: 17px; }
+    .kv1-lab   { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .kv1-t     { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .kv1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .kv1-ar    { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none;
+    .kv1-sub   { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .kv1-ar    { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none;
                  stroke-dasharray: 4 3; marker-end: url(#kv1Arrow); }
   </style>
   <defs>
     <marker id="kv1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <!-- KV Cache 없이 -->
@@ -220,14 +220,14 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
     .pd1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pd1-title { fill: var(--text, #1c1917); font-size: 22px; }
     .pd1-pillt { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .pd1-meta  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .pd1-hotA  { fill: var(--accent, #d97706); font-size: 18px; }
-    .pd1-hotB  { fill: var(--primary, #0d9488); font-size: 18px; }
-    .pd1-ar    { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pd1Arrow); }
+    .pd1-meta  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .pd1-hotA  { fill: var(--accent, #9d5604); font-size: 18px; }
+    .pd1-hotB  { fill: var(--primary, #0a756c); font-size: 18px; }
+    .pd1-ar    { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#pd1Arrow); }
   </style>
   <defs>
     <marker id="pd1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <rect x="165" y="10" width="150" height="36" rx="18" class="pd1-pill"/>
@@ -235,7 +235,7 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
   <path d="M240,48 L240,64" class="pd1-ar"/>
   <!-- Prefill -->
   <rect x="20" y="68" width="440" height="196" rx="10" class="pd1-box"/>
-  <rect x="20" y="68" width="6" height="196" fill="var(--accent, #d97706)"/>
+  <rect x="20" y="68" width="6" height="196" fill="var(--accent, #9d5604)"/>
   <text x="46" y="100" class="pd1-title">Prefill</text>
   <text x="142" y="100" class="pd1-meta">요청당 1회</text>
   <text x="46" y="130" class="pd1-hotA">compute-bound</text>
@@ -246,7 +246,7 @@ decode 스텝당 최소 시간 ≈ 62 GB ÷ 3.35 TB/s ≈ 18.5 ms
   <path d="M240,266 L240,282" class="pd1-ar"/>
   <!-- Decode -->
   <rect x="20" y="286" width="440" height="196" rx="10" class="pd1-box"/>
-  <rect x="20" y="286" width="6" height="196" fill="var(--primary, #0d9488)"/>
+  <rect x="20" y="286" width="6" height="196" fill="var(--primary, #0a756c)"/>
   <text x="46" y="318" class="pd1-title">Decode</text>
   <text x="142" y="318" class="pd1-meta">나머지 토큰 수만큼 반복</text>
   <text x="46" y="348" class="pd1-hotB">memory-bound</text>

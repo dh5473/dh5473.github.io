@@ -4,9 +4,9 @@
      role="img" aria-label="fillfactor 80을 적용한 뒤의 두 페이지 비교. 이미 채워진 기존 페이지는 튜플로 가득 차 있어 UPDATE 시 새 버전이 다른 페이지로 나가고 HOT이 성립하지 않습니다. ALTER 이후 새로 쓰인 페이지는 80퍼센트만 채워지고 20퍼센트가 여유로 남아 같은 페이지 안에서 HOT chain이 성립합니다.">
 <style>
 .qhp5-t { fill: var(--text, #1c1917); }
-.qhp5-m { fill: var(--text-muted, #78716c); }
+.qhp5-m { fill: var(--text-muted, #6d6762); }
 .qhp5-h { fill: var(--text, #1c1917); font-weight: 600; }
-.qhp5-full { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+.qhp5-full { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
 .qhp5-free { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
 .qhp5-note { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .qhp5-div { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }

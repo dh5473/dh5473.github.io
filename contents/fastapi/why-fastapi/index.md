@@ -97,11 +97,11 @@ async def create_user(user: User):
 <svg viewBox="0 0 400 218" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Django, Flask, FastAPI가 라우팅 매칭, JSON 파싱, 타입 검증, API 문서 네 단계에서 각각 자동으로 처리하는 범위를 비교한 표">
 <style>
 .wf-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
-.wf-head { font-size: 14px; fill: var(--text-muted, #78716c); }
+.wf-head { font-size: 14px; fill: var(--text-muted, #6d6762); }
 .wf-name { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
-.wf-at { font-size: 14px; font-weight: 600; fill: var(--text-success, #16a34a); }
-.wf-mt { font-size: 14px; fill: var(--text-muted, #78716c); }
-.wf-auto { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.2; }
+.wf-at { font-size: 14px; font-weight: 600; fill: var(--text-success, #107836); }
+.wf-mt { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.wf-auto { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.2; }
 .wf-man { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
 </style>
 <text class="wf-title" x="200" y="20" text-anchor="middle">프레임워크가 대신 해주는 범위</text>

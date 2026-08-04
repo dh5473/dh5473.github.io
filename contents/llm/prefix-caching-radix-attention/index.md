@@ -39,26 +39,26 @@ vLLM은 KV Cache를 고정 크기 블록으로 쪼개 관리하고, 동시에 �
   <style>
     .pc1-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: start; }
     .pc1-in    { font-size: 18px; text-anchor: middle; }
-    .pc1-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .pc1-note  { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .pc1-hit   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
-    .pc1-full  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .pc1-calc  { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .pc1-lead  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+    .pc1-full  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .pc1-calc  { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .pc1-lead  { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
   </style>
   <!-- 캐시 없이 -->
   <text x="20" y="28" class="pc1-title">prefix caching 없이</text>
   <rect x="20" y="44" width="440" height="48" rx="5" class="pc1-full"/>
-  <text x="240" y="74" class="pc1-in" fill="var(--text-danger, #dc2626)">2,048 + 50 = 2,098 토큰 전부 prefill</text>
+  <text x="240" y="74" class="pc1-in" fill="var(--text-danger, #cb2121)">2,048 + 50 = 2,098 토큰 전부 prefill</text>
   <!-- 캐시 적용 -->
   <text x="20" y="132" class="pc1-title">prefix caching 적용</text>
   <text x="20" y="156" class="pc1-title">(두 번째 요청부터)</text>
   <rect x="20" y="172" width="429" height="56" rx="5" class="pc1-hit"/>
-  <text x="234" y="196" class="pc1-in" fill="var(--text-muted, #78716c)">캐시 히트</text>
-  <text x="234" y="218" class="pc1-in" fill="var(--text-muted, #78716c)">시스템 프롬프트 2,048 토큰 재사용</text>
+  <text x="234" y="196" class="pc1-in" fill="var(--text-muted, #6d6762)">캐시 히트</text>
+  <text x="234" y="218" class="pc1-in" fill="var(--text-muted, #6d6762)">시스템 프롬프트 2,048 토큰 재사용</text>
   <rect x="449" y="172" width="11" height="56" rx="2" class="pc1-calc"/>
   <path d="M454,228 L454,246" class="pc1-lead"/>
   <text x="460" y="264" class="pc1-note" text-anchor="end">실제 prefill 50 토큰</text>
-  <text x="20" y="292" font-size="20" fill="var(--primary, #0d9488)" font-weight="600">요청당 prefill 연산 약 1/40</text>
+  <text x="20" y="292" font-size="20" fill="var(--primary, #0a756c)" font-weight="600">요청당 prefill 연산 약 1/40</text>
 </svg>
 </div>
 
@@ -80,21 +80,21 @@ vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="프롬프트를 16토큰 블록으로 자르고 해시를 사슬처럼 잇는 구조. 블록 0의 해시 h0은 블록 0의 토큰만으로 만들고, h1은 h0과 블록 1의 토큰으로, h2는 h1과 블록 2의 토큰으로 만듭니다. 부모 블록의 해시가 자식 블록의 키에 함께 들어갑니다.">
   <style>
-    .pc2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .pc2-cap   { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
     .pc2-blk   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .pc2-hash  { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .pc2-hash  { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
     .pc2-label { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .pc2-sub   { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-    .pc2-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pc2Arrow); }
-    .pc2-chain { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#pc2Chain); }
-    .pc2-side  { fill: var(--primary, #0d9488); font-size: 17px; text-anchor: start; }
+    .pc2-sub   { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
+    .pc2-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#pc2Arrow); }
+    .pc2-chain { stroke: var(--primary, #0a756c); stroke-width: 1.5; fill: none; marker-end: url(#pc2Chain); }
+    .pc2-side  { fill: var(--primary, #0a756c); font-size: 17px; text-anchor: start; }
   </style>
   <defs>
     <marker id="pc2Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
     <marker id="pc2Chain" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0a756c)"/>
     </marker>
   </defs>
   <text x="240" y="24" class="pc2-cap">프롬프트를 16토큰씩 자른 블록과 해시 사슬</text>
@@ -144,29 +144,29 @@ vLLM은 KV를 16토큰짜리 블록 단위로 관리합니다. prefix caching은
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="공유 접두사 2,040 토큰을 block_size 16으로 자른 모습. 블록 0부터 블록 126까지 2,032 토큰은 캐시 히트가 나고, 마지막 8 토큰은 블록을 채우지 못해 해시가 없어 재계산됩니다.">
   <style>
-    .pc3-cap  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .pc3-hit  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .pc3-miss { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .pc3-cap  { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .pc3-hit  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+    .pc3-miss { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
     .pc3-gap  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .pc3-num  { font-size: 20px; text-anchor: middle; }
-    .pc3-blk  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .pc3-blk  { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
     .pc3-brk  { stroke-width: 1.5; fill: none; }
   </style>
   <text x="240" y="22" class="pc3-cap">공유 접두사 2,040 토큰, block_size = 16</text>
-  <text x="212" y="54" font-size="20" text-anchor="middle" fill="var(--text-success, #16a34a)" font-weight="600">캐시 히트 2,032 토큰</text>
-  <text x="420" y="54" font-size="20" text-anchor="middle" fill="var(--text-danger, #dc2626)" font-weight="600">재계산</text>
-  <path d="M30,70 L30,62 L395,62 L395,70" class="pc3-brk" stroke="var(--text-success, #16a34a)"/>
-  <path d="M399,70 L399,62 L445,62 L445,70" class="pc3-brk" stroke="var(--text-danger, #dc2626)"/>
+  <text x="212" y="54" font-size="20" text-anchor="middle" fill="var(--text-success, #107836)" font-weight="600">캐시 히트 2,032 토큰</text>
+  <text x="420" y="54" font-size="20" text-anchor="middle" fill="var(--text-danger, #cb2121)" font-weight="600">재계산</text>
+  <path d="M30,70 L30,62 L395,62 L395,70" class="pc3-brk" stroke="var(--text-success, #107836)"/>
+  <path d="M399,70 L399,62 L445,62 L445,70" class="pc3-brk" stroke="var(--text-danger, #cb2121)"/>
   <rect x="30"  y="78" width="95" height="52" rx="4" class="pc3-hit"/>
-  <text x="77"  y="112" class="pc3-num" fill="var(--text-success, #16a34a)">16</text>
+  <text x="77"  y="112" class="pc3-num" fill="var(--text-success, #107836)">16</text>
   <rect x="125" y="78" width="95" height="52" rx="4" class="pc3-hit"/>
-  <text x="172" y="112" class="pc3-num" fill="var(--text-success, #16a34a)">16</text>
+  <text x="172" y="112" class="pc3-num" fill="var(--text-success, #107836)">16</text>
   <rect x="220" y="78" width="80" height="52" rx="4" class="pc3-gap"/>
-  <text x="260" y="112" class="pc3-num" fill="var(--text-muted, #78716c)">···</text>
+  <text x="260" y="112" class="pc3-num" fill="var(--text-muted, #6d6762)">···</text>
   <rect x="300" y="78" width="95" height="52" rx="4" class="pc3-hit"/>
-  <text x="347" y="112" class="pc3-num" fill="var(--text-success, #16a34a)">16</text>
+  <text x="347" y="112" class="pc3-num" fill="var(--text-success, #107836)">16</text>
   <rect x="395" y="78" width="50" height="52" rx="4" class="pc3-miss"/>
-  <text x="420" y="112" class="pc3-num" fill="var(--text-danger, #dc2626)">8</text>
+  <text x="420" y="112" class="pc3-num" fill="var(--text-danger, #cb2121)">8</text>
   <text x="77"  y="156" class="pc3-blk">블록 0</text>
   <text x="172" y="156" class="pc3-blk">블록 1</text>
   <text x="347" y="156" class="pc3-blk">블록 126</text>
@@ -224,19 +224,19 @@ radix tree는 trie(접두사 트리)의 압축판입니다. 갈림길 없이 이
      role="img" aria-label="같은 시스템 프롬프트를 공유하는 요청 A와 B를 두 엔진이 어떻게 다루는지 비교. 위쪽 vLLM은 h0, h1, h2까지 같은 해시가 나와 같은 물리 블록을 가리키고 마지막 블록에서만 a3과 b3으로 갈라집니다. 아래쪽 SGLang은 루트에서 시스템 프롬프트 노드까지 한 몸통을 공유하고 그 아래에서 두 질문 노드로 갈라집니다.">
   <style>
     .pc4-req   { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }
-    .pc4-head  { fill: var(--primary, #0d9488); font-size: 22px; text-anchor: middle; font-weight: 600; }
-    .pc4-share { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .pc4-split { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 1.5; }
+    .pc4-head  { fill: var(--primary, #0a756c); font-size: 22px; text-anchor: middle; font-weight: 600; }
+    .pc4-share { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .pc4-split { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
     .pc4-lbl   { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .pc4-row   { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-    .pc4-cap   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .pc4-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pc4Arrow); }
-    .pc4-edge  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+    .pc4-row   { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
+    .pc4-cap   { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .pc4-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#pc4Arrow); }
+    .pc4-edge  { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
     .pc4-brk   { stroke-width: 1.5; fill: none; }
   </style>
   <defs>
     <marker id="pc4Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <!-- 입력 요청 -->
@@ -270,10 +270,10 @@ radix tree는 trie(접두사 트리)의 압축판입니다. 갈림길 없이 이
   <path d="M334,240 L346,240" class="pc4-arrow"/>
   <rect x="348" y="220" width="80" height="40" rx="6" class="pc4-split"/>
   <text x="388" y="246" class="pc4-lbl">b3</text>
-  <path d="M60,266 L60,274 L332,274 L332,266" class="pc4-brk" stroke="var(--primary, #0d9488)"/>
-  <path d="M348,266 L348,274 L428,274 L428,266" class="pc4-brk" stroke="var(--accent, #d97706)"/>
-  <text x="196" y="298" font-size="17" text-anchor="middle" fill="var(--primary, #0d9488)">같은 해시 = 같은 물리 블록</text>
-  <text x="388" y="298" font-size="17" text-anchor="middle" fill="var(--accent, #d97706)">갈라짐</text>
+  <path d="M60,266 L60,274 L332,274 L332,266" class="pc4-brk" stroke="var(--primary, #0a756c)"/>
+  <path d="M348,266 L348,274 L428,274 L428,266" class="pc4-brk" stroke="var(--accent, #9d5604)"/>
+  <text x="196" y="298" font-size="17" text-anchor="middle" fill="var(--primary, #0a756c)">같은 해시 = 같은 물리 블록</text>
+  <text x="388" y="298" font-size="17" text-anchor="middle" fill="var(--accent, #9d5604)">갈라짐</text>
   <path d="M20,328 L460,328" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <!-- SGLang radix tree -->
   <text x="240" y="364" class="pc4-head">SGLang: radix tree</text>

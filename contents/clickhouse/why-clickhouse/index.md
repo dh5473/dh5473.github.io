@@ -57,12 +57,12 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 <svg viewBox="0 0 480 284" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="행 지향 저장에서는 한 행의 다섯 개 컬럼이 디스크 블록에 나란히 붙어 저장되므로, price 컬럼 하나만 필요한 집계에도 모든 컬럼을 함께 읽어야 한다는 것을 보여주는 그림">
 <style>
 .ch1-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
-.ch1-lbl { fill: var(--text-muted, #78716c); font-size: 18px; }
-.ch1-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
-.ch1-t { fill: var(--text-muted, #78716c); font-size: 17px; }
-.ch1-hit { fill: var(--primary, #0d9488); font-size: 17px; font-weight: 700; }
+.ch1-lbl { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.ch1-cap { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.ch1-t { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.ch1-hit { fill: var(--primary, #0a756c); font-size: 17px; font-weight: 700; }
 .ch1-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ch1-cell-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch1-cell-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 </style>
 <text class="ch1-title" x="240" y="28" text-anchor="middle">행 지향: 한 행이 통째로 붙어 있음</text>
 <!-- block 1 -->
@@ -113,15 +113,15 @@ OLAP에는 또 한 가지 중요한 특성이 있습니다. UPDATE가 거의 없
 <svg viewBox="0 0 480 356" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컬럼 지향 저장에서는 컬럼마다 별도의 파일이 만들어져, avg(price) 쿼리가 price.bin 파일 하나만 읽고 나머지 네 개 파일은 열지 않는다는 것을 보여주는 그림">
 <style>
 .ch2-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
-.ch2-name { fill: var(--text-muted, #78716c); font-size: 18px; }
-.ch2-name-hit { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
-.ch2-val { fill: var(--text-muted, #78716c); font-size: 17px; }
-.ch2-val-hit { fill: var(--primary, #0d9488); font-size: 17px; }
-.ch2-tag { fill: var(--text-muted, #78716c); font-size: 17px; }
-.ch2-tag-hit { fill: var(--primary, #0d9488); font-size: 17px; font-weight: 700; }
-.ch2-cap { fill: var(--text-muted, #78716c); font-size: 18px; }
+.ch2-name { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.ch2-name-hit { fill: var(--primary, #0a756c); font-size: 18px; font-weight: 700; }
+.ch2-val { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.ch2-val-hit { fill: var(--primary, #0a756c); font-size: 17px; }
+.ch2-tag { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.ch2-tag-hit { fill: var(--primary, #0a756c); font-size: 17px; font-weight: 700; }
+.ch2-cap { fill: var(--text-muted, #6d6762); font-size: 18px; }
 .ch2-bar { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ch2-bar-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch2-bar-hit { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 </style>
 <text class="ch2-title" x="240" y="28" text-anchor="middle">컬럼 지향: 컬럼마다 파일이 따로</text>
 <!-- order_id -->
@@ -188,16 +188,16 @@ ClickHouse는 다릅니다. 한 번에 최대 **65,536개의 값**(기본 `max_b
 <style>
 .ch3-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ch3-box-v { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch3-box-v { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 .ch3-t { fill: var(--text, #1c1917); font-size: 18px; }
-.ch3-tv { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
-.ch3-note { fill: var(--text-muted, #78716c); font-size: 18px; }
-.ch3-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.ch3-tv { fill: var(--primary, #0a756c); font-size: 18px; font-weight: 700; }
+.ch3-note { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.ch3-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 .ch3-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <defs>
 <marker id="ch3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- panel A -->
@@ -295,16 +295,16 @@ MergeTree의 기본 구조를 요약하면 다음과 같습니다.
 <style>
 .ch4-title { fill: var(--text, #1c1917); font-size: 21px; font-weight: 700; }
 .ch4-in { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ch4-part { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.ch4-part { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 .ch4-t { fill: var(--text, #1c1917); font-size: 18px; }
-.ch4-tp { fill: var(--primary, #0d9488); font-size: 18px; font-weight: 700; }
-.ch4-big { fill: var(--primary, #0d9488); font-size: 20px; font-weight: 700; }
-.ch4-note { fill: var(--text-muted, #78716c); font-size: 17px; }
-.ch4-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+.ch4-tp { fill: var(--primary, #0a756c); font-size: 18px; font-weight: 700; }
+.ch4-big { fill: var(--primary, #0a756c); font-size: 20px; font-weight: 700; }
+.ch4-note { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.ch4-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
 </style>
 <defs>
 <marker id="ch4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="ch4-title" x="240" y="28" text-anchor="middle">INSERT마다 새 Part 생성</text>

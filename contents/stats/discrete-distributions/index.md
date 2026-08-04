@@ -270,18 +270,18 @@ $$\text{Var}(X) = n \cdot \frac{K}{N} \cdot \frac{N-K}{N} \cdot \frac{N-n}{N-1}$
      role="img" aria-label="이산확률분포 선택 결정 트리. 성공과 실패로 나뉘는 시행인지, 시행이 한 번인지, 복원 추출인지, 무엇을 세는지에 따라 포아송, 베르누이, 초기하, 이항, 기하 분포로 갈린다. 범주가 셋 이상이면 다항분포로, 이항에서 시행 수가 크고 성공 확률이 작으면 포아송 근사로 넘어간다.">
 <style>
 .ds-q { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ds-r { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.ds-fn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; stroke-dasharray: 6 4; }
-.ds-ft { fill: var(--text-warn, #d97706); font-size: 15px; font-weight: 600; }
+.ds-r { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.ds-fn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.ds-ft { fill: var(--text-warn, #9d5604); font-size: 15px; font-weight: 600; }
 .ds-qt { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
-.ds-rn { fill: var(--primary, #0d9488); font-size: 15px; font-weight: 700; }
-.ds-rh { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ds-e { fill: var(--text-muted, #78716c); font-size: 14px; }
-.ds-l { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+.ds-rn { fill: var(--primary, #0a756c); font-size: 15px; font-weight: 700; }
+.ds-rh { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ds-e { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.ds-l { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
 </style>
 <defs>
 <marker id="dsArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 판단 노드 -->

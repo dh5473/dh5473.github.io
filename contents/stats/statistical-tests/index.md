@@ -22,13 +22,13 @@ A/B 테스트에서 전환율 차이를 보려면? 세 가지 교육 프로그�
      role="img" aria-label="검정 방법 선택 트리. 데이터 유형이 범주형이면 카이제곱 적합도 검정과 독립성 검정으로, 연속형이면 집단 수와 표본 관계에 따라 단일 표본 t-검정, 일원 ANOVA, 독립 표본 t-검정, 대응 표본 t-검정으로 갈린다. 정규성이 깨지면 비모수 검정으로 대체한다.">
 <style>
 .st-q { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.st-r { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.st-fn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.st-r { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.st-fn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .st-qt { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
-.st-rt { fill: var(--primary, #0d9488); font-size: 15px; font-weight: 700; }
-.st-h { fill: var(--text-muted, #78716c); font-size: 14px; }
-.st-wt { fill: var(--text-warn, #d97706); font-size: 15px; font-weight: 600; }
-.st-l { stroke: var(--text-muted, #78716c); stroke-width: 1.2; fill: none; }
+.st-rt { fill: var(--primary, #0a756c); font-size: 15px; font-weight: 700; }
+.st-h { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.st-wt { fill: var(--text-warn, #9d5604); font-size: 15px; font-weight: 600; }
+.st-l { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; fill: none; }
 </style>
 <!-- 뿌리 -->
 <rect class="st-q" x="8" y="10" width="384" height="34" rx="6"/>

@@ -23,14 +23,14 @@ CPython에서 GIL은 인터프리터 내부 상태를 보호하는 뮤텍스로,
 .gl-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .gl-l { fill: var(--text, #1c1917); font-size: 14px; }
 .gl-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.gl-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.gl-run { fill: var(--primary, #0d9488); }
+.gl-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.gl-run { fill: var(--primary, #0a756c); }
 .gl-wait { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.gl-ax { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#glArrow); }
+.gl-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#glArrow); }
 </style>
 <defs>
 <marker id="glArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="gl-t" x="200" y="22" text-anchor="middle">스레드 3개, GIL 1개</text>

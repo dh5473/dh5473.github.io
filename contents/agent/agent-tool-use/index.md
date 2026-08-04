@@ -31,17 +31,17 @@ Claude Code에 "deprecated된 모듈을 import하는 파일을 전부 찾아줘"
 <svg viewBox="0 0 480 574" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="HCI는 사람과 소프트웨어 사이를 버튼, 메뉴, 레이아웃으로 잇고, ACI는 모델과 시스템 사이를 도구 이름, 설명, 파라미터 스키마, 에러 메시지로 잇는다는 대응 관계를 보여주는 그림">
   <defs>
     <marker id="aciArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <style>
     .aci-title { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .aci-main { font-size: 22px; fill: var(--text, #1c1917); }
     .aci-sub { font-size: 20px; fill: var(--text, #1c1917); }
-    .aci-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .aci-tag { font-size: 17px; fill: var(--text-muted, #6d6762); }
     .aci-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .aci-hub { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .aci-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#aciArrow); }
+    .aci-hub { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .aci-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; marker-end: url(#aciArrow); }
   </style>
   <!-- panel 1: HCI -->
   <text x="14" y="24" class="aci-title">HCI: 사람을 위한 인터페이스</text>
@@ -109,16 +109,16 @@ Anthropic의 "Writing Effective Tools for AI Agents"와 "Building Effective Agen
 <svg viewBox="0 0 480 370" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="도구 정의의 name, description, parameters, return, error 다섯 부분에 도구 설계 5원칙이 각각 대응하는 것을 보여주는 표 형태의 그림">
   <defs>
     <marker id="tpArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <style>
-    .tp-head { font-size: 17px; fill: var(--text-muted, #78716c); }
-    .tp-key { font-size: 20px; fill: var(--primary, #0d9488); font-family: 'JetBrains Mono', monospace; }
+    .tp-head { font-size: 17px; fill: var(--text-muted, #6d6762); }
+    .tp-key { font-size: 20px; fill: var(--primary, #0a756c); font-family: 'JetBrains Mono', monospace; }
     .tp-name { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
-    .tp-desc { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .tp-desc { font-size: 17px; fill: var(--text-muted, #6d6762); }
     .tp-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .tp-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#tpArrow); }
+    .tp-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; marker-end: url(#tpArrow); }
   </style>
   <text x="16" y="22" class="tp-head">도구 정의</text>
   <text x="200" y="22" class="tp-head">적용 원칙</text>
@@ -336,21 +336,21 @@ Claude Code의 도구 설계에서 이 구분이 선명하게 드러납니다. `
 <svg viewBox="0 0 480 310" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="같은 호출을 두 번 했을 때 Write는 파일이 그대로, Edit는 no changes 반환으로 멱등하지만, increment는 카운터가 1에서 2로 올라가 비멱등이 되는 것을 비교한 그림">
   <defs>
     <marker id="idemArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <style>
     .idem-title { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
-    .idem-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .idem-tag { font-size: 17px; fill: var(--text-muted, #6d6762); }
     .idem-val { font-size: 20px; fill: var(--text, #1c1917); }
     .idem-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .idem-line { stroke: var(--text-muted, #78716c); stroke-width: 1.5; marker-end: url(#idemArrow); }
-    .idem-okbox { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .idem-oktext { font-size: 20px; font-weight: 700; fill: var(--text-success, #16a34a); }
-    .idem-ngbox { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .idem-ngtext { font-size: 20px; font-weight: 700; fill: var(--text-danger, #dc2626); }
-    .idem-ok { stroke: var(--text-success, #16a34a); stroke-width: 2; fill: none; }
-    .idem-ng { stroke: var(--text-danger, #dc2626); stroke-width: 2; fill: none; }
+    .idem-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; marker-end: url(#idemArrow); }
+    .idem-okbox { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+    .idem-oktext { font-size: 20px; font-weight: 700; fill: var(--text-success, #107836); }
+    .idem-ngbox { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .idem-ngtext { font-size: 20px; font-weight: 700; fill: var(--text-danger, #cb2121); }
+    .idem-ok { stroke: var(--text-success, #107836); stroke-width: 2; fill: none; }
+    .idem-ng { stroke: var(--text-danger, #cb2121); stroke-width: 2; fill: none; }
   </style>
   <!-- row 1: Write -->
   <text x="20" y="24" class="idem-title">Write: 파일 전체 덮어쓰기</text>

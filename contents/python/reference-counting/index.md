@@ -97,11 +97,11 @@ del node_a, node_b
 .rc-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .rc-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .rc-l { fill: var(--text, #1c1917); font-size: 14px; }
-.rc-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.rc-d { fill: var(--text-danger, #dc2626); font-size: 14px; }
+.rc-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.rc-d { fill: var(--text-danger, #cb2121); font-size: 14px; }
 .rc-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rc-a { stroke: var(--text, #1c1917); stroke-width: 1.5; fill: none; marker-end: url(#rcArrow); }
-.rc-ext { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#rcArrowM); }
+.rc-ext { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#rcArrowM); }
 .rc-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 </style>
 <defs>
@@ -109,7 +109,7 @@ del node_a, node_b
 <path d="M0 0 L10 5 L0 10 z" fill="var(--text, #1c1917)"/>
 </marker>
 <marker id="rcArrowM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="rc-t" x="200" y="22" text-anchor="middle">del 뒤에도 남는 참조</text>

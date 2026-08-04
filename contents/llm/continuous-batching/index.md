@@ -29,16 +29,16 @@ PagedAttention은 KV Cache를 고정 크기 블록들의 풀로 바꿔놓았습�
   <style>
     .cb1-title { fill: var(--text, #1c1917); font-size: 22px; }
     .cb1-name  { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
-    .cb1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb1-run   { fill: var(--primary, #0d9488); }
+    .cb1-sub   { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .cb1-run   { fill: var(--primary, #0a756c); }
     .cb1-waste { fill: url(#cb1Hatch); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .cb1-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
-    .cb1-warn  { fill: var(--text-danger, #dc2626); font-size: 17px; text-anchor: middle; }
+    .cb1-warn  { fill: var(--text-danger, #cb2121); font-size: 17px; text-anchor: middle; }
   </style>
   <defs>
     <pattern id="cb1Hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <rect width="8" height="8" fill="var(--bg-danger, #fef2f2)"/>
-      <line x1="0" y1="0" x2="0" y2="8" stroke="var(--text-danger, #dc2626)" stroke-width="1.4" opacity="0.4"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="var(--text-danger, #cb2121)" stroke-width="1.4" opacity="0.4"/>
     </pattern>
   </defs>
   <text x="10" y="24" class="cb1-title">Static batching</text>
@@ -88,12 +88,12 @@ A는 3스텝 만에 답을 다 만들었는데도, 같은 배치의 C가 14스�
      role="img" aria-label="continuous batching의 스텝별 배치 구성. 네 개의 슬롯이 매 스텝 다시 채워집니다. A가 완료되면 E가, D가 완료되면 F가, B가 완료되면 G가 즉시 그 자리에 합류해 빈 슬롯이 생기지 않습니다">
   <style>
     .cb2-title { fill: var(--text, #1c1917); font-size: 22px; }
-    .cb2-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb2-step  { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .cb2-cell  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .cb2-new   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .cb2-new   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
     .cb2-req   { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
-    .cb2-nreq  { fill: var(--text-success, #16a34a); font-size: 22px; text-anchor: middle; }
-    .cb2-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb2-nreq  { fill: var(--text-success, #107836); font-size: 22px; text-anchor: middle; }
+    .cb2-note  { fill: var(--text-muted, #6d6762); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb2-title">Continuous batching</text>
   <!-- 스텝 t -->
@@ -164,11 +164,11 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
      role="img" aria-label="chunked prefill이 없을 때의 스텝 구성. 스텝 t와 t+2는 A B C의 decode로 채워지지만, 그 사이 스텝 t+1을 8000토큰짜리 긴 prefill이 통째로 차지해 기존 요청의 토큰 생성이 멈춥니다">
   <style>
     .cb3-title { fill: var(--text, #1c1917); font-size: 22px; }
-    .cb3-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb3-dec   { fill: var(--primary, #0d9488); }
-    .cb3-pre   { fill: var(--accent, #d97706); }
+    .cb3-step  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .cb3-dec   { fill: var(--primary, #0a756c); }
+    .cb3-pre   { fill: var(--accent, #9d5604); }
     .cb3-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
-    .cb3-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb3-note  { fill: var(--text-muted, #6d6762); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb3-title">Chunked prefill이 없다면</text>
   <!-- 스텝 t -->
@@ -210,11 +210,11 @@ continuous batching으로 빈자리 문제는 풀렸지만, 새 요청이 배치
      role="img" aria-label="chunked prefill을 적용한 스텝 구성. 스텝 t부터 t+3까지 매 스텝에 A와 B의 decode와 X의 prefill 청크가 함께 실려, 기존 요청의 토큰 생성이 끊기지 않습니다">
   <style>
     .cb4-title { fill: var(--text, #1c1917); font-size: 22px; }
-    .cb4-step  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb4-dec   { fill: var(--primary, #0d9488); }
-    .cb4-pre   { fill: var(--accent, #d97706); }
+    .cb4-step  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .cb4-dec   { fill: var(--primary, #0a756c); }
+    .cb4-pre   { fill: var(--accent, #9d5604); }
     .cb4-in    { fill: var(--on-fill, #14100e); font-size: 17px; text-anchor: middle; }
-    .cb4-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .cb4-note  { fill: var(--text-muted, #6d6762); font-size: 17px; }
   </style>
   <text x="8" y="24" class="cb4-title">Chunked prefill</text>
   <!-- 스텝 t -->
@@ -276,16 +276,16 @@ V1은 "이번 스텝은 prefill용, 다음 스텝은 decode용"처럼 스텝을 
      role="img" aria-label="한 스텝의 토큰 예산 8192를 채우는 방식. 먼저 running 큐의 A B C가 decode로 1토큰씩 3토큰을 차지하고, 남은 예산 8189를 waiting 큐의 X가 prefill 청크로 가져갑니다. X의 프롬프트 10000토큰 중 나머지 1811토큰은 다음 스텝으로 넘어갑니다. 최종 스케줄 결과는 A 1, B 1, C 1, X 8189">
   <style>
     .cb5-title { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .cb5-dec   { fill: var(--primary, #0d9488); }
-    .cb5-pre   { fill: var(--accent, #d97706); }
+    .cb5-dec   { fill: var(--primary, #0a756c); }
+    .cb5-pre   { fill: var(--accent, #9d5604); }
     .cb5-leg   { fill: var(--text, #1c1917); font-size: 17px; }
-    .cb5-muted { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .cb5-note  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .cb5-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
+    .cb5-muted { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .cb5-note  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .cb5-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#cb5Arrow); }
   </style>
   <defs>
     <marker id="cb5Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <text x="240" y="26" class="cb5-title">한 스텝의 토큰 예산 = 8,192</text>

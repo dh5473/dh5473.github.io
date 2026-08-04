@@ -32,20 +32,20 @@ DAG이 몇 개 없을 때는 문제가 안 됩니다. 하지만 DAG 수가 늘�
 <!-- xcom -->
 <text x="8" y="58" font-size="15" fill="var(--text, #1c1917)">xcom</text>
 <text x="392" y="58" font-size="15" font-weight="600" text-anchor="end" fill="var(--text, #1c1917)">243,066건</text>
-<rect x="8" y="66" width="340" height="20" rx="3" fill="var(--primary, #0d9488)"/>
+<rect x="8" y="66" width="340" height="20" rx="3" fill="var(--primary, #0a756c)"/>
 <!-- task_instance -->
 <text x="8" y="110" font-size="15" fill="var(--text, #1c1917)">task_instance</text>
 <text x="392" y="110" font-size="15" font-weight="600" text-anchor="end" fill="var(--text, #1c1917)">118,734건</text>
-<rect x="8" y="118" width="166" height="20" rx="3" fill="var(--primary, #0d9488)"/>
+<rect x="8" y="118" width="166" height="20" rx="3" fill="var(--primary, #0a756c)"/>
 <!-- dag_run -->
 <text x="8" y="162" font-size="15" fill="var(--text, #1c1917)">dag_run</text>
 <text x="392" y="162" font-size="15" font-weight="600" text-anchor="end" fill="var(--text, #1c1917)">24,860건</text>
-<rect x="8" y="170" width="35" height="20" rx="3" fill="var(--primary, #0d9488)"/>
+<rect x="8" y="170" width="35" height="20" rx="3" fill="var(--primary, #0a756c)"/>
 <!-- log -->
 <text x="8" y="214" font-size="15" fill="var(--text, #1c1917)">log</text>
 <text x="392" y="214" font-size="15" font-weight="600" text-anchor="end" fill="var(--text, #1c1917)">280건</text>
-<rect x="8" y="222" width="3" height="20" rx="1" fill="var(--primary, #0d9488)"/>
-<text x="20" y="237" font-size="14" fill="var(--text-muted, #78716c)">(막대가 거의 보이지 않는 크기)</text>
+<rect x="8" y="222" width="3" height="20" rx="1" fill="var(--primary, #0a756c)"/>
+<text x="20" y="237" font-size="14" fill="var(--text-muted, #6d6762)">(막대가 거의 보이지 않는 크기)</text>
 </svg>
 </div>
 
@@ -214,38 +214,38 @@ Moving data to table _airflow_deleted__xcom__20260401024053
      role="img" aria-label="db clean 전후 디스크 상태를 세 단계로 비교한 그림. 실행 전에는 xcom 파일 하나에 오래된 행과 최근 행이 함께 있고, db clean 직후에는 xcom 파일 크기가 그대로인 채 아카이브 파일이 하나 더 생겨 디스크 사용량이 늘며, 아카이브를 지우고 VACUUM FULL을 돌린 뒤에야 xcom 파일이 최근 행 크기로 줄어듭니다">
 <defs>
 <marker id="db2Arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
-<path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- panel 1 -->
 <text x="20" y="20" font-size="17" font-weight="600" fill="var(--text, #1c1917)">1. db clean 실행 전</text>
-<text x="20" y="44" font-size="14" fill="var(--text-muted, #78716c)">xcom 테이블 파일</text>
-<rect x="20" y="52" width="238" height="44" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<text x="139" y="79" font-size="14" text-anchor="middle" fill="var(--text-danger, #dc2626)">30일 이전 243,066건</text>
-<rect x="262" y="52" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<text x="301" y="79" font-size="14" text-anchor="middle" fill="var(--primary, #0d9488)">최근</text>
+<text x="20" y="44" font-size="14" fill="var(--text-muted, #6d6762)">xcom 테이블 파일</text>
+<rect x="20" y="52" width="238" height="44" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<text x="139" y="79" font-size="14" text-anchor="middle" fill="var(--text-danger, #cb2121)">30일 이전 243,066건</text>
+<rect x="262" y="52" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<text x="301" y="79" font-size="14" text-anchor="middle" fill="var(--primary, #0a756c)">최근</text>
 <!-- arrow 1 -->
-<line x1="60" y1="106" x2="60" y2="134" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#db2Arrow)"/>
+<line x1="60" y1="106" x2="60" y2="134" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#db2Arrow)"/>
 <text x="76" y="125" font-size="15" fill="var(--text, #1c1917)">airflow db clean</text>
 <!-- panel 2 -->
 <text x="20" y="166" font-size="17" font-weight="600" fill="var(--text, #1c1917)">2. db clean 직후</text>
-<text x="20" y="190" font-size="14" fill="var(--text-muted, #78716c)">xcom 테이블 파일 (크기 그대로)</text>
-<rect x="20" y="198" width="238" height="44" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5" stroke-dasharray="5 3"/>
-<text x="139" y="225" font-size="14" text-anchor="middle" fill="var(--text-danger, #dc2626)">dead tuple로 남은 자리</text>
-<rect x="262" y="198" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<text x="301" y="225" font-size="14" text-anchor="middle" fill="var(--primary, #0d9488)">최근</text>
-<text x="20" y="266" font-size="14" fill="var(--text-muted, #78716c)">_airflow_deleted__xcom__20260401024053</text>
-<rect x="20" y="274" width="238" height="44" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5"/>
-<text x="139" y="301" font-size="14" text-anchor="middle" fill="var(--text-warn, #d97706)">243,066건 복사본</text>
+<text x="20" y="190" font-size="14" fill="var(--text-muted, #6d6762)">xcom 테이블 파일 (크기 그대로)</text>
+<rect x="20" y="198" width="238" height="44" rx="4" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5" stroke-dasharray="5 3"/>
+<text x="139" y="225" font-size="14" text-anchor="middle" fill="var(--text-danger, #cb2121)">dead tuple로 남은 자리</text>
+<rect x="262" y="198" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<text x="301" y="225" font-size="14" text-anchor="middle" fill="var(--primary, #0a756c)">최근</text>
+<text x="20" y="266" font-size="14" fill="var(--text-muted, #6d6762)">_airflow_deleted__xcom__20260401024053</text>
+<rect x="20" y="274" width="238" height="44" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="1.5"/>
+<text x="139" y="301" font-size="14" text-anchor="middle" fill="var(--text-warn, #9d5604)">243,066건 복사본</text>
 <!-- arrow 2 -->
-<line x1="60" y1="328" x2="60" y2="366" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#db2Arrow)"/>
+<line x1="60" y1="328" x2="60" y2="366" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#db2Arrow)"/>
 <text x="76" y="344" font-size="15" fill="var(--text, #1c1917)">airflow db drop-archived</text>
 <text x="76" y="362" font-size="15" fill="var(--text, #1c1917)">VACUUM FULL xcom</text>
 <!-- panel 3 -->
 <text x="20" y="398" font-size="17" font-weight="600" fill="var(--text, #1c1917)">3. 아카이브 삭제 + VACUUM FULL 후</text>
-<text x="20" y="422" font-size="14" fill="var(--text-muted, #78716c)">xcom 테이블 파일 (재작성되어 축소)</text>
-<rect x="20" y="430" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<text x="59" y="457" font-size="14" text-anchor="middle" fill="var(--primary, #0d9488)">최근</text>
+<text x="20" y="422" font-size="14" fill="var(--text-muted, #6d6762)">xcom 테이블 파일 (재작성되어 축소)</text>
+<rect x="20" y="430" width="78" height="44" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<text x="59" y="457" font-size="14" text-anchor="middle" fill="var(--primary, #0a756c)">최근</text>
 </svg>
 </div>
 
@@ -283,23 +283,23 @@ $ airflow db clean \
      role="img" aria-label="db clean의 내부 삭제 절차 세 단계. 아카이브 테이블을 만들어 행을 복사하고, 원본에서 삭제하고, skip-archive 옵션을 준 경우에만 마지막에 아카이브 테이블을 드롭합니다">
 <defs>
 <marker id="db3Arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
-<path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- step 1 -->
 <rect x="20" y="16" width="360" height="56" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
 <text x="34" y="41" font-size="16" font-weight="600" fill="var(--text, #1c1917)">1. CREATE TABLE ... AS SELECT</text>
-<text x="34" y="62" font-size="14" fill="var(--text-muted, #78716c)">오래된 행을 아카이브 테이블로 복사</text>
-<line x1="200" y1="74" x2="200" y2="96" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#db3Arrow)"/>
+<text x="34" y="62" font-size="14" fill="var(--text-muted, #6d6762)">오래된 행을 아카이브 테이블로 복사</text>
+<line x1="200" y1="74" x2="200" y2="96" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#db3Arrow)"/>
 <!-- step 2 -->
 <rect x="20" y="98" width="360" height="56" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
 <text x="34" y="123" font-size="16" font-weight="600" fill="var(--text, #1c1917)">2. DELETE FROM xcom</text>
-<text x="34" y="144" font-size="14" fill="var(--text-muted, #78716c)">방금 복사한 행을 원본에서 삭제</text>
-<line x1="200" y1="156" x2="200" y2="178" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#db3Arrow)"/>
+<text x="34" y="144" font-size="14" fill="var(--text-muted, #6d6762)">방금 복사한 행을 원본에서 삭제</text>
+<line x1="200" y1="156" x2="200" y2="178" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#db3Arrow)"/>
 <!-- step 3 -->
-<rect x="20" y="180" width="360" height="56" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="1.5" stroke-dasharray="5 3"/>
-<text x="34" y="205" font-size="16" font-weight="600" fill="var(--text-warn, #d97706)">3. DROP TABLE _airflow_deleted__...</text>
-<text x="34" y="226" font-size="14" fill="var(--text-warn, #d97706)">--skip-archive 를 줬을 때만 실행</text>
+<rect x="20" y="180" width="360" height="56" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="1.5" stroke-dasharray="5 3"/>
+<text x="34" y="205" font-size="16" font-weight="600" fill="var(--text-warn, #9d5604)">3. DROP TABLE _airflow_deleted__...</text>
+<text x="34" y="226" font-size="14" fill="var(--text-warn, #9d5604)">--skip-archive 를 줬을 때만 실행</text>
 </svg>
 </div>
 
@@ -389,61 +389,61 @@ PostgreSQL의 `DELETE`는 행에 "이제 안 보임" 표시만 남깁니다. 그
      role="img" aria-label="테이블 파일을 8개 페이지로 표현해 DELETE 직후, VACUUM 후, VACUUM FULL 후를 비교한 그림. VACUUM은 dead tuple 자리를 재사용 가능한 빈칸으로 바꾸지만 파일 크기는 8페이지 그대로이고, VACUUM FULL은 살아있는 3페이지만 새 파일에 다시 써서 파일이 3페이지로 줄어듭니다">
 <!-- panel 1 -->
 <text x="20" y="20" font-size="17" font-weight="600" fill="var(--text, #1c1917)">DELETE 직후</text>
-<text x="20" y="42" font-size="14" fill="var(--text-muted, #78716c)">지운 행이 dead tuple로 파일 안에 그대로 남음</text>
-<rect x="25" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M38,61 L54,77 M54,61 L38,77" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<rect x="69" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M82,61 L98,77 M98,61 L82,77" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<rect x="113" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M126,61 L142,77 M142,61 L126,77" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<rect x="157" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M170,61 L186,77 M186,61 L170,77" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<rect x="201" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M214,61 L230,77 M230,61 L214,77" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
-<rect x="245" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="266" cy="69" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="289" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="310" cy="69" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="333" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="354" cy="69" r="6" fill="var(--primary, #0d9488)"/>
-<path d="M25,96 L25,102 M25,99 L375,99 M375,96 L375,102" stroke="var(--text-muted, #78716c)" stroke-width="1.5"/>
+<text x="20" y="42" font-size="14" fill="var(--text-muted, #6d6762)">지운 행이 dead tuple로 파일 안에 그대로 남음</text>
+<rect x="25" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M38,61 L54,77 M54,61 L38,77" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
+<rect x="69" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M82,61 L98,77 M98,61 L82,77" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
+<rect x="113" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M126,61 L142,77 M142,61 L126,77" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
+<rect x="157" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M170,61 L186,77 M186,61 L170,77" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
+<rect x="201" y="52" width="42" height="34" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M214,61 L230,77 M230,61 L214,77" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
+<rect x="245" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="266" cy="69" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="289" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="310" cy="69" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="333" y="52" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="354" cy="69" r="6" fill="var(--primary, #0a756c)"/>
+<path d="M25,96 L25,102 M25,99 L375,99 M375,96 L375,102" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
 <text x="25" y="118" font-size="15" fill="var(--text, #1c1917)">파일 크기: 8페이지</text>
 <!-- panel 2 -->
 <text x="20" y="152" font-size="17" font-weight="600" fill="var(--text, #1c1917)">VACUUM 후</text>
-<text x="20" y="174" font-size="14" fill="var(--text-muted, #78716c)">빈칸은 재사용 가능. 파일 크기는 그대로.</text>
+<text x="20" y="174" font-size="14" fill="var(--text-muted, #6d6762)">빈칸은 재사용 가능. 파일 크기는 그대로.</text>
 <rect x="25" y="184" width="42" height="34" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
 <rect x="69" y="184" width="42" height="34" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
 <rect x="113" y="184" width="42" height="34" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
 <rect x="157" y="184" width="42" height="34" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
 <rect x="201" y="184" width="42" height="34" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
-<rect x="245" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="266" cy="201" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="289" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="310" cy="201" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="333" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="354" cy="201" r="6" fill="var(--primary, #0d9488)"/>
-<path d="M25,228 L25,234 M25,231 L375,231 M375,228 L375,234" stroke="var(--text-muted, #78716c)" stroke-width="1.5"/>
-<text x="25" y="250" font-size="15" fill="var(--text-warn, #d97706)">파일 크기: 8페이지 (안 줄어듦)</text>
+<rect x="245" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="266" cy="201" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="289" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="310" cy="201" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="333" y="184" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="354" cy="201" r="6" fill="var(--primary, #0a756c)"/>
+<path d="M25,228 L25,234 M25,231 L375,231 M375,228 L375,234" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
+<text x="25" y="250" font-size="15" fill="var(--text-warn, #9d5604)">파일 크기: 8페이지 (안 줄어듦)</text>
 <!-- panel 3 -->
 <text x="20" y="284" font-size="17" font-weight="600" fill="var(--text, #1c1917)">VACUUM FULL 후</text>
-<text x="20" y="306" font-size="14" fill="var(--text-muted, #78716c)">살아있는 행만 새 파일에 다시 씀</text>
-<rect x="25" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="46" cy="333" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="69" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="90" cy="333" r="6" fill="var(--primary, #0d9488)"/>
-<rect x="113" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="134" cy="333" r="6" fill="var(--primary, #0d9488)"/>
-<path d="M25,360 L25,366 M25,363 L155,363 M155,360 L155,366" stroke="var(--text-muted, #78716c)" stroke-width="1.5"/>
-<text x="25" y="382" font-size="15" font-weight="600" fill="var(--text-success, #16a34a)">파일 크기: 3페이지 (OS에 반환)</text>
+<text x="20" y="306" font-size="14" fill="var(--text-muted, #6d6762)">살아있는 행만 새 파일에 다시 씀</text>
+<rect x="25" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="46" cy="333" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="69" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="90" cy="333" r="6" fill="var(--primary, #0a756c)"/>
+<rect x="113" y="316" width="42" height="34" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="134" cy="333" r="6" fill="var(--primary, #0a756c)"/>
+<path d="M25,360 L25,366 M25,363 L155,363 M155,360 L155,366" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
+<text x="25" y="382" font-size="15" font-weight="600" fill="var(--text-success, #107836)">파일 크기: 3페이지 (OS에 반환)</text>
 <!-- legend -->
-<rect x="25" y="404" width="20" height="18" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<path d="M30,409 L40,419 M40,409 L30,419" stroke="var(--text-danger, #dc2626)" stroke-width="1.5"/>
-<text x="53" y="418" font-size="14" fill="var(--text-muted, #78716c)">dead tuple</text>
+<rect x="25" y="404" width="20" height="18" rx="3" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<path d="M30,409 L40,419 M40,409 L30,419" stroke="var(--text-danger, #cb2121)" stroke-width="1.5"/>
+<text x="53" y="418" font-size="14" fill="var(--text-muted, #6d6762)">dead tuple</text>
 <rect x="145" y="404" width="20" height="18" rx="3" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="173" y="418" font-size="14" fill="var(--text-muted, #78716c)">재사용 가능한 빈칸</text>
-<rect x="25" y="434" width="20" height="18" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-<circle cx="35" cy="443" r="5" fill="var(--primary, #0d9488)"/>
-<text x="53" y="448" font-size="14" fill="var(--text-muted, #78716c)">살아있는 행</text>
+<text x="173" y="418" font-size="14" fill="var(--text-muted, #6d6762)">재사용 가능한 빈칸</text>
+<rect x="25" y="434" width="20" height="18" rx="3" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+<circle cx="35" cy="443" r="5" fill="var(--primary, #0a756c)"/>
+<text x="53" y="448" font-size="14" fill="var(--text-muted, #6d6762)">살아있는 행</text>
 </svg>
 </div>
 

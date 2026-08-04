@@ -97,20 +97,20 @@ def my_endpoint(a: A = Depends(create_a)):
 <style>
 .dt-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
 .dt-node { font-size: 17px; font-weight: 700; fill: var(--text, #1c1917); }
-.dt-pn { font-size: 17px; font-weight: 700; fill: var(--primary, #0d9488); }
-.dt-an { font-size: 17px; font-weight: 700; fill: var(--accent, #d97706); }
+.dt-pn { font-size: 17px; font-weight: 700; fill: var(--primary, #0a756c); }
+.dt-an { font-size: 17px; font-weight: 700; fill: var(--accent, #9d5604); }
 .dt-plain { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.dt-single { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-.dt-req { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; }
-.dt-trans { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1.8; stroke-dasharray: 4 3; }
-.dt-sc { font-size: 14px; fill: var(--primary, #0d9488); }
-.dt-ac { font-size: 14px; fill: var(--accent, #d97706); }
-.dt-mc { font-size: 14px; fill: var(--text-muted, #78716c); }
-.dt-note { font-size: 14px; fill: var(--text-muted, #78716c); }
-.dt-edge { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+.dt-single { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+.dt-req { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.8; }
+.dt-trans { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #6d6762); stroke-width: 1.8; stroke-dasharray: 4 3; }
+.dt-sc { font-size: 14px; fill: var(--primary, #0a756c); }
+.dt-ac { font-size: 14px; fill: var(--accent, #9d5604); }
+.dt-mc { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.dt-note { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.dt-edge { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
 </style>
 <defs>
-<marker id="dtArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="dtArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text class="dt-title" x="200" y="20" text-anchor="middle">스코프가 제각각인 의존성 트리</text>
 <!-- 간선 -->

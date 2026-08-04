@@ -29,15 +29,15 @@ OpenAI도 같은 입장입니다. "A Practical Guide to Building Agents"에서 "
 <svg viewBox="0 0 480 608" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="복잡도 순서로 나열한 워크플로우 패턴 사다리. 단일 LLM 호출에서 시작해 부족할 때만 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers, Evaluator-Optimizer 순으로 내려갑니다">
 <style>
 .wp1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.wp1-box-hi { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp1-box-hi { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
 .wp1-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
-.wp1-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp1-q { fill: var(--accent, #d97706); font-size: 17px; }
-.wp1-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.wp1-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp1-q { fill: var(--accent, #9d5604); font-size: 17px; }
+.wp1-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
 </style>
 <defs>
 <marker id="wp1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 1. 단일 호출 -->
@@ -94,24 +94,24 @@ Anthropic의 정의는 명확합니다.
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 434" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Prompt Chaining 데이터 흐름. 첫 LLM 호출의 출력을 결정론적 게이트가 검증하고, 통과하면 두 번째 LLM 호출로 넘어가며 실패하면 첫 단계로 되돌아가 재생성합니다">
 <style>
-.wp2-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-.wp2-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp2-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+.wp2-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.8; stroke-dasharray: 5 3; }
 .wp2-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
-.wp2-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp2-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.6; }
 .wp2-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
-.wp2-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp2-pt { fill: var(--text-muted, #78716c); font-size: 18px; }
-.wp2-ok { fill: var(--text-success, #16a34a); font-size: 17px; }
-.wp2-no { fill: var(--text-danger, #dc2626); font-size: 17px; }
-.wp2-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.wp2-fail { stroke: var(--text-danger, #dc2626); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
+.wp2-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp2-pt { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.wp2-ok { fill: var(--text-success, #107836); font-size: 17px; }
+.wp2-no { fill: var(--text-danger, #cb2121); font-size: 17px; }
+.wp2-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.wp2-fail { stroke: var(--text-danger, #cb2121); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
 </style>
 <defs>
 <marker id="wp2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="wp2ArrowFail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #dc2626)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #cb2121)"/>
 </marker>
 </defs>
 <!-- 입력 -->
@@ -200,21 +200,21 @@ Routing은 교통 경찰과 같습니다. 모든 요청을 하나의 거대한 �
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 326" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Routing 데이터 흐름. 분류기가 사용자 요청의 유형을 판별한 뒤 billing, technical, general 세 개의 전문 핸들러 중 하나로만 요청을 보냅니다">
 <style>
-.wp3-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
+.wp3-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
 .wp3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .wp3-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
 .wp3-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
-.wp3-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp3-pt { fill: var(--text-muted, #78716c); font-size: 18px; }
-.wp3-line { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
-.wp3-skip { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; opacity: 0.5; }
+.wp3-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp3-pt { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.wp3-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.8; fill: none; }
+.wp3-skip { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; opacity: 0.5; }
 </style>
 <defs>
 <marker id="wp3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="wp3ArrowSkip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 입력 -->
@@ -293,18 +293,18 @@ Anthropic은 Parallelization을 두 가지로 나눕니다.
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 422" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Parallelization의 두 하위 패턴. 위쪽 Sectioning은 서로 다른 세 하위 작업을 동시에 실행해 결과를 병합하고, 아래쪽 Voting은 같은 프롬프트를 세 번 실행해 다수결로 집계합니다">
 <style>
-.wp4-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-.wp4-merge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp4-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+.wp4-merge { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.8; stroke-dasharray: 5 3; }
 .wp4-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
 .wp4-hd { fill: var(--text, #1c1917); font-size: 18px; font-weight: 700; }
 .wp4-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
-.wp4-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp4-pt { fill: var(--text-muted, #78716c); font-size: 18px; }
-.wp4-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.wp4-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp4-pt { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.wp4-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
 </style>
 <defs>
 <marker id="wp4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- Sectioning 패널 -->
@@ -391,19 +391,19 @@ Prompt Chaining에서는 단계가 **개발자에 의해 미리 정해져** 있�
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 440" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Orchestrator-Workers 데이터 흐름. 중앙 오케스트레이터가 요청을 런타임에 하위 작업으로 분해해 여러 워커에게 위임하고, 돌아온 결과를 다시 종합해 최종 답변을 만듭니다">
 <style>
-.wp5-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-.wp5-hub { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2.6; }
+.wp5-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+.wp5-hub { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2.6; }
 .wp5-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
-.wp5-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp5-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.6; }
 .wp5-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
 .wp5-t15 { fill: var(--text, #1c1917); font-size: 20px; font-weight: 600; }
-.wp5-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp5-pt { fill: var(--text-muted, #78716c); font-size: 18px; }
-.wp5-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.wp5-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp5-pt { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.wp5-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
 </style>
 <defs>
 <marker id="wp5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 입력 -->
@@ -507,25 +507,25 @@ async def worker(subtask: str) -> str:
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 480 388" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Evaluator-Optimizer 데이터 흐름. 생성자가 만든 응답을 평가자가 점수와 피드백으로 심사하고, 기준을 넘으면 최종 출력으로 나가며 못 넘으면 피드백을 안고 생성자로 되돌아갑니다">
 <style>
-.wp6-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-.wp6-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.wp6-llm { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+.wp6-gate { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.8; stroke-dasharray: 5 3; }
 .wp6-pill { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.4; }
-.wp6-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.6; }
+.wp6-final { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.6; }
 .wp6-t1 { fill: var(--text, #1c1917); font-size: 22px; font-weight: 600; }
 .wp6-t13 { fill: var(--text, #1c1917); font-size: 18px; font-weight: 600; }
-.wp6-t2 { fill: var(--text-muted, #78716c); font-size: 17px; }
-.wp6-pt { fill: var(--text-muted, #78716c); font-size: 18px; }
-.wp6-ok { fill: var(--text-success, #16a34a); font-size: 17px; }
-.wp6-no { fill: var(--text-danger, #dc2626); font-size: 17px; }
-.wp6-line { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.wp6-back { stroke: var(--text-danger, #dc2626); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
+.wp6-t2 { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.wp6-pt { fill: var(--text-muted, #6d6762); font-size: 18px; }
+.wp6-ok { fill: var(--text-success, #107836); font-size: 17px; }
+.wp6-no { fill: var(--text-danger, #cb2121); font-size: 17px; }
+.wp6-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.wp6-back { stroke: var(--text-danger, #cb2121); stroke-width: 1.6; fill: none; stroke-dasharray: 5 3; }
 </style>
 <defs>
 <marker id="wp6Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="wp6ArrowBack" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #dc2626)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #cb2121)"/>
 </marker>
 </defs>
 <!-- 입력 -->

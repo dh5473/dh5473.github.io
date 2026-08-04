@@ -61,8 +61,8 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
 <svg viewBox="0 0 290 348" style="width: 100%; height: auto; max-width: 290px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="워크플로우에서 에이전트로 이어지는 스펙트럼. 위쪽 워크플로우(개발자가 정한 코드 경로)부터 아래쪽 에이전트(LLM이 스스로 판단)까지 Prompt Chaining, Routing, Parallelization, Orchestrator-Workers 및 Evaluator-Optimizer, Autonomous Agent 순으로 배치되어 있습니다.">
   <defs>
     <linearGradient id="wa1Grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="var(--text-muted, #78716c)" />
-      <stop offset="1" stop-color="var(--primary, #0d9488)" />
+      <stop offset="0" stop-color="var(--text-muted, #6d6762)" />
+      <stop offset="1" stop-color="var(--primary, #0a756c)" />
     </linearGradient>
   </defs>
   <!-- 축 양 끝 라벨 -->
@@ -71,16 +71,16 @@ Workflow는 개발자가 미리 정해놓은 코드 경로를 따라 LLM이 실�
   <!-- 스펙트럼 축 -->
   <rect x="36" y="44" width="10" height="248" rx="5" fill="url(#wa1Grad)" />
   <!-- 다섯 개 패턴 지점 -->
-  <circle cx="41" cy="72" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <circle cx="41" cy="72" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2.5" />
   <text x="66" y="77" font-size="15" fill="var(--text, #1c1917)">Prompt Chaining</text>
-  <circle cx="41" cy="124" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <circle cx="41" cy="124" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2.5" />
   <text x="66" y="129" font-size="15" fill="var(--text, #1c1917)">Routing</text>
-  <circle cx="41" cy="176" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <circle cx="41" cy="176" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2.5" />
   <text x="66" y="181" font-size="15" fill="var(--text, #1c1917)">Parallelization</text>
-  <circle cx="41" cy="228" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <circle cx="41" cy="228" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2.5" />
   <text x="66" y="224" font-size="15" fill="var(--text, #1c1917)">Orchestrator-Workers /</text>
   <text x="66" y="244" font-size="15" fill="var(--text, #1c1917)">Evaluator-Optimizer</text>
-  <circle cx="41" cy="280" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0d9488)" stroke-width="2.5" />
+  <circle cx="41" cy="280" r="7" fill="var(--bg, #fafaf8)" stroke="var(--primary, #0a756c)" stroke-width="2.5" />
   <text x="66" y="285" font-size="15" fill="var(--text, #1c1917)">Autonomous Agent</text>
 </svg>
 </div>
@@ -101,7 +101,7 @@ Anthropic은 이를 **"Augmented LLM"**이라는 개념으로 설명합니다. �
 <svg viewBox="0 0 480 300" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Augmented LLM 구조도. 도구, 검색, 메모리 세 요소가 중앙의 LLM 코어에 연결되어 하나의 증강된 LLM을 이룹니다.">
   <defs>
     <marker id="wa2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
   </defs>
   <!-- 바깥 컨테이너 -->
@@ -115,11 +115,11 @@ Anthropic은 이를 **"Augmented LLM"**이라는 개념으로 설명합니다. �
   <rect x="318" y="76" width="124" height="60" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
   <text x="380" y="113" font-size="20" text-anchor="middle" fill="var(--text, #1c1917)">Memory</text>
   <!-- 코어로 이어지는 연결선 -->
-  <line x1="100" y1="136" x2="176" y2="194" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
-  <line x1="240" y1="136" x2="240" y2="194" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
-  <line x1="380" y1="136" x2="304" y2="194" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <line x1="100" y1="136" x2="176" y2="194" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <line x1="240" y1="136" x2="240" y2="194" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
+  <line x1="380" y1="136" x2="304" y2="194" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa2Arrow)" />
   <!-- 코어 -->
-  <rect x="150" y="198" width="180" height="66" rx="12" fill="var(--primary, #0d9488)" />
+  <rect x="150" y="198" width="180" height="66" rx="12" fill="var(--primary, #0a756c)" />
   <text x="240" y="239" font-size="22" font-weight="700" text-anchor="middle" fill="var(--on-fill, #14100e)">LLM (Core)</text>
 </svg>
 </div>
@@ -162,37 +162,37 @@ Claude Code는 약 26개의 내장 도구를 가지고 있고, Codex도 유사�
 <svg viewBox="0 0 440 424" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="에이전트 루프 흐름도. 사용자 요청이 모델에 들어가면 모델이 다음 행동을 결정하고, 도구 호출이 없으면 응답을 반환하며, 도구 호출이 있으면 도구를 실행해 결과를 수집한 뒤 다시 모델로 돌아갑니다.">
   <defs>
     <marker id="wa3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
     <marker id="wa3ArrowLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--accent, #d97706)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--accent, #9d5604)" />
     </marker>
   </defs>
   <!-- 입력 -->
   <rect x="71" y="16" width="180" height="44" rx="22" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
   <text x="161" y="45" font-size="20" text-anchor="middle" fill="var(--text, #1c1917)">사용자 요청</text>
-  <line x1="161" y1="60" x2="161" y2="80" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <line x1="161" y1="60" x2="161" y2="80" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
   <!-- 모델 판단 -->
-  <rect x="46" y="84" width="230" height="58" rx="10" fill="var(--primary, #0d9488)" />
+  <rect x="46" y="84" width="230" height="58" rx="10" fill="var(--primary, #0a756c)" />
   <text x="161" y="120" font-size="20" font-weight="700" text-anchor="middle" fill="var(--on-fill, #14100e)">모델: 다음 행동 결정</text>
-  <line x1="161" y1="142" x2="161" y2="160" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <line x1="161" y1="142" x2="161" y2="160" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
   <!-- 분기 -->
   <polygon points="161,166 243,210 161,254 79,210" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
   <text x="161" y="217" font-size="20" text-anchor="middle" fill="var(--text, #1c1917)">도구 호출?</text>
   <!-- 아니오: 종료 -->
-  <line x1="243" y1="210" x2="296" y2="210" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
-  <text x="270" y="198" font-size="17" text-anchor="middle" fill="var(--text-muted, #78716c)">아니오</text>
-  <rect x="300" y="183" width="132" height="54" rx="10" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5" />
-  <text x="366" y="217" font-size="20" text-anchor="middle" fill="var(--text-success, #16a34a)">응답 반환</text>
+  <line x1="243" y1="210" x2="296" y2="210" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <text x="270" y="198" font-size="17" text-anchor="middle" fill="var(--text-muted, #6d6762)">아니오</text>
+  <rect x="300" y="183" width="132" height="54" rx="10" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="1.5" />
+  <text x="366" y="217" font-size="20" text-anchor="middle" fill="var(--text-success, #107836)">응답 반환</text>
   <!-- 예: 도구 실행 -->
-  <line x1="161" y1="254" x2="161" y2="286" stroke="var(--text-muted, #78716c)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
-  <text x="173" y="274" font-size="17" fill="var(--text-muted, #78716c)">예</text>
+  <line x1="161" y1="254" x2="161" y2="286" stroke="var(--text-muted, #6d6762)" stroke-width="1.8" marker-end="url(#wa3Arrow)" />
+  <text x="173" y="274" font-size="17" fill="var(--text-muted, #6d6762)">예</text>
   <rect x="46" y="288" width="230" height="78" rx="10" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5" />
   <text x="161" y="321" font-size="20" text-anchor="middle" fill="var(--text, #1c1917)">도구 실행 후</text>
   <text x="161" y="347" font-size="20" text-anchor="middle" fill="var(--text, #1c1917)">결과 수집</text>
   <!-- 루프 백 -->
-  <path d="M161,366 V404 H24 V113 H40" fill="none" stroke="var(--accent, #d97706)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#wa3ArrowLoop)" />
-  <text x="60" y="392" font-size="17" fill="var(--accent, #d97706)">루프 반복</text>
+  <path d="M161,366 V404 H24 V113 H40" fill="none" stroke="var(--accent, #9d5604)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#wa3ArrowLoop)" />
+  <text x="60" y="392" font-size="17" fill="var(--accent, #9d5604)">루프 반복</text>
 </svg>
 </div>
 

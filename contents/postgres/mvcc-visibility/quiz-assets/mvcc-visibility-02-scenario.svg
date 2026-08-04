@@ -4,16 +4,16 @@
      role="img" aria-label="xid 번호선 위에 799, 806, 812가 표시되어 있고 806이 Session A snapshot의 xmin, 812가 xmax입니다. 그 아래 구 버전 튜플은 t_xmin 799에 t_xmax 812이고 balance가 5000, 신 버전 튜플은 t_xmin 812에 t_xmax 0이고 balance가 7000입니다.">
 <style>
 .qmv2-t { fill: var(--text, #1c1917); }
-.qmv2-m { fill: var(--text-muted, #78716c); }
-.qmv2-k { fill: var(--primary, #0d9488); font-weight: 600; }
-.qmv2-a { fill: var(--accent, #d97706); font-weight: 600; }
-.qmv2-ax { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
-.qmv2-tick { stroke: var(--primary, #0d9488); stroke-width: 2; }
-.qmv2-tickm { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+.qmv2-m { fill: var(--text-muted, #6d6762); }
+.qmv2-k { fill: var(--primary, #0a756c); font-weight: 600; }
+.qmv2-a { fill: var(--accent, #9d5604); font-weight: 600; }
+.qmv2-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.8; fill: none; }
+.qmv2-tick { stroke: var(--primary, #0a756c); stroke-width: 2; }
+.qmv2-tickm { stroke: var(--text-muted, #6d6762); stroke-width: 2; }
 .qmv2-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
 <defs>
-<marker id="qmv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="qmv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text x="180" y="26" text-anchor="middle" font-size="16" font-weight="600" class="qmv2-t">두 튜플 버전과 Session A의 snapshot</text>
 <line x1="24" y1="88" x2="346" y2="88" class="qmv2-ax" marker-end="url(#qmv2Arrow)"/>

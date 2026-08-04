@@ -28,14 +28,14 @@ Claude Code의 루프를 한 줄로 요약하면 AsyncGenerator while-loop이고
 <style>
 .al1-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al1-t{fill:var(--text,#1c1917);font-size:20px}
-.al1-s{fill:var(--text-muted,#78716c);font-size:17px}
-.al1-k{fill:var(--primary,#0d9488);font-size:20px;font-weight:600}
-.al1-a{fill:var(--accent,#d97706);font-size:20px;font-weight:600}
+.al1-s{fill:var(--text-muted, #6d6762);font-size:17px}
+.al1-k{fill:var(--primary, #0a756c);font-size:20px;font-weight:600}
+.al1-a{fill:var(--accent, #9d5604);font-size:20px;font-weight:600}
 .al1-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.al1-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+.al1-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.6;fill:none}
 </style>
 <defs>
-<marker id="al1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="al1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <!-- 위: Claude Code -->
 <text x="24" y="26" class="al1-h">Claude Code · 상태 유지</text>
@@ -85,15 +85,15 @@ Claude Code에서 한 턴이 처리되는 과정을 추적해 보겠습니다. C
 <style>
 .al2-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al2-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
-.al2-d{fill:var(--text-muted,#78716c);font-size:17px}
-.al2-s{fill:var(--text-muted,#78716c);font-size:18px}
+.al2-d{fill:var(--text-muted, #6d6762);font-size:17px}
+.al2-s{fill:var(--text-muted, #6d6762);font-size:18px}
 .al2-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.al2-ai{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
-.al2-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
-.al2-tag{fill:var(--primary,#0d9488);font-size:17px;font-weight:700}
+.al2-ai{fill:var(--bg-muted,#eeecea);stroke:var(--primary, #0a756c);stroke-width:2}
+.al2-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.6;fill:none}
+.al2-tag{fill:var(--primary, #0a756c);font-size:17px;font-weight:700}
 </style>
 <defs>
-<marker id="al2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="al2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text x="20" y="26" class="al2-h">한 턴의 6단계 파이프라인</text>
 <!-- 1 -->
@@ -147,14 +147,14 @@ Stage 2에서는 이 조립된 컨텍스트에 5단계 전처리 파이프라인
 <style>
 .al3-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al3-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
-.al3-i{fill:var(--primary,#0d9488);font-size:21px;font-weight:600}
-.al3-num{fill:var(--text-muted,#78716c);font-size:17px}
+.al3-i{fill:var(--primary, #0a756c);font-size:21px;font-weight:600}
+.al3-num{fill:var(--text-muted, #6d6762);font-size:17px}
 .al3-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.al3-pill{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
-.al3-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+.al3-pill{fill:var(--bg-muted,#eeecea);stroke:var(--primary, #0a756c);stroke-width:1.5}
+.al3-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.6;fill:none}
 </style>
 <defs>
-<marker id="al3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="al3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text x="20" y="26" class="al3-h">Pre-model Shapers (5단계)</text>
 <!-- 입력 -->
@@ -241,17 +241,17 @@ arXiv 논문에 따르면 `queryLoop()`가 yield하는 이벤트는 여러 유�
 <style>
 .al4-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
 .al4-t{fill:var(--text,#1c1917);font-size:20px}
-.al4-s{fill:var(--text-muted,#78716c);font-size:17px}
-.al4-ok{fill:var(--text-success,#16a34a);font-size:20px;font-weight:700}
-.al4-ex{fill:var(--text-warn,#d97706);font-size:20px;font-weight:700}
+.al4-s{fill:var(--text-muted, #6d6762);font-size:17px}
+.al4-ok{fill:var(--text-success, #107836);font-size:20px;font-weight:700}
+.al4-ex{fill:var(--text-warn, #9d5604);font-size:20px;font-weight:700}
 .al4-pill{fill:var(--bg-muted,#eeecea);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.al4-pa{fill:var(--bg-success,#f0fdf4);stroke:var(--text-success,#16a34a);stroke-width:1.5}
-.al4-pb{fill:var(--bg-warn,#fffbeb);stroke:var(--text-warn,#d97706);stroke-width:1.5}
+.al4-pa{fill:var(--bg-success,#f0fdf4);stroke:var(--text-success, #107836);stroke-width:1.5}
+.al4-pb{fill:var(--bg-warn,#fffbeb);stroke:var(--text-warn, #9d5604);stroke-width:1.5}
 .al4-in{fill:var(--bg,#fafaf8);stroke:var(--border,#e7e5e4);stroke-width:1.2}
-.al4-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+.al4-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.6;fill:none}
 </style>
 <defs>
-<marker id="al4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="al4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <!-- 입력: 모델 응답 -->
 <rect x="100" y="16" width="280" height="44" rx="22" class="al4-pill"/>
@@ -320,15 +320,15 @@ Codex의 한 턴은 다음과 같이 처리됩니다.
 .al5-h{fill:var(--text,#1c1917);font-size:22px;font-weight:700}
 .al5-n{fill:var(--text,#1c1917);font-size:21px;font-weight:600}
 .al5-t{fill:var(--text,#1c1917);font-size:20px}
-.al5-s{fill:var(--text-muted,#78716c);font-size:17px}
-.al5-i{fill:var(--primary,#0d9488);font-size:21px;font-weight:600}
+.al5-s{fill:var(--text-muted, #6d6762);font-size:17px}
+.al5-i{fill:var(--primary, #0a756c);font-size:21px;font-weight:600}
 .al5-box{fill:var(--bg-subtle,#f5f4f2);stroke:var(--border,#e7e5e4);stroke-width:1.5}
-.al5-api{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:2}
+.al5-api{fill:var(--bg-muted,#eeecea);stroke:var(--primary, #0a756c);stroke-width:2}
 .al5-row{fill:var(--bg,#fafaf8);stroke:var(--border,#e7e5e4);stroke-width:1.2}
-.al5-ln{stroke:var(--text-muted,#78716c);stroke-width:1.6;fill:none}
+.al5-ln{stroke:var(--text-muted, #6d6762);stroke-width:1.6;fill:none}
 </style>
 <defs>
-<marker id="al5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="al5Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text x="20" y="26" class="al5-h">Turn N의 처리 과정</text>
 <!-- 클라이언트: 히스토리 재구성 -->
@@ -412,11 +412,11 @@ Claude Code의 6단계 파이프라인과 비교하면 구조가 훨씬 간결�
 <style>
 .al6-h{fill:var(--text,#1c1917);font-size:21px;font-weight:700}
 .al6-turn{fill:var(--text,#1c1917);font-size:20px;font-weight:600}
-.al6-s{fill:var(--text-muted,#78716c);font-size:17px}
-.al6-c{fill:var(--primary,#0d9488);font-size:17px;font-weight:600}
-.al6-w{fill:var(--accent,#d97706);font-size:17px;font-weight:600}
-.al6-cb{fill:var(--bg-muted,#eeecea);stroke:var(--primary,#0d9488);stroke-width:1.5}
-.al6-wb{fill:var(--bg-warn,#fffbeb);stroke:var(--accent,#d97706);stroke-width:1.5}
+.al6-s{fill:var(--text-muted, #6d6762);font-size:17px}
+.al6-c{fill:var(--primary, #0a756c);font-size:17px;font-weight:600}
+.al6-w{fill:var(--accent, #9d5604);font-size:17px;font-weight:600}
+.al6-cb{fill:var(--bg-muted,#eeecea);stroke:var(--primary, #0a756c);stroke-width:1.5}
+.al6-wb{fill:var(--bg-warn,#fffbeb);stroke:var(--accent, #9d5604);stroke-width:1.5}
 </style>
 <text x="20" y="26" class="al6-h">턴이 쌓일수록 길어지는 캐시 프리픽스</text>
 <!-- 범례 -->

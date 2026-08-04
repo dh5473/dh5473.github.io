@@ -35,9 +35,9 @@ Part 이름에는 이력이 담겨 있습니다. 1,000만 행을 한 번에 INSE
 .pn-name { font-size: 28px; fill: var(--text, #1c1917); }
 .pn-num { font-size: 17px; fill: var(--on-fill, #14100e); font-weight: 600; }
 .pn-key { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
-.pn-desc { font-size: 18px; fill: var(--text-muted, #78716c); }
+.pn-desc { font-size: 18px; fill: var(--text-muted, #6d6762); }
 .pn-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.pn-badge { fill: var(--primary, #0d9488); }
+.pn-badge { fill: var(--primary, #0a756c); }
 </style>
 <!-- part 이름 -->
 <text class="pn-mono pn-name" x="173" y="46" text-anchor="middle">a</text>
@@ -153,13 +153,13 @@ Granule 경계는 **모든 컬럼에 동일하게 적용**됩니다. Granule 0�
 <style>
 .gc-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .gc-head { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
-.gc-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
+.gc-sub { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .gc-cell { font-size: 18px; fill: var(--text, #1c1917); }
 .gc-lab { font-size: 17px; fill: var(--text, #1c1917); }
-.gc-cap { font-size: 18px; fill: var(--text-muted, #78716c); }
+.gc-cap { font-size: 18px; fill: var(--text-muted, #6d6762); }
 .gc-hbox { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .gc-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.gc-guide { stroke: var(--primary, #0d9488); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.gc-guide { stroke: var(--primary, #0a756c); stroke-width: 1.5; stroke-dasharray: 4 4; }
 </style>
 <!-- 헤더 -->
 <rect class="gc-hbox" x="24" y="24" width="122" height="48"/>
@@ -225,11 +225,11 @@ Granule 경계는 **모든 컬럼에 동일하게 적용**됩니다. Granule 0�
 <style>
 .cb-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .cb-title { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
-.cb-blk { font-size: 18px; fill: var(--text-muted, #78716c); }
+.cb-blk { font-size: 18px; fill: var(--text-muted, #6d6762); }
 .cb-gr { font-size: 18px; fill: var(--text, #1c1917); }
-.cb-cap { font-size: 18px; fill: var(--text-muted, #78716c); }
+.cb-cap { font-size: 18px; fill: var(--text-muted, #6d6762); }
 .cb-outer { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.cb-pill { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.cb-pill { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 </style>
 <text class="cb-mono cb-title" x="24" y="30">price.bin</text>
 <!-- 압축 블록 0 -->
@@ -298,20 +298,20 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 <style>
 .rp-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
 .rp-title { font-size: 20px; fill: var(--text, #1c1917); font-weight: 600; }
-.rp-th { font-size: 17px; fill: var(--text-muted, #78716c); font-weight: 600; }
+.rp-th { font-size: 17px; fill: var(--text-muted, #6d6762); font-weight: 600; }
 .rp-td { font-size: 18px; fill: var(--text, #1c1917); }
-.rp-arrowlab { font-size: 18px; fill: var(--primary, #0d9488); font-weight: 600; }
+.rp-arrowlab { font-size: 18px; fill: var(--primary, #0a756c); font-weight: 600; }
 .rp-blk { font-size: 18px; fill: var(--text, #1c1917); }
-.rp-blksub { font-size: 17px; fill: var(--text-muted, #78716c); }
+.rp-blksub { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .rp-panel { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .rp-head { fill: var(--bg-muted, #eeecea); stroke: none; }
 .rp-line { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .rp-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.rp-arrow { stroke: var(--primary, #0d9488); stroke-width: 2.5; fill: none; }
+.rp-arrow { stroke: var(--primary, #0a756c); stroke-width: 2.5; fill: none; }
 </style>
 <defs>
 <marker id="rpArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0d9488)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0a756c)"/>
 </marker>
 </defs>
 <!-- 1단계: primary.idx -->
@@ -437,15 +437,15 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="전체 1221개 granule 중 전자제품에 해당하는 916번부터 1068번까지 153개만 선택되고 나머지 1068개는 건너뛰는 것을 막대로 보여주는 그림">
 <style>
-.gp-cat { font-size: 18px; fill: var(--text-success, #16a34a); font-weight: 600; }
-.gp-skip { font-size: 18px; fill: var(--text-muted, #78716c); font-weight: 600; }
-.gp-sel { font-size: 17px; fill: var(--text-success, #16a34a); font-weight: 600; }
-.gp-tick { font-size: 17px; fill: var(--text-muted, #78716c); }
+.gp-cat { font-size: 18px; fill: var(--text-success, #107836); font-weight: 600; }
+.gp-skip { font-size: 18px; fill: var(--text-muted, #6d6762); font-weight: 600; }
+.gp-sel { font-size: 17px; fill: var(--text-success, #107836); font-weight: 600; }
+.gp-tick { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .gp-leg { font-size: 18px; fill: var(--text, #1c1917); }
 .gp-sum { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
 .gp-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.gp-hit { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
-.gp-conn { stroke: var(--text-success, #16a34a); stroke-width: 2; }
+.gp-hit { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2; }
+.gp-conn { stroke: var(--text-success, #107836); stroke-width: 2; }
 </style>
 <!-- 선택 구간 라벨 -->
 <text class="gp-cat" x="375" y="52" text-anchor="middle">전자제품</text>
@@ -485,17 +485,17 @@ Mark가 없다면 granule N의 데이터를 읽으려면 `.bin` 파일의 처음
 .qf-q { font-size: 17px; fill: var(--text, #1c1917); }
 .qf-num { font-size: 17px; fill: var(--on-fill, #14100e); font-weight: 600; }
 .qf-main { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
-.qf-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
+.qf-sub { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .qf-notet { font-size: 18px; fill: var(--text, #1c1917); font-weight: 600; }
-.qf-qbox { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.qf-qbox { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 .qf-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.qf-badge { fill: var(--primary, #0d9488); }
-.qf-arrow { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
-.qf-note { fill: none; stroke: var(--text-muted, #78716c); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.qf-badge { fill: var(--primary, #0a756c); }
+.qf-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
+.qf-note { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.5; stroke-dasharray: 5 4; }
 </style>
 <defs>
 <marker id="qfArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 쿼리 -->

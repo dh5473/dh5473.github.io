@@ -27,14 +27,14 @@ Python 개발을 하다 보면 누구나 한 번쯤 가상환경이나 패키지
 .uv-h { fill: var(--text, #1c1917); font-size: 15px; font-weight: 700; }
 .uv-l { fill: var(--text, #1c1917); font-size: 14px; }
 .uv-w { fill: var(--on-fill, #14100e); font-size: 16px; font-weight: 700; }
-.uv-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.uv-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .uv-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.uv-one { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.uv-a { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; marker-end: url(#uvArrow); }
+.uv-one { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.uv-a { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; marker-end: url(#uvArrow); }
 </style>
 <defs>
 <marker id="uvArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="uv-t" x="200" y="22" text-anchor="middle">네 도구가 하던 일을 하나로</text>

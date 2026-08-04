@@ -28,12 +28,12 @@ KV Cache는 흔히 "추론 속도를 올리는 캐시" 정도로 소개됩니다
      role="img" aria-label="캐시가 없을 때 매 스텝마다 앞선 토큰의 K, V를 다시 계산하는 모습">
   <style>
     .kv1-title { fill: var(--text, #1c1917); font-size: 16px; text-anchor: middle; }
-    .kv1-step  { fill: var(--text-muted, #78716c); font-size: 13px; }
-    .kv1-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .kv1-redo  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+    .kv1-step  { fill: var(--text-muted, #6d6762); font-size: 13px; }
+    .kv1-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .kv1-redo  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
     .kv1-lab   { fill: var(--text, #1c1917); font-size: 16px; text-anchor: middle; }
-    .kv1-labr  { fill: var(--text-danger, #dc2626); font-size: 16px; text-anchor: middle; }
-    .kv1-leg   { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .kv1-labr  { fill: var(--text-danger, #cb2121); font-size: 16px; text-anchor: middle; }
+    .kv1-leg   { fill: var(--text-muted, #6d6762); font-size: 13px; }
   </style>
   <text x="180" y="22" class="kv1-title">캐시 없이: 앞부분을 매번 다시 계산</text>
   <text x="12" y="64" class="kv1-step">스텝 1</text>
@@ -69,12 +69,12 @@ KV Cache는 이 낭비를 없앱니다. 각 토큰의 K, V를 처음 계산할 �
      role="img" aria-label="KV Cache를 쓸 때 앞선 토큰은 캐시에서 읽고 새 토큰의 K, V만 계산하는 모습">
   <style>
     .kv2-title { fill: var(--text, #1c1917); font-size: 16px; text-anchor: middle; }
-    .kv2-step  { fill: var(--text-muted, #78716c); font-size: 13px; }
-    .kv2-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .kv2-hit   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .kv2-step  { fill: var(--text-muted, #6d6762); font-size: 13px; }
+    .kv2-new   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .kv2-hit   { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
     .kv2-lab   { fill: var(--text, #1c1917); font-size: 16px; text-anchor: middle; }
-    .kv2-labh  { fill: var(--text-success, #16a34a); font-size: 16px; text-anchor: middle; }
-    .kv2-leg   { fill: var(--text-muted, #78716c); font-size: 13px; }
+    .kv2-labh  { fill: var(--text-success, #107836); font-size: 16px; text-anchor: middle; }
+    .kv2-leg   { fill: var(--text-muted, #6d6762); font-size: 13px; }
   </style>
   <text x="180" y="22" class="kv2-title">KV Cache: 앞부분은 캐시에서 읽기</text>
   <text x="12" y="64" class="kv2-step">스텝 1</text>

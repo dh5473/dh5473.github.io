@@ -32,16 +32,16 @@ Claude Code에 "이 디렉터리의 임시 파일을 정리해줘"라고 요청�
   <style>
     .pp2p-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pp2p-step { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .pp2p-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .pp2p-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .pp2p-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .pp2p-hd { fill: var(--primary, #0d9488); font-size: 20px; font-weight: 600; text-anchor: middle; }
+    .pp2p-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .pp2p-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+    .pp2p-key { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .pp2p-hd { fill: var(--primary, #0a756c); font-size: 20px; font-weight: 600; text-anchor: middle; }
     .pp2p-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .pp2p-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .pp2p-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pp2pArr); }
+    .pp2p-s { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .pp2p-arr { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#pp2pArr); }
   </style>
   <defs>
-    <marker id="pp2pArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
+    <marker id="pp2pArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/></marker>
   </defs>
   <!-- Phase 1 panel -->
   <rect x="10" y="8" width="460" height="372" rx="10" class="pp2p-panel"/>
@@ -171,22 +171,22 @@ def should_prompt(mode: PermissionMode, tool_name: str,
 <svg viewBox="0 0 480 520" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="deny-first 퍼미션 파이프라인의 7단계. 모드 게이트, deny 규칙, allow 규칙, ML 분류기, 사용자 프롬프트, 거부 라우팅, 실행 순서로 평가되며 deny 규칙이 allow 규칙보다 먼저 검사됩니다.">
   <style>
     .pps-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .pps-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .pps-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
+    .pps-deny { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .pps-allow { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
     .pps-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .pps-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+    .pps-s { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
     .pps-chip { font-size: 20px; font-weight: 600; text-anchor: middle; fill: var(--bg, #fafaf8); }
-    .pps-ok { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: start; }
-    .pps-note { fill: var(--primary, #0d9488); font-size: 17px; text-anchor: middle; }
-    .pps-arr { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#ppsArr); }
-    .pps-arr-d { stroke: var(--text-danger, #dc2626); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrD); }
-    .pps-arr-a { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrA); }
-    .pps-join { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; }
+    .pps-ok { fill: var(--text-success, #107836); font-size: 17px; text-anchor: start; }
+    .pps-note { fill: var(--primary, #0a756c); font-size: 17px; text-anchor: middle; }
+    .pps-arr { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#ppsArr); }
+    .pps-arr-d { stroke: var(--text-danger, #cb2121); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrD); }
+    .pps-arr-a { stroke: var(--text-success, #107836); stroke-width: 1.5; fill: none; marker-end: url(#ppsArrA); }
+    .pps-join { stroke: var(--text-success, #107836); stroke-width: 1.5; fill: none; }
   </style>
   <defs>
-    <marker id="ppsArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/></marker>
-    <marker id="ppsArrD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #dc2626)"/></marker>
-    <marker id="ppsArrA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)"/></marker>
+    <marker id="ppsArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/></marker>
+    <marker id="ppsArrD" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-danger, #cb2121)"/></marker>
+    <marker id="ppsArrA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--text-success, #107836)"/></marker>
   </defs>
   <!-- Stage 1: Mode Gate -->
   <rect x="20" y="12" width="300" height="56" rx="8" class="pps-box"/>
@@ -197,14 +197,14 @@ def should_prompt(mode: PermissionMode, tool_name: str,
   <rect x="20" y="88" width="300" height="44" rx="8" class="pps-deny"/>
   <text x="170" y="117" class="pps-t" style="font-weight:600">2. Deny Rules</text>
   <line x1="322" y1="110" x2="344" y2="110" class="pps-arr-d"/>
-  <rect x="350" y="92" width="110" height="36" rx="6" fill="var(--text-danger, #dc2626)"/>
+  <rect x="350" y="92" width="110" height="36" rx="6" fill="var(--text-danger, #cb2121)"/>
   <text x="405" y="118" class="pps-chip">DENY</text>
   <line x1="170" y1="134" x2="170" y2="150" class="pps-arr"/>
   <!-- Stage 3: Allow Rules -->
   <rect x="20" y="152" width="300" height="44" rx="8" class="pps-allow"/>
   <text x="170" y="181" class="pps-t" style="font-weight:600">3. Allow Rules</text>
   <line x1="322" y1="174" x2="344" y2="174" class="pps-arr-a"/>
-  <rect x="350" y="156" width="110" height="36" rx="6" fill="var(--text-success, #16a34a)"/>
+  <rect x="350" y="156" width="110" height="36" rx="6" fill="var(--text-success, #107836)"/>
   <text x="405" y="182" class="pps-chip">ALLOW</text>
   <line x1="170" y1="198" x2="170" y2="214" class="pps-arr"/>
   <!-- Stage 4: ML Classifier -->

@@ -133,7 +133,7 @@ MAE 대신 MSE가 기본값인 데는 세 가지 실용적 이유가 있다.
 |x|와 x²을 그래프로 비교하면 차이가 한눈에 보인다.
 
 ![|x|와 x² 함수 비교](./mse-vs-mae.png)
-<p align="center" style="color: #888; font-size: 13px;"><em>절댓값 함수는 x = 0에서 꺾인다. 제곱 함수는 모든 점에서 매끄럽다.</em></p>
+<p align="center" style="color: var(--text-muted, #6d6762); font-size: 13px;"><em>절댓값 함수는 x = 0에서 꺾인다. 제곱 함수는 모든 점에서 매끄럽다.</em></p>
 
 절댓값 함수는 x = 0에서 꺾이며, 이 지점에서 미분값이 정의되지 않는다. 반면 x²은 모든 구간에서 매끄럽게 미분된다.
 
@@ -171,7 +171,7 @@ costs = [np.mean((price - (w * area + b_optimal)) ** 2) for w in w_values]
 ```
 
 ![비용 곡선 — w에 따른 J(w) 변화](./cost-curve.png)
-<p align="center" style="color: #888; font-size: 13px;"><em>기울기(w)를 바꿔가며 계산한 비용 J(w). 포물선의 바닥이 최적의 w다.</em></p>
+<p align="center" style="color: var(--text-muted, #6d6762); font-size: 13px;"><em>기울기(w)를 바꿔가며 계산한 비용 J(w). 포물선의 바닥이 최적의 w다.</em></p>
 
 깨끗한 U자 곡선이다. w가 너무 작으면 직선이 너무 눕기 때문에 큰 면적의 집값을 과소 예측해서 비용이 크고, 너무 크면 직선이 너무 가파르기 때문에 작은 면적의 집값을 과대 예측해서 비용이 크다. 정확히 맞는 지점에서 비용이 최소가 된다.
 

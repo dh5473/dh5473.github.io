@@ -27,14 +27,14 @@ vllm serve로 모델을 띄우고 nvidia-smi를 확인하면, 요청을 하나�
   <style>
     .vp1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .vp1-label { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-    .vp1-sub   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .vp1-note  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: start; }
-    .vp1-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#vp1Arrow); }
-    .vp1-line  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
+    .vp1-sub   { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .vp1-note  { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: start; }
+    .vp1-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#vp1Arrow); }
+    .vp1-line  { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
   </style>
   <defs>
     <marker id="vp1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <text x="230" y="18" class="vp1-sub">HTTP 요청 / 응답</text>
@@ -91,8 +91,8 @@ vLLM은 시작할 때 GPU 메모리의 일정 비율을 통째로 예약합니�
   <style>
     .vm1-title  { fill: var(--text, #1c1917); font-size: 21px; text-anchor: middle; }
     .vm1-fixed  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .vm1-act    { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
-    .vm1-kv     { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .vm1-act    { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
+    .vm1-kv     { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
     .vm1-in     { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
     .vm1-on     { fill: var(--on-fill, #14100e); }
     .vm1-legend { fill: var(--text, #1c1917); font-size: 18px; text-anchor: start; }

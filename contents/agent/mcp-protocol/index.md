@@ -28,9 +28,9 @@ MCP(Model Context Protocol)는 이 두 문제를 동시에 해결하려는 표�
     .mn-label { font-size: 19px; fill: var(--text, #1c1917); }
     .mn-formula { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .mn-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .mn-mesh { stroke: var(--text-danger, #dc2626); stroke-width: 1; opacity: 0.5; }
-    .mn-spoke { stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-    .mn-hub { fill: var(--primary, #0d9488); }
+    .mn-mesh { stroke: var(--text-danger, #cb2121); stroke-width: 1; opacity: 0.5; }
+    .mn-spoke { stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+    .mn-hub { fill: var(--primary, #0a756c); }
     .mn-hub-text { font-size: 20px; font-weight: 700; fill: var(--on-fill, #14100e); }
     .mn-divider { stroke: var(--border, #e7e5e4); stroke-width: 1; }
   </style>
@@ -122,17 +122,17 @@ MCP는 세 가지 역할로 구성됩니다.
   <style>
     .hcs-h { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
     .hcs-l { font-size: 19px; fill: var(--text, #1c1917); }
-    .hcs-s { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .hcs-s { font-size: 17px; fill: var(--text-muted, #6d6762); }
     .hcs-band { fill: var(--bg, #fafaf8); }
     .hcs-host { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .hcs-client { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .hcs-server { fill: var(--bg, #fafaf8); stroke: var(--primary, #0d9488); stroke-width: 1.8; }
-    .hcs-ext { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.2; stroke-dasharray: 4 3; }
-    .hcs-arrow { stroke: var(--text-muted, #78716c); stroke-width: 1.6; }
+    .hcs-server { fill: var(--bg, #fafaf8); stroke: var(--primary, #0a756c); stroke-width: 1.8; }
+    .hcs-ext { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #6d6762); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .hcs-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; }
   </style>
   <defs>
     <marker id="hcsHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
   </defs>
   <!-- Host 계층 -->
@@ -216,15 +216,15 @@ Client와 Server 사이의 세션은 세 단계를 거칩니다. 초기화(Initi
     .lc-msg { font-size: 18px; fill: var(--text, #1c1917); }
     .lc-life { stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
     .lc-band { fill: var(--bg-muted, #eeecea); }
-    .lc-req { stroke: var(--primary, #0d9488); stroke-width: 1.6; }
-    .lc-res { stroke: var(--text-muted, #78716c); stroke-width: 1.4; stroke-dasharray: 5 3; }
+    .lc-req { stroke: var(--primary, #0a756c); stroke-width: 1.6; }
+    .lc-res { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; stroke-dasharray: 5 3; }
   </style>
   <defs>
     <marker id="lcReqHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--primary, #0d9488)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--primary, #0a756c)" />
     </marker>
     <marker id="lcResHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
     </marker>
   </defs>
   <!-- 라이프라인 -->
@@ -293,12 +293,12 @@ tools = [
   <style>
     .ctx-title { font-size: 19px; font-weight: 700; fill: var(--text, #1c1917); }
     .ctx-row { font-size: 19px; fill: var(--text, #1c1917); }
-    .ctx-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .ctx-sub { font-size: 17px; fill: var(--text-muted, #6d6762); }
     .ctx-track { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-    .ctx-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .ctx-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .ctx-bad-t { font-size: 18px; font-weight: 700; fill: var(--text-danger, #dc2626); }
-    .ctx-good-t { font-size: 18px; font-weight: 700; fill: var(--text-success, #16a34a); }
+    .ctx-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .ctx-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+    .ctx-bad-t { font-size: 18px; font-weight: 700; fill: var(--text-danger, #cb2121); }
+    .ctx-good-t { font-size: 18px; font-weight: 700; fill: var(--text-success, #107836); }
   </style>
   <text x="240" y="24" text-anchor="middle" class="ctx-title">200K 컨텍스트에서 작업 시작 전 소비되는 몫</text>
   <!-- 기본 방식: 트랙 420 = 200,000 토큰, 막대 162 = 77,000 토큰 -->
@@ -375,13 +375,13 @@ Programmatic Tool Calling이 "모델이 코드를 작성하고 도구 호출 결
   <style>
     .st-name { font-size: 19px; font-weight: 700; }
     .st-base { fill: var(--text, #1c1917); }
-    .st-opt { fill: var(--primary, #0d9488); }
+    .st-opt { fill: var(--primary, #0a756c); }
     .st-in { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .st-out { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #78716c); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .st-out { fill: var(--bg, #fafaf8); stroke: var(--text-muted, #6d6762); stroke-width: 1.2; stroke-dasharray: 4 3; }
     .st-in-t { font-size: 19px; fill: var(--text, #1c1917); }
-    .st-out-t { font-size: 19px; fill: var(--text-muted, #78716c); }
-    .st-strike { stroke: var(--text-muted, #78716c); stroke-width: 1.2; opacity: 0.6; }
-    .st-legend { font-size: 17px; fill: var(--text-muted, #78716c); }
+    .st-out-t { font-size: 19px; fill: var(--text-muted, #6d6762); }
+    .st-strike { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; opacity: 0.6; }
+    .st-legend { font-size: 17px; fill: var(--text-muted, #6d6762); }
   </style>
   <!-- 범례 -->
   <rect x="22" y="8" width="16" height="16" rx="2" class="st-in" />

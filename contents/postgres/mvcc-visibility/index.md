@@ -90,24 +90,24 @@ snapshot은 트랜잭션이 "지금 세상의 상태"를 사진처럼 저장해�
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="xid 번호선 위에서 snapshot의 xmin(748)과 xmax(752)가 번호선을 과거 구간, xip 배열이 흩어진 구간, 미래 구간의 셋으로 나누는 그림">
 <defs>
-<marker id="mv1Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0d9488)"/></marker>
+<marker id="mv1Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0a756c)"/></marker>
 </defs>
 <style>
 .mv1-t { fill: var(--text, #1c1917); }
-.mv1-m { fill: var(--text-muted, #78716c); }
-.mv1-k { fill: var(--primary, #0d9488); font-weight: 600; }
-.mv1-a { fill: var(--accent, #d97706); font-weight: 600; }
+.mv1-m { fill: var(--text-muted, #6d6762); }
+.mv1-k { fill: var(--primary, #0a756c); font-weight: 600; }
+.mv1-a { fill: var(--accent, #9d5604); font-weight: 600; }
 </style>
 <!-- 제목 -->
 <text x="240" y="30" text-anchor="middle" font-size="20" font-weight="600" class="mv1-t">xid 번호선 위의 snapshot</text>
 <!-- xmin / xmax 포인터 -->
 <text x="140" y="64" text-anchor="middle" font-size="18" class="mv1-k">xmin = 748</text>
 <text x="400" y="64" text-anchor="middle" font-size="18" class="mv1-k">xmax = 752</text>
-<line x1="140" y1="72" x2="140" y2="92" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
-<line x1="400" y1="72" x2="400" y2="92" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
+<line x1="140" y1="72" x2="140" y2="92" stroke="var(--primary, #0a756c)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
+<line x1="400" y1="72" x2="400" y2="92" stroke="var(--primary, #0a756c)" stroke-width="2" marker-end="url(#mv1Arrow)"/>
 <!-- 세 구간 -->
 <rect x="18" y="96" width="89" height="50" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)"/>
-<rect x="107" y="96" width="260" height="50" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)"/>
+<rect x="107" y="96" width="260" height="50" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)"/>
 <rect x="367" y="96" width="95" height="50" rx="4" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-dasharray="4 3"/>
 <!-- 번호선 눈금 -->
 <text x="30" y="122" text-anchor="middle" font-size="17" class="mv1-m">…</text>
@@ -119,13 +119,13 @@ snapshot은 트랜잭션이 "지금 세상의 상태"를 사진처럼 저장해�
 <text x="400" y="122" text-anchor="middle" font-size="17" class="mv1-m">752</text>
 <text x="447" y="122" text-anchor="middle" font-size="17" class="mv1-m">…</text>
 <!-- xip[] 표시 점 -->
-<circle cx="140" cy="136" r="4" fill="var(--accent, #d97706)"/>
-<circle cx="270" cy="136" r="4" fill="var(--accent, #d97706)"/>
+<circle cx="140" cy="136" r="4" fill="var(--accent, #9d5604)"/>
+<circle cx="270" cy="136" r="4" fill="var(--accent, #9d5604)"/>
 <!-- 구간 설명 -->
 <rect x="20" y="180" width="22" height="22" rx="4" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)"/>
 <text x="52" y="186" font-size="18" class="mv1-t">xmin(748) 미만: 모두 종료됨</text>
 <text x="52" y="209" font-size="18" class="mv1-m">committed / aborted는 CLOG로 확인</text>
-<rect x="20" y="236" width="22" height="22" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)"/>
+<rect x="20" y="236" width="22" height="22" rx="4" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)"/>
 <text x="52" y="242" font-size="18" class="mv1-t">748 ~ 751: 주황 점이 찍힌 748·750만</text>
 <text x="52" y="265" font-size="18" class="mv1-m">아직 진행 중, 나머지는 이미 종료됨</text>
 <rect x="20" y="281" width="22" height="22" rx="4" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-dasharray="4 3"/>
@@ -179,25 +179,25 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="튜플 가시성 판정 흐름도. Step 1에서 t_xmin을 검사해 현재 트랜잭션인지, committed 과거인지, aborted인지를 따지고, 통과한 튜플만 Step 2로 내려가 t_xmax의 네 가지 상태에 따라 보임 또는 안 보임을 결정합니다">
 <defs>
-<marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0d9488)"/></marker>
+<marker id="mv2Arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="var(--primary, #0a756c)"/></marker>
 </defs>
 <style>
 .mv2-t { fill: var(--text, #1c1917); }
-.mv2-m { fill: var(--text-muted, #78716c); }
+.mv2-m { fill: var(--text-muted, #6d6762); }
 .mv2-h { fill: var(--text, #1c1917); font-weight: 600; }
-.mv2-ok { fill: var(--text-success, #16a34a); font-weight: 600; }
-.mv2-no { fill: var(--text-danger, #dc2626); font-weight: 600; }
-.mv2-go { fill: var(--primary, #0d9488); font-weight: 600; }
+.mv2-ok { fill: var(--text-success, #107836); font-weight: 600; }
+.mv2-no { fill: var(--text-danger, #cb2121); font-weight: 600; }
+.mv2-go { fill: var(--primary, #0a756c); font-weight: 600; }
 .mv2-card { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
-.mv2-bar { fill: var(--primary, #0d9488); }
-.mv2-ck { fill: none; stroke: var(--text-success, #16a34a); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
-.mv2-xx { fill: none; stroke: var(--text-danger, #dc2626); stroke-width: 2.8; stroke-linecap: round; }
-.mv2-dn { fill: none; stroke: var(--primary, #0d9488); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.mv2-bar { fill: var(--primary, #0a756c); }
+.mv2-ck { fill: none; stroke: var(--text-success, #107836); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.mv2-xx { fill: none; stroke: var(--text-danger, #cb2121); stroke-width: 2.8; stroke-linecap: round; }
+.mv2-dn { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 <!-- 시작 -->
-<rect x="126" y="16" width="228" height="42" rx="21" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)"/>
+<rect x="126" y="16" width="228" height="42" rx="21" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)"/>
 <text x="240" y="44" text-anchor="middle" font-size="19" class="mv2-t">튜플 하나를 집음</text>
-<line x1="240" y1="60" x2="240" y2="86" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
+<line x1="240" y1="60" x2="240" y2="86" stroke="var(--primary, #0a756c)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
 <!-- Step 1 헤더 -->
 <text x="18" y="110" font-size="19" class="mv2-h">Step 1. t_xmin 검사</text>
 <text x="18" y="132" font-size="17" class="mv2-m">이 튜플을 만든 트랜잭션이 보이는가?</text>
@@ -205,10 +205,10 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 <rect x="18" y="146" width="444" height="112" rx="8" class="mv2-card"/>
 <rect x="18" y="146" width="5" height="112" rx="2.5" class="mv2-bar"/>
 <text x="38" y="173" font-size="18" class="mv2-t">t_xmin이 현재 트랜잭션인가?</text>
-<rect x="32" y="189" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<rect x="32" y="189" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-opacity="0.4"/>
 <path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,201)"/>
 <text x="64" y="207" font-size="18" class="mv2-ok">현재 명령 이전에 INSERT → 보임</text>
-<rect x="32" y="219" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<rect x="32" y="219" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-opacity="0.4"/>
 <path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,231)"/>
 <text x="64" y="237" font-size="18" class="mv2-no">현재 명령 이후에 INSERT → 안 보임</text>
 <!-- 분기 1-2 -->
@@ -216,49 +216,49 @@ Step 1을 통과해서 "이 튜플이 생성된 건 보인다"까지 확인됐�
 <rect x="18" y="272" width="5" height="134" rx="2.5" class="mv2-bar"/>
 <text x="38" y="299" font-size="18" class="mv2-t">t_xmin이 committed이고</text>
 <text x="38" y="321" font-size="18" class="mv2-t">snapshot 기준 과거인가?</text>
-<rect x="32" y="337" width="418" height="26" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-opacity="0.4"/>
+<rect x="32" y="337" width="418" height="26" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-opacity="0.4"/>
 <path class="mv2-dn" d="M-5,-4 L0,3 L5,-4" transform="translate(46,349)"/>
 <text x="64" y="355" font-size="18" class="mv2-go">예 → Step 2로 내려감</text>
-<rect x="32" y="367" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<rect x="32" y="367" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-opacity="0.4"/>
 <path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,379)"/>
 <text x="64" y="385" font-size="18" class="mv2-no">아니오(진행 중·미래) → 안 보임</text>
 <!-- 분기 1-3 -->
 <rect x="18" y="420" width="444" height="82" rx="8" class="mv2-card"/>
 <rect x="18" y="420" width="5" height="82" rx="2.5" class="mv2-bar"/>
 <text x="38" y="447" font-size="18" class="mv2-t">t_xmin이 aborted인가?</text>
-<rect x="32" y="463" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<rect x="32" y="463" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-opacity="0.4"/>
 <path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,475)"/>
 <text x="64" y="481" font-size="18" class="mv2-no">안 보임 (INSERT가 롤백됨)</text>
 <!-- Step 2 헤더 -->
-<line x1="240" y1="510" x2="240" y2="532" stroke="var(--primary, #0d9488)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
+<line x1="240" y1="510" x2="240" y2="532" stroke="var(--primary, #0a756c)" stroke-width="2" marker-end="url(#mv2Arrow)"/>
 <text x="18" y="558" font-size="19" class="mv2-h">Step 2. t_xmax 검사</text>
 <text x="18" y="580" font-size="17" class="mv2-m">이 튜플을 죽인 트랜잭션이 유효한가?</text>
 <!-- 분기 2-1 -->
 <rect x="18" y="594" width="444" height="82" rx="8" class="mv2-card"/>
 <rect x="18" y="594" width="5" height="82" rx="2.5" class="mv2-bar"/>
 <text x="38" y="621" font-size="18" class="mv2-t">t_infomask에 HEAP_XMAX_INVALID</text>
-<rect x="32" y="637" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<rect x="32" y="637" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-opacity="0.4"/>
 <path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,649)"/>
 <text x="64" y="655" font-size="18" class="mv2-ok">보임 (아무도 죽이지 않음)</text>
 <!-- 분기 2-2 -->
 <rect x="18" y="690" width="444" height="82" rx="8" class="mv2-card"/>
 <rect x="18" y="690" width="5" height="82" rx="2.5" class="mv2-bar"/>
 <text x="38" y="717" font-size="18" class="mv2-t">xmax가 committed이고 과거</text>
-<rect x="32" y="733" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-opacity="0.4"/>
+<rect x="32" y="733" width="418" height="26" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-opacity="0.4"/>
 <path class="mv2-xx" d="M-5,-5 L5,5 M5,-5 L-5,5" transform="translate(46,745)"/>
 <text x="64" y="751" font-size="18" class="mv2-no">안 보임 (삭제 확정)</text>
 <!-- 분기 2-3 -->
 <rect x="18" y="786" width="444" height="82" rx="8" class="mv2-card"/>
 <rect x="18" y="786" width="5" height="82" rx="2.5" class="mv2-bar"/>
 <text x="38" y="813" font-size="18" class="mv2-t">xmax가 아직 진행 중</text>
-<rect x="32" y="829" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<rect x="32" y="829" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-opacity="0.4"/>
 <path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,841)"/>
 <text x="64" y="847" font-size="18" class="mv2-ok">보임 (삭제가 아직 미확정)</text>
 <!-- 분기 2-4 -->
 <rect x="18" y="882" width="444" height="106" rx="8" class="mv2-card"/>
 <rect x="18" y="882" width="5" height="106" rx="2.5" class="mv2-bar"/>
 <text x="38" y="909" font-size="18" class="mv2-t">xmax가 aborted</text>
-<rect x="32" y="925" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-opacity="0.4"/>
+<rect x="32" y="925" width="418" height="26" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-opacity="0.4"/>
 <path class="mv2-ck" d="M-6,0.5 L-2,4.5 L6,-4.5" transform="translate(46,937)"/>
 <text x="64" y="943" font-size="18" class="mv2-ok">보임 (삭제 시도가 무효화됨)</text>
 <text x="38" y="969" font-size="17" class="mv2-m">이후 HEAP_XMAX_INVALID로 캐싱됨</text>

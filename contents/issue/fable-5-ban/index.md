@@ -88,14 +88,14 @@ Anthropic은 상세한 시스템 카드와 책임 있는 스케일링 정책(Res
 <style>
 .tp-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .tp-l { fill: var(--text, #1c1917); font-size: 14px; }
-.tp-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.tp-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .tp-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.tp-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-.tp-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#tpArrow); }
+.tp-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+.tp-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#tpArrow); }
 </style>
 <defs>
 <marker id="tpArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="tp-t" x="200" y="22" text-anchor="middle">투명성이 근거가 되는 순환</text>

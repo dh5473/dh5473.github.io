@@ -45,23 +45,23 @@ DBeaver가 성공한 이유도 같은 축에서 설명됩니다. DBeaver가 쓰�
 .mi1-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
 .mi1-box { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); }
 .mi1-srv { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); }
-.mi1-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); }
-.mi1-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); }
+.mi1-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); }
+.mi1-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); }
 .mi1-t { fill: var(--text, #1c1917); font-size: 17px; text-anchor: middle; }
 .mi1-h { fill: var(--text, #1c1917); font-size: 18px; font-weight: 700; text-anchor: middle; }
-.mi1-s { fill: var(--text-muted, #78716c); font-size: 14px; text-anchor: middle; }
-.mi1-bt { fill: var(--text-danger, #dc2626); font-size: 14px; }
-.mi1-gt { fill: var(--text-success, #16a34a); font-size: 14px; }
-.mi1-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.mi1-bl { stroke: var(--text-danger, #dc2626); stroke-width: 2.2; fill: none; }
-.mi1-gl { stroke: var(--text-success, #16a34a); stroke-width: 2.2; fill: none; }
+.mi1-s { fill: var(--text-muted, #6d6762); font-size: 14px; text-anchor: middle; }
+.mi1-bt { fill: var(--text-danger, #cb2121); font-size: 14px; }
+.mi1-gt { fill: var(--text-success, #107836); font-size: 14px; }
+.mi1-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.mi1-bl { stroke: var(--text-danger, #cb2121); stroke-width: 2.2; fill: none; }
+.mi1-gl { stroke: var(--text-success, #107836); stroke-width: 2.2; fill: none; }
 </style>
 <defs>
 <marker id="mi1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="mi1ArrowG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-success, #16a34a)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-success, #107836)"/>
 </marker>
 </defs>
 <!-- 위 패널: pymssql 경로 -->
@@ -77,7 +77,7 @@ DBeaver가 성공한 이유도 같은 축에서 설명됩니다. DBeaver가 쓰�
 <text class="mi1-t" x="200" y="180">TLS 핸드셰이크</text>
 <text class="mi1-s" x="200" y="199">OpenSSL 3.x가 거부</text>
 <line class="mi1-bl" x1="200" y1="208" x2="200" y2="220" stroke-dasharray="4 3"/>
-<circle cx="200" cy="232" r="11" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<circle cx="200" cy="232" r="11" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <path class="mi1-bl" d="M 195 227 L 205 237 M 205 227 L 195 237"/>
 <text class="mi1-bt" x="220" y="237">여기서 끊김</text>
 <rect class="mi1-srv" x="70" y="254" width="260" height="38" rx="6"/>
@@ -93,7 +93,7 @@ DBeaver가 성공한 이유도 같은 축에서 설명됩니다. DBeaver가 쓰�
 <text class="mi1-t" x="200" y="466">TLS 핸드셰이크 없음</text>
 <text class="mi1-s" x="200" y="485">암호화를 협상하지 않음</text>
 <line class="mi1-gl" x1="200" y1="494" x2="200" y2="506"/>
-<circle cx="200" cy="518" r="11" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2"/>
+<circle cx="200" cy="518" r="11" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="2"/>
 <path class="mi1-gl" d="M 195 518 L 199 523 L 206 512"/>
 <text class="mi1-gt" x="220" y="523">로그인 진행</text>
 <line class="mi1-gl" x1="200" y1="530" x2="200" y2="538" marker-end="url(#mi1ArrowG)"/>
@@ -130,15 +130,15 @@ pymssql 대신 **pyodbc**를 선택한 이유는 네 가지입니다.
 .mi2-wrap { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
 .mi2-box { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); }
 .mi2-srv { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); }
-.mi2-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); }
+.mi2-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); }
 .mi2-t { fill: var(--text, #1c1917); font-size: 17px; text-anchor: middle; }
-.mi2-s { fill: var(--text-muted, #78716c); font-size: 14px; }
-.mi2-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.mi2-bl { stroke: var(--text-danger, #dc2626); stroke-width: 2.2; fill: none; }
+.mi2-s { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.mi2-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.mi2-bl { stroke: var(--text-danger, #cb2121); stroke-width: 2.2; fill: none; }
 </style>
 <defs>
 <marker id="mi2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <rect class="mi2-wrap" x="14" y="8" width="372" height="270" rx="8"/>
@@ -153,7 +153,7 @@ pymssql 대신 **pyodbc**를 선택한 이유는 네 가지입니다.
 <text class="mi2-t" x="194" y="198">ODBC Driver 18 for SQL Server</text>
 <rect class="mi2-bad" x="44" y="214" width="300" height="44"/>
 <text class="mi2-t" x="194" y="242">OpenSSL 3.x (TLS 핸드셰이크)</text>
-<circle cx="364" cy="236" r="12" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<circle cx="364" cy="236" r="12" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <path class="mi2-bl" d="M 359 231 L 369 241 M 369 231 L 359 241"/>
 <line class="mi2-ln" x1="194" y1="278" x2="194" y2="312" stroke-dasharray="5 4" marker-end="url(#mi2Arrow)"/>
 <text class="mi2-s" x="208" y="300">TCP 1433 · TDS</text>
@@ -224,18 +224,18 @@ OpenSSL 3.x는 RFC 5746의 보안 재협상 확장을 지원하지 않는 상대
 <style>
 .mi3-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
 .mi3-head { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); }
-.mi3-warn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); }
-.mi3-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); }
+.mi3-warn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); }
+.mi3-good { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); }
 .mi3-h { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; text-anchor: middle; }
 .mi3-t { fill: var(--text, #1c1917); font-size: 16px; text-anchor: middle; }
 .mi3-l { fill: var(--text, #1c1917); font-size: 15px; text-anchor: middle; }
-.mi3-s { fill: var(--text-muted, #78716c); font-size: 14px; text-anchor: middle; }
+.mi3-s { fill: var(--text-muted, #6d6762); font-size: 14px; text-anchor: middle; }
 .mi3-life { stroke: var(--border, #e7e5e4); stroke-width: 1.4; stroke-dasharray: 4 4; }
-.mi3-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.mi3-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
 </style>
 <defs>
 <marker id="mi3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 위 패널: Encrypt=no 여도 TLS -->
@@ -392,18 +392,18 @@ Airflow Task는 단발성 실행이라 Task가 시작되면 연결하고 끝나�
      role="img" aria-label="ClickHouse에서 마지막 동기화 지점을 읽고, MSSQL 배치 조회와 변환과 INSERT를 반복한 뒤, 루프가 끝나면 OPTIMIZE TABLE FINAL을 실행하는 증분 동기화 흐름도">
 <style>
 .mi4-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); }
-.mi4-loop { fill: none; stroke: var(--primary, #0d9488); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.mi4-loop { fill: none; stroke: var(--primary, #0a756c); stroke-width: 1.6; stroke-dasharray: 6 4; }
 .mi4-t { fill: var(--text, #1c1917); font-size: 17px; text-anchor: middle; }
-.mi4-p { fill: var(--primary, #0d9488); font-size: 14px; }
-.mi4-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.mi4-pl { stroke: var(--primary, #0d9488); stroke-width: 1.8; fill: none; }
+.mi4-p { fill: var(--primary, #0a756c); font-size: 14px; }
+.mi4-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.mi4-pl { stroke: var(--primary, #0a756c); stroke-width: 1.8; fill: none; }
 </style>
 <defs>
 <marker id="mi4Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="mi4ArrowP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0d9488)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0a756c)"/>
 </marker>
 </defs>
 <rect class="mi4-box" x="70" y="36" width="260" height="44" rx="6"/>

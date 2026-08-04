@@ -46,8 +46,8 @@ WAL에 기록되는 단위는 **WAL record**입니다. 각 record는 "어떤 리
 .wal1-lbl { font-size: 18px; fill: var(--text, #1c1917); }
 .wal1-bld { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal1-sm  { font-size: 17px; fill: var(--text, #1c1917); }
-.wal1-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
-.wal1-fld { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.wal1-mut { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.wal1-fld { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 .wal1-pad { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .wal1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
@@ -173,11 +173,11 @@ PostgreSQL의 해결책은 **Full Page Write**(FPW)입니다. checkpoint 직후 
 .wal2-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal2-lbl { font-size: 18px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal2-sm  { font-size: 17px; fill: var(--text, #1c1917); }
-.wal2-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
-.wal2-cp  { font-size: 17px; font-weight: 700; fill: var(--accent, #d97706); }
-.wal2-line { stroke: var(--accent, #d97706); stroke-width: 2; stroke-dasharray: 7 5; }
-.wal2-full { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 2; }
-.wal2-diff { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.wal2-mut { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.wal2-cp  { font-size: 17px; font-weight: 700; fill: var(--accent, #9d5604); }
+.wal2-line { stroke: var(--accent, #9d5604); stroke-width: 2; stroke-dasharray: 7 5; }
+.wal2-full { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 2; }
+.wal2-diff { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; }
 </style>
 <text x="240" y="30" text-anchor="middle" class="wal2-ttl">Full Page Write</text>
 <text x="240" y="54" text-anchor="middle" class="wal2-mut">WAL에 실제로 쓰이는 양</text>
@@ -275,10 +275,10 @@ checkpoint가 dirty page를 한꺼번에 flush하면 I/O spike가 발생합니�
 .wal3-ttl { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
 .wal3-lbl { font-size: 18px; fill: var(--text, #1c1917); }
 .wal3-sm  { font-size: 17px; fill: var(--text, #1c1917); }
-.wal3-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
-.wal3-work { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 2; }
+.wal3-mut { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.wal3-work { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 2; }
 .wal3-idle { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 2; }
-.wal3-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.wal3-lead { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
 </style>
 <text x="240" y="30" text-anchor="middle" class="wal3-ttl">spread checkpoint</text>
 <text x="240" y="54" text-anchor="middle" class="wal3-mut">checkpoint_timeout 5분, completion_target 0.9</text>
@@ -339,29 +339,29 @@ checkpoint가 자주 돌수록 REDO point가 최근으로 당겨져서 recovery 
      role="img" aria-label="한 번의 row 변경은 두 갈래로 흐릅니다. WAL buffer에 쌓인 WAL record는 walwriter가 주기적으로 내리거나 COMMIT 시 backend가 직접 내려 pg_wal 세그먼트 파일이 되고, shared_buffers의 dirty page는 bgwriter가 조금씩 또는 checkpointer가 한꺼번에 내려 data file이 됩니다.">
 <defs>
 <marker id="wal4ArrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--primary, #0d9488)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--primary, #0a756c)"/>
 </marker>
 <marker id="wal4ArrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #d97706)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--accent, #9d5604)"/>
 </marker>
 <marker id="wal4ArrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <style>
-.wal4-sec { font-size: 19px; font-weight: 700; fill: var(--primary, #0d9488); }
+.wal4-sec { font-size: 19px; font-weight: 700; fill: var(--primary, #0a756c); }
 .wal4-lbl { font-size: 18px; fill: var(--text, #1c1917); }
-.wal4-hdT { font-size: 18px; font-weight: 700; fill: var(--primary, #0d9488); }
-.wal4-hdA { font-size: 18px; font-weight: 700; fill: var(--accent, #d97706); }
+.wal4-hdT { font-size: 18px; font-weight: 700; fill: var(--primary, #0a756c); }
+.wal4-hdA { font-size: 18px; font-weight: 700; fill: var(--accent, #9d5604); }
 .wal4-sm  { font-size: 17px; fill: var(--text, #1c1917); }
-.wal4-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.wal4-mut { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .wal4-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .wal4-sink { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.wal4-bgP { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; stroke-dasharray: 6 4; }
-.wal4-bgA { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 2.5; }
-.wal4-lnP { stroke: var(--primary, #0d9488); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
-.wal4-lnA { stroke: var(--accent, #d97706); stroke-width: 2.5; fill: none; }
-.wal4-lnM { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
+.wal4-bgP { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; stroke-dasharray: 6 4; }
+.wal4-bgA { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 2.5; }
+.wal4-lnP { stroke: var(--primary, #0a756c); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+.wal4-lnA { stroke: var(--accent, #9d5604); stroke-width: 2.5; fill: none; }
+.wal4-lnM { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
 </style>
 <!-- panel 1: WAL -->
 <text x="20" y="32" class="wal4-sec">WAL 경로</text>

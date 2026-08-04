@@ -103,16 +103,16 @@ WHERE tablename = 'orders' AND attname = 'status';
      role="img" aria-label="위쪽은 status 컬럼의 MCV가 세 값의 빈도를 그대로 담아 조건 값에 따라 Seq Scan과 Bitmap Index Scan이 갈리는 모습, 아래쪽은 amount 컬럼이 히스토그램 버킷 100개로 분포를 근사해 범위 조건의 비율을 보간하는 모습을 보여주는 그림">
 <style>
 .ps1-t { fill: var(--text, #1c1917); }
-.ps1-m { fill: var(--text-muted, #78716c); }
+.ps1-m { fill: var(--text-muted, #6d6762); }
 .ps1-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ps1-s1 { fill: var(--primary, #0d9488); }
-.ps1-s2 { fill: var(--text-muted, #78716c); }
+.ps1-s1 { fill: var(--primary, #0a756c); }
+.ps1-s2 { fill: var(--text-muted, #6d6762); }
 .ps1-s3 { fill: var(--text, #1c1917); }
-.ps1-lead { stroke: var(--text-muted, #78716c); stroke-width: 1.5; }
+.ps1-lead { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
 .ps1-div { stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .ps1-bk { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .ps1-tick { stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ps1-cut { stroke: var(--accent, #d97706); stroke-width: 2; stroke-dasharray: 5 4; }
+.ps1-cut { stroke: var(--accent, #9d5604); stroke-width: 2; stroke-dasharray: 5 4; }
 </style>
 <!-- 제목 -->
 <text x="240" y="26" text-anchor="middle" font-size="21" font-weight="600" class="ps1-t">ANALYZE가 남기는 두 종류의 분포</text>
@@ -138,7 +138,7 @@ WHERE tablename = 'orders' AND attname = 'status';
 <text x="32" y="364" font-size="19" font-weight="600" class="ps1-t">아래: amount 컬럼 (값이 거의 다 다름)</text>
 <text x="32" y="388" font-size="18" class="ps1-m">histogram 버킷 100개로 근사한 분포</text>
 <rect x="32" y="402" width="416" height="32" class="ps1-bk"/>
-<rect x="240" y="402" width="208" height="32" fill="var(--accent, #d97706)" opacity="0.35"/>
+<rect x="240" y="402" width="208" height="32" fill="var(--accent, #9d5604)" opacity="0.35"/>
 <line x1="73.6" y1="402" x2="73.6" y2="434" class="ps1-tick"/>
 <line x1="115.2" y1="402" x2="115.2" y2="434" class="ps1-tick"/>
 <line x1="156.8" y1="402" x2="156.8" y2="434" class="ps1-tick"/>
@@ -204,14 +204,14 @@ EXPLAIN ANALYZE SELECT * FROM orders WHERE amount > 500;
      role="img" aria-label="EXPLAIN 한 노드의 앞 괄호는 cost와 rows와 width로 된 추정치이고 뒤 괄호는 actual time과 rows와 loops로 된 실측치이며, 양쪽의 rows를 비교하는 것이 진단의 출발점임을 보여주는 그림">
 <style>
 .ps2-t { fill: var(--text, #1c1917); }
-.ps2-m { fill: var(--text-muted, #78716c); }
+.ps2-m { fill: var(--text-muted, #6d6762); }
 .ps2-c { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: var(--text, #1c1917); }
-.ps2-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: var(--primary, #0d9488); font-weight: 600; }
+.ps2-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: var(--primary, #0a756c); font-weight: 600; }
 .ps2-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .ps2-hl { fill: var(--bg-muted, #eeecea); }
 .ps2-band { fill: var(--bg-muted, #eeecea); }
-.ps2-arr { stroke: var(--primary, #0d9488); stroke-width: 2; }
-.ps2-arrh { fill: var(--primary, #0d9488); }
+.ps2-arr { stroke: var(--primary, #0a756c); stroke-width: 2; }
+.ps2-arrh { fill: var(--primary, #0a756c); }
 </style>
 <!-- 제목 -->
 <text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps2-t">한 노드에 붙는 추정과 실측</text>
@@ -416,14 +416,14 @@ WHERE country = 'KR' AND city = 'Seoul';
      role="img" aria-label="두 컬럼을 독립으로 가정해 선택도를 곱하면 3813행을 추정하지만 실제로는 10000행이 나오고, 이 노드가 조인의 바깥이면 플래너가 Nested Loop를 골라 실제 반복 횟수가 추정의 2.6배로 늘어나는 연쇄를 보여주는 그림">
 <style>
 .ps3-t { fill: var(--text, #1c1917); }
-.ps3-m { fill: var(--text-muted, #78716c); }
+.ps3-m { fill: var(--text-muted, #6d6762); }
 .ps3-neutral { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.ps3-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-.ps3-warn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
-.ps3-badt { fill: var(--text-danger, #dc2626); }
-.ps3-warnt { fill: var(--text-warn, #d97706); }
-.ps3-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
-.ps3-arrh { fill: var(--text-muted, #78716c); }
+.ps3-bad { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+.ps3-warn { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
+.ps3-badt { fill: var(--text-danger, #cb2121); }
+.ps3-warnt { fill: var(--text-warn, #9d5604); }
+.ps3-arr { stroke: var(--text-muted, #6d6762); stroke-width: 2; }
+.ps3-arrh { fill: var(--text-muted, #6d6762); }
 </style>
 <!-- 제목 -->
 <text x="240" y="28" text-anchor="middle" font-size="21" font-weight="600" class="ps3-t">3,813 대 10,000이 남기는 것</text>

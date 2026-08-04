@@ -40,17 +40,17 @@ B-tree 인덱스도 디스크에 저장됩니다. 테이블과 같은 8KB 페이
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="B-tree 인덱스 구조도. 루트 페이지 아래에 브랜치 노드가 있고, 그 아래 리프 페이지들이 키 범위를 나눠 갖습니다. 리프끼리는 좌우로 이어져 있고, 각 리프는 ctid로 힙 페이지를 가리킵니다.">
 <defs>
-<marker id="bta1Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #78716c)" stroke-width="1.6"/></marker>
-<marker id="bta1SibR" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--primary, #0d9488)" stroke-width="1.8"/></marker>
-<marker id="bta1SibL" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto"><path d="M8,1 L1,5 L8,9" fill="none" stroke="var(--primary, #0d9488)" stroke-width="1.8"/></marker>
+<marker id="bta1Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6"/></marker>
+<marker id="bta1SibR" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--primary, #0a756c)" stroke-width="1.8"/></marker>
+<marker id="bta1SibL" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto"><path d="M8,1 L1,5 L8,9" fill="none" stroke="var(--primary, #0a756c)" stroke-width="1.8"/></marker>
 </defs>
 <style>
 .bta1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.bta1-node { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.bta1-node { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 .bta1-t { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
-.bta1-s { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-.bta1-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
-.bta1-sib { stroke: var(--primary, #0d9488); stroke-width: 2; fill: none; }
+.bta1-s { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+.bta1-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
+.bta1-sib { stroke: var(--primary, #0a756c); stroke-width: 2; fill: none; }
 </style>
 <!-- root -->
 <rect class="bta1-node" x="170" y="20" width="140" height="44" rx="8"/>
@@ -237,16 +237,16 @@ Seq Scan on events
      role="img" aria-label="복합 인덱스 (user_id, created_at)의 리프 정렬 순서. 선두 컬럼 조건이 있는 쿼리는 연속된 한 구간으로 잡히고, 선두 컬럼 조건이 없는 쿼리는 리프 곳곳에 흩어집니다.">
 <style>
 .bta2-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.bta2-hit { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
-.bta2-miss { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 2; }
-.bta2-k { fill: var(--primary, #0d9488); font-size: 17px; text-anchor: middle; }
-.bta2-v { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
+.bta2-hit { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2; }
+.bta2-miss { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 2; }
+.bta2-k { fill: var(--primary, #0a756c); font-size: 17px; text-anchor: middle; }
+.bta2-v { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
 .bta2-h { fill: var(--text, #1c1917); font-size: 19px; }
-.bta2-sub { fill: var(--text-muted, #78716c); font-size: 17px; }
-.bta2-c { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-.bta2-grp { stroke: var(--primary, #0d9488); stroke-width: 2; fill: none; }
-.bta2-bar1 { stroke: var(--text-success, #16a34a); stroke-width: 4; fill: none; }
-.bta2-bar2 { stroke: var(--text-warn, #d97706); stroke-width: 4; fill: none; }
+.bta2-sub { fill: var(--text-muted, #6d6762); font-size: 17px; }
+.bta2-c { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
+.bta2-grp { stroke: var(--primary, #0a756c); stroke-width: 2; fill: none; }
+.bta2-bar1 { stroke: var(--text-success, #107836); stroke-width: 4; fill: none; }
+.bta2-bar2 { stroke: var(--text-warn, #9d5604); stroke-width: 4; fill: none; }
 </style>
 <!-- panel A: leaf order -->
 <text class="bta2-h" x="14" y="26">인덱스 리프의 정렬 순서</text>
@@ -349,17 +349,17 @@ VM 비트를 세우는 것은 **VACUUM**의 일입니다. autovacuum이 돌면�
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Index-Only Scan의 두 갈래. 리프 엔트리가 가리키는 힙 페이지의 Visibility Map 비트가 서 있으면 힙을 읽지 않고 반환하고, 꺼져 있으면 힙 페이지를 읽어 가시성을 확인합니다.">
 <defs>
-<marker id="bta3Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #78716c)" stroke-width="1.6"/></marker>
+<marker id="bta3Arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1,1 L8,5 L1,9" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6"/></marker>
 </defs>
 <style>
 .bta3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.bta3-ok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 2; }
-.bta3-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 2; }
+.bta3-ok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 2; }
+.bta3-no { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 2; }
 .bta3-t { fill: var(--text, #1c1917); font-size: 19px; text-anchor: middle; }
-.bta3-s { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
-.bta3-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; }
-.bta3-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3; fill: none; stroke-linecap: round; }
-.bta3-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3; fill: none; stroke-linecap: round; }
+.bta3-s { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
+.bta3-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
+.bta3-okmark { stroke: var(--text-success, #107836); stroke-width: 3; fill: none; stroke-linecap: round; }
+.bta3-nomark { stroke: var(--text-danger, #cb2121); stroke-width: 3; fill: none; stroke-linecap: round; }
 </style>
 <!-- entry -->
 <rect class="bta3-box" x="60" y="16" width="360" height="46" rx="8"/>

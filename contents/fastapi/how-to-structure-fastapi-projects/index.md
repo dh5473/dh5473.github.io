@@ -168,15 +168,15 @@ from src.notifications import service as notification_service
 <style>
 .st-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
 .st-panel { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
-.st-count { font-size: 14px; fill: var(--text-muted, #78716c); }
+.st-count { font-size: 14px; fill: var(--text-muted, #6d6762); }
 .st-row { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
 .st-dirA { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.st-dirB { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.2; }
+.st-dirB { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.2; }
 .st-dtA { font-size: 14px; font-weight: 600; fill: var(--text, #1c1917); }
-.st-dtB { font-size: 14px; font-weight: 600; fill: var(--primary, #0d9488); }
-.st-file { font-size: 14px; fill: var(--text-muted, #78716c); }
-.st-tick { fill: var(--text-muted, #78716c); }
-.st-bar { fill: var(--primary, #0d9488); }
+.st-dtB { font-size: 14px; font-weight: 600; fill: var(--primary, #0a756c); }
+.st-file { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.st-tick { fill: var(--text-muted, #6d6762); }
+.st-bar { fill: var(--primary, #0a756c); }
 </style>
 <text class="st-title" x="200" y="20" text-anchor="middle">auth 기능 하나를 고칠 때 여는 파일</text>
 <!-- 패널 A: 파일 타입 기반 -->

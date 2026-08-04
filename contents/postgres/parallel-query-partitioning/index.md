@@ -60,19 +60,19 @@ thumbnail: './thumbnail.png'
      role="img" aria-label="leader와 worker 두 개가 각각 테이블의 서로 다른 블록 범위를 스캔해 부분 집계를 만들고, 그 결과를 Gather 노드가 모아 Finalize HashAggregate로 넘기는 구조">
 <style>
 .pq1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.pq1-lead { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
+.pq1-lead { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
 .pq1-role { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
-.pq1-roleon { font-size: 20px; font-weight: 700; fill: var(--primary, #0d9488); }
+.pq1-roleon { font-size: 20px; font-weight: 700; fill: var(--primary, #0a756c); }
 .pq1-op { font-size: 18px; fill: var(--text, #1c1917); }
-.pq1-sub { font-size: 17px; fill: var(--text-muted, #78716c); }
-.pq1-ttl { font-size: 21px; font-weight: 700; fill: var(--primary, #0d9488); }
+.pq1-sub { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.pq1-ttl { font-size: 21px; font-weight: 700; fill: var(--primary, #0a756c); }
 .pq1-fin { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
-.pq1-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
-.pq1-note { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pq1-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.8; fill: none; }
+.pq1-note { font-size: 17px; fill: var(--text-muted, #6d6762); }
 </style>
 <defs>
 <marker id="pq1Arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- leader lane -->
@@ -261,22 +261,22 @@ SELECT COUNT(*) FROM logs WHERE created_at >= '2026-04-15';
      role="img" aria-label="created_at이 2026-04-15 이상이라는 조건에서 3월 파티션은 점선 회색으로 건너뛰고 4월과 5월 파티션만 teal 실선으로 읽는 파티션 프루닝 결과">
 <style>
 .pp1-q { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.pp1-read { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.pp1-skip { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #78716c); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.pp1-read { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.pp1-skip { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #6d6762); stroke-width: 1.6; stroke-dasharray: 7 5; }
 .pp1-qt { font-size: 19px; font-weight: 600; fill: var(--text, #1c1917); }
 .pp1-name { font-size: 20px; font-weight: 700; fill: var(--text, #1c1917); }
-.pp1-nameoff { font-size: 20px; font-weight: 700; fill: var(--text-muted, #78716c); }
-.pp1-stat { font-size: 18px; font-weight: 700; fill: var(--primary, #0d9488); }
-.pp1-statoff { font-size: 18px; font-weight: 700; fill: var(--text-muted, #78716c); }
-.pp1-rng { font-size: 17px; fill: var(--text-muted, #78716c); }
-.pp1-mk { fill: none; stroke: var(--primary, #0d9488); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.pp1-mkoff { fill: none; stroke: var(--text-muted, #78716c); stroke-width: 2.6; stroke-linecap: round; }
-.pp1-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.8; fill: none; }
-.pp1-note { font-size: 17px; fill: var(--text-muted, #78716c); }
+.pp1-nameoff { font-size: 20px; font-weight: 700; fill: var(--text-muted, #6d6762); }
+.pp1-stat { font-size: 18px; font-weight: 700; fill: var(--primary, #0a756c); }
+.pp1-statoff { font-size: 18px; font-weight: 700; fill: var(--text-muted, #6d6762); }
+.pp1-rng { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.pp1-mk { fill: none; stroke: var(--primary, #0a756c); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.pp1-mkoff { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 2.6; stroke-linecap: round; }
+.pp1-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.8; fill: none; }
+.pp1-note { font-size: 17px; fill: var(--text-muted, #6d6762); }
 </style>
 <defs>
 <marker id="pp1Arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- query -->

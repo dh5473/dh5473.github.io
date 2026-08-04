@@ -63,17 +63,17 @@ PgBouncer는 클라이언트와 PostgreSQL 사이에서 커넥션을 **재사용
      role="img" aria-label="PgBouncer가 클라이언트 커넥션 1,000개를 PostgreSQL 커넥션 30~50개로 줄이는 구조. 위아래 두 막대는 같은 축척이며 폭이 커넥션 수에 비례합니다">
 <style>
 .ot1-t { fill: var(--text, #1c1917); }
-.ot1-m { fill: var(--text-muted, #78716c); }
-.ot1-p { fill: var(--primary, #0d9488); }
+.ot1-m { fill: var(--text-muted, #6d6762); }
+.ot1-p { fill: var(--primary, #0a756c); }
 .ot1-bar { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ot1-ghost { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 5; }
-.ot1-pool { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.ot1-real { fill: var(--primary, #0d9488); }
-.ot1-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+.ot1-pool { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.ot1-real { fill: var(--primary, #0a756c); }
+.ot1-arr { stroke: var(--text-muted, #6d6762); stroke-width: 2; }
 </style>
 <defs>
 <marker id="ot1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
 </marker>
 </defs>
 <text class="ot1-t" x="240" y="26" text-anchor="middle" font-size="21" font-weight="600">PgBouncer 커넥션 멀티플렉싱</text>
@@ -146,9 +146,9 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
      role="img" aria-label="PostgreSQL 메모리 파라미터를 튜닝 관점에서 나눈 그림. 위쪽 공유 메모리는 서버당 한 번만 잡히고, 아래쪽 프로세스별 메모리는 커넥션 수만큼 곱해지며, effective_cache_size는 실제 할당이 없는 플래너 힌트입니다">
 <style>
 .ot2-t { fill: var(--text, #1c1917); }
-.ot2-m { fill: var(--text-muted, #78716c); }
-.ot2-p { fill: var(--primary, #0d9488); }
-.ot2-a { fill: var(--accent, #d97706); }
+.ot2-m { fill: var(--text-muted, #6d6762); }
+.ot2-p { fill: var(--primary, #0a756c); }
+.ot2-a { fill: var(--accent, #9d5604); }
 .ot2-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ot2-row { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
@@ -199,18 +199,18 @@ PostgreSQL의 메모리는 크게 두 공간으로 나뉩니다. 모든 프로�
      role="img" aria-label="물리 메모리를 shared_buffers 25퍼센트, OS page cache 50퍼센트 이상, 나머지로 나눈 막대와 shared_buffers, OS page cache, 디스크 순으로 내려가는 조회 순서">
 <style>
 .ot3-t { fill: var(--text, #1c1917); }
-.ot3-m { fill: var(--text-muted, #78716c); }
-.ot3-p { fill: var(--primary, #0d9488); }
-.ot3-d { fill: var(--text-danger, #dc2626); }
-.ot3-s1 { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0d9488); stroke-width: 2; }
-.ot3-s2 { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #d97706); stroke-width: 2; }
+.ot3-m { fill: var(--text-muted, #6d6762); }
+.ot3-p { fill: var(--primary, #0a756c); }
+.ot3-d { fill: var(--text-danger, #cb2121); }
+.ot3-s1 { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 2; }
+.ot3-s2 { fill: var(--bg-subtle, #f5f4f2); stroke: var(--accent, #9d5604); stroke-width: 2; }
 .ot3-s3 { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ot3-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ot3-arr { stroke: var(--text-muted, #78716c); stroke-width: 2; }
+.ot3-arr { stroke: var(--text-muted, #6d6762); stroke-width: 2; }
 </style>
 <defs>
 <marker id="ot3Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)" />
 </marker>
 </defs>
 <text class="ot3-t" x="240" y="26" text-anchor="middle" font-size="21" font-weight="600">2단 캐시: 메모리를 어떻게 나누는가</text>
@@ -271,12 +271,12 @@ shared_buffers가 크면 dirty page도 그만큼 많이 쌓일 수 있습니다.
      role="img" aria-label="work_mem이 두 번 곱해지는 구조. 쿼리 하나의 실행 계획에 있는 연산 세 개가 각각 4MB를 잡아 12MB가 되고, 동시 활성 쿼리 50개를 곱하면 600MB가 됩니다">
 <style>
 .ot4-t { fill: var(--text, #1c1917); }
-.ot4-m { fill: var(--text-muted, #78716c); }
-.ot4-p { fill: var(--primary, #0d9488); }
-.ot4-a { fill: var(--accent, #d97706); }
+.ot4-m { fill: var(--text-muted, #6d6762); }
+.ot4-p { fill: var(--primary, #0a756c); }
+.ot4-a { fill: var(--accent, #9d5604); }
 .ot4-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .ot4-row { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.ot4-sum { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 2; }
+.ot4-sum { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 2; }
 .ot4-line { stroke: var(--border, #e7e5e4); stroke-width: 2; }
 </style>
 <text class="ot4-t" x="240" y="28" text-anchor="middle" font-size="21" font-weight="600">work_mem이 곱해지는 두 단계</text>

@@ -27,43 +27,43 @@ Claude Code의 Pre-model Shapers는 이 문제를 **"덜 파괴적인 필터부�
 <svg viewBox="0 0 480 524" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 5단계를 실행 순서대로 나열한 가로 막대그래프. 위에서부터 Budget Reduction, Snip, Microcompact, Context Collapse, Auto-Compact 순이며, Microcompact와 Auto-Compact만 LLM 호출을 동반합니다.">
   <defs>
     <marker id="cp1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <rect x="0" y="0" width="480" height="524" fill="var(--bg-subtle, #f5f4f2)" rx="12"/>
   <!-- legend -->
-  <rect x="20" y="24" width="16" height="16" rx="3" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-  <text x="44" y="37" font-size="17" fill="var(--text-muted, #78716c)">LLM 호출 없음</text>
-  <rect x="200" y="24" width="16" height="16" rx="3" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
-  <text x="224" y="37" font-size="17" fill="var(--text-muted, #78716c)">LLM 호출 발생</text>
+  <rect x="20" y="24" width="16" height="16" rx="3" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+  <text x="44" y="37" font-size="17" fill="var(--text-muted, #6d6762)">LLM 호출 없음</text>
+  <rect x="200" y="24" width="16" height="16" rx="3" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
+  <text x="224" y="37" font-size="17" fill="var(--text-muted, #6d6762)">LLM 호출 발생</text>
   <!-- Stage 1 -->
   <text x="20" y="92" font-size="20" font-weight="600" fill="var(--text, #1c1917)">1. Budget Reduction</text>
-  <text x="460" y="92" text-anchor="end" font-size="17" fill="var(--text-muted, #78716c)">비용 ~0</text>
-  <rect x="20" y="104" width="80" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-  <text x="112" y="125" font-size="17" fill="var(--text-muted, #78716c)">1</text>
+  <text x="460" y="92" text-anchor="end" font-size="17" fill="var(--text-muted, #6d6762)">비용 ~0</text>
+  <rect x="20" y="104" width="80" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+  <text x="112" y="125" font-size="17" fill="var(--text-muted, #6d6762)">1</text>
   <!-- Stage 2 -->
   <text x="20" y="174" font-size="20" font-weight="600" fill="var(--text, #1c1917)">2. Snip</text>
-  <text x="460" y="174" text-anchor="end" font-size="17" fill="var(--text-muted, #78716c)">비용 ~0</text>
-  <rect x="20" y="186" width="160" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-  <text x="192" y="207" font-size="17" fill="var(--text-muted, #78716c)">2</text>
+  <text x="460" y="174" text-anchor="end" font-size="17" fill="var(--text-muted, #6d6762)">비용 ~0</text>
+  <rect x="20" y="186" width="160" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+  <text x="192" y="207" font-size="17" fill="var(--text-muted, #6d6762)">2</text>
   <!-- Stage 3 -->
   <text x="20" y="256" font-size="20" font-weight="600" fill="var(--text, #1c1917)">3. Microcompact</text>
-  <text x="460" y="256" text-anchor="end" font-size="17" fill="var(--text-muted, #78716c)">LLM 호출</text>
-  <rect x="20" y="268" width="240" height="30" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
-  <text x="272" y="289" font-size="17" fill="var(--text-muted, #78716c)">3</text>
+  <text x="460" y="256" text-anchor="end" font-size="17" fill="var(--text-muted, #6d6762)">LLM 호출</text>
+  <rect x="20" y="268" width="240" height="30" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
+  <text x="272" y="289" font-size="17" fill="var(--text-muted, #6d6762)">3</text>
   <!-- Stage 4 -->
   <text x="20" y="338" font-size="20" font-weight="600" fill="var(--text, #1c1917)">4. Context Collapse</text>
-  <text x="460" y="338" text-anchor="end" font-size="17" fill="var(--text-muted, #78716c)">비용 ~0</text>
-  <rect x="20" y="350" width="320" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
-  <text x="352" y="371" font-size="17" fill="var(--text-muted, #78716c)">4</text>
+  <text x="460" y="338" text-anchor="end" font-size="17" fill="var(--text-muted, #6d6762)">비용 ~0</text>
+  <rect x="20" y="350" width="320" height="30" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
+  <text x="352" y="371" font-size="17" fill="var(--text-muted, #6d6762)">4</text>
   <!-- Stage 5 -->
   <text x="20" y="420" font-size="20" font-weight="600" fill="var(--text, #1c1917)">5. Auto-Compact</text>
-  <text x="460" y="420" text-anchor="end" font-size="17" fill="var(--text-muted, #78716c)">LLM 호출</text>
-  <rect x="20" y="432" width="400" height="30" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
-  <text x="432" y="453" font-size="17" fill="var(--text-muted, #78716c)">5</text>
+  <text x="460" y="420" text-anchor="end" font-size="17" fill="var(--text-muted, #6d6762)">LLM 호출</text>
+  <rect x="20" y="432" width="400" height="30" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
+  <text x="432" y="453" font-size="17" fill="var(--text-muted, #6d6762)">5</text>
   <!-- axis -->
-  <line x1="20" y1="478" x2="440" y2="478" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp1Arrow)"/>
-  <text x="20" y="504" font-size="17" fill="var(--text-muted, #78716c)">막대 길이 = 실행 순서 (측정값이 아닌 도식)</text>
+  <line x1="20" y1="478" x2="440" y2="478" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp1Arrow)"/>
+  <text x="20" y="504" font-size="17" fill="var(--text-muted, #6d6762)">막대 길이 = 실행 순서 (측정값이 아닌 도식)</text>
 </svg>
 </div>
 
@@ -301,49 +301,49 @@ Auto-Compact를 "임계값 초과 → LLM 요약"이라는 2단계 구조로 이
 <svg viewBox="0 0 460 624" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="컴팩션 파이프라인 실행 흐름도. Stage 1부터 3까지는 매 턴 실행되고, 토큰이 임계값을 넘으면 Stage 4 Context Collapse, 그래도 넘으면 Stage 5 Auto-Compact로 이어집니다.">
   <defs>
     <marker id="cp2Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
     <marker id="cp2Ok" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-success, #16a34a)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-success, #107836)"/>
     </marker>
   </defs>
   <rect x="0" y="0" width="460" height="624" fill="var(--bg-subtle, #f5f4f2)" rx="12"/>
   <!-- always-run group -->
-  <text x="20" y="30" font-size="17" fill="var(--text-muted, #78716c)">Stage 1-3: 매 턴 실행</text>
+  <text x="20" y="30" font-size="17" fill="var(--text-muted, #6d6762)">Stage 1-3: 매 턴 실행</text>
   <rect x="12" y="40" width="266" height="202" rx="10" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5" stroke-dasharray="5,4"/>
-  <rect x="24" y="52" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
+  <rect x="24" y="52" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
   <text x="145" y="81" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">1. Budget Reduction</text>
-  <line x1="145" y1="96" x2="145" y2="114" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
-  <rect x="24" y="118" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
+  <line x1="145" y1="96" x2="145" y2="114" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <rect x="24" y="118" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
   <text x="145" y="147" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">2. Snip</text>
-  <line x1="145" y1="162" x2="145" y2="180" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
-  <rect x="24" y="184" width="242" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
+  <line x1="145" y1="162" x2="145" y2="180" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <rect x="24" y="184" width="242" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
   <text x="145" y="213" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">3. Microcompact</text>
   <!-- decision 1 -->
-  <line x1="145" y1="244" x2="145" y2="262" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <line x1="145" y1="244" x2="145" y2="262" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
   <polygon points="145,264 240,310 145,356 50,310" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="145" y="317" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">토큰 초과?</text>
-  <line x1="240" y1="310" x2="282" y2="310" stroke="var(--text-success, #16a34a)" stroke-width="1.5" marker-end="url(#cp2Ok)"/>
-  <text x="261" y="300" text-anchor="middle" font-size="17" fill="var(--text-success, #16a34a)">No</text>
-  <rect x="288" y="292" width="110" height="36" rx="18" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5"/>
-  <text x="343" y="317" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text-success, #16a34a)">완료</text>
+  <line x1="240" y1="310" x2="282" y2="310" stroke="var(--text-success, #107836)" stroke-width="1.5" marker-end="url(#cp2Ok)"/>
+  <text x="261" y="300" text-anchor="middle" font-size="17" fill="var(--text-success, #107836)">No</text>
+  <rect x="288" y="292" width="110" height="36" rx="18" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="1.5"/>
+  <text x="343" y="317" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text-success, #107836)">완료</text>
   <!-- stage 4 -->
-  <line x1="145" y1="356" x2="145" y2="378" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
-  <text x="157" y="372" font-size="17" fill="var(--text-muted, #78716c)">Yes</text>
-  <rect x="24" y="380" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="1.5"/>
+  <line x1="145" y1="356" x2="145" y2="378" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <text x="157" y="372" font-size="17" fill="var(--text-muted, #6d6762)">Yes</text>
+  <rect x="24" y="380" width="242" height="44" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="1.5"/>
   <text x="145" y="409" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">4. Context Collapse</text>
   <!-- decision 2 -->
-  <line x1="145" y1="424" x2="145" y2="442" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <line x1="145" y1="424" x2="145" y2="442" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
   <polygon points="145,444 240,490 145,536 50,490" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="145" y="497" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">여전히 초과?</text>
-  <line x1="240" y1="490" x2="282" y2="490" stroke="var(--text-success, #16a34a)" stroke-width="1.5" marker-end="url(#cp2Ok)"/>
-  <text x="261" y="480" text-anchor="middle" font-size="17" fill="var(--text-success, #16a34a)">No</text>
-  <rect x="288" y="472" width="110" height="36" rx="18" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="1.5"/>
-  <text x="343" y="497" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text-success, #16a34a)">완료</text>
+  <line x1="240" y1="490" x2="282" y2="490" stroke="var(--text-success, #107836)" stroke-width="1.5" marker-end="url(#cp2Ok)"/>
+  <text x="261" y="480" text-anchor="middle" font-size="17" fill="var(--text-success, #107836)">No</text>
+  <rect x="288" y="472" width="110" height="36" rx="18" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="1.5"/>
+  <text x="343" y="497" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text-success, #107836)">완료</text>
   <!-- stage 5 -->
-  <line x1="145" y1="536" x2="145" y2="558" stroke="var(--text-muted, #78716c)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
-  <text x="157" y="552" font-size="17" fill="var(--text-muted, #78716c)">Yes</text>
-  <rect x="24" y="560" width="242" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
+  <line x1="145" y1="536" x2="145" y2="558" stroke="var(--text-muted, #6d6762)" stroke-width="1.5" marker-end="url(#cp2Arrow)"/>
+  <text x="157" y="552" font-size="17" fill="var(--text-muted, #6d6762)">Yes</text>
+  <rect x="24" y="560" width="242" height="44" rx="6" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
   <text x="145" y="589" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text, #1c1917)">5. Auto-Compact</text>
 </svg>
 </div>
@@ -376,10 +376,10 @@ OpenAI 블로그([Unrolling the Codex Agent Loop](https://openai.com/index/unrol
 <svg viewBox="0 0 480 664" style="width: 100%; height: auto; max-width: 380px;" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard, -apple-system, sans-serif" role="img" aria-label="Codex 클라이언트와 Responses API 사이의 컴팩션 시퀀스를 세로로 쌓은 그림. 실선 화살표는 클라이언트에서 서버로 가는 요청, 점선 화살표는 서버에서 돌아오는 응답입니다. 클라이언트가 히스토리를 보내면 서버가 압축해 암호화된 blob을 돌려주고, 이후 요청에서 그 blob이 캐시 프리픽스가 됩니다.">
   <defs>
     <marker id="cp3Fwd" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <path d="M0,0 L9,3.5 L0,7 Z" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="var(--text-muted, #6d6762)"/>
     </marker>
     <marker id="cp3Open" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-      <path d="M0,0 L9,4 L0,8" fill="none" stroke="var(--text-muted, #78716c)" stroke-width="1.5"/>
+      <path d="M0,0 L9,4 L0,8" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
     </marker>
   </defs>
   <rect x="0" y="0" width="480" height="664" fill="var(--bg-subtle, #f5f4f2)" rx="12"/>
@@ -389,38 +389,38 @@ OpenAI 블로그([Unrolling the Codex Agent Loop](https://openai.com/index/unrol
   <rect x="248" y="16" width="216" height="40" rx="6" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="356" y="43" text-anchor="middle" font-size="19" font-weight="700" fill="var(--text, #1c1917)">Responses API</text>
   <!-- legend -->
-  <line x1="20" y1="78" x2="52" y2="78" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
-  <text x="60" y="84" font-size="17" fill="var(--text-muted, #78716c)">요청</text>
-  <line x1="142" y1="78" x2="110" y2="78" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
-  <text x="150" y="84" font-size="17" fill="var(--text-muted, #78716c)">응답</text>
-  <rect x="232" y="70" width="16" height="16" rx="3" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
-  <text x="256" y="84" font-size="17" fill="var(--text-muted, #78716c)">서버 LLM 처리</text>
+  <line x1="20" y1="78" x2="52" y2="78" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
+  <text x="60" y="84" font-size="17" fill="var(--text-muted, #6d6762)">요청</text>
+  <line x1="142" y1="78" x2="110" y2="78" stroke="var(--text-muted, #6d6762)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
+  <text x="150" y="84" font-size="17" fill="var(--text-muted, #6d6762)">응답</text>
+  <rect x="232" y="70" width="16" height="16" rx="3" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
+  <text x="256" y="84" font-size="17" fill="var(--text-muted, #6d6762)">서버 LLM 처리</text>
   <!-- 1. compact request -->
   <rect x="16" y="104" width="448" height="92" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="36" y="136" font-size="19" font-weight="600" fill="var(--text, #1c1917)">POST /responses/compact</text>
-  <text x="36" y="160" font-size="17" fill="var(--text-muted, #78716c)">히스토리 150K 토큰</text>
-  <line x1="36" y1="180" x2="440" y2="180" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
+  <text x="36" y="160" font-size="17" fill="var(--text-muted, #6d6762)">히스토리 150K 토큰</text>
+  <line x1="36" y1="180" x2="440" y2="180" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
   <!-- 2. server-side compaction -->
-  <rect x="248" y="208" width="216" height="56" rx="10" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
+  <rect x="248" y="208" width="216" height="56" rx="10" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
   <text x="356" y="242" text-anchor="middle" font-size="18" font-weight="600" fill="var(--text, #1c1917)">서버에서 압축</text>
   <!-- 3. blob response -->
   <rect x="16" y="276" width="448" height="92" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="36" y="308" font-size="19" font-weight="600" fill="var(--text, #1c1917)">encrypted_content blob</text>
-  <text x="36" y="332" font-size="17" fill="var(--text-muted, #78716c)">type=compaction (열람 불가)</text>
-  <line x1="440" y1="352" x2="36" y2="352" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
+  <text x="36" y="332" font-size="17" fill="var(--text-muted, #6d6762)">type=compaction (열람 불가)</text>
+  <line x1="440" y1="352" x2="36" y2="352" stroke="var(--text-muted, #6d6762)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
   <!-- 4. next request -->
   <rect x="16" y="380" width="448" height="92" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="36" y="412" font-size="19" font-weight="600" fill="var(--text, #1c1917)">POST /responses</text>
-  <text x="36" y="436" font-size="17" fill="var(--text-muted, #78716c)">blob + 새 사용자 메시지</text>
-  <line x1="36" y1="456" x2="440" y2="456" stroke="var(--text-muted, #78716c)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
+  <text x="36" y="436" font-size="17" fill="var(--text-muted, #6d6762)">blob + 새 사용자 메시지</text>
+  <line x1="36" y1="456" x2="440" y2="456" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#cp3Fwd)"/>
   <!-- 5. server-side restore -->
-  <rect x="248" y="484" width="216" height="56" rx="10" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #d97706)" stroke-width="1.5"/>
+  <rect x="248" y="484" width="216" height="56" rx="10" fill="var(--bg-warn, #fffbeb)" stroke="var(--accent, #9d5604)" stroke-width="1.5"/>
   <text x="356" y="518" text-anchor="middle" font-size="18" font-weight="600" fill="var(--text, #1c1917)">blob 복원 후 생성</text>
   <!-- 6. SSE response -->
   <rect x="16" y="552" width="448" height="92" rx="10" fill="var(--bg, #fafaf8)" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
   <text x="36" y="584" font-size="19" font-weight="600" fill="var(--text, #1c1917)">SSE 응답</text>
-  <text x="36" y="608" font-size="17" fill="var(--text-muted, #78716c)">blob이 다음 캐시 프리픽스</text>
-  <line x1="440" y1="628" x2="36" y2="628" stroke="var(--text-muted, #78716c)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
+  <text x="36" y="608" font-size="17" fill="var(--text-muted, #6d6762)">blob이 다음 캐시 프리픽스</text>
+  <line x1="440" y1="628" x2="36" y2="628" stroke="var(--text-muted, #6d6762)" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#cp3Open)"/>
 </svg>
 </div>
 

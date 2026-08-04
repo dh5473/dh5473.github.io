@@ -27,25 +27,25 @@ LLM의 decode는 토큰 하나를 뽑을 때마다 모델 가중치 전체를 GP
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="draft 모델이 그린 다섯 개의 토큰을 target 모델이 forward 한 번으로 병렬 검증해 앞의 세 개를 수락하고 네 번째를 거절한 뒤 나머지 하나를 버리고, target이 다시 뽑은 토큰 한 개를 더해 이번 iteration에 네 토큰을 확정하는 과정">
   <style>
-    .sd1-cap    { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
+    .sd1-cap    { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
     .sd1-box    { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .sd1-tok    { fill: var(--text, #1c1917); font-size: 22px; text-anchor: middle; }
-    .sd1-okbox  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-    .sd1-oktxt  { fill: var(--text-success, #16a34a); font-size: 22px; text-anchor: middle; }
-    .sd1-oksub  { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: middle; }
-    .sd1-okmark { stroke: var(--text-success, #16a34a); stroke-width: 3.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .sd1-nobox  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
-    .sd1-nosub  { fill: var(--text-danger, #dc2626); font-size: 17px; text-anchor: middle; }
-    .sd1-nomark { stroke: var(--text-danger, #dc2626); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+    .sd1-okbox  { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+    .sd1-oktxt  { fill: var(--text-success, #107836); font-size: 22px; text-anchor: middle; }
+    .sd1-oksub  { fill: var(--text-success, #107836); font-size: 17px; text-anchor: middle; }
+    .sd1-okmark { stroke: var(--text-success, #107836); stroke-width: 3.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .sd1-nobox  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+    .sd1-nosub  { fill: var(--text-danger, #cb2121); font-size: 17px; text-anchor: middle; }
+    .sd1-nomark { stroke: var(--text-danger, #cb2121); stroke-width: 3.5; fill: none; stroke-linecap: round; }
     .sd1-drop   { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .sd1-dsub   { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; opacity: 0.7; }
-    .sd1-newbox { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-    .sd1-newtxt { fill: var(--primary, #0d9488); font-size: 20px; text-anchor: middle; }
-    .sd1-arrow  { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#sd1Arrow); }
+    .sd1-dsub   { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; opacity: 0.7; }
+    .sd1-newbox { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+    .sd1-newtxt { fill: var(--primary, #0a756c); font-size: 20px; text-anchor: middle; }
+    .sd1-arrow  { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#sd1Arrow); }
   </style>
   <defs>
     <marker id="sd1Arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #78716c)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--text-muted, #6d6762)"/>
     </marker>
   </defs>
   <!-- 1단: draft 제안 -->

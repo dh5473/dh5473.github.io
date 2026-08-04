@@ -30,10 +30,10 @@ thumbnail: './thumbnail.png'
      role="img" aria-label="양자화가 줄일 수 있는 세 가지 자원. 1번 가중치가 차지하는 메모리, 2번 매 스텝 가중치를 읽는 양, 3번 행렬곱의 연산 정밀도.">
   <style>
     .q1-box   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .q1-badge { fill: var(--primary, #0d9488); }
+    .q1-badge { fill: var(--primary, #0a756c); }
     .q1-num   { fill: var(--on-fill, #14100e); font-size: 19px; text-anchor: middle; }
     .q1-label { fill: var(--text, #1c1917); font-size: 21px; }
-    .q1-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q1-cap   { fill: var(--text-muted, #6d6762); font-size: 17px; }
   </style>
   <text x="20" y="20" class="q1-cap">양자화가 줄일 수 있는 세 가지</text>
   <rect x="20" y="36" width="440" height="52" rx="8" class="q1-box"/>
@@ -71,12 +71,12 @@ W4A16은 ①과 ②를 얻고 ③은 포기합니다. W8A8은 셋 다 얻는 대
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Gemma 3 27B 가중치 크기 비교. bf16은 27B 곱하기 2바이트로 약 54GB, int4는 약 14.1GB. decode 한 스텝은 가중치 전체를 읽습니다.">
   <style>
-    .q2-cap   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q2-cap   { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .q2-name  { fill: var(--text, #1c1917); font-size: 21px; }
     .q2-val   { fill: var(--text, #1c1917); font-size: 18px; }
     .q2-bar16 { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .q2-bar4  { fill: var(--primary, #0d9488); }
-    .q2-sub   { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q2-bar4  { fill: var(--primary, #0a756c); }
+    .q2-sub   { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .q2-line  { stroke: var(--border, #e7e5e4); stroke-width: 1; }
   </style>
   <text x="20" y="22" class="q2-cap">Gemma 3 27B 가중치 크기</text>
@@ -123,16 +123,16 @@ FP8은 이름 그대로 8비트 부동소수점입니다. 같은 8비트라도 �
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="1바이트에 숫자를 담는 세 가지 방법의 비트 배치. INT8은 부호 1비트와 정수 7비트로 값 사이 간격이 균일하고 최대 플러스마이너스 127. E4M3는 부호 1비트, 지수 4비트, 가수 3비트의 부동소수점으로 0 근처가 촘촘하고 최대 플러스마이너스 448. E5M2는 지수를 5비트로 늘려 범위를 넓힌 형식으로 최대 플러스마이너스 57344.">
   <style>
-    .q3-cap  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q3-cap  { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .q3-name { fill: var(--text, #1c1917); font-size: 21px; }
     .q3-max  { fill: var(--text, #1c1917); font-size: 17px; text-anchor: end; }
-    .q3-sub  { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .q3-sub  { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .q3-cs   { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q3-ce   { fill: var(--bg-warn, #fffbeb); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q3-cm   { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .q3-bs   { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
-    .q3-be   { fill: var(--text-warn, #d97706); font-size: 18px; text-anchor: middle; }
-    .q3-bm   { fill: var(--text-muted, #78716c); font-size: 18px; text-anchor: middle; }
+    .q3-be   { fill: var(--text-warn, #9d5604); font-size: 18px; text-anchor: middle; }
+    .q3-bm   { fill: var(--text-muted, #6d6762); font-size: 18px; text-anchor: middle; }
   </style>
   <text x="20" y="22" class="q3-cap">1바이트(8비트)에 숫자를 담는 방법</text>
   <text x="20" y="48" class="q3-sub">S 부호 · E 지수 · M 가수 · I 정수</text>

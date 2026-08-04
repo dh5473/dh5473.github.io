@@ -38,15 +38,15 @@ KV Cache는 진행 중인 모든 요청이 GPU에 들고 있어야 하는 상태
     .fr1-h    { fill: var(--text, #1c1917); font-size: 20px; font-weight: 700; }
     .fr1-t    { fill: var(--text, #1c1917); font-size: 17px; }
     .fr1-lb   { fill: var(--text, #1c1917); font-size: 20px; }
-    .fr1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; }
-    .fr1-use  { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1; }
-    .fr1-res  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1; }
-    .fr1-occ  { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #78716c); stroke-width: 1; stroke-opacity: 0.4; }
-    .fr1-free { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1; }
-    .fr1-ok   { fill: var(--text-success, #16a34a); font-size: 17px; text-anchor: middle; }
-    .fr1-bad  { fill: var(--text-danger, #dc2626); font-size: 17px; }
+    .fr1-sub  { fill: var(--text-muted, #6d6762); font-size: 17px; }
+    .fr1-use  { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1; }
+    .fr1-res  { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1; }
+    .fr1-occ  { fill: var(--bg-muted, #eeecea); stroke: var(--text-muted, #6d6762); stroke-width: 1; stroke-opacity: 0.4; }
+    .fr1-free { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1; }
+    .fr1-ok   { fill: var(--text-success, #107836); font-size: 17px; text-anchor: middle; }
+    .fr1-bad  { fill: var(--text-danger, #cb2121); font-size: 17px; }
     .fr1-div  { stroke: var(--border, #e7e5e4); stroke-width: 1; }
-    .fr1-need { fill: none; stroke: var(--text-danger, #dc2626); stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .fr1-need { fill: none; stroke: var(--text-danger, #cb2121); stroke-width: 1.5; stroke-dasharray: 4 3; }
   </style>
   <text x="8" y="22" class="fr1-h">연속 할당: 요청마다 최대 길이를 통째로 예약</text>
   <!-- 요청 A: 16칸 예약, 2칸 사용 -->
@@ -103,21 +103,21 @@ vLLM 이전의 대표적 시스템인 Orca, FasterTransformer가 이 연속 할�
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="운영체제 페이징의 논리 주소와 물리 메모리 매핑. 왼쪽에 논리 페이지 0, 1, 2가 연속으로 붙어 있고, 오른쪽 물리 메모리 풀에는 페이지 12, 47, 91이 다른 프로세스의 페이지들 사이에 흩어져 있습니다. 페이지 테이블이 논리 페이지 0을 물리 47로, 1을 12로, 2를 91로 잇는 화살표가 서로 교차합니다.">
   <style>
-    .pg1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .pg1-head { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .pg1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .pg1-pool { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .pg1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .pg1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
     .pg1-oth  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .pg1-lb   { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
     .pg1-l    { fill: var(--text, #1c1917); font-size: 20px; }
-    .pg1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .pg1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
+    .pg1-sub  { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .pg1-r    { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: end; }
     .pg1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
-    .pg1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#pg1Head); }
+    .pg1-arr  { stroke: var(--primary, #0a756c); stroke-width: 1.5; fill: none; marker-end: url(#pg1Head); }
   </style>
   <defs>
     <marker id="pg1Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0a756c)"/>
     </marker>
   </defs>
   <text x="8" y="20" class="pg1-head">논리 주소 공간 (연속)</text>
@@ -172,21 +172,21 @@ KV Cache를 하나의 연속 덩어리로 잡는 대신, **고정 크기 블록(
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="PagedAttention 블록 테이블의 논리 블록과 물리 블록 매핑. 왼쪽에 논리 블록 0(토큰 0~15), 1(토큰 16~31), 2(토큰 32~47)가 연속으로 붙어 있고, 오른쪽 물리 블록 풀에는 블록 3, 7, 9가 다른 시퀀스가 쓰는 블록들 사이에 흩어져 있습니다. 블록 테이블이 논리 블록 0을 물리 블록 7로, 1을 3으로, 2를 9로 잇는 화살표가 서로 교차합니다.">
   <style>
-    .bt1-head { fill: var(--text-muted, #78716c); font-size: 17px; }
+    .bt1-head { fill: var(--text-muted, #6d6762); font-size: 17px; }
     .bt1-box  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
     .bt1-pool { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-    .bt1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+    .bt1-hit  { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
     .bt1-oth  { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
     .bt1-lb   { fill: var(--text, #1c1917); font-size: 20px; text-anchor: middle; }
     .bt1-l    { fill: var(--text, #1c1917); font-size: 20px; }
-    .bt1-sub  { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: middle; }
-    .bt1-r    { fill: var(--text-muted, #78716c); font-size: 17px; text-anchor: end; }
+    .bt1-sub  { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: middle; }
+    .bt1-r    { fill: var(--text-muted, #6d6762); font-size: 17px; text-anchor: end; }
     .bt1-cap  { fill: var(--text, #1c1917); font-size: 18px; text-anchor: middle; }
-    .bt1-arr  { stroke: var(--primary, #0d9488); stroke-width: 1.5; fill: none; marker-end: url(#bt1Head); }
+    .bt1-arr  { stroke: var(--primary, #0a756c); stroke-width: 1.5; fill: none; marker-end: url(#bt1Head); }
   </style>
   <defs>
     <marker id="bt1Head" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0d9488)"/>
+      <path d="M0,0 L8,3 L0,6" fill="var(--primary, #0a756c)"/>
     </marker>
   </defs>
   <text x="8" y="20" class="bt1-head">시퀀스의 논리 블록 (연속)</text>

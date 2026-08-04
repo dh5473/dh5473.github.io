@@ -178,18 +178,18 @@ before와 after가 헷갈린다면, 무엇을 기준으로 앞뒤인지를 붙�
 <style>
 .pv-title { font-size: 16px; font-weight: 700; fill: var(--text, #1c1917); }
 .pv-io { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
-.pv-hook { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.6; }
-.pv-core { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #d97706); stroke-width: 1.8; }
+.pv-hook { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.6; }
+.pv-core { fill: var(--bg-warn, #fffbeb); stroke: var(--accent, #9d5604); stroke-width: 1.8; }
 .pv-obj { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
 .pv-iot { font-size: 15px; fill: var(--text, #1c1917); }
-.pv-ht { font-size: 15px; font-weight: 600; fill: var(--primary, #0d9488); }
-.pv-ct { font-size: 15px; font-weight: 700; fill: var(--accent, #d97706); }
+.pv-ht { font-size: 15px; font-weight: 600; fill: var(--primary, #0a756c); }
+.pv-ct { font-size: 15px; font-weight: 700; fill: var(--accent, #9d5604); }
 .pv-ot { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
-.pv-note { font-size: 14px; fill: var(--text-muted, #78716c); }
-.pv-edge { stroke: var(--text-muted, #78716c); stroke-width: 1.4; fill: none; }
+.pv-note { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.pv-edge { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
 </style>
 <defs>
-<marker id="pvArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #78716c)"/></marker>
+<marker id="pvArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <text class="pv-title" x="200" y="20" text-anchor="middle">검증이 지나가는 순서</text>
 <path class="pv-edge" d="M122,82 L122,94" marker-end="url(#pvArrow)"/>

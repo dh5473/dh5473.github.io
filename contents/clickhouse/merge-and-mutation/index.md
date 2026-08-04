@@ -28,10 +28,10 @@ MergeTree는 정반대의 선택을 합니다. INSERT가 들어오면 데이터�
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="위쪽은 RDB의 in-place update로 페이지 안에서 행을 직접 수정하며 락과 WAL, 랜덤 I/O가 따르는 구조. 아래쪽은 MergeTree의 append 방식으로 INSERT마다 불변 Part가 새로 생기고 백그라운드 머지가 이들을 하나로 합치는 구조.">
-<style>.ch3a-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.ch3a-t{font-size:20px;fill:var(--text, #1c1917)}.ch3a-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3a-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3a-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3a-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:2}.ch3a-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.ch3a-h{font-size:21px;font-weight:700;fill:var(--text, #1c1917)}.ch3a-t{font-size:20px;fill:var(--text, #1c1917)}.ch3a-s{font-size:18px;fill:var(--text-muted, #6d6762)}.ch3a-p{font-size:19px;fill:var(--primary, #0a756c)}.ch3a-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3a-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0a756c);stroke-width:2}.ch3a-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3aArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 위 패널: RDB -->
@@ -77,10 +77,10 @@ ClickHouse는 백그라운드 스레드에서 주기적으로 Part 목록을 확
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="머지 전 all_1_1_0, all_2_2_0, all_3_3_0 세 개의 level 0 Part가 백그라운드 머지를 거쳐 block 범위 1부터 3까지를 담은 level 1 Part인 all_1_3_1 하나로 합쳐지는 과정.">
-<style>.ch3b-h{font-size:20px;fill:var(--text-muted, #78716c)}.ch3b-n{font-size:20px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3b-m{font-size:18px;fill:var(--text-muted, #78716c)}.ch3b-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3b-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3b-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0d9488);stroke-width:2}.ch3b-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.ch3b-h{font-size:20px;fill:var(--text-muted, #6d6762)}.ch3b-n{font-size:20px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3b-m{font-size:18px;fill:var(--text-muted, #6d6762)}.ch3b-p{font-size:19px;fill:var(--primary, #0a756c)}.ch3b-box{fill:var(--bg-subtle, #f5f4f2);stroke:var(--border, #e7e5e4);stroke-width:1.5}.ch3b-hi{fill:var(--bg-muted, #eeecea);stroke:var(--primary, #0a756c);stroke-width:2}.ch3b-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3bArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 머지 전 -->
@@ -140,25 +140,25 @@ Part는 생성부터 삭제까지 세 단계를 거칩니다.
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="Part 생명주기 3단계. INSERT로 Active 상태가 되어 쿼리에 응답하고, 머지가 완료되면 Inactive로 전환되어 디스크에 남아 있다가, old_parts_lifetime 기본 480초가 지나면 디스크에서 물리적으로 삭제됩니다.">
-<style>.ch3c-n{font-size:21px;font-weight:700}.ch3c-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-p{font-size:19px;fill:var(--primary, #0d9488)}.ch3c-l{font-size:18px;fill:var(--text-muted, #78716c)}.ch3c-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.ch3c-n{font-size:21px;font-weight:700}.ch3c-s{font-size:18px;fill:var(--text-muted, #6d6762)}.ch3c-p{font-size:19px;fill:var(--primary, #0a756c)}.ch3c-l{font-size:18px;fill:var(--text-muted, #6d6762)}.ch3c-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3cArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- INSERT -->
 <text x="240" y="28" text-anchor="middle" class="ch3c-p">INSERT</text>
 <line x1="240" y1="38" x2="240" y2="62" class="ch3c-line" marker-end="url(#ch3cArrow)"/>
 <!-- Active -->
-<rect x="90" y="68" width="300" height="72" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2"/>
-<text x="240" y="100" text-anchor="middle" class="ch3c-n" fill="var(--text-success, #16a34a)">Active</text>
+<rect x="90" y="68" width="300" height="72" rx="8" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="2"/>
+<text x="240" y="100" text-anchor="middle" class="ch3c-n" fill="var(--text-success, #107836)">Active</text>
 <text x="240" y="126" text-anchor="middle" class="ch3c-s">active = 1, 쿼리에 응답</text>
 <!-- 머지 완료 -->
 <line x1="240" y1="144" x2="240" y2="190" class="ch3c-line" marker-end="url(#ch3cArrow)"/>
 <text x="254" y="173" class="ch3c-l">머지 완료</text>
 <!-- Inactive -->
-<rect x="90" y="196" width="300" height="94" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #d97706)" stroke-width="2"/>
-<text x="240" y="228" text-anchor="middle" class="ch3c-n" fill="var(--text-warn, #d97706)">Inactive</text>
+<rect x="90" y="196" width="300" height="94" rx="8" fill="var(--bg-warn, #fffbeb)" stroke="var(--text-warn, #9d5604)" stroke-width="2"/>
+<text x="240" y="228" text-anchor="middle" class="ch3c-n" fill="var(--text-warn, #9d5604)">Inactive</text>
 <text x="240" y="254" text-anchor="middle" class="ch3c-s">active = 0, 디스크에 잔존</text>
 <text x="240" y="278" text-anchor="middle" class="ch3c-s">장애 복구 · 실행 중 쿼리 대비</text>
 <!-- 수명 경과 -->
@@ -167,7 +167,7 @@ Part는 생성부터 삭제까지 세 단계를 거칩니다.
 <text x="254" y="336" class="ch3c-l">기본 480초 경과</text>
 <!-- 물리 삭제 -->
 <rect x="90" y="350" width="300" height="72" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)" stroke-width="2" stroke-dasharray="6 4"/>
-<text x="240" y="382" text-anchor="middle" class="ch3c-n" fill="var(--text-muted, #78716c)">물리 삭제</text>
+<text x="240" y="382" text-anchor="middle" class="ch3c-n" fill="var(--text-muted, #6d6762)">물리 삭제</text>
 <text x="240" y="408" text-anchor="middle" class="ch3c-s">디스크에서 완전히 제거</text>
 </svg>
 </div>
@@ -205,10 +205,10 @@ ALTER TABLE orders DELETE WHERE order_id < 100;
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="뮤테이션 처리 과정. ALTER TABLE UPDATE가 실행되면 원본 Part all_1_3_1 전체를 처음부터 끝까지 읽어 조건에 맞는 행을 바꾼 새 Part all_1_3_1_4를 기록하고, 원본은 inactive로 전환됩니다.">
-<style>.ch3d-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-n{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-t{font-size:19px;fill:var(--text, #1c1917)}.ch3d-s{font-size:18px;fill:var(--text-muted, #78716c)}.ch3d-line{stroke:var(--text-muted, #78716c);stroke-width:2;fill:none}</style>
+<style>.ch3d-c{font-size:18px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-n{font-size:19px;fill:var(--text, #1c1917);font-family:"JetBrains Mono",monospace}.ch3d-t{font-size:19px;fill:var(--text, #1c1917)}.ch3d-s{font-size:18px;fill:var(--text-muted, #6d6762)}.ch3d-line{stroke:var(--text-muted, #6d6762);stroke-width:2;fill:none}</style>
 <defs>
 <marker id="ch3dArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <!-- 명령 -->
@@ -220,16 +220,16 @@ ALTER TABLE orders DELETE WHERE order_id < 100;
 <text x="240" y="120" text-anchor="middle" class="ch3d-s">원본 Part · 1,000만 행</text>
 <line x1="240" y1="136" x2="240" y2="158" class="ch3d-line" marker-end="url(#ch3dArrow)"/>
 <!-- 재작성 -->
-<rect x="50" y="164" width="380" height="76" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0d9488)" stroke-width="2" stroke-dasharray="6 4"/>
+<rect x="50" y="164" width="380" height="76" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--primary, #0a756c)" stroke-width="2" stroke-dasharray="6 4"/>
 <text x="240" y="194" text-anchor="middle" class="ch3d-t">Part 전체를 처음부터 끝까지 읽기</text>
 <text x="240" y="220" text-anchor="middle" class="ch3d-t">조건에 맞는 행을 바꿔 새 Part 기록</text>
 <line x1="240" y1="244" x2="240" y2="266" class="ch3d-line" marker-end="url(#ch3dArrow)"/>
 <!-- 결과 -->
 <rect x="50" y="272" width="380" height="140" rx="8" fill="none" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
-<rect x="68" y="288" width="344" height="52" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #16a34a)" stroke-width="2"/>
+<rect x="68" y="288" width="344" height="52" rx="6" fill="var(--bg-success, #f0fdf4)" stroke="var(--text-success, #107836)" stroke-width="2"/>
 <text x="88" y="321" class="ch3d-n">all_1_3_1_4</text>
 <text x="392" y="321" text-anchor="end" class="ch3d-s">active = 1</text>
-<rect x="68" y="348" width="344" height="52" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #dc2626)" stroke-width="2"/>
+<rect x="68" y="348" width="344" height="52" rx="6" fill="var(--bg-danger, #fef2f2)" stroke="var(--text-danger, #cb2121)" stroke-width="2"/>
 <text x="88" y="381" class="ch3d-n">all_1_3_1</text>
 <text x="392" y="381" text-anchor="end" class="ch3d-s">inactive 전환</text>
 </svg>

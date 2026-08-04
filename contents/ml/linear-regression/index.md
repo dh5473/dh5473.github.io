@@ -24,7 +24,7 @@ thumbnail: './thumbnail.png'
 면적(x)과 집값(y) 데이터가 있을 때, 이 점들 사이를 가장 잘 관통하는 직선을 그으면 새로운 면적에 대한 가격을 예측할 수 있다.
 
 ![면적-가격 산점도와 회귀 직선](./scatter-regression.png)
-<p align="center" style="color: #888; font-size: 13px;"><em>8개 데이터 포인트에 가장 잘 맞는 선형 회귀 직선. 기울기(w)가 면적 1m²당 가격 변화량을 나타낸다.</em></p>
+<p align="center" style="color: var(--text-muted, #6d6762); font-size: 13px;"><em>8개 데이터 포인트에 가장 잘 맞는 선형 회귀 직선. 기울기(w)가 면적 1m²당 가격 변화량을 나타낸다.</em></p>
 
 수학적으로 이 직선은 다음과 같이 표현한다.
 
@@ -87,7 +87,7 @@ print(f"100m² 예측 가격: {predicted[0]:.2f}억")  # 3.72억
 각 데이터 포인트마다 잔차가 존재한다. 아래 그림에서 수직 점선이 잔차다.
 
 ![잔차 시각화](./residual-visualization.png)
-<p align="center" style="color: #888; font-size: 13px;"><em>각 데이터 포인트에서 회귀 직선까지의 수직 거리가 잔차다. 과대 예측(빨간)과 과소 예측(초록) 점선이 잔차를 나타낸다.</em></p>
+<p align="center" style="color: var(--text-muted, #6d6762); font-size: 13px;"><em>각 데이터 포인트에서 회귀 직선까지의 수직 거리가 잔차다. 과대 예측(빨간)과 과소 예측(초록) 점선이 잔차를 나타낸다.</em></p>
 
 잔차가 클수록 그 데이터 포인트를 잘 못 맞추고 있다는 뜻이다. 모든 잔차를 합쳐서 최소화하는 직선이 가장 좋은 직선이다.
 
@@ -257,7 +257,7 @@ plt.show()
 선형 회귀는 이상치에 매우 민감하다. 잔차를 제곱해서 최소화하기 때문에, 극단적인 값 하나가 전체 직선을 그쪽으로 끌어당긴다.
 
 ![이상치가 회귀 직선에 미치는 영향](./outlier-impact.png)
-<p align="center" style="color: #888; font-size: 13px;"><em>빨간 별이 이상치 1개. 이상치 하나만으로 회귀 직선 전체가 크게 왜곡된다.</em></p>
+<p align="center" style="color: var(--text-muted, #6d6762); font-size: 13px;"><em>빨간 별이 이상치 1개. 이상치 하나만으로 회귀 직선 전체가 크게 왜곡된다.</em></p>
 
 [머신러닝 프로젝트 워크플로우](/ml/workflow/)에서 EDA를 강조하는 이유 중 하나가 바로 이것이다. 데이터를 먼저 시각화해서 이상치를 파악하는 게 모델을 학습하기 전에 꼭 거쳐야 하는 단계다.
 

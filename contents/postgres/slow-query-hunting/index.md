@@ -22,16 +22,16 @@ thumbnail: './thumbnail.png'
      role="img" aria-label="관측 도구의 세 층위. pg_stat_statements는 전체 워크로드에서 어떤 쿼리가 시간을 가장 많이 쓰는지, EXPLAIN ANALYZE는 그 쿼리 한 번이 어디에서 시간을 쓰는지, wait_event는 지금 그 쿼리가 무엇을 기다리는지를 보여줍니다">
 <defs>
 <marker id="sqfArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <style>
 .sqf-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.sqf-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0d9488); }
+.sqf-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0a756c); }
 .sqf-s { font-size: 17px; fill: var(--text, #1c1917); }
-.sqf-tag { font-size: 17px; fill: var(--text-muted, #78716c); }
-.sqf-n { font-size: 17px; fill: var(--text-muted, #78716c); }
-.sqf-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
+.sqf-tag { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.sqf-n { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.sqf-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
 </style>
 <!-- layer 1: whole workload -->
 <rect class="sqf-box" x="20" y="16" width="440" height="84" rx="8"/>
@@ -338,20 +338,20 @@ ORDER BY pg_relation_size(indexrelid) DESC;
      role="img" aria-label="느린 쿼리 진단 판단 트리. DB가 느리다는 신고에서 출발해 pg_stat_statements로 상위 쿼리를 고르고, EXPLAIN ANALYZE로 실행 계획을 읽고, pg_stat_activity로 지금 무엇을 기다리는지 보고, pg_stat_user_tables로 테이블 상태를 점검합니다. 각 단계마다 관측된 조건과 그에 대응하는 다음 행동을 짝지어 보여줍니다">
 <defs>
 <marker id="sqtArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <style>
 .sqt-start { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .sqt-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 .sqt-t { font-size: 21px; font-weight: 700; fill: var(--text, #1c1917); }
-.sqt-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0d9488); }
-.sqt-hs { font-size: 17px; fill: var(--text-muted, #78716c); }
+.sqt-h { font-size: 20px; font-weight: 700; fill: var(--primary, #0a756c); }
+.sqt-hs { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .sqt-c { font-size: 17px; fill: var(--text, #1c1917); }
-.sqt-a { font-size: 17px; fill: var(--primary, #0d9488); }
+.sqt-a { font-size: 17px; fill: var(--primary, #0a756c); }
 .sqt-sep { stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.sqt-ln { stroke: var(--text-muted, #78716c); stroke-width: 1.6; fill: none; }
-.sqt-dot { fill: var(--accent, #d97706); }
+.sqt-ln { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.sqt-dot { fill: var(--accent, #9d5604); }
 </style>
 <!-- 출발점 -->
 <rect class="sqt-start" x="120" y="14" width="240" height="44" rx="8"/>

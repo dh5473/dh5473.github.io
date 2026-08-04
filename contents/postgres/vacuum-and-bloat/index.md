@@ -102,27 +102,27 @@ VACUUM은 힙을 처음부터 끝까지 스캔하면서 dead tuple의 **TID**(bl
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="시간축 위에 oldest xmin 경계선을 세로 점선으로 표시한 그림. 오래 열려 있는 트랜잭션 T1이 시작한 시점이 경계선이 되고, 그 왼쪽에서 dead가 된 튜플은 VACUUM이 수거할 수 있지만 오른쪽에서 dead가 된 튜플은 T1에게 아직 보일 수 있어 수거하지 못합니다.">
 <style>
-.vb3-hz { font-size: 17px; fill: var(--text-danger, #dc2626); font-weight: 600; }
-.vb3-ok { font-size: 17px; fill: var(--text-success, #16a34a); font-weight: 600; }
-.vb3-no { font-size: 17px; fill: var(--text-danger, #dc2626); font-weight: 600; }
-.vb3-tx-t { font-size: 17px; fill: var(--text-warn, #d97706); font-weight: 600; }
+.vb3-hz { font-size: 17px; fill: var(--text-danger, #cb2121); font-weight: 600; }
+.vb3-ok { font-size: 17px; fill: var(--text-success, #107836); font-weight: 600; }
+.vb3-no { font-size: 17px; fill: var(--text-danger, #cb2121); font-weight: 600; }
+.vb3-tx-t { font-size: 17px; fill: var(--text-warn, #9d5604); font-weight: 600; }
 .vb3-dead-t { font-size: 17px; fill: var(--text, #1c1917); }
-.vb3-mut { font-size: 17px; fill: var(--text-muted, #78716c); }
+.vb3-mut { font-size: 17px; fill: var(--text-muted, #6d6762); }
 .vb3-cap { font-size: 18px; fill: var(--text, #1c1917); }
-.vb3-zok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.2; }
-.vb3-zno { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.2; }
-.vb3-tx { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+.vb3-zok { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.2; }
+.vb3-zno { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.2; }
+.vb3-tx { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
 .vb3-dead { fill: var(--bg-muted, #eeecea); stroke: var(--text, #1c1917); stroke-width: 1.2; }
-.vb3-axis { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
-.vb3-warn { stroke: var(--text-warn, #d97706); stroke-width: 2; fill: none; }
-.vb3-hzline { stroke: var(--text-danger, #dc2626); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+.vb3-axis { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
+.vb3-warn { stroke: var(--text-warn, #9d5604); stroke-width: 2; fill: none; }
+.vb3-hzline { stroke: var(--text-danger, #cb2121); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
 </style>
 <defs>
 <marker id="vb3Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #6d6762)" />
 </marker>
 <marker id="vb3ArrowW" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-warn, #d97706)" />
+<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-warn, #9d5604)" />
 </marker>
 </defs>
 <!-- 경계선 -->
@@ -176,26 +176,26 @@ PG 12에서 인덱스 정리를 끄고 켜는 `INDEX_CLEANUP` 옵션이 생겼�
      role="img" aria-label="VACUUM의 세 단계 흐름도. 힙을 스캔해 dead tuple의 TID를 모으고, 모든 인덱스에서 그 TID를 가리키는 엔트리를 제거한 뒤, 힙의 line pointer를 LP_UNUSED로 바꾸고 FSM과 VM을 갱신합니다. 스캔하지 못한 구간이 남아 있으면 1단계로 되돌아갑니다.">
 <style>
 .vb1-ttl { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
-.vb1-sub { font-size: 17.5px; fill: var(--text-muted, #78716c); }
+.vb1-sub { font-size: 17.5px; fill: var(--text-muted, #6d6762); }
 .vb1-num { font-size: 18px; fill: var(--on-fill, #14100e); font-weight: 700; }
 .vb1-dec-t { font-size: 19px; fill: var(--text, #1c1917); }
-.vb1-chip-t { font-size: 17px; fill: var(--text-muted, #78716c); }
-.vb1-yn { font-size: 17px; fill: var(--text-warn, #d97706); font-weight: 600; }
+.vb1-chip-t { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.vb1-yn { font-size: 17px; fill: var(--text-warn, #9d5604); font-weight: 600; }
 .vb1-cap-t { font-size: 21px; fill: var(--text, #1c1917); font-weight: 600; }
-.vb1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
+.vb1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
 .vb1-cap { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.vb1-dec { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #d97706); stroke-width: 1.5; }
+.vb1-dec { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.5; }
 .vb1-chip { fill: var(--bg, #fafaf8); stroke: var(--border, #e7e5e4); stroke-width: 1; }
-.vb1-cir { fill: var(--primary, #0d9488); }
-.vb1-arw { stroke: var(--text-muted, #78716c); stroke-width: 2; fill: none; }
-.vb1-loop { stroke: var(--text-warn, #d97706); stroke-width: 2; fill: none; }
+.vb1-cir { fill: var(--primary, #0a756c); }
+.vb1-arw { stroke: var(--text-muted, #6d6762); stroke-width: 2; fill: none; }
+.vb1-loop { stroke: var(--text-warn, #9d5604); stroke-width: 2; fill: none; }
 </style>
 <defs>
 <marker id="vb1Arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #78716c)" />
+<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-muted, #6d6762)" />
 </marker>
 <marker id="vb1Loop" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-warn, #d97706)" />
+<path d="M0,0 L9,4.5 L0,9 z" fill="var(--text-warn, #9d5604)" />
 </marker>
 </defs>
 <!-- 시작 -->
@@ -278,14 +278,14 @@ SELECT pg_size_pretty(pg_relation_size('bloat_demo'));
      role="img" aria-label="테이블 파일 크기의 변화를 세 개의 막대로 비교한 그림. UPDATE 전에는 6904 킬로바이트가 전부 살아있는 튜플이고, 10만 행을 전부 UPDATE한 뒤에는 13메가바이트로 늘어나 절반이 dead tuple이며, VACUUM을 돌린 뒤에는 dead tuple이 사라지지만 파일은 여전히 13메가바이트이고 그 절반이 재사용 대기 중인 빈 공간입니다.">
 <style>
 .vb2-stage { font-size: 19px; fill: var(--text, #1c1917); font-weight: 600; }
-.vb2-size { font-size: 18px; fill: var(--text-muted, #78716c); }
-.vb2-tlive { font-size: 17px; fill: var(--text-success, #16a34a); }
-.vb2-tdead { font-size: 17px; fill: var(--text-danger, #dc2626); }
-.vb2-tfree { font-size: 17px; fill: var(--text-muted, #78716c); }
-.vb2-live { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #16a34a); stroke-width: 1.5; }
-.vb2-dead { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #dc2626); stroke-width: 1.5; }
+.vb2-size { font-size: 18px; fill: var(--text-muted, #6d6762); }
+.vb2-tlive { font-size: 17px; fill: var(--text-success, #107836); }
+.vb2-tdead { font-size: 17px; fill: var(--text-danger, #cb2121); }
+.vb2-tfree { font-size: 17px; fill: var(--text-muted, #6d6762); }
+.vb2-live { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+.vb2-dead { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
 .vb2-free { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.vb2-leg { font-size: 17px; fill: var(--text-muted, #78716c); }
+.vb2-leg { font-size: 17px; fill: var(--text-muted, #6d6762); }
 </style>
 <!-- UPDATE 전 -->
 <text class="vb2-stage" x="30" y="26">UPDATE 전</text>

@@ -33,14 +33,14 @@ thumbnail: './thumbnail.png'
 .qe-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .qe-l { fill: var(--text, #1c1917); font-size: 14px; }
 .qe-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.qe-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.qe-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .qe-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.qe-core { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.qe-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#qeArrow); }
+.qe-core { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.qe-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#qeArrow); }
 </style>
 <defs>
 <marker id="qeArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="qe-t" x="200" y="22" text-anchor="middle">QueryEngine이 관장하는 네 갈래</text>
@@ -128,18 +128,18 @@ AI 에이전트에서 가장 민감한 문제는 "이 도구를 실행해도 되
 <style>
 .pm-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .pm-l { fill: var(--text, #1c1917); font-size: 14px; }
-.pm-n { fill: var(--text-muted, #78716c); font-size: 14px; }
-.pm-s { fill: var(--text-success, #16a34a); font-size: 14px; }
+.pm-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.pm-s { fill: var(--text-success, #107836); font-size: 14px; }
 .pm-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.pm-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#pmArrow); }
-.pm-sc { stroke: var(--text-success, #16a34a); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#pmArrowS); }
+.pm-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#pmArrow); }
+.pm-sc { stroke: var(--text-success, #107836); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; marker-end: url(#pmArrowS); }
 </style>
 <defs>
 <marker id="pmArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 <marker id="pmArrowS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-success, #16a34a)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-success, #107836)"/>
 </marker>
 </defs>
 <text class="pm-t" x="200" y="22" text-anchor="middle">네 계층과 단락 경로</text>
@@ -291,15 +291,15 @@ Claude Code의 가장 야심찬 설계는 **Coordinator Mode**입니다. 하나�
 .cd-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
 .cd-l { fill: var(--text, #1c1917); font-size: 14px; }
 .cd-w { fill: var(--on-fill, #14100e); font-size: 14px; }
-.cd-n { fill: var(--text-muted, #78716c); font-size: 14px; }
+.cd-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
 .cd-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
-.cd-top { fill: var(--primary, #0d9488); stroke: var(--primary, #0d9488); stroke-width: 1.5; }
-.cd-pad { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #d97706); stroke-width: 1.5; }
-.cd-a { stroke: var(--text-muted, #78716c); stroke-width: 1.5; fill: none; marker-end: url(#cdArrow); }
+.cd-top { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.5; }
+.cd-pad { fill: var(--bg-muted, #eeecea); stroke: var(--accent, #9d5604); stroke-width: 1.5; }
+.cd-a { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; marker-end: url(#cdArrow); }
 </style>
 <defs>
 <marker id="cdArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #78716c)"/>
+<path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted, #6d6762)"/>
 </marker>
 </defs>
 <text class="cd-t" x="200" y="22" text-anchor="middle">코디네이터와 워커</text>
