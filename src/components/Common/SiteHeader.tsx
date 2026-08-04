@@ -140,7 +140,7 @@ const GitHubButton = styled.a`
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--on-fill);
   cursor: pointer;
   transition: background 0.2s ease;
   text-decoration: none;

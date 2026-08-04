@@ -35,7 +35,7 @@ const PageButton = styled.button<{ active?: boolean; disabled?: boolean }>`
     ${({ active }) => (active ? c.primary : 'transparent')};
   background: ${({ active }) => (active ? c.primary : 'transparent')};
   color: ${({ active, disabled }) =>
-    disabled ? c.border : active ? '#ffffff' : c.textMuted};
+    disabled ? c.border : active ? 'var(--on-fill)' : c.textMuted};
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
@@ -44,7 +44,7 @@ const PageButton = styled.button<{ active?: boolean; disabled?: boolean }>`
 
   &:hover:not(:disabled) {
     background: ${({ active }) => (active ? c.primaryHov : c.bgSubtle)};
-    color: ${({ active }) => (active ? '#ffffff' : c.text)};
+    color: ${({ active }) => (active ? 'var(--on-fill)' : c.text)};
   }
 
   &:disabled {

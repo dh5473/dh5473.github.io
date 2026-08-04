@@ -176,7 +176,7 @@ const GradeButton = styled.button`
   border: none;
   border-radius: 10px;
   background: ${c.primary};
-  color: #ffffff;
+  color: var(--on-fill);
   font-family: inherit;
   font-size: 15px;
   font-weight: 700;

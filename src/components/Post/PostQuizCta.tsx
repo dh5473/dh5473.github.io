@@ -55,7 +55,7 @@ const Action = styled.a`
   padding: 11px 20px;
   border-radius: 10px;
   background: ${c.primary};
-  color: #ffffff;
+  color: var(--on-fill);
   font-size: 14.5px;
   font-weight: 700;
   text-decoration: none;

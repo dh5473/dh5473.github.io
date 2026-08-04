@@ -40,7 +40,7 @@ const Chip = styled.button<{ active: boolean }>`
   border: 1.5px solid
     ${({ active }) => (active ? c.primary : c.border)};
   background: ${({ active }) => (active ? c.primary : 'transparent')};
-  color: ${({ active }) => (active ? '#ffffff' : c.textMuted)};
+  color: ${({ active }) => (active ? 'var(--on-fill)' : c.textMuted)};
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -50,17 +50,18 @@ const Chip = styled.button<{ active: boolean }>`
 
   &:hover {
     border-color: ${c.primary};
-    color: ${({ active }) => (active ? '#ffffff' : c.primary)};
+    color: ${({ active }) => (active ? 'var(--on-fill)' : c.primary)};
   }
 `
 
 const ChipCount = styled.span<{ active: boolean }>`
   font-size: 11px;
   font-weight: 600;
-  background: ${({ active }) => (active ? 'rgba(255,255,255,0.25)' : c.bgMuted)};
+  background: ${({ active }) =>
+    active ? 'var(--on-fill-veil)' : c.bgMuted};
   border-radius: 10px;
   padding: 1px 6px;
-  color: ${({ active }) => (active ? '#ffffff' : c.textMuted)};
+  color: ${({ active }) => (active ? 'var(--on-fill)' : c.textMuted)};
   transition: all 0.2s ease;
 `
 

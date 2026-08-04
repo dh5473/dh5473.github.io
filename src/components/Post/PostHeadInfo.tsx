@@ -56,8 +56,8 @@ const CategoryBadge = styled.span`
   margin-top: auto;
   margin-bottom: 12px;
   padding: 4px 10px;
-  background: rgba(13, 148, 136, 0.8);
-  color: #ffffff;
+  background: rgb(var(--primary-rgb) / 0.8);
+  color: var(--on-fill);
   font-size: 12px;
   font-weight: 600;
   border-radius: 20px;

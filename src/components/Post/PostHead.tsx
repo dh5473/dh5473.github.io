@@ -19,10 +19,12 @@ const PostHeadWrapper = styled.div<{ hasThumbnail: boolean }>`
   width: 100%;
   height: 400px;
   overflow: hidden;
+  /* 히어로는 테마와 무관하게 늘 어둡고 그 위 글자는 흰색이다. --primary를 쓰면
+     다크의 밝은 teal이 들어와 흰 제목이 2.49:1로 깨지므로 값을 고정한다. */
   background: ${({ hasThumbnail }) =>
     hasThumbnail
       ? 'transparent'
-      : 'linear-gradient(135deg, #0d9488 0%, #1c1917 100%)'};
+      : 'linear-gradient(135deg, #0a756c 0%, #1c1917 100%)'};
 
   ${bp.md} {
     height: 300px;
@@ -50,7 +52,7 @@ const GradientOverlay = styled.div`
   z-index: 1;
   background: linear-gradient(
     135deg,
-    rgba(13, 148, 136, 0.15) 0%,
+    rgb(var(--primary-rgb) / 0.15) 0%,
     transparent 60%
   );
 `

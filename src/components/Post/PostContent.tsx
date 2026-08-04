@@ -173,9 +173,9 @@ const MarkdownRenderer = styled.div`
   }
 
   .copy-button.copied {
-    background: #0d9488;
-    border-color: #0d9488;
-    color: #ffffff;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-fill);
     opacity: 1;
   }
 

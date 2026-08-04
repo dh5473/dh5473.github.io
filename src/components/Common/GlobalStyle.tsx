@@ -4,31 +4,41 @@ import { Global, css } from '@emotion/react'
 const defaultStyle = css`
   /* ─── Design Tokens ─────────────────────────────────────────────── */
 
+  /* 라이트의 전경 토큰은 색조·채도를 그대로 두고 명도만 낮춰, 가장 어두운
+     표면인 --bg-muted 위에서 4.7:1을 넘도록 맞춘 값이다. 이전 값은 같은
+     자리에서 2.70~4.07이라 본문 링크와 인라인 코드까지 AA 미만이었다.
+     다크는 5.72~10.98이라 손대지 않았다. */
   :root {
     --bg:           #fafaf8;
     --bg-subtle:    #f5f4f2;
     --bg-muted:     #eeecea;
     --text:         #1c1917;
-    --text-muted:   #78716c;
-    --primary:      #0d9488;
-    --primary-hov:  #0f766e;
-    --accent:       #d97706;
+    --text-muted:   #6d6762;
+    --primary:      #0a756c;
+    /* 히어로 배지·그라디언트처럼 primary를 반투명하게 깔아야 하는 자리용.
+       rgb(var(--primary-rgb) / 0.8) 로 쓴다. */
+    --primary-rgb:  10 117 108;
+    --primary-hov:  #075c55;
+    --accent:       #9d5604;
     --border:       #e7e5e4;
     --border-muted: #f0edeb;
     --code-bg:      #1e1b18;
 
     /* 다이어그램 시맨틱 토큰 */
-    --text-success: #16a34a;
+    --text-success: #107836;
     --bg-success:   #f0fdf4;
-    --text-danger:  #dc2626;
+    --text-danger:  #cb2121;
     --bg-danger:    #fef2f2;
-    --text-warn:    #d97706;
+    --text-warn:    #9d5604;
     --bg-warn:      #fffbeb;
 
     /* --primary·--accent처럼 진하게 칠한 도형 위에 얹는 글자색.
-       두 테마 모두 중간 밝기의 색으로 칠하므로 값이 같다. 흰 글자는
-       다크에서 2.49:1까지 떨어지지만 이 잉크는 5.05~8.81을 유지한다. */
-    --on-fill:      #14100e;
+       채움이 라이트에서는 어둡고 다크에서는 밝아 잉크 방향이 테마마다
+       뒤집힌다. 한 값으로 두 테마를 덮으려 하면 반드시 한쪽이 깨진다. */
+    --on-fill:      #ffffff;
+    /* 진한 채움 위에 한 겹 더 얹는 반투명 판. 잉크가 계속 읽히도록
+       라이트에서는 채움을 더 어둡게, 다크에서는 더 밝게 민다. */
+    --on-fill-veil: rgba(0, 0, 0, 0.22);
   }
 
   [data-theme='dark'] {
@@ -38,6 +48,7 @@ const defaultStyle = css`
     --text:         #f5f0eb;
     --text-muted:   #a8a29e;
     --primary:      #14b8a6;
+    --primary-rgb:  20 184 166;
     --primary-hov:  #0d9488;
     --accent:       #f59e0b;
     --border:       #292524;
@@ -51,6 +62,10 @@ const defaultStyle = css`
     --bg-danger:    rgba(239, 68, 68, 0.12);
     --text-warn:    #fbbf24;
     --bg-warn:      rgba(245, 158, 11, 0.12);
+
+    /* 다크의 채움은 밝은 색이라 잉크가 어두워야 한다 (5.05~11.33) */
+    --on-fill:      #14100e;
+    --on-fill-veil: rgba(255, 255, 255, 0.25);
   }
 
   /* ─── Reset ─────────────────────────────────────────────────────── */

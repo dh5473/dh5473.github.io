@@ -12,7 +12,7 @@ import {
   TagBadge,
 } from 'components/Quiz/QuizMeta'
 import { QuizPostGroup, QuizQuestion, QuizScopeSummary } from 'types/quiz.types'
-import { seriesMetadata } from 'utils/seriesData'
+import { seriesMetadata, inkOn } from 'utils/seriesData'
 import { c, bp } from 'styles/theme'
 
 type QuizListTemplateProps = {
@@ -64,7 +64,7 @@ const StartLink = styled.a`
   padding: 11px 20px;
   border-radius: 10px;
   background: ${c.primary};
-  color: #ffffff;
+  color: var(--on-fill);
   font-size: 14.5px;
   font-weight: 700;
   text-decoration: none;
@@ -271,7 +271,10 @@ const QuizListTemplate: FunctionComponent<QuizListTemplateProps> = function ({
           </SpreadSlot>
         </MetaRow>
 
-        <StartLink href={`/quiz/${scope.id}/`} style={{ background: accent }}>
+        <StartLink
+          href={`/quiz/${scope.id}/`}
+          style={{ background: accent, color: inkOn(accent) }}
+        >
           직접 풀어보기 →
         </StartLink>
 
