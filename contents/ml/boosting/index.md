@@ -25,7 +25,7 @@ thumbnail: './thumbnail.png'
 
 순서의 차이는 학습 시간에 그대로 나타난다. 배깅은 트리 100그루를 코어 여러 개에 흩어 동시에 학습시킬 수 있지만, 부스팅은 앞 트리의 예측이 있어야 다음 트리의 타겟이 정해지므로 트리 사이를 병렬화할 방법이 없다. 같은 100그루라도 부스팅 쪽이 몇 배 오래 걸린다.
 
-노이즈가 많은 데이터, 학습을 병렬로 돌려야 하는 상황이면 배깅이 안전하다. 데이터가 비교적 깨끗하고 마지막 몇 퍼센트를 짜내야 하면 부스팅이다. 정형 데이터 대회에서 상위권 해법이 대체로 Gradient Boosting 계열인 것도 이 때문이다.
+노이즈가 많은 데이터, 학습을 병렬로 돌려야 하는 상황이면 배깅이 안전하다. 데이터가 비교적 깨끗하고 마지막 몇 퍼센트를 짜내야 하면 부스팅이다.
 
 ## AdaBoost
 
@@ -56,9 +56,56 @@ $\alpha_t$ 하나가 두 가지 일을 동시에 한다. 잘 맞춘 분류기일
 
 오류율이 0.5를 넘으면 $\alpha_t$ 가 음수가 되어, 그 분류기의 예측이 뒤집힌 채 반영된다. 찍기보다 못한 분류기도 버리지 않고 부호를 바꿔 쓰는 셈이다.
 
-![AdaBoost 이터레이션별 샘플 가중치 변화](./adaboost-weights.png)
+샘플 20개로 두 라운드만 돌려보면 가중치가 이렇게 움직인다.
 
-가로축은 샘플 하나하나, 세로축은 그 샘플이 다음 학습에서 갖는 비중이다. 처음에는 20개 샘플이 모두 1/20으로 평평하다. 첫 분류기가 틀린 네 개(인덱스 4, 7, 10, 13)만 0.1로 솟고 나머지는 그만큼 내려간다. 두 번째 이터레이션에서는 17번이 다시 틀리면서 0.15까지 올라간다. 어려운 샘플일수록 봉우리가 계속 높아진다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 410" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="샘플 20개의 AdaBoost 가중치가 라운드마다 달라지는 모습을 막대 세 줄로 쌓아 비교한 그림. 처음에는 스무 개가 모두 0.05로 균등하고, 1라운드에서 오분류된 다섯 개가 0.10으로 오르며, 2라운드에서 또 틀린 4번과 17번이 0.25까지 올라 나머지를 압도한다.">
+<text x="200" y="24" text-anchor="middle" font-size="17" font-weight="700" fill="var(--text, #1c1917)">오분류 샘플로 몰리는 가중치</text>
+<!-- 범례 -->
+<rect x="128" y="41" width="14" height="10" fill="var(--bg-muted, #eeecea)" stroke="var(--text-muted, #6d6762)" stroke-width="1"/>
+<text x="148" y="50" font-size="14" fill="var(--text-muted, #6d6762)">정분류</text>
+<rect x="208" y="41" width="14" height="10" fill="var(--text-danger, #cb2121)"/>
+<text x="228" y="50" font-size="14" fill="var(--text-muted, #6d6762)">오분류</text>
+<!-- 라운드 0 -->
+<text x="42" y="76" font-size="14" fill="var(--text-muted, #6d6762)">라운드 0 · 균등 가중치 0.05</text>
+<g fill="var(--bg-muted, #eeecea)" stroke="var(--text-muted, #6d6762)" stroke-width="1">
+<rect x="46" y="92.8" width="12" height="19.2"/><rect x="62.5" y="92.8" width="12" height="19.2"/><rect x="79" y="92.8" width="12" height="19.2"/><rect x="95.5" y="92.8" width="12" height="19.2"/><rect x="112" y="92.8" width="12" height="19.2"/><rect x="128.5" y="92.8" width="12" height="19.2"/><rect x="145" y="92.8" width="12" height="19.2"/><rect x="161.5" y="92.8" width="12" height="19.2"/><rect x="178" y="92.8" width="12" height="19.2"/><rect x="194.5" y="92.8" width="12" height="19.2"/><rect x="211" y="92.8" width="12" height="19.2"/><rect x="227.5" y="92.8" width="12" height="19.2"/><rect x="244" y="92.8" width="12" height="19.2"/><rect x="260.5" y="92.8" width="12" height="19.2"/><rect x="277" y="92.8" width="12" height="19.2"/><rect x="293.5" y="92.8" width="12" height="19.2"/><rect x="310" y="92.8" width="12" height="19.2"/><rect x="326.5" y="92.8" width="12" height="19.2"/><rect x="343" y="92.8" width="12" height="19.2"/><rect x="359.5" y="92.8" width="12" height="19.2"/>
+</g>
+<line x1="42" y1="112" x2="376" y2="112" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 라운드 1 후 -->
+<text x="42" y="148" font-size="14" fill="var(--text-muted, #6d6762)">라운드 1 후 · 오분류 5개 → 0.10</text>
+<line x1="42" y1="202.8" x2="376" y2="202.8" stroke="var(--text-muted, #6d6762)" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="376" y="197" text-anchor="end" font-size="14" fill="var(--text-muted, #6d6762)">0.05</text>
+<g fill="var(--bg-muted, #eeecea)" stroke="var(--text-muted, #6d6762)" stroke-width="1">
+<rect x="46" y="209.2" width="12" height="12.8"/><rect x="62.5" y="209.2" width="12" height="12.8"/><rect x="79" y="209.2" width="12" height="12.8"/><rect x="95.5" y="209.2" width="12" height="12.8"/><rect x="128.5" y="209.2" width="12" height="12.8"/><rect x="145" y="209.2" width="12" height="12.8"/><rect x="178" y="209.2" width="12" height="12.8"/><rect x="194.5" y="209.2" width="12" height="12.8"/><rect x="227.5" y="209.2" width="12" height="12.8"/><rect x="244" y="209.2" width="12" height="12.8"/><rect x="277" y="209.2" width="12" height="12.8"/><rect x="293.5" y="209.2" width="12" height="12.8"/><rect x="310" y="209.2" width="12" height="12.8"/><rect x="343" y="209.2" width="12" height="12.8"/><rect x="359.5" y="209.2" width="12" height="12.8"/>
+</g>
+<g fill="var(--text-danger, #cb2121)">
+<rect x="112" y="183.6" width="12" height="38.4"/><rect x="161.5" y="183.6" width="12" height="38.4"/><rect x="211" y="183.6" width="12" height="38.4"/><rect x="260.5" y="183.6" width="12" height="38.4"/><rect x="326.5" y="183.6" width="12" height="38.4"/>
+</g>
+<line x1="42" y1="222" x2="376" y2="222" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 라운드 2 후 -->
+<text x="42" y="248" font-size="14" fill="var(--text-muted, #6d6762)">라운드 2 후 · 연속 오분류 4·17번 → 0.25</text>
+<line x1="42" y1="336.8" x2="376" y2="336.8" stroke="var(--text-muted, #6d6762)" stroke-width="1" stroke-dasharray="4 4"/>
+<g fill="var(--bg-muted, #eeecea)" stroke="var(--text-muted, #6d6762)" stroke-width="1">
+<rect x="161.5" y="332" width="12" height="24"/><rect x="211" y="332" width="12" height="24"/><rect x="260.5" y="332" width="12" height="24"/>
+<rect x="46" y="348" width="12" height="8"/><rect x="62.5" y="348" width="12" height="8"/><rect x="79" y="348" width="12" height="8"/><rect x="95.5" y="348" width="12" height="8"/><rect x="128.5" y="348" width="12" height="8"/><rect x="145" y="348" width="12" height="8"/><rect x="178" y="348" width="12" height="8"/><rect x="194.5" y="348" width="12" height="8"/><rect x="227.5" y="348" width="12" height="8"/><rect x="244" y="348" width="12" height="8"/><rect x="277" y="348" width="12" height="8"/><rect x="293.5" y="348" width="12" height="8"/><rect x="310" y="348" width="12" height="8"/><rect x="343" y="348" width="12" height="8"/><rect x="359.5" y="348" width="12" height="8"/>
+</g>
+<g fill="var(--text-danger, #cb2121)">
+<rect x="112" y="260" width="12" height="96"/><rect x="326.5" y="260" width="12" height="96"/>
+</g>
+<line x1="42" y1="356" x2="376" y2="356" stroke="var(--border, #e7e5e4)" stroke-width="1.5"/>
+<!-- 인덱스 -->
+<g font-size="14" fill="var(--text-muted, #6d6762)" text-anchor="middle">
+<text x="118" y="376">4</text><text x="167.5" y="376">7</text><text x="217" y="376">10</text><text x="266.5" y="376">13</text><text x="332.5" y="376">17</text>
+</g>
+<text x="200" y="398" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">샘플 인덱스</text>
+</svg>
+</div>
+
+처음에는 스무 개가 모두 1/20이다. 첫 분류기가 다섯 개를 틀리면 $\epsilon_1 = 0.25$, $\alpha_1 = 0.55$ 이고, 정규화까지 마치면 틀린 다섯 개는 0.1로 오르고 나머지 열다섯 개는 0.033으로 내려간다. 두 번째 분류기가 그중 4번과 17번을 또 틀리면 $\epsilon_2 = 0.2$, $\alpha_2 = 0.69$ 라서 두 샘플의 가중치가 0.25까지 뛴다. 두 라운드 만에 출발점의 다섯 배다. 반대로 한 번도 틀리지 않은 열다섯 개는 0.021까지 내려가, 이제 세 번째 분류기가 보는 데이터는 사실상 4번과 17번이다.
 
 :::warning
 
@@ -163,9 +210,7 @@ $$r_{im} = -\left. \frac{\partial L(y_i, F(x_i))}{\partial F(x_i)} \right|_{F = 
 
 :::
 
-![Gradient Boosting 이터레이션 수에 따른 훈련/검증 MSE](./boosting-iterations.png)
-
-트리를 늘릴수록 훈련 MSE는 0을 향해 계속 내려간다. 검증 MSE도 처음 25그루 사이에 대부분의 이득을 가져가고, 그 뒤로는 거의 평평하다. 두 곡선 사이에 벌어진 간격이 과적합의 크기이고, 검증 곡선이 평평해진 뒤에 쌓는 트리는 훈련 데이터만 더 정확히 외운다. 조기 종료(Early Stopping)는 이 평평해지는 지점을 자동으로 찾아 학습을 멈추는 장치다.
+트리를 늘릴수록 훈련 오차는 0을 향해 계속 내려간다. 반면 검증 오차는 초반 수십 그루에서 이득을 거의 다 가져가고 그 뒤로는 평평해지며, 두 곡선 사이에 벌어지는 간격이 과적합의 크기다. 조기 종료(Early Stopping)는 이 평평해지는 지점을 자동으로 찾아 학습을 멈추는 장치다.
 
 ## 학습률과 트리 수는 함께 움직인다
 
@@ -204,23 +249,11 @@ print(gb.n_estimators_, gb.score(X_test, y_test))
 75 0.9473684210526315
 ```
 
-500그루를 지정했지만 75그루에서 멈췄다. 다만 이 설정의 테스트 정확도는 100그루를 끝까지 학습시킨 0.9561보다 낮다. 조기 종료가 찾아주는 건 최고 성능 지점이 아니라 **검증 손실이 더 이상 줄지 않는 지점**이다. 검증용으로 떼어낸 10%가 작을수록 이 판단은 흔들리므로, 데이터가 작다면 `n_iter_no_change`를 넉넉히 주는 편이 안전하다.
+500그루를 지정했지만 75그루에서 멈췄다. 다만 이 설정의 테스트 정확도는 같은 학습률로 100그루를 끝까지 학습시킨 0.9561보다 낮다. 조기 종료가 찾아주는 건 최고 성능 지점이 아니라 **검증 손실이 더 이상 줄지 않는 지점**이다. 검증용으로 떼어낸 10%가 작을수록 이 판단은 흔들리므로, 데이터가 작다면 `n_iter_no_change`를 넉넉히 주는 편이 안전하다.
 
-## 흔한 실수
+## 약한 학습기는 약해야 한다
 
-### 트리 수만 늘린다
-
-```python
-# 학습률은 그대로 두고 트리만 늘렸다
-gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.1)
-
-# 학습률을 낮추면서 함께 늘려야 의미가 있다
-gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01)
-```
-
-`learning_rate=0.1`에서 100그루면 이미 수렴이 끝났을 수 있다. 그 상태로 1000그루를 쌓으면 학습 시간만 10배가 되고, 남는 트리는 훈련 데이터의 노이즈를 외우는 데 쓰인다.
-
-### `max_depth`를 키운다
+튜닝에서 가장 자주 어긋나는 손잡이는 `max_depth`다.
 
 ```python
 # 각 트리가 너무 강해진다
@@ -230,7 +263,7 @@ gb = GradientBoostingClassifier(n_estimators=100, max_depth=8)
 gb = GradientBoostingClassifier(n_estimators=100, max_depth=3)
 ```
 
-깊은 트리는 혼자서도 훈련 데이터를 거의 맞춘다. 그러면 두세 번째 트리가 학습할 잔차가 노이즈밖에 남지 않아, 오차를 나눠 갖는 부스팅의 구조 자체가 무너진다. 약한 학습기는 약해야 한다.
+깊은 트리는 혼자서도 훈련 데이터를 거의 맞춘다. 그러면 두세 번째 트리가 학습할 잔차가 노이즈밖에 남지 않아, 오차를 나눠 갖는 부스팅의 구조 자체가 무너진다. 랜덤 포레스트가 트리를 끝까지 키우는 것을 기본값으로 두는 것과 정확히 반대다. 배깅은 강한 모델의 분산을 평균으로 깎아내는 쪽이고, 부스팅은 약한 모델의 편향을 누적으로 메우는 쪽이기 때문이다.
 
 ## 마치며
 

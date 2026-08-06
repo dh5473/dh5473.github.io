@@ -17,8 +17,6 @@ Accuracy가 못 쓸 지표라는 말은 아니다. 클래스 비율이 대체로
 
 그래서 필요한 건 "몇 개 맞혔나"가 아니라 "어떤 종류의 실수를 얼마나 했나"다.
 
----
-
 ## 혼동 행렬의 네 칸
 
 예측 결과를 실제 클래스와 예측 클래스의 조합으로 갈라 놓은 표가 혼동 행렬(Confusion Matrix)이다. 이진 분류라면 네 칸이 나온다.
@@ -104,8 +102,6 @@ tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 print(tn, fp, fn, tp)   # 4 1 1 4
 ```
 
----
-
 ## 정밀도와 재현율은 같은 손잡이의 양 끝
 
 Precision과 Recall은 독립적으로 올릴 수 있는 값이 아니다. 로지스틱 회귀든 부스팅이든 확률을 출력하는 모델은 그 확률을 임계값(threshold)과 비교해서 양성/음성을 정한다. 기본값은 0.5지만 이건 그냥 기본값이다. 임계값을 움직이면 두 지표가 반대 방향으로 움직인다.
@@ -178,12 +174,9 @@ Precision과 Recall은 독립적으로 올릴 수 있는 값이 아니다. 로�
 | 스팸 필터 | FP. 업무 메일이 스팸함으로 사라진다 | Precision |
 | 상품 추천 | FP. 엉뚱한 추천이 이탈을 부른다 | Precision |
 | 암 조기 검진 | FN. 환자를 정상이라며 돌려보낸다 | Recall |
-| 제조 불량 검출 | FN. 불량품이 그대로 출하된다 | Recall |
 | 악성코드 탐지 | FN. 감염이 조용히 퍼진다 | Recall |
 
 임계값을 0에서 1까지 훑으면서 (Recall, Precision) 쌍을 기록하면 PR 곡선(Precision-Recall Curve)이 된다. 곡선이 우상단 꼭짓점에 붙을수록 좋은 모델이고, 이 곡선 아래 면적을 요약한 값이 AP(Average Precision), 흔히 PR-AUC라 부르는 숫자다.
-
----
 
 ## F1이 조화평균인 이유
 
@@ -217,15 +210,64 @@ f2 = fbeta_score(y_true, y_pred, beta=2)      # 놓치지 않는 게 우선
 f05 = fbeta_score(y_true, y_pred, beta=0.5)   # 헛경보를 줄이는 게 우선
 ```
 
----
-
 ## ROC 곡선과 AUC
 
-ROC(Receiver Operating Characteristic) 곡선도 임계값을 훑으면서 그리지만 세로축과 가로축이 다르다. 세로축은 TPR로 Recall과 같은 값이고, 가로축은 FPR, 즉 실제 음성 중 양성으로 잘못 분류한 비율이다. FPR은 Specificity의 여집합이다.
+ROC(Receiver Operating Characteristic) 곡선도 임계값을 훑으면서 그리지만 세로축과 가로축이 다르다. 세로축은 TPR로 Recall과 같은 값이고, 가로축은 FPR, 즉 실제 음성 중 양성으로 잘못 분류한 비율이다.
 
 $$\text{TPR} = \frac{TP}{TP+FN}, \qquad \text{FPR} = \frac{FP}{FP+TN} = 1 - \text{Specificity}$$
 
 임계값 1에서 시작하면 아무것도 양성으로 부르지 않으니 원점 (0, 0)이고, 임계값 0이면 전부 양성으로 부르니 (1, 1)이다. 그 사이를 어떻게 지나가느냐가 모델의 실력이다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 408" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ROC 곡선 그림. 가로축이 FPR, 세로축이 TPR이고 대각선이 무작위 기준선이다. 좌상단으로 부푼 곡선 아래를 칠한 면적이 AUC 0.85다.">
+<style>
+.roc1-t { font-size: 17px; font-weight: 700; fill: var(--text, #1c1917); }
+.roc1-l { font-size: 15px; fill: var(--text, #1c1917); }
+.roc1-m { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.roc1-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.roc1-diag { stroke: var(--text-muted, #6d6762); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+.roc1-curve { stroke: var(--primary, #0a756c); stroke-width: 2.5; fill: none; stroke-linejoin: round; }
+.roc1-area { fill: var(--primary, #0a756c); fill-opacity: 0.16; stroke: none; }
+</style>
+<text class="roc1-t" x="200" y="26" text-anchor="middle">ROC 곡선과 AUC 면적</text>
+<!-- 플롯 영역 -->
+<rect x="68" y="48" width="260" height="260" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<!-- 곡선 아래 면적 -->
+<path class="roc1-area" d="M 68.0 308.0 L 68.2 297.8 L 68.4 289.9 L 68.7 282.7 L 69.1 276.6 L 69.6 269.3 L 70.3 260.5 L 71.4 250.0 L 72.9 237.6 L 73.9 230.7 L 75.2 223.3 L 76.7 215.3 L 78.5 206.8 L 80.7 197.8 L 83.3 188.3 L 86.5 178.3 L 90.3 167.8 L 94.9 156.9 L 100.5 145.7 L 107.3 134.3 L 115.5 122.8 L 125.4 111.3 L 137.3 100.0 L 151.7 89.0 L 169.1 78.8 L 190.1 69.4 L 215.5 61.3 L 246.2 54.7 L 283.2 50.1 L 328.0 48.0 L 328.0 308.0 Z"/>
+<!-- 무작위 기준선 -->
+<path class="roc1-diag" d="M 68 308 L 328 48"/>
+<!-- ROC 곡선 -->
+<path class="roc1-curve" d="M 68.0 308.0 L 68.2 297.8 L 68.4 289.9 L 68.7 282.7 L 69.1 276.6 L 69.6 269.3 L 70.3 260.5 L 71.4 250.0 L 72.9 237.6 L 73.9 230.7 L 75.2 223.3 L 76.7 215.3 L 78.5 206.8 L 80.7 197.8 L 83.3 188.3 L 86.5 178.3 L 90.3 167.8 L 94.9 156.9 L 100.5 145.7 L 107.3 134.3 L 115.5 122.8 L 125.4 111.3 L 137.3 100.0 L 151.7 89.0 L 169.1 78.8 L 190.1 69.4 L 215.5 61.3 L 246.2 54.7 L 283.2 50.1 L 328.0 48.0"/>
+<!-- 축 -->
+<path class="roc1-ax" d="M 68 48 L 68 308 L 328 308"/>
+<path class="roc1-ax" d="M 63 48 L 68 48 M 63 178 L 68 178 M 63 308 L 68 308"/>
+<path class="roc1-ax" d="M 68 308 L 68 313 M 198 308 L 198 313 M 328 308 L 328 313"/>
+<!-- 눈금 -->
+<text class="roc1-m" x="62" y="53" text-anchor="end">1.0</text>
+<text class="roc1-m" x="62" y="183" text-anchor="end">0.5</text>
+<text class="roc1-m" x="62" y="313" text-anchor="end">0</text>
+<text class="roc1-m" x="68" y="328" text-anchor="middle">0</text>
+<text class="roc1-m" x="198" y="328" text-anchor="middle">0.5</text>
+<text class="roc1-m" x="328" y="328" text-anchor="middle">1.0</text>
+<!-- 축 이름 -->
+<text class="roc1-l" x="26" y="178" text-anchor="middle" transform="rotate(-90 26 178)">TPR (Recall)</text>
+<text class="roc1-l" x="198" y="350" text-anchor="middle">FPR (1 - Specificity)</text>
+<!-- 면적 값 -->
+<text class="roc1-t" x="245" y="248" text-anchor="middle">AUC 0.85</text>
+<!-- 범례 -->
+<path class="roc1-curve" d="M 95 369 L 129 369"/>
+<text class="roc1-l" x="137" y="374">ROC 곡선</text>
+<path class="roc1-diag" d="M 95 391 L 129 391"/>
+<text class="roc1-l" x="137" y="396">무작위 기준선 (AUC 0.5)</text>
+</svg>
+</div>
+
+AUC는 이 곡선 아래 면적이다. 무작위로 찍는 분류기는 대각선을 그리므로 AUC가 0.5이고, 완벽한 분류기는 좌상단 꼭짓점을 지나 1이 된다.
+
+AUC에는 깔끔한 확률적 해석이 있다. **양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때, 모델이 양성 쪽에 더 높은 점수를 줄 확률**이 곧 AUC다. AUC 0.85는 그 순서 맞히기를 100번 중 85번 성공한다는 뜻이다. 임계값을 하나로 고정하지 않고 순위 매기는 능력만 보기 때문에, 임계값을 정하기 전 모델끼리 비교하는 데 편하다.
 
 ```python
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -233,14 +275,6 @@ from sklearn.metrics import roc_curve, roc_auc_score
 fpr, tpr, thresholds = roc_curve(y_true, y_scores)
 auc = roc_auc_score(y_true, y_scores)
 ```
-
-![ROC 곡선과 무작위 분류기 기준선](./roc-curve.png)
-
-AUC는 이 곡선 아래 면적이다. 무작위로 찍는 분류기는 대각선을 그리므로 AUC가 0.5이고, 완벽한 분류기는 좌상단 꼭짓점을 지나 1이 된다.
-
-AUC에는 깔끔한 확률적 해석이 있다. **양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때, 모델이 양성 쪽에 더 높은 점수를 줄 확률**이 곧 AUC다. AUC 0.85는 그 순서 맞히기를 100번 중 85번 성공한다는 뜻이다. 임계값을 하나로 고정하지 않고 순위 매기는 능력만 보기 때문에, 임계값을 정하기 전 모델끼리 비교하는 데 편하다.
-
----
 
 ## 불균형에서는 PR 곡선을 봐라
 
@@ -270,8 +304,6 @@ print(f"ROC-AUC: {roc_auc_score(y_true, y_scores):.3f}")
 print(f"PR-AUC : {average_precision_score(y_true, y_scores):.3f}")
 ```
 
----
-
 ## 다중 클래스에서 평균 내는 세 가지 방법
 
 클래스가 셋 이상이면 Precision, Recall, F1은 클래스마다 하나씩 나온다. 이걸 대표값 하나로 합치는 방식이 세 가지다.
@@ -279,14 +311,12 @@ print(f"PR-AUC : {average_precision_score(y_true, y_scores):.3f}")
 | 방식 | 계산 | 성격 |
 |---|---|---|
 | Macro | 클래스별 지표를 단순 평균 | 클래스마다 같은 무게. 샘플 열 개짜리 소수 클래스가 점수를 크게 흔든다 |
-| Micro | 전체 TP, FP, FN을 먼저 합산한 뒤 계산 | 샘플마다 같은 무게. 다수 클래스가 지배한다 |
+| Micro | 전체 TP, FP, FN을 먼저 합산한 뒤 계산 | 샘플마다 같은 무게. 샘플이 많은 클래스가 점수를 거의 정한다 |
 | Weighted | 클래스별 지표를 샘플 수로 가중 평균 | Micro와 Macro 사이. 다수 클래스 쪽으로 기운다 |
 
-샘플 하나가 정확히 한 레이블을 갖는 보통의 다중 분류에서는 Micro Precision, Micro Recall, Micro F1이 전부 Accuracy와 같은 값이 된다. 틀린 예측 하나가 예측된 클래스에 FP를, 실제 클래스에 FN을 정확히 하나씩 남기기 때문에 전체 FP 합과 FN 합이 같아지기 때문이다. 그래서 단일 레이블 문제에서 Micro F1을 보고하는 건 Accuracy를 다른 이름으로 부르는 것에 지나지 않는다.
+샘플 하나가 정확히 한 레이블을 갖는 보통의 다중 분류에서는 Micro Precision, Micro Recall, Micro F1이 전부 Accuracy와 같은 값이 된다. 틀린 예측 하나는 자기가 지목한 클래스에 FP를, 정답 클래스에 FN을 하나씩 남기므로 $\sum FP = \sum FN$이고, 그래서 Micro Precision과 Micro Recall이 같아진다. 두 값이 같으면 조화평균인 Micro F1도 같은 값이다. 게다가 샘플마다 예측이 정확히 하나씩이니 $\sum TP + \sum FP = n$이고, 결국 $\sum TP / n$, 곧 Accuracy다. 단일 레이블 문제에서 Micro F1을 보고하는 건 Accuracy를 다른 이름으로 부르는 셈이다.
 
 소수 클래스가 중요한 문제라면 Macro F1을 본다. 클래스마다 같은 표를 주기 때문에 소수 클래스가 망가지면 점수가 바로 내려간다.
-
----
 
 ## 지표 고르기
 
@@ -310,8 +340,6 @@ print(f"PR-AUC : {average_precision_score(y_true, y_scores):.3f}")
 
 불균형 데이터라면 보고서에 양성 비율을 같이 적는 습관도 도움이 된다. 그 숫자가 없으면 PR-AUC를 읽는 사람이 기준선을 모르고, Accuracy를 읽는 사람은 99%가 어디서 왔는지 모른다.
 
----
-
 ## 마치며
 
 분류 지표를 고르는 일은 통계 문제가 아니라 비용 문제다. 혼동 행렬의 네 칸 중 FP와 FN 가운데 무엇이 더 비싼지를 먼저 정하면 지표는 거의 자동으로 따라온다. 그 판단 없이 F1이나 AUC를 습관처럼 집으면, 실제로는 아무도 원하지 않는 균형점에서 모델을 최적화하게 된다.
@@ -320,10 +348,15 @@ print(f"PR-AUC : {average_precision_score(y_true, y_scores):.3f}")
 
 다음 글에서는 연속값을 예측하는 회귀 모델을 다룬다. 맞았다와 틀렸다로 나눌 수 없는 예측을 어떤 자로 재는지가 주제다.
 
----
-
 ## 함께 보면 좋은 글
 
 - [로지스틱 회귀](/ml/logistic-regression/) : 임계값과 비교할 확률 출력이 어디서 나오는지
 - [결정 경계](/ml/decision-boundary/) : 임계값을 움직이면 경계가 어느 쪽으로 밀리는지
 - [교차 검증](/ml/cross-validation/) : 이 지표들을 흔들리지 않게 재는 방법
+
+## 참고자료
+
+- [Scikit-learn, Metrics and scoring: quantifying the quality of predictions](https://scikit-learn.org/stable/modules/model_evaluation.html)
+- [Scikit-learn, sklearn.metrics.confusion_matrix](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html)
+- [Saito & Rehmsmeier, "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets", PLOS ONE (2015)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432)
+- [Gareth James et al., "An Introduction to Statistical Learning", Chapter 4](https://www.statlearning.com/)

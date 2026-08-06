@@ -142,7 +142,8 @@ MNAR 여부는 도메인 지식에서 판단한다. 고액 연봉자가 소득�
 ```python
 import pandas as pd
 
-df = pd.read_csv('data.csv')
+# Kaggle Titanic train.csv (891행). 컬럼명은 모두 소문자로 바꿔 둔 상태다
+df = pd.read_csv('titanic.csv')
 
 missing = df.isnull().sum()
 missing_pct = (missing / len(df) * 100).round(1)
@@ -339,7 +340,7 @@ df_imputed = imputer.fit_transform(df[numeric_cols])
 - **수치형만 받는다.** 범주형은 미리 인코딩하거나 `SimpleImputer(strategy='most_frequent')`로 따로 처리한다.
 - **K는 5에서 10 사이.** 너무 작으면 이웃 한둘의 노이즈를 그대로 베끼고, 너무 크면 결국 전체 평균에 수렴한다.
 
-계산 비용도 만만치 않다. 결측이 있는 행마다 전체 데이터와 거리를 재기 때문에 10만 행을 넘어가면 눈에 띄게 느려진다.
+계산 비용도 만만치 않다. 결측이 있는 행마다 나머지 전체와 거리를 재므로 비용이 행 수의 제곱에 비례해서 늘어난다. 행이 열 배가 되면 시간은 백 배가 된다.
 
 ## IterativeImputer와 MICE
 
@@ -347,7 +348,7 @@ KNN이 이웃에서 값을 빌려온다면, `IterativeImputer`는 **모델로 �
 
 | 라운드 | 하는 일 |
 |------|--------|
-| 1 | `age`를 `[sex, fare, pclass]`로 회귀해 채우고, 이어서 `fare`를 `[sex, age(방금 채운 값), pclass]`로 회귀해 채운다 |
+| 1 | `age`를 `[fare, pclass, sibsp]`로 회귀해 채우고, 이어서 `fare`를 `[age(방금 채운 값), pclass, sibsp]`로 회귀해 채운다 |
 | 2 | 갱신된 `fare`로 `age`를 다시 예측하고, 갱신된 `age`로 `fare`를 다시 예측한다 |
 | N | 대체값의 변화가 `tol` 아래로 떨어지거나 `max_iter`에 닿을 때까지 |
 
@@ -388,11 +389,6 @@ $\bar{U}$는 각 데이터셋 안에서 나온 분산의 평균이고, $B$는 $m
 
 예측 모델을 만드는 게 목적이라면 단일 대체로 충분한 경우가 많다. 계수의 신뢰구간이나 p값을 보고해야 하는 분석이라면 다중 대체가 필요하다.
 
-| IterativeImputer의 강점 | 한계 |
-|---|---|
-| 변수 사이의 상관 구조를 보존한다 | 컬럼 수 × 라운드 수만큼 모델을 학습해 느리다 |
-| MAR 가정에서 이론적 근거가 가장 탄탄하다 | MNAR에서는 여전히 편향이 남는다 |
-
 ## 시계열에는 순서라는 정보가 있다
 
 행의 순서가 의미를 갖는 데이터라면 앞뒤 값을 쓸 수 있다.
@@ -412,8 +408,6 @@ df['temp'] = df['temp'].interpolate(method='time')       # 시간 간격 반영
 | 선형 보간 | 두 점 사이가 직선에 가깝다 | 온도, 센서처럼 연속적으로 변하는 값 |
 | 시간 보간 | 변화가 시간 간격에 비례한다 | 측정 간격이 들쭉날쭉한 로그 |
 
-`bfill`은 미래 값을 끌어다 쓰므로 실시간 예측 파이프라인에서는 그 자체가 데이터 누수다.
-
 ## 트리 부스팅은 NaN을 그대로 받는다
 
 XGBoost는 분기를 만들 때 결측 샘플을 왼쪽으로 보낸 경우와 오른쪽으로 보낸 경우의 손실을 둘 다 계산하고, 이득이 큰 쪽을 그 분기의 기본 방향으로 학습해 둔다. 결측 처리 규칙 자체가 학습 대상이 되는 셈이다. LightGBM도 `use_missing=True`가 기본값이라 같은 일을 한다.
@@ -425,7 +419,7 @@ model = xgb.XGBClassifier(n_estimators=100)
 model.fit(X_train, y_train)   # X_train에 NaN이 있어도 에러가 나지 않는다
 ```
 
-이런 모델에서는 미리 평균 대체를 해 봐야 얻는 게 없다. 오히려 모델이 스스로 찾을 분기 방향을 사람이 임의로 덮어쓰는 꼴이 된다. NaN을 그대로 두고 결측 지시 변수만 추가하는 것이 실전에서 가장 흔한 조합이다.
+이런 모델에서는 미리 평균 대체를 해 봐야 얻는 게 없다. 오히려 모델이 스스로 찾을 분기 방향을 사람이 임의로 덮어쓰는 꼴이 된다. NaN을 그대로 두고 필요하면 결측 지시 변수만 얹는 편이 낫다.
 
 sklearn 쪽에서도 `HistGradientBoostingClassifier`와 `HistGradientBoostingRegressor`는 결측을 자체 처리한다. 로지스틱 회귀, SVM, KNN 같은 나머지 추정기는 여전히 NaN을 받지 못한다.
 
@@ -444,6 +438,9 @@ X_train, X_test = train_test_split(X_imputed, test_size=0.2)
 ```python
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
 
 # StandardScaler가 NaN을 그대로 통과시키므로 스케일링을 먼저 걸 수 있다
 numeric = Pipeline([
@@ -482,10 +479,16 @@ scores = cross_val_score(pipe, X, y, cv=5, scoring='accuracy')
 
 방법 선택보다 확실하게 성능을 망치는 요인은 따로 있다. 전체 데이터로 대체한 뒤 분할하는 누수다. 이건 정교함의 문제가 아니라 순서의 문제이고, 전처리를 `Pipeline`으로 묶는 것만으로 원천 차단된다.
 
-한 가지 더. 값을 채우면 그 칸이 비어 있었다는 사실이 사라진다. 결측 지시 변수는 한 줄이면 만들 수 있고, 채운 값이 추정이었다는 흔적을 데이터에 남겨 둔다.
-
 ## 함께 보면 좋은 글
 
 - [피처 스케일링](/ml/feature-scaling/) : KNN 대체 전에 반드시 거쳐야 하는 단계
 - [범주형 인코딩](/ml/categorical-encoding/) : 문자열 컬럼을 대체 가능한 형태로 바꾸는 방법
 - [교차 검증](/ml/cross-validation/) : 대체를 fold 안에서만 해야 하는 이유
+
+## 참고자료
+
+- [scikit-learn: Imputation of missing values](https://scikit-learn.org/stable/modules/impute.html)
+- [Stef van Buuren, Flexible Imputation of Missing Data, 1.2 Concepts of MCAR, MAR and MNAR](https://stefvanbuuren.name/fimd/sec-MCAR.html)
+- [Stef van Buuren, Flexible Imputation of Missing Data, 5.2 Parameter pooling](https://stefvanbuuren.name/fimd/sec-pooling.html)
+- [Stef van Buuren, Karin Groothuis-Oudshoorn, "mice: Multivariate Imputation by Chained Equations in R" (JSS 45-3, 2011)](https://www.jstatsoft.org/article/view/v045i03)
+- [Tianqi Chen, Carlos Guestrin, "XGBoost: A Scalable Tree Boosting System" (KDD 2016)](https://arxiv.org/abs/1603.02754)

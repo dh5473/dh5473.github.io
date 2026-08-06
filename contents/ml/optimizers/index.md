@@ -120,7 +120,7 @@ $\beta$ 는 보통 0.9다. 현재 기울기의 기여는 10%뿐이고 나머지 
 
 :::
 
-**Nesterov 가속 경사(NAG)** 는 여기에 한 가지를 더한다. 현재 위치가 아니라 관성대로 한 발 나아간 자리 $w_t - \beta v_{t-1}$ 에서 기울기를 구한다. 갈 곳의 경사가 이미 반대로 기울어 있다면 도착하기 전에 제동을 걸 수 있어서 넘침이 줄어든다. PyTorch에서는 `SGD(momentum=0.9, nesterov=True)` 한 줄이다.
+**Nesterov 가속 경사(NAG)** 는 여기에 한 가지를 더한다. 현재 위치가 아니라 관성대로 한 발 나아간 자리 $w_t - \alpha\beta v_{t-1}$ 에서 기울기를 구한다. 갈 곳의 경사가 이미 반대로 기울어 있다면 도착하기 전에 제동을 걸 수 있어서 넘침이 줄어든다. PyTorch에서는 `SGD(momentum=0.9, nesterov=True)` 한 줄이다.
 
 ## RMSProp, 파라미터마다 보폭을 다르게
 
@@ -152,7 +152,7 @@ $$w_{t+1} = w_t - \alpha\,\frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
 
 보정이 왜 필요한지는 첫 스텝을 직접 대입하면 보인다. $\beta_1 = 0.9$ 일 때 $m_1 = 0.1\,g_1$ 이라 실제 기울기의 10분의 1밖에 안 된다. $1 - \beta_1^1 = 0.1$ 로 나누면 $\hat{m}_1 = g_1$ 으로 복원된다. $t$ 가 커지면 $\beta_1^t \to 0$ 이므로 분모가 1에 수렴하고 보정은 저절로 사라진다.
 
-편향 보정에는 덤이 하나 붙는다. $t = 1$ 에서 $\hat{m}_1 = g_1$, $\hat{v}_1 = g_1^2$ 이므로 갱신량이 $\alpha \cdot g_1 / |g_1|$, 즉 부호만 남은 $\pm\alpha$ 가 된다. 기울기가 100이든 0.001이든 첫 걸음의 크기는 정확히 $\alpha$ 다. Adam에서 학습률이 "한 스텝에 파라미터가 움직일 수 있는 최대치"에 가까운 의미를 갖는 이유가 여기에 있다.
+편향 보정에는 덤이 하나 붙는다. $t = 1$ 에서 $\hat{m}_1 = g_1$, $\hat{v}_1 = g_1^2$ 이므로 갱신량이 $\alpha\,g_1 / (|g_1| + \epsilon)$ 로 떨어진다. $\epsilon$ 이 $10^{-8}$ 이니 기울기가 100이든 0.001이든 이 값은 부호만 남은 $\pm\alpha$ 와 같다고 봐도 된다. 기울기 크기가 $\epsilon$ 근처까지 내려가야 비로소 보폭이 줄기 시작한다. Adam에서 학습률이 "한 스텝에 파라미터가 움직일 수 있는 최대치"에 가까운 의미를 갖는 이유가 여기에 있다.
 
 | 하이퍼파라미터 | 기본값 | 역할 |
 |---|---|---|
@@ -186,7 +186,7 @@ Adam에서는 같지 않다. $\lambda w$ 가 $g_t$ 에 섞여 들어가면 그 �
 
 $$w_{t+1} = w_t - \alpha\,\frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} - \alpha\lambda w_t$$
 
-적응적 스케일링을 거치지 않으므로 모든 파라미터가 같은 비율로 줄어든다. 차이는 한 항의 위치뿐이지만 일반화 성능에서 일관되게 앞서고, 트랜스포머 계열에서는 AdamW가 기본값이다.
+적응적 스케일링을 거치지 않으므로 모든 파라미터가 같은 비율로 줄어든다. 차이는 한 항의 위치뿐이지만 원 논문의 이미지 분류 실험에서 일반화 성능이 나아졌고, 지금은 트랜스포머 계열의 기본값이 AdamW다.
 
 ## 학습률은 고정하지 않는다
 
@@ -223,7 +223,7 @@ def warmup_cosine(step, total_steps, warmup_steps, max_lr=0.001):
 
 확신이 없으면 Adam을 학습률 0.001로 시작한다. 규제가 필요하면 AdamW로 바꾼다. 대부분의 문제에서 이 조합이 무난한 출발점이 된다.
 
-다만 Adam이 항상 최선은 아니다. CNN 기반 이미지 분류에서는 SGD + Momentum(학습률 0.1, $\beta = 0.9$)에 step decay를 얹은 조합이 Adam보다 나은 일반화 성능을 내는 경우가 많다. ResNet과 VGG 계열의 원 논문들이 대부분 이 설정을 쓴다. 대신 학습률 스케줄을 직접 설계해야 한다.
+다만 Adam이 항상 최선은 아니다. CNN 기반 이미지 분류에서는 SGD + Momentum(학습률 0.1, $\beta = 0.9$)에 step decay를 얹은 조합이 Adam보다 나은 일반화 성능을 내는 경우가 많다. ResNet 원 논문이 정확히 이 설정으로 학습하고, 오차가 정체될 때마다 학습률을 10분의 1로 줄인다. 대신 학습률 스케줄을 직접 설계해야 한다.
 
 BERT, GPT 계열의 파인튜닝은 AdamW + warmup + cosine이 사실상 정해진 답이다.
 
@@ -260,3 +260,11 @@ scheduler = torch.optim.lr_scheduler.OneCycleLR(
 - [역전파](/ml/backpropagation/) : 옵티마이저가 받아 쓰는 기울기를 만드는 과정
 - [신경망 학습 안정화](/ml/neural-network-tips/) : 초기화와 정규화로 학습을 무너지지 않게 만드는 법
 - [규제](/ml/regularization/) : AdamW가 다루려 한 L2 규제의 원리
+
+## 참고자료
+
+- [Kingma & Ba, Adam: A Method for Stochastic Optimization (2014)](https://arxiv.org/abs/1412.6980)
+- [Loshchilov & Hutter, Decoupled Weight Decay Regularization (AdamW, 2017)](https://arxiv.org/abs/1711.05101)
+- [Tieleman & Hinton, CSC321 Lecture 6 Slides (RMSProp, 미출판)](https://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)
+- [Sutskever et al., On the Importance of Initialization and Momentum in Deep Learning (ICML 2013)](https://proceedings.mlr.press/v28/sutskever13.html)
+- [Loshchilov & Hutter, SGDR: Stochastic Gradient Descent with Warm Restarts (2016)](https://arxiv.org/abs/1608.03983)

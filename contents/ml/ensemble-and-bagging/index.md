@@ -13,11 +13,9 @@ thumbnail: './thumbnail.png'
 
 이 출렁임을 줄이는 방법은 의외로 평범하다. 모델을 여러 개 만들어 답을 모으면 된다. 각 모델이 서로 다른 지점에서 틀린다면 틀린 답들은 흩어지고 맞은 답만 겹쳐서 남는다. 이것이 **앙상블**의 전부다.
 
----
-
 ## 오류가 상쇄된다는 것의 의미
 
-혼자 답을 맞히는 것보다 100명에게 물어 다수결로 정하는 편이 더 정확하다는 관찰이 있다. 개인의 실수가 제각기 다른 방향으로 흩어지기 때문에, 모으면 서로 지워진다.
+반반보다 조금이라도 나은 사람 여럿에게 물어 다수결로 정하면 한 사람에게 묻는 것보다 정확해진다. 개인의 실수가 제각기 다른 방향으로 흩어지기 때문에, 모으면 서로 지워진다.
 
 정확도 70%짜리 분류기 세 개를 다수결로 합쳐보자. 셋 중 최소 둘이 맞으면 다수결이 맞는다. 세 분류기가 독립이라면
 
@@ -29,11 +27,55 @@ $$P = \sum_{k=\lceil n/2 \rceil}^{n} \binom{n}{k} p^k (1-p)^{n-k}$$
 
 이고, $p > 0.5$ 이기만 하면 $n$ 이 커질수록 1에 수렴한다. 개별 70%짜리를 11개 모으면 92.2%, 21개 모으면 97.4%다.
 
-![앙상블 투표 원리와 모델 수에 따른 정확도](./ensemble-voting.png)
+다만 수렴하는 속도는 $p$ 에 크게 달렸다. 개별 정확도가 0.5에 가까울수록 곡선이 완만해져서, 0.6짜리는 51개를 모아도 92.6%에 그친다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 326" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="개별 정확도가 0.6, 0.7, 0.8인 분류기를 홀수 개씩 모아 다수결을 냈을 때의 정확도 곡선. 세 곡선 모두 1을 향하지만 0.8은 열 개 남짓에서 이미 1에 붙고 0.6은 쉰한 개에서도 0.93에 머문다.">
+<style>
+.eb2-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.eb2-grid { stroke: var(--border, #e7e5e4); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+.eb2-c8 { stroke: var(--accent, #9d5604); stroke-width: 2.2; fill: none; stroke-linejoin: round; }
+.eb2-c7 { stroke: var(--primary, #0a756c); stroke-width: 2.6; fill: none; stroke-linejoin: round; }
+.eb2-c6 { stroke: var(--text-muted, #6d6762); stroke-width: 2.2; fill: none; stroke-linejoin: round; }
+.eb2-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.eb2-l { fill: var(--text-muted, #6d6762); font-size: 14px; }
+</style>
+<text class="eb2-t" x="200" y="22" text-anchor="middle">개별 정확도에 따른 수렴 속도</text>
+<text class="eb2-l" x="14" y="44">다수결 정확도</text>
+<!-- 격자와 눈금 -->
+<path class="eb2-grid" d="M 58 52 L 370 52"/>
+<path class="eb2-grid" d="M 58 131 L 370 131"/>
+<path class="eb2-grid" d="M 58 210 L 370 210"/>
+<text class="eb2-l" x="52" y="57" text-anchor="end">1.0</text>
+<text class="eb2-l" x="52" y="136" text-anchor="end">0.8</text>
+<text class="eb2-l" x="52" y="215" text-anchor="end">0.6</text>
+<text class="eb2-l" x="52" y="255" text-anchor="end">0.5</text>
+<path class="eb2-ax" d="M 58 48 L 58 250 L 370 250"/>
+<text class="eb2-l" x="62" y="270" text-anchor="middle">1</text>
+<text class="eb2-l" x="121" y="270" text-anchor="middle">11</text>
+<text class="eb2-l" x="180" y="270" text-anchor="middle">21</text>
+<text class="eb2-l" x="238" y="270" text-anchor="middle">31</text>
+<text class="eb2-l" x="297" y="270" text-anchor="middle">41</text>
+<text class="eb2-l" x="356" y="270" text-anchor="middle">51</text>
+<text class="eb2-l" x="370" y="292" text-anchor="end">앙상블 모델 수 n</text>
+<!-- 곡선 -->
+<polyline class="eb2-c8" points="62,131 74,93 86,75 97,65 109,60 121,57 133,55 144,54 156,53 168,53 180,52 191,52 203,52 215,52 227,52 238,52 250,52 262,52 274,52 285,52 297,52 309,52 321,52 332,52 344,52 356,52"/>
+<polyline class="eb2-c7" points="62,171 74,138 86,117 97,102 109,91 121,83 133,77 144,72 156,68 168,65 180,62 191,60 203,59 215,58 227,57 238,56 250,55 262,55 274,54 285,54 297,53 309,53 321,53 332,53 344,53 356,53"/>
+<polyline class="eb2-c6" points="62,210 74,191 86,178 97,167 109,158 121,150 133,143 144,136 156,131 168,126 180,121 191,117 203,113 215,109 227,106 238,103 250,100 262,97 274,95 285,92 297,90 309,88 321,86 332,84 344,83 356,81"/>
+<!-- 범례 -->
+<path class="eb2-c8" d="M 62 312 L 84 312"/>
+<text class="eb2-l" x="90" y="317">p = 0.8</text>
+<path class="eb2-c7" d="M 158 312 L 180 312"/>
+<text class="eb2-l" x="186" y="317">p = 0.7</text>
+<path class="eb2-c6" d="M 254 312 L 276 312"/>
+<text class="eb2-l" x="282" y="317">p = 0.6</text>
+</svg>
+</div>
 
 문제는 이 계산이 전부 **오류가 서로 독립**이라는 가정 위에 서 있다는 점이다. 모든 모델을 같은 데이터로 학습시키면 같은 샘플에서 나란히 틀린다. 그러면 다수결의 답이 모델 하나의 답과 같아져서, 모델을 아무리 늘려도 얻는 것이 없다. 앙상블의 성패는 개별 모델의 성능이 아니라 **모델들이 서로 얼마나 다르게 틀리는가**에 달려 있다.
-
----
 
 ## 부트스트랩 샘플링
 
@@ -58,8 +100,6 @@ print(np.sort(boot), oob)
 $$\lim_{N \to \infty} \left(1 - \frac{1}{N}\right)^N = e^{-1} \approx 0.368$$
 
 즉 부트스트랩 샘플 하나마다 원본의 약 36.8%가 학습에 쓰이지 않고 남는다. 이 샘플들은 그 모델이 한 번도 본 적 없으므로 그대로 검증 데이터가 된다. $N = 10000$ 으로 200번 반복해 재보면 평균 0.368로 이론값과 맞아떨어진다.
-
----
 
 ## 배깅
 
@@ -162,8 +202,6 @@ print(f"배깅     {((votes >= 0.5) == y_test).mean():.4f}")
 배깅     0.9561
 ```
 
----
-
 ## sklearn과 OOB 평가
 
 실전에서는 `BaggingClassifier`를 쓴다. 위의 반복문과 하는 일이 같고, `oob_score=True`를 켜면 남겨진 36.8%로 자동 검증까지 해준다.
@@ -192,26 +230,16 @@ OOB 평가가 성립하는 이유는 이렇다. 어떤 샘플 하나를 놓고 �
 
 교차검증은 같은 일을 하려고 데이터를 $k$ 번 나눠 $k$ 번 다시 학습한다. OOB는 배깅을 한 번 학습하는 도중에 공짜로 나온다. 데이터가 크거나 학습이 오래 걸릴수록 이 차이가 크다.
 
+읽을 때는 테스트 점수와 나란히 놓고 본다. OOB가 눈에 띄게 낮다면 데이터에 시간 순서나 그룹 구조가 있어서 무작위 분할 자체가 맞지 않는다는 신호일 수 있다.
+
 | 파라미터 | 기본값 | 설명 |
 |---|---|---|
 | `estimator` | None (결정 트리) | 기본 학습기. 트리가 아니어도 된다 |
 | `n_estimators` | 10 | 앙상블에 넣을 모델 수 |
-| `max_samples` | 1.0 | 부트스트랩 샘플 크기 (비율 또는 개수) |
+| `max_samples` | None (원본과 같은 크기) | 부트스트랩 샘플 크기 (비율 또는 개수) |
 | `max_features` | 1.0 | 각 모델이 볼 특성 비율 |
 | `bootstrap` | True | 복원 추출 여부 |
 | `oob_score` | False | OOB 점수 계산 여부 |
-
-:::tip
-
-**OOB 점수를 읽는 법**
-
-`oob_score=True`는 `bootstrap=True`일 때만 쓸 수 있다. 뽑히지 않은 샘플이 있어야 검증할 것이 생기기 때문이다.
-
-OOB 점수가 테스트 점수보다 눈에 띄게 낮다면 데이터에 시간 순서나 그룹 구조가 있어서 무작위 분할이 맞지 않는다는 신호일 수 있다.
-
-:::
-
----
 
 ## 배깅이 넘지 못하는 벽
 
@@ -225,37 +253,72 @@ $$\lim_{B \to \infty} \mathrm{Var}(\bar{T}) = \rho \sigma^2$$
 
 $\rho \sigma^2$ 가 분산의 바닥이다. 상관관계가 0.8이라면 트리를 만 그루 심어도 원래 분산의 80%가 남는다.
 
-![트리 간 상관관계가 배깅의 분산 감소를 제한하는 모습](./tree-correlation.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 306" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="트리 수를 늘릴 때 평균 예측의 분산이 줄어드는 곡선을 상관관계 0, 0.3, 0.8에 대해 그린 그림. 상관관계가 0이면 0까지 내려가지만 0.3과 0.8은 각각 0.3과 0.8 높이에 그어진 점선 위에서 멈춘다.">
+<style>
+.eb3-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.eb3-grid { stroke: var(--border, #e7e5e4); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+.eb3-floor { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+.eb3-r0 { stroke: var(--primary, #0a756c); stroke-width: 2.4; fill: none; stroke-linejoin: round; }
+.eb3-r3 { stroke: var(--accent, #9d5604); stroke-width: 2.4; fill: none; stroke-linejoin: round; }
+.eb3-r8 { stroke: var(--text-danger, #cb2121); stroke-width: 2.4; fill: none; stroke-linejoin: round; }
+.eb3-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.eb3-l { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.eb3-k0 { fill: var(--primary, #0a756c); font-size: 14px; font-weight: 600; }
+.eb3-k3 { fill: var(--accent, #9d5604); font-size: 14px; font-weight: 600; }
+.eb3-k8 { fill: var(--text-danger, #cb2121); font-size: 14px; font-weight: 600; }
+</style>
+<text class="eb3-t" x="200" y="22" text-anchor="middle">트리를 늘려도 남는 분산</text>
+<text class="eb3-l" x="14" y="44">평균 예측의 분산 ÷ σ²</text>
+<!-- 격자와 눈금 -->
+<path class="eb3-grid" d="M 58 52 L 310 52"/>
+<text class="eb3-l" x="52" y="57" text-anchor="end">1.0</text>
+<text class="eb3-l" x="52" y="97" text-anchor="end">0.8</text>
+<text class="eb3-l" x="52" y="196" text-anchor="end">0.3</text>
+<text class="eb3-l" x="52" y="255" text-anchor="end">0</text>
+<path class="eb3-ax" d="M 58 48 L 58 250 L 370 250"/>
+<text class="eb3-l" x="62" y="270" text-anchor="middle">1</text>
+<text class="eb3-l" x="121" y="270" text-anchor="middle">25</text>
+<text class="eb3-l" x="183" y="270" text-anchor="middle">50</text>
+<text class="eb3-l" x="244" y="270" text-anchor="middle">75</text>
+<text class="eb3-l" x="306" y="270" text-anchor="middle">100</text>
+<text class="eb3-l" x="370" y="292" text-anchor="end">트리 수 B</text>
+<!-- 분산 하한 -->
+<path class="eb3-floor" d="M 58 92 L 310 92"/>
+<path class="eb3-floor" d="M 58 191 L 310 191"/>
+<text class="eb3-l" x="14" y="292">점선 = 분산 하한 ρσ²</text>
+<!-- 곡선 -->
+<polyline class="eb3-r8" points="62,52 64,72 67,78 69,82 72,84 74,85 79,87 84,88 92,89 99,89 109,90 121,90 133,90 158,91 183,91 220,91 257,91 306,91"/>
+<polyline class="eb3-r3" points="62,52 64,121 67,144 69,156 72,163 74,168 79,173 84,177 92,180 99,182 109,184 121,185 133,186 158,187 183,188 220,188 257,189 306,189"/>
+<polyline class="eb3-r0" points="62,52 64,151 67,184 69,200 72,210 74,217 79,225 84,230 92,235 99,238 109,240 121,242 133,243 158,245 183,246 220,247 257,248 306,248"/>
+<text class="eb3-k8" x="314" y="96">ρ = 0.8</text>
+<text class="eb3-k3" x="314" y="194">ρ = 0.3</text>
+<text class="eb3-k0" x="314" y="244">ρ = 0</text>
+</svg>
+</div>
 
 $\rho$ 가 커지는 전형적인 상황은 **특성 하나가 지나치게 강할 때**다. 30개 특성 중 하나가 압도적으로 예측력이 높으면 어느 부트스트랩 샘플로 학습하든 모든 트리가 그 특성을 루트에 놓는다. 데이터를 다르게 줬는데도 트리 모양이 형제처럼 닮아버리고, 같은 곳에서 같이 틀린다. 데이터만 흔들어서는 여기까지가 한계다.
-
----
 
 ## 자주 하는 실수
 
 **분산이 낮은 모델에 배깅을 씌운다.** 배깅이 줄이는 것은 분산뿐이다. 로지스틱 회귀나 릿지 회귀처럼 데이터가 조금 바뀌어도 계수가 거의 그대로인 모델은 부트스트랩 샘플을 100개 만들어도 100개의 거의 같은 모델이 나온다. 평균을 내도 원래 모델과 다를 것이 없다. 배깅의 단골 손님이 결정 트리인 것은 트리가 그만큼 불안정하기 때문이다.
 
-**`bootstrap=False`로 둔다.** 복원 추출을 끄면 모든 모델이 같은 훈련 데이터를 통째로 받는다. 결정 트리처럼 결정론적인 학습기라면 100그루가 전부 동일한 트리가 되어 앙상블 효과가 0이 된다. `max_samples`를 1.0보다 작게 함께 주면 비복원 서브샘플링이 되어 다양성이 조금 생기지만, 배깅의 정의에 맞는 설정은 `bootstrap=True`다.
-
----
+**`bootstrap=False`로 둔다.** 복원 추출을 끄면 모든 모델이 같은 훈련 데이터를 통째로 받는다. 결정 트리처럼 결정론적인 학습기라면 100그루가 전부 동일한 트리가 되어 앙상블 효과가 0이 된다. sklearn은 이 조합에 `oob_score=True`를 얹으면 아예 `ValueError`를 던진다.
 
 ## 마치며
 
-배깅의 논리는 두 줄로 요약된다. 부트스트랩으로 서로 다른 훈련 데이터를 만들어 모델을 여러 개 학습시키고, 예측을 평균 내면 분산이 $\sigma^2 / B$ 로 줄어든다. 여기에 OOB라는 부산물이 따라와서 별도의 검증 셋 없이 일반화 성능까지 추정하게 해준다.
-
-동시에 배깅은 자기 한계를 스스로 드러내는 방법이기도 하다. $\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2$ 라는 식은 트리를 더 심어서 얻을 수 있는 몫과 얻을 수 없는 몫을 정확히 갈라놓는다. 트리 수를 늘리는 것으로는 $\rho \sigma^2$ 에 손댈 수 없다.
+배깅은 자기 한계를 스스로 드러내는 방법이다. $\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2$ 라는 식은 트리를 더 심어서 얻을 수 있는 몫과 얻을 수 없는 몫을 정확히 갈라놓는다. 뒷항은 $B$ 를 늘리면 사라지지만 앞항은 트리 수를 어떻게 해도 손댈 수 없다.
 
 그래서 다음 수는 트리 수가 아니라 $\rho$ 를 겨냥해야 한다. 데이터를 다르게 주는 것만으로는 부족하니, 트리가 볼 수 있는 것 자체를 제한해서 서로 다른 트리가 나오게 만드는 방법을 다음 글에서 다룬다.
-
----
 
 ## 함께 보면 좋은 글
 
 - [결정 트리](/ml/decision-tree/) : 배깅이 쌓아 올리는 개별 트리가 어떻게 학습되는지
 - [랜덤 포레스트](/ml/random-forest/) : 트리 간 상관관계를 직접 낮추는 방법
 - [부스팅](/ml/boosting/) : 분산이 아니라 편향을 겨냥하는 반대편 앙상블
-
----
 
 ## 참고자료
 

@@ -81,9 +81,64 @@ $$\min_{w,\,b} \; \frac{1}{2}\lVert w \rVert^2 + C \sum_{i=1}^{n} \max\left(0,\;
 
 앞의 항은 마진을 넓히려 하고 뒤의 항은 위반을 줄이려 한다. 둘의 힘겨루기를 조절하는 것이 **C**다. C가 크면 위반 하나하나가 비싸지므로 마진을 희생해서라도 훈련 데이터를 맞히려 들고, 작으면 몇 개쯤 틀려도 좋으니 마진을 넓히는 쪽으로 간다. 규제 항이 앞에 붙어 있는 구조이므로 C는 규제 강도의 역수로 동작한다. 이 방향이 헷갈리기 쉬운데, `LogisticRegression(C=1.0)` 의 C도 똑같이 "작을수록 규제가 세다".
 
-![C 파라미터에 따른 결정 경계 변화. C가 작으면 마진이 넓고 경계가 단순하며, C가 크면 마진이 좁고 경계가 훈련 데이터를 따라 구부러진다](./c-parameter.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 570" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 점 배치에 C를 작게 잡으면 마진이 넓어지는 대신 마진 안쪽에 점 두 개가 들어오고, C를 크게 잡으면 마진 안쪽에 아무 점도 들이지 않는 대신 마진이 좁아진다는 것을 위아래 두 패널로 비교한 그림">
+<defs>
+<marker id="svm3ArrE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--text, #1c1917)"/></marker>
+<marker id="svm3ArrS" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="var(--text, #1c1917)"/></marker>
+</defs>
+<style>
+.svm3-a { fill: var(--primary, #0a756c); }
+.svm3-b { fill: var(--accent, #9d5604); }
+.svm3-h { font-size: 17px; font-weight: 700; fill: var(--text, #1c1917); }
+.svm3-p { font-size: 15px; font-weight: 600; fill: var(--text, #1c1917); }
+.svm3-s { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.svm3-sv { fill: none; stroke: var(--text, #1c1917); stroke-width: 2; }
+.svm3-m { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.svm3-box { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text x="200" y="24" text-anchor="middle" class="svm3-h">C가 정하는 마진의 폭</text>
+<!-- 위 패널 : C 작음 -->
+<text x="200" y="54" text-anchor="middle" class="svm3-p">위 : C 작음, 넓은 마진</text>
+<text x="200" y="74" text-anchor="middle" class="svm3-s">마진 위반 2점</text>
+<rect x="44" y="84" width="312" height="188" rx="6" class="svm3-box"/>
+<rect x="45" y="137" width="310" height="70" fill="var(--bg-muted, #eeecea)"/>
+<line x1="45" y1="137" x2="355" y2="137" class="svm3-m"/>
+<line x1="45" y1="207" x2="355" y2="207" class="svm3-m"/>
+<line x1="45" y1="172" x2="355" y2="172" stroke="var(--text, #1c1917)" stroke-width="2.5"/>
+<line x1="90" y1="139" x2="90" y2="205" stroke="var(--text, #1c1917)" stroke-width="1.8" marker-start="url(#svm3ArrS)" marker-end="url(#svm3ArrE)"/>
+<text x="100" y="162" class="svm3-s">마진</text>
+<circle cx="70" cy="117" r="6.5" class="svm3-a"/><circle cx="110" cy="102" r="6.5" class="svm3-a"/><circle cx="190" cy="100" r="6.5" class="svm3-a"/>
+<circle cx="230" cy="114" r="6.5" class="svm3-a"/><circle cx="270" cy="106" r="6.5" class="svm3-a"/><circle cx="310" cy="120" r="6.5" class="svm3-a"/>
+<polygon points="80,230 87,242 73,242" class="svm3-b"/><polygon points="120,243 127,255 113,255" class="svm3-b"/><polygon points="160,220 167,232 153,232" class="svm3-b"/>
+<polygon points="200,237 207,249 193,249" class="svm3-b"/><polygon points="280,225 287,237 273,237" class="svm3-b"/><polygon points="320,240 327,252 313,252" class="svm3-b"/>
+<circle cx="150" cy="163" r="6.5" class="svm3-a"/><circle cx="150" cy="163" r="11" class="svm3-sv"/>
+<polygon points="240,186 247,198 233,198" class="svm3-b"/><circle cx="240" cy="193" r="11" class="svm3-sv"/>
+<!-- 아래 패널 : C 큼 -->
+<text x="200" y="302" text-anchor="middle" class="svm3-p">아래 : C 큼, 좁은 마진</text>
+<text x="200" y="322" text-anchor="middle" class="svm3-s">마진 위반 0점</text>
+<rect x="44" y="332" width="312" height="188" rx="6" class="svm3-box"/>
+<polygon points="45,397 355,438 355,456 45,415" fill="var(--bg-muted, #eeecea)"/>
+<line x1="45" y1="397" x2="355" y2="438" class="svm3-m"/>
+<line x1="45" y1="415" x2="355" y2="456" class="svm3-m"/>
+<line x1="45" y1="406" x2="355" y2="447" stroke="var(--text, #1c1917)" stroke-width="2.5"/>
+<circle cx="70" cy="365" r="6.5" class="svm3-a"/><circle cx="110" cy="350" r="6.5" class="svm3-a"/><circle cx="190" cy="348" r="6.5" class="svm3-a"/>
+<circle cx="230" cy="362" r="6.5" class="svm3-a"/><circle cx="270" cy="354" r="6.5" class="svm3-a"/><circle cx="310" cy="368" r="6.5" class="svm3-a"/>
+<polygon points="80,478 87,490 73,490" class="svm3-b"/><polygon points="120,491 127,503 113,503" class="svm3-b"/><polygon points="160,468 167,480 153,480" class="svm3-b"/>
+<polygon points="200,485 207,497 193,497" class="svm3-b"/><polygon points="280,473 287,485 273,485" class="svm3-b"/><polygon points="320,488 327,500 313,500" class="svm3-b"/>
+<circle cx="150" cy="411" r="6.5" class="svm3-a"/><circle cx="150" cy="411" r="11" class="svm3-sv"/>
+<polygon points="240,434 247,446 233,446" class="svm3-b"/><circle cx="240" cy="441" r="11" class="svm3-sv"/>
+<!-- 범례 -->
+<circle cx="78" cy="548" r="6.5" class="svm3-a"/><text x="88" y="553" class="svm3-s">클래스 A</text>
+<polygon points="156,541 163,553 149,553" class="svm3-b"/><text x="166" y="553" class="svm3-s">클래스 B</text>
+<circle cx="238" cy="548" r="6.5" class="svm3-a"/><circle cx="238" cy="548" r="11" class="svm3-sv"/><text x="254" y="553" class="svm3-s">서포트 벡터</text>
+</svg>
+</div>
 
-반달 모양 데이터에서 C만 바꿔가며 교차 검증 정확도를 재보면 양쪽 끝이 모두 나쁘다.
+두 패널의 점 배치는 같고 C만 다르다. 위쪽은 두 점을 마진 안에 들이면서 도로를 넓게 냈고, 아래쪽은 아무도 들이지 않는 대신 도로가 좁아졌다. 어느 쪽이 나은지는 데이터가 정한다. 반달 모양 데이터에서 C만 바꿔가며 교차 검증 정확도를 재보면 양쪽 끝이 모두 나쁘다.
 
 ```python
 from sklearn.svm import SVC
@@ -110,6 +165,8 @@ C=100.00 | 정확도: 0.840 (±0.044)
 ```
 
 C=0.01에서는 경계가 너무 무뎌 과소적합이고, C=100에서는 잡음 하나까지 맞히려다 과적합이다. 표준편차가 C와 함께 커지는 것도 눈여겨볼 만하다. C가 클수록 결정 경계가 어느 폴드가 걸리느냐에 더 민감해진다.
+
+`noise=0.35`는 두 반달이 실제로 겹치도록 크게 잡은 값이다. 같은 코드에서 잡음만 0.3으로 낮추면 C를 키울수록 정확도가 올라가기만 해서 오른쪽 끝의 과적합이 나타나지 않는다. C를 크게 잡는 것이 손해가 되려면 경계 근처에 겹치는 점이 애초에 있어야 한다는 뜻이고, 소프트 마진이 필요한 상황도 정확히 그 상황이다.
 
 ## 커널 트릭
 
@@ -175,17 +232,17 @@ RBF 커널이 대응하는 $\phi$ 는 무한 차원이라 물리적으로 계산
 
 $\gamma$ 는 각 데이터 포인트의 영향이 미치는 반경을 정한다. 작으면 한 점의 영향이 멀리까지 퍼져 경계가 뭉툭해지고, 크면 각 점 주변에만 좁게 작용해 경계가 점 하나하나를 감싸듯 구불거린다. 결국 C와 같은 방향의 손잡이라, 둘 다 크면 확실하게 과적합한다.
 
-위의 C 실험과 같은 방식으로 커널만 바꿔가며 반달 데이터 300개(`noise=0.3`)에 5-폴드 교차 검증을 돌리면 이렇게 나온다.
+앞의 C 실험과 같은 데이터에 커널만 바꿔가며 5-폴드 교차 검증을 돌리면 이렇게 나온다.
 
 | 커널 | 교차 검증 정확도 |
 |---|---|
-| linear | 0.857 (±0.025) |
-| rbf, $\gamma = 0.1$ | 0.853 (±0.027) |
-| rbf, $\gamma = 1$ | 0.887 (±0.024) |
-| rbf, $\gamma = 10$ | 0.893 (±0.008) |
-| rbf, $\gamma = 100$ | 0.830 (±0.036) |
+| linear | 0.815 (±0.030) |
+| rbf, $\gamma = 0.1$ | 0.805 (±0.019) |
+| rbf, $\gamma = 1$ | 0.880 (±0.043) |
+| rbf, $\gamma = 10$ | 0.855 (±0.053) |
+| rbf, $\gamma = 100$ | 0.775 (±0.069) |
 
-직선으로는 반달 두 개를 가를 수 없어 85.7%에서 멈춘다. $\gamma$ 를 키우면 경계가 휘면서 올라가다가, 100에서는 점 하나하나를 개별로 감싸버려 선형 커널보다도 못해진다.
+직선으로는 반달 두 개를 가를 수 없어 81.5%에서 멈춘다. $\gamma$ 가 0.1이면 경계가 거의 직선이라 선형 커널과 다를 게 없고, 1에서 88.0%로 가장 높다. 여기서 더 키우면 경계가 점을 하나씩 감싸기 시작해 100에서는 선형 커널보다도 못해진다.
 
 :::warning
 
@@ -235,11 +292,13 @@ CV 정확도: 0.9736  테스트: 0.9825
 
 SVM이 확실히 앞서는 자리는 특성 수가 표본 수에 견줄 만큼 많은 경우다. 마진 최대화 자체가 모델 복잡도에 제동을 걸기 때문에, 차원이 높아도 거리 기반 모델처럼 무너지지 않는다. 커널만 갈아 끼우면 결정 경계의 모양을 바꿀 수 있다는 점도 다른 모델에는 없는 유연함이다.
 
-발목을 잡는 것은 규모다. 커널 SVM의 학습 비용은 표본 수 $n$ 이 늘어날수록 $O(n^2)$ 에서 $O(n^3)$ 사이로 커져서, 데이터가 십만 건을 넘어가면 현실적으로 돌릴 수 없다. 이 구간에서는 트리 기반 모델이나 신경망이 답이다. 확률이 필요할 때도 불리하다. SVM이 내놓는 값은 경계까지의 부호 있는 거리이지 확률이 아니라서, `probability=True` 로 Platt scaling을 붙여야 하는데 내부에서 교차 검증을 한 번 더 돌리므로 학습이 크게 느려진다.
+발목을 잡는 것은 규모다. libsvm을 쓰는 `SVC`의 학습 시간은 표본 수에 최소한 제곱으로 늘어나서, 수만 건을 넘어가면 현실적이지 않다. 이 구간에서는 `LinearSVC`나 `SGDClassifier`로 내려가거나, 트리 기반 모델과 신경망 쪽으로 넘어가는 편이 낫다.
+
+확률이 필요할 때도 불리하다. SVM이 내놓는 값은 경계까지의 부호 있는 거리이지 확률이 아니라서, `probability=True` 로 Platt scaling을 붙여야 한다. 그런데 이 옵션은 내부에서 5-폴드 교차 검증을 한 번 더 돌리므로 학습이 크게 느려진다.
 
 ## 마치며
 
-SVM의 핵심은 경계를 하나 고르는 방식에 있다. 훈련 데이터를 맞히는 경계는 얼마든지 있으니 맞히는 것 말고 다른 기준이 필요한데, SVM은 그 기준으로 여백을 골랐다. 양쪽에서 가장 멀리 떨어진 자리에 경계를 놓으면 새 데이터가 조금 흔들려도 같은 쪽에 떨어진다. 이 선택이 만드는 부수 효과가 서포트 벡터다. 경계는 마진에 걸친 소수의 점으로만 정해지고 나머지 데이터는 있으나 마나이며, 모델이 가벼워지고 이상치에 둔감해지는 것이 전부 여기서 나온다. 커널 트릭은 이 구조 위에 얹힌 보너스에 가깝다. 최적화 문제가 내적으로만 데이터를 보게 되어 있었기 때문에, 좌표를 옮기지 않고 커널 함수만 바꿔 끼우는 일이 가능했다.
+SVM의 핵심은 경계를 하나 고르는 방식에 있다. 훈련 데이터를 맞히는 경계는 얼마든지 있으니 맞히는 것 말고 다른 기준이 필요한데, SVM은 그 기준으로 여백을 골랐다. 양쪽에서 가장 멀리 떨어진 자리에 경계를 놓으면 새 데이터가 조금 흔들려도 같은 쪽에 떨어진다. 이 선택이 만드는 부수 효과가 서포트 벡터다. 경계가 마진에 걸친 소수의 점으로만 정해지니 모델이 가볍고 이상치에 둔감하다는 성질이 전부 여기서 따라 나온다. 커널 트릭은 이 구조 위에 얹힌 보너스에 가깝다. 최적화 문제가 내적으로만 데이터를 보게 되어 있었기 때문에, 좌표를 옮기지 않고 커널 함수만 바꿔 끼우는 일이 가능했다.
 
 확률로 가르는 로지스틱 회귀, 거리로 가르는 KNN, 여백으로 가르는 SVM까지 왔다. 다음 글에서는 이 모델들이 공통으로 마주치는 문제, 즉 모델이 단순하면 패턴을 놓치고 복잡하면 잡음까지 외우는 편향과 분산의 맞바꿈을 다룬다.
 

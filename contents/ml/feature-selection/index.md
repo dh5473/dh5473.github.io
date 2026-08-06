@@ -93,6 +93,8 @@ X_filtered = selector.fit_transform(X)
 다음은 중복 제거다. 두 피처의 상관계수가 0.95를 넘으면 거의 같은 정보이므로 하나를 버려도 손실이 거의 없다.
 
 ```python
+import numpy as np
+
 corr = X.corr().abs()
 upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
 to_drop = [c for c in upper.columns if any(upper[c] > 0.95)]
@@ -174,7 +176,7 @@ lasso = LassoCV(cv=5, random_state=42).fit(X, y)
 selected = X.columns[lasso.coef_ != 0]
 ```
 
-분류라면 `LogisticRegression(penalty='l1', solver='liblinear')`을 쓴다. `saga` solver도 L1을 지원하고 다중 클래스에 쓸 수 있다.
+분류라면 `LogisticRegression(l1_ratio=1, solver='saga')`가 같은 일을 한다. `l1_ratio=1`이 순수 L1이라는 뜻이고, 오래된 코드에서 보이는 `penalty='l1'` 표기가 sklearn 1.8에서 이 형태로 대체됐다. `liblinear` solver도 L1을 풀지만 클래스가 셋 이상이면 오류를 낸다.
 
 트리 계열은 다른 방식으로 같은 일을 한다. 분기를 만들 때마다 그 피처가 지니 불순도를 얼마나 줄였는지 누적한 값이 `feature_importances_`다.
 
@@ -217,12 +219,9 @@ import shap
 
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_val)
-
-shap_importance = np.abs(shap_values).mean(axis=0)
-ranking = pd.Series(shap_importance, index=X.columns).sort_values(ascending=False)
 ```
 
-계산 비용은 크다. 다만 "이 피처를 왜 뺐는가"를 다른 사람에게 설명해야 하는 자리에서는 대체할 도구가 마땅치 않다.
+정확한 Shapley 값은 피처 부분집합 전체를 훑어야 나오므로 피처 수에 지수적으로 비싸진다. `TreeExplainer`는 트리 구조를 이용해 그 값을 다항 시간에 구하는 특수 경로이고, 트리가 아닌 모델에서는 근사 비용을 각오해야 한다. 그래도 "이 피처를 왜 뺐는가"를 다른 사람에게 설명해야 하는 자리에서는 대체할 도구가 마땅치 않다.
 
 ## 세 갈래 비교
 
@@ -252,6 +251,7 @@ ranking = pd.Series(shap_importance, index=X.columns).sort_values(ascending=Fals
 
 ```python
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
 
 pipeline = Pipeline([
     ('variance', VarianceThreshold(threshold=0.0)),
@@ -276,3 +276,11 @@ scores = cross_val_score(pipeline, X, y, cv=5, scoring='accuracy')
 - [규제](/ml/regularization/) : L1이 가중치를 정확히 0으로 만드는 원리
 - [랜덤 포레스트](/ml/random-forest/) : 트리 중요도가 계산되는 자리
 - [교차 검증](/ml/cross-validation/) : 선택을 fold 안에 넣어야 하는 이유
+
+## 참고자료
+
+- [scikit-learn: Feature selection](https://scikit-learn.org/stable/modules/feature_selection.html)
+- [scikit-learn: Permutation feature importance](https://scikit-learn.org/stable/modules/permutation_importance.html)
+- [scikit-learn: Permutation Importance with Multicollinear or Correlated Features](https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html)
+- [Isabelle Guyon, André Elisseeff, "An Introduction to Variable and Feature Selection" (JMLR 3, 2003)](https://www.jmlr.org/papers/v3/guyon03a.html)
+- [Scott Lundberg, Su-In Lee, "A Unified Approach to Interpreting Model Predictions" (NeurIPS 2017)](https://proceedings.neurips.cc/paper_files/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html)

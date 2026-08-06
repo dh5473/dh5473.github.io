@@ -51,7 +51,7 @@ thumbnail: './thumbnail.png'
 </svg>
 </div>
 
-평가 결과를 보고 전처리 방식을 바꾸고, 특성이 모자라면 데이터를 더 모으고, 다시 학습시키는 과정이 반복된다. 배포한 뒤에도 성능이 떨어지면 데이터 수집으로 되돌아온다. ML 개발이 공학보다 실험에 가깝다고 말하는 이유가 이 두 개의 고리에 있다. 한 번에 완성하려는 욕심을 버리는 것이 첫 번째 마인드셋이고, 이 고리를 몇 바퀴 도는 동안 시간의 대부분은 알고리즘이 아니라 데이터를 모으고 정제하는 데 들어간다.
+평가 결과를 보고 전처리 방식을 바꾸고, 특성이 모자라면 데이터를 더 모으고, 다시 학습시키는 과정이 반복된다. 배포한 뒤에도 성능이 떨어지면 데이터 수집으로 되돌아온다. ML 개발이 공학보다 실험에 가깝다고 말하는 이유가 이 두 개의 고리에 있다. 한 번에 끝내는 절차가 아니라 어디로 되돌아갈지를 계속 고르는 절차다.
 
 ## 문제 정의
 
@@ -81,7 +81,7 @@ import pandas as pd
 
 df = pd.read_csv('apartments.csv')
 
-df.shape            # (10000, 12)
+df.shape            # (10000, 4)  area, floor, built_year, price
 df.dtypes           # 컬럼별 타입
 df.isnull().sum()   # floor 23건, built_year 156건 결측
 df.describe()       # 컬럼별 min·max·평균·표준편차
@@ -94,7 +94,7 @@ df.describe()       # 컬럼별 min·max·평균·표준편차
 ```python
 df['price'].hist(bins=50)   # 가격이 한쪽으로 치우쳐 있는지 확인
 
-df.corr(numeric_only=True)['price'].sort_values(ascending=False)
+df.corr(numeric_only=True)['price'].drop('price').sort_values(ascending=False)
 # area          0.72
 # floor         0.31
 # built_year   -0.18

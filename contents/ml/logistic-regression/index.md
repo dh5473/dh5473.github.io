@@ -35,7 +35,87 @@ print(np.round(LinearRegression().fit(x2, y2).predict(x2), 2))
 
 첫 번째 결과는 0.5로 자르면 일곱 개를 전부 맞힌다. 그런데 이상치 하나가 들어오자 직선이 눌려 평평해지면서, 4시간 공부한 합격자의 예측값이 0.70에서 0.45로 떨어졌다. 원래 맞던 것까지 틀리게 됐다.
 
-![선형 회귀로 분류를 시도하면 생기는 문제](./linear-classification-fail.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 400" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="선형 회귀로 합격 여부를 예측한 두 경우. 위 원본 데이터에서는 회귀 직선이 0.5를 3.2에서 지나 일곱 점을 모두 맞히고, 아래 20시간 이상치를 넣으면 직선이 눌리면서 0.5 통과 지점이 5.0으로 밀려 4시간 합격자의 예측이 0.45로 떨어진다.">
+<style>
+.lr2-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; fill: none; }
+.lr2-fit { stroke: var(--primary, #0a756c); stroke-width: 2.4; fill: none; }
+.lr2-th { stroke: var(--accent, #9d5604); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.lr2-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.lr2-a { fill: var(--accent, #9d5604); font-size: 15px; font-weight: 600; }
+.lr2-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.lr2-an { fill: var(--accent, #9d5604); font-size: 14px; font-weight: 600; }
+.lr2-d { fill: var(--text-danger, #cb2121); font-size: 14px; font-weight: 600; }
+.lr2-p0 { fill: var(--text-muted, #6d6762); }
+.lr2-p1 { fill: var(--primary, #0a756c); }
+.lr2-out { fill: var(--accent, #9d5604); }
+.lr2-ring { fill: none; stroke: var(--text-danger, #cb2121); stroke-width: 2; }
+.lr2-lead { stroke: var(--text-danger, #cb2121); stroke-width: 1.2; fill: none; }
+</style>
+<!-- ===== 위: 원본 데이터 ===== -->
+<text class="lr2-t" x="56" y="20">원본 데이터</text>
+<text class="lr2-a" x="384" y="20" text-anchor="end">0.5 통과 x = 3.2</text>
+<circle class="lr2-p0" cx="60" cy="36" r="4"/>
+<text class="lr2-n" x="70" y="40">불합격 (0)</text>
+<circle class="lr2-p1" cx="150" cy="36" r="4"/>
+<text class="lr2-n" x="160" y="40">합격 (1)</text>
+<path class="lr2-fit" d="M 232 36 L 258 36"/>
+<text class="lr2-n" x="264" y="40">선형 회귀</text>
+<path class="lr2-ax" d="M 56 54 L 56 154 L 384 154"/>
+<text class="lr2-n" x="50" y="79.9" text-anchor="end">1.0</text>
+<text class="lr2-an" x="50" y="111.1" text-anchor="end">0.5</text>
+<text class="lr2-n" x="50" y="142.4" text-anchor="end">0</text>
+<path class="lr2-th" d="M 56 107.1 L 384 107.1"/>
+<path class="lr2-th" d="M 215.5 54 L 215.5 154"/>
+<path class="lr2-fit" d="M 56 153.6 L 384 58.1"/>
+<circle class="lr2-p0" cx="81.2" cy="138.4" r="4"/>
+<circle class="lr2-p0" cx="106.5" cy="138.4" r="4"/>
+<circle class="lr2-p0" cx="131.7" cy="138.4" r="4"/>
+<circle class="lr2-p0" cx="156.9" cy="138.4" r="4"/>
+<circle class="lr2-p1" cx="257.8" cy="75.9" r="4"/>
+<circle class="lr2-p1" cx="308.3" cy="75.9" r="4"/>
+<circle class="lr2-p1" cx="358.8" cy="75.9" r="4"/>
+<text class="lr2-n" x="56" y="170" text-anchor="middle">0</text>
+<text class="lr2-an" x="215.5" y="170" text-anchor="middle">3.2</text>
+<text class="lr2-n" x="156.9" y="170" text-anchor="middle">2</text>
+<text class="lr2-n" x="257.8" y="170" text-anchor="middle">4</text>
+<text class="lr2-n" x="358.8" y="170" text-anchor="middle">6</text>
+<text class="lr2-n" x="220" y="188" text-anchor="middle">공부 시간</text>
+<!-- ===== 아래: 이상치 추가 ===== -->
+<text class="lr2-t" x="56" y="222">20시간 이상치 추가</text>
+<text class="lr2-a" x="384" y="222" text-anchor="end">0.5 통과 x = 5.0</text>
+<path class="lr2-out" d="M 62 232.5 L 67 238 L 62 243.5 L 57 238 Z"/>
+<text class="lr2-n" x="72" y="242">이상치 (20시간, 합격)</text>
+<path class="lr2-ax" d="M 56 256 L 56 356 L 384 356"/>
+<text class="lr2-n" x="50" y="281.9" text-anchor="end">1.0</text>
+<text class="lr2-an" x="50" y="313.1" text-anchor="end">0.5</text>
+<text class="lr2-n" x="50" y="344.4" text-anchor="end">0</text>
+<path class="lr2-th" d="M 56 309.1 L 384 309.1"/>
+<path class="lr2-th" d="M 134.1 256 L 134.1 356"/>
+<path class="lr2-fit" d="M 56 325.6 L 384 256.4"/>
+<circle class="lr2-p0" cx="63.8" cy="340.4" r="3.4"/>
+<circle class="lr2-p0" cx="71.6" cy="340.4" r="3.4"/>
+<circle class="lr2-p0" cx="79.4" cy="340.4" r="3.4"/>
+<circle class="lr2-p0" cx="87.2" cy="340.4" r="3.4"/>
+<circle class="lr2-p1" cx="118.5" cy="277.9" r="4"/>
+<circle class="lr2-p1" cx="134.1" cy="277.9" r="4"/>
+<circle class="lr2-p1" cx="149.7" cy="277.9" r="4"/>
+<path class="lr2-out" d="M 368.4 271.4 L 374.9 277.9 L 368.4 284.4 L 361.9 277.9 Z"/>
+<path class="lr2-lead" stroke-dasharray="3 3" d="M 118.5 284 L 118.5 306"/>
+<circle class="lr2-ring" cx="118.5" cy="312.4" r="6"/>
+<path class="lr2-lead" d="M 125 314 L 166 333"/>
+<text class="lr2-d" x="170" y="337">예측 0.45 (임계값 미달)</text>
+<text class="lr2-n" x="56" y="372" text-anchor="middle">0</text>
+<text class="lr2-an" x="134.1" y="372" text-anchor="middle">5</text>
+<text class="lr2-n" x="212.2" y="372" text-anchor="middle">10</text>
+<text class="lr2-n" x="290.3" y="372" text-anchor="middle">15</text>
+<text class="lr2-n" x="368.4" y="372" text-anchor="middle">20</text>
+<text class="lr2-n" x="220" y="390" text-anchor="middle">공부 시간</text>
+</svg>
+</div>
 
 두 가지가 근본 원인이다. 하나는 출력 범위다. 선형 회귀의 출력은 음의 무한대에서 양의 무한대까지 열려 있어서 1.29 같은 값이 나오는데, 이건 확률로 읽을 수 없다. 다른 하나는 이상치 민감도다. 직선 하나가 모든 점과의 제곱 오차를 줄이려 하므로, 클래스 내부에서 멀리 떨어진 점 하나가 직선 전체를 끌고 간다.
 
@@ -135,13 +215,48 @@ $$J(w, b) = -\frac{1}{m}\sum_{i=1}^{m}\left[y_i \log h(x_i) + (1 - y_i) \log \le
 
 $y$가 0 아니면 1이므로 대괄호 안의 두 항 중 하나는 항상 0이 되어 사라진다. $y=1$이면 $-\log h(x)$만, $y=0$이면 $-\log(1 - h(x))$만 남는다. 두 경우 모두 **모델이 정답 클래스에 부여한 확률에 로그를 씌워 부호를 뒤집은 값**이다.
 
-| 정답에 부여한 확률 | 비용 | |
-|---|---|---|
-| 0.99 | 0.01 | 확신 있게 맞힘 |
-| 0.5 | 0.69 | 반반 |
-| 0.01 | 4.61 | 확신 있게 틀림 |
-
-![Log Loss 곡선](./log-loss-curve.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 288" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="정답 클래스에 부여한 확률에 따른 로그 손실 곡선. 확률 0.99에서 비용이 0.01로 거의 0이고 0.5에서 0.69이며, 확률이 0에 가까워지면 비용이 발산해 0.01에서 이미 4.61이 된다.">
+<style>
+.lr3-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; fill: none; }
+.lr3-curve { stroke: var(--primary, #0a756c); stroke-width: 2.4; fill: none; stroke-linejoin: round; }
+.lr3-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.lr3-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.lr3-d { fill: var(--text-danger, #cb2121); font-size: 14px; font-weight: 600; }
+.lr3-s { fill: var(--text-success, #107836); font-size: 14px; font-weight: 600; }
+.lr3-m { fill: var(--text, #1c1917); font-size: 14px; font-weight: 600; }
+.lr3-lead { stroke: var(--text-muted, #6d6762); stroke-width: 1.1; fill: none; }
+</style>
+<text class="lr3-t" x="200" y="22" text-anchor="middle">정답 확률에 매기는 로그 손실</text>
+<path class="lr3-ax" d="M 66 44 L 66 232 L 380 232"/>
+<text class="lr3-n" x="60" y="48" text-anchor="end">5</text>
+<text class="lr3-n" x="60" y="85.6" text-anchor="end">4</text>
+<text class="lr3-n" x="60" y="123.2" text-anchor="end">3</text>
+<text class="lr3-n" x="60" y="160.8" text-anchor="end">2</text>
+<text class="lr3-n" x="60" y="198.4" text-anchor="end">1</text>
+<text class="lr3-n" x="60" y="236" text-anchor="end">0</text>
+<text class="lr3-n" x="26" y="138" text-anchor="middle" transform="rotate(-90 26 138)">비용</text>
+<polyline class="lr3-curve" points="68.1,44.0 69.1,58.8 72.3,84.9 75.4,100.2 78.6,111.0 81.7,119.4 84.8,126.2 91.1,137.0 97.4,145.4 103.7,152.3 110.0,158.1 116.2,163.1 122.5,167.5 128.8,171.5 144.5,179.9 160.2,186.7 175.9,192.5 191.6,197.5 207.3,202.0 223.0,205.9 238.7,209.5 254.4,212.8 270.1,215.8 285.8,218.6 301.5,221.2 317.2,223.6 332.9,225.9 348.6,228.0 364.3,230.1 380.0,232.0"/>
+<circle cx="69.1" cy="58.9" r="4.5" fill="var(--text-danger, #cb2121)"/>
+<text class="lr3-d" x="84" y="54">확신 있게 틀림</text>
+<text class="lr3-n" x="84" y="72">(0.01, 4.61)</text>
+<circle cx="223" cy="205.9" r="4.5" fill="var(--text, #1c1917)"/>
+<path class="lr3-lead" d="M 229 201 L 247 156"/>
+<text class="lr3-m" x="252" y="150">확신 없음</text>
+<text class="lr3-n" x="252" y="168">(0.50, 0.69)</text>
+<circle cx="376.9" cy="231.6" r="4.5" fill="var(--text-success, #107836)"/>
+<path class="lr3-lead" d="M 366 214 L 375 227"/>
+<text class="lr3-s" x="378" y="190" text-anchor="end">확신 있게 맞힘</text>
+<text class="lr3-n" x="378" y="208" text-anchor="end">(0.99, 0.01)</text>
+<text class="lr3-n" x="66" y="250" text-anchor="middle">0</text>
+<text class="lr3-n" x="223" y="250" text-anchor="middle">0.5</text>
+<text class="lr3-n" x="380" y="250" text-anchor="middle">1.0</text>
+<text class="lr3-n" x="223" y="272" text-anchor="middle">정답 클래스에 부여한 확률</text>
+</svg>
+</div>
 
 벌이 대칭이 아니라는 게 핵심이다. 잘 맞힌 쪽의 이득은 0에서 멈추지만, 확신 있게 틀린 쪽의 벌은 로그를 따라 발산한다. 정답 확률을 0에 가깝게 준 예측 하나가 나머지 수백 건의 잘 맞힌 예측을 상쇄할 만큼 커진다. 그리고 이 함수는 볼록하다.
 
@@ -188,9 +303,7 @@ print(np.round(h, 3))          # [0.001 0.003 0.012 0.05  0.941 0.996 1.   ]
 print((h >= 0.5).astype(int))  # [0 0 0 0 1 1 1]
 ```
 
-출력이 0과 1 사이의 확률로 나오고, 일곱 개를 전부 맞힌다.
-
-![학습 과정에서 비용 함수의 변화](./training-cost-curve.png)
+출력이 0과 1 사이의 확률로 나오고, 일곱 개를 전부 맞힌다. 비용은 첫 epoch의 0.693에서 300 epoch 뒤 0.019까지 내려간다. 시작값 0.693은 $\log 2$인데, 가중치가 전부 0이라 모든 샘플에 확률 0.5를 주는 상태의 손실이 정확히 그 값이기 때문이다.
 
 ## sklearn으로 쓸 때
 

@@ -19,7 +19,7 @@ $$z_2 = W_2(W_1 x + b_1) + b_2 = (W_2 W_1)\,x + (W_2 b_1 + b_2)$$
 
 $W' = W_2 W_1$, $b' = W_2 b_1 + b_2$ 로 묶으면 $z_2 = W'x + b'$ 다. **두 층을 쌓았는데 결과는 한 층짜리 선형 변환과 같다.** 선형 함수를 아무리 합성해도 선형이라서, 100층을 쌓아도 표현력은 한 층과 동일하다.
 
-비선형 활성화 함수는 이 붕괴를 막는 장치다. 그렇다면 어떤 비선형 함수를 골라야 하는가. 이 질문에 대한 답이 30년에 걸쳐 바뀌었다.
+비선형 활성화 함수는 이 붕괴를 막는 장치다. 그렇다면 어떤 비선형 함수를 골라야 하는가. 그 답은 30년에 걸쳐 바뀌었다.
 
 ## 시그모이드가 세운 벽
 
@@ -98,7 +98,7 @@ $$0.25^5 \approx 9.8 \times 10^{-4}, \qquad 0.25^{10} \approx 9.5 \times 10^{-7}
 
 시그모이드에는 문제가 두 개 더 있다. 출력이 항상 양수라 다음 층이 받는 입력의 부호가 한쪽으로 쏠리고, 그러면 한 뉴런에 들어오는 가중치들의 기울기가 모두 같은 부호가 되어 최적화 경로가 지그재그를 그린다. 그리고 $e^{-z}$ 계산은 비교 연산보다 비싸다. 수백만 뉴런에 매 순전파마다 적용되면 무시하기 어려운 비용이 된다.
 
-결론은 단순하다. 은닉층에 시그모이드를 쓸 이유가 없다. 이진 분류의 출력층에서만 쓴다.
+은닉층에 시그모이드를 쓸 이유는 없다. 이진 분류의 출력층에서만 쓴다.
 
 ## tanh는 4배 나은 출발점이었다
 
@@ -120,11 +120,64 @@ $$f(z) = \max(0, z)$$
 
 **기울기가 줄지 않는다.** 양의 구간에서 도함수가 정확히 1이므로 층을 몇 개 거치든 $1^n = 1$ 이다. 시그모이드가 10층에서 $10^{-6}$ 로 사라지는 자리에서 ReLU는 기울기 크기를 그대로 넘긴다.
 
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 324" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="역전파로 층을 거슬러 오를 때 남는 기울기 크기를 막대로 그린 그림. 시그모이드는 층마다 0.25가 곱해져 1, 0.25, 0.063, 0.016, 0.0039, 0.00098로 줄어들고 세 층째부터 막대가 거의 보이지 않는다. ReLU는 양의 구간에서 도함수가 1이라 모든 층에서 크기가 그대로 유지된다.">
+<style>
+.vg1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.vg1-h { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.vg1-s { fill: var(--text-danger, #cb2121); font-size: 15px; font-weight: 600; }
+.vg1-r { fill: var(--primary, #0a756c); font-size: 15px; font-weight: 600; }
+.vg1-v { fill: var(--text-danger, #cb2121); font-size: 14px; }
+.vg1-bar { fill: var(--text-danger, #cb2121); }
+.vg1-axis { stroke: var(--border, #e7e5e4); stroke-width: 1.4; fill: none; }
+.vg1-grid { stroke: var(--border, #e7e5e4); stroke-width: 1; stroke-dasharray: 4 3; fill: none; }
+</style>
+<!-- 제목과 축척 고지 -->
+<text class="vg1-t" x="200" y="26" text-anchor="middle">층을 거슬러 오를 때 남는 기울기</text>
+<text class="vg1-h" x="200" y="48" text-anchor="middle">막대 높이는 실제 비율</text>
+<!-- 계열 이름 -->
+<text class="vg1-s" x="56" y="96">시그모이드</text>
+<text class="vg1-r" x="380" y="96" text-anchor="end">ReLU (z &gt; 0)</text>
+<!-- 축과 눈금 -->
+<path class="vg1-axis" d="M 56 104 L 56 264 L 380 264"/>
+<path class="vg1-grid" d="M 56 184 L 380 184"/>
+<text class="vg1-h" x="52" y="109" text-anchor="end">1.0</text>
+<text class="vg1-h" x="52" y="189" text-anchor="end">0.5</text>
+<text class="vg1-h" x="52" y="269" text-anchor="end">0</text>
+<text class="vg1-h" x="18" y="184" text-anchor="middle" transform="rotate(-90 18 184)">기울기 크기</text>
+<!-- ReLU: 모든 층에서 1 -->
+<path d="M 56 104 L 380 104" fill="none" stroke="var(--primary, #0a756c)" stroke-width="2.5"/>
+<!-- 시그모이드: 층마다 0.25배 -->
+<rect class="vg1-bar" x="70" y="104" width="26" height="160"/>
+<rect class="vg1-bar" x="124" y="224" width="26" height="40"/>
+<rect class="vg1-bar" x="178" y="254" width="26" height="10"/>
+<rect class="vg1-bar" x="232" y="261.5" width="26" height="2.5"/>
+<rect class="vg1-bar" x="286" y="263.37" width="26" height="0.63"/>
+<rect class="vg1-bar" x="340" y="263.84" width="26" height="0.16"/>
+<text class="vg1-v" x="137" y="218" text-anchor="middle">0.25</text>
+<text class="vg1-v" x="191" y="248" text-anchor="middle">0.063</text>
+<text class="vg1-v" x="245" y="255" text-anchor="middle">0.016</text>
+<text class="vg1-v" x="299" y="257" text-anchor="middle">0.0039</text>
+<text class="vg1-v" x="353" y="257" text-anchor="middle">0.00098</text>
+<!-- 층 번호 -->
+<text class="vg1-h" x="83" y="284" text-anchor="middle">0</text>
+<text class="vg1-h" x="137" y="284" text-anchor="middle">1</text>
+<text class="vg1-h" x="191" y="284" text-anchor="middle">2</text>
+<text class="vg1-h" x="245" y="284" text-anchor="middle">3</text>
+<text class="vg1-h" x="299" y="284" text-anchor="middle">4</text>
+<text class="vg1-h" x="353" y="284" text-anchor="middle">5</text>
+<text class="vg1-h" x="200" y="310" text-anchor="middle">역전파로 거슬러 오른 층 수</text>
+</svg>
+</div>
+
 **계산이 거의 공짜다.** 지수도 나눗셈도 없고 비교 하나면 끝난다. GPU에서 병렬화하기에도 이보다 나은 형태가 없다. 부수 효과로 입력의 절반 가까이가 0이 되면서 층의 표현이 자연히 희소해진다.
 
 ### Dying ReLU
 
-대가도 있다. $z < 0$ 에서 도함수가 0이라, 어떤 뉴런의 입력이 모든 데이터에 대해 음수가 되는 상태에 빠지면 그 뉴런은 기울기를 한 방울도 받지 못한다. 가중치가 갱신되지 않으니 그 상태에서 나올 방법도 없다. 영구히 죽은 뉴런이 되는 것이다.
+대가도 있다. $z < 0$ 에서 도함수가 0이라, 어떤 뉴런의 입력이 모든 데이터에서 음수가 되는 상태에 빠지면 그 뉴런은 기울기를 한 방울도 받지 못한다. 가중치가 갱신되지 않으니 그 상태에서 나올 방법도 없다. 영구히 죽은 뉴런이 되는 것이다.
 
 학습률이 크면 한 번의 큰 업데이트가 뉴런을 이 상태로 밀어넣기 쉽다. 학습률을 낮추거나, 아래의 Leaky ReLU 계열로 바꾸는 것이 표준 대응이다.
 
@@ -180,8 +233,6 @@ $z$ 가 크면 $\sigma(z) \approx 1$ 이라 항등 함수처럼, 작으면 $\sig
 | GELU | $z\,\Phi(z)$ | 약 $(-0.17, \infty)$ | 약 1.13 | 없음 | 중간 |
 | Swish | $z\,\sigma(z)$ | 약 $(-0.28, \infty)$ | 약 1.10 | 없음 | 중간 |
 
-![시그모이드와 tanh, ReLU를 10층 역전파에 통과시켰을 때의 기울기 크기 변화](./vanishing-gradient.png)
-
 ## 출력층은 다른 문제다
 
 여기까지는 은닉층 이야기다. 출력층의 활성화 함수는 기울기 흐름이 아니라 **출력이 무엇을 의미해야 하는가**로 정해진다.
@@ -215,9 +266,7 @@ PyTorch의 `nn.Linear`도 TensorFlow의 `Dense`도 기본값은 활성화 없음
 
 ## 마치며
 
-활성화 함수를 고르는 문제는 결국 "역전파에서 곱해질 수를 얼마로 둘 것인가"의 문제였다. 시그모이드는 그 수의 상한이 0.25였고, 그래서 깊이가 곧 학습 불가능을 뜻했다. tanh가 상한을 1로 올렸지만 포화 구간은 남았다. ReLU는 필요한 구간에서 그 수를 정확히 1로 고정해 문제를 없앴고, 대신 반대편 절반을 완전히 포기했다. Leaky ReLU와 GELU는 포기한 절반을 어떻게 조금씩 되찾을지에 대한 서로 다른 답이다.
-
-실무에서 이 계보를 다 알아야 할 이유는 없다. 은닉층은 ReLU로 시작하고, 학습이 정체되면 Leaky ReLU를 시도하고, 트랜스포머를 다룬다면 GELU를 쓴다. 출력층은 문제 유형이 정한다. 이 세 줄이면 대부분의 상황에서 합리적인 선택이 된다.
+활성화 함수를 고르는 문제는 결국 "역전파에서 곱해질 수를 얼마로 둘 것인가"의 문제였다. 시그모이드는 그 수의 상한이 0.25였고, 그래서 깊이가 곧 학습 불가능을 뜻했다. tanh가 상한을 1로 올렸지만 포화 구간은 남았다. ReLU는 필요한 구간에서 그 수를 정확히 1로 고정해 문제를 없앴고, 대신 반대편 절반을 완전히 포기했다. Leaky ReLU와 GELU는 포기한 절반을 조금씩 되찾는 서로 다른 방식이다.
 
 활성화 함수를 정했다면 다음 질문은 계산된 기울기를 어떤 규칙으로 파라미터에 반영할 것인가다. 학습률 하나로 모든 파라미터를 똑같이 움직이는 방식에는 한계가 있다.
 
@@ -227,3 +276,11 @@ PyTorch의 `nn.Linear`도 TensorFlow의 `Dense`도 기본값은 활성화 없음
 - [옵티마이저](/ml/optimizers/) : 전달된 기울기를 어떤 규칙으로 쓸지의 문제
 - [신경망 학습 안정화](/ml/neural-network-tips/) : 초기화와 정규화로 층 사이 신호 크기를 잡는 법
 - [로지스틱 회귀](/ml/logistic-regression/) : 시그모이드가 확률로 해석되는 자리
+
+## 참고자료
+
+- [Glorot, Bordes, Bengio, Deep Sparse Rectifier Neural Networks (AISTATS 2011)](https://proceedings.mlr.press/v15/glorot11a.html)
+- [He et al., Delving Deep into Rectifiers (arXiv 1502.01852)](https://arxiv.org/abs/1502.01852)
+- [Hendrycks, Gimpel, Gaussian Error Linear Units (arXiv 1606.08415)](https://arxiv.org/abs/1606.08415)
+- [Ramachandran et al., Searching for Activation Functions (arXiv 1710.05941)](https://arxiv.org/abs/1710.05941)
+- [CS231n, Neural Networks Part 1](https://cs231n.github.io/neural-networks-1/)

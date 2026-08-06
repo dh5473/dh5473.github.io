@@ -19,8 +19,6 @@ thumbnail: './thumbnail.png'
 
 **Target Encoding**은 방향을 바꾼다. 범주를 차원으로 펼치는 대신, 그 범주가 타겟과 어떤 관계였는지를 숫자 하나로 요약한다. 차원은 늘지 않으면서 범주의 예측력은 남는다. 대신 타겟을 피처에 집어넣는 일이라 누수 위험이 구조적으로 따라붙는다. 이 글의 나머지는 대부분 그 위험을 다루는 이야기다.
 
----
-
 ## Target Encoding의 원리
 
 각 범주를 그 범주에 속한 샘플들의 **타겟 평균**으로 바꾼다. 이진 분류에서 `city`를 이탈 여부(`churn`)로 인코딩한다면 이렇게 된다.
@@ -41,8 +39,6 @@ def target_encode_naive(df, col, target):
 
 세 줄이면 끝나지만 이 구현을 그대로 쓰면 반드시 문제가 생긴다.
 
----
-
 ## 왜 순진한 구현이 위험한가
 
 타겟 평균으로 만든 피처를 그 타겟을 예측하는 데 다시 쓴다. 모델 입장에서는 정답의 일부가 입력에 섞여 들어온 것이다. 이걸 **타겟 누수(target leakage)** 라고 부른다.
@@ -60,8 +56,6 @@ def target_encode_naive(df, col, target):
 
 아래에서 다룰 Smoothing, K-Fold, Leave-One-Out, CatBoost 인코딩은 전부 이 하나의 문제를 공략하는 방법들이다.
 
----
-
 ## Smoothing으로 사전 확률에 끌어당기기
 
 첫 번째 대응은 범주별 평균을 전체 평균 쪽으로 수축시키는 것이다. 샘플이 적은 범주일수록 더 많이 끌어당긴다.
@@ -77,7 +71,7 @@ $\bar{y} = 0.32$, $m = 100$일 때 실제로 어떻게 움직이는지 보면 �
 | 범주 | $n_i$ | $\bar{y}_i$ | 인코딩 값 | 해석 |
 |---|---|---|---|---|
 | 대도시 | 5,000 | 0.32 | 0.320 | 범주 평균 거의 그대로 |
-| 중소도시 | 50 | 0.60 | 0.413 | 범주 평균과 전체 평균의 중간 |
+| 중소도시 | 50 | 0.60 | 0.413 | 전체 평균 쪽으로 3분의 2만큼 끌려감 |
 | 희귀 도시 | 3 | 1.00 | 0.340 | 사실상 전체 평균 |
 
 $m$이 0이면 수축이 없는 순진한 Target Encoding이고, $m$이 무한히 커지면 모든 범주가 전체 평균 하나로 뭉개진다.
@@ -90,7 +84,7 @@ def target_encode_smooth(df, col, target, m=100):
     return df[col].map(smooth)
 ```
 
-$m$은 교차 검증으로 정한다. 범주당 평균 샘플 수와 비슷한 값에서 시작해 위아래로 훑으면 대체로 10에서 300 사이에서 최적값이 잡힌다.
+$m$은 교차 검증으로 정한다. 식이 "가상의 샘플 $m$개"라는 뜻이니, 범주당 평균 샘플 수 근처에서 시작해 위아래로 훑으면 탐색 범위를 잡기 쉽다.
 
 :::warning
 
@@ -99,8 +93,6 @@ $m$은 교차 검증으로 정한다. 범주당 평균 샘플 수와 비슷한 �
 수축은 희귀 범주가 만드는 극단값을 눌러줄 뿐, 각 샘플이 자기 타겟이 포함된 평균을 보고 있다는 사실 자체는 그대로다. $n_i = 3$인 범주라면 자기 타겟의 지분이 3분의 1이다. Smoothing만 걸어놓고 안심하면 안 된다.
 
 :::
-
----
 
 ## K-Fold Target Encoding
 
@@ -209,8 +201,6 @@ def target_encode_kfold(df, col, target, n_splits=5, m=100):
 
 K-Fold와 Smoothing은 서로 다른 문제를 막으므로 같이 쓴다. K-Fold가 자기 참조를 끊고, Smoothing이 샘플이 적은 범주의 통계를 눌러준다. 위 구현이 둘을 합친 형태다.
 
----
-
 ## Leave-One-Out
 
 K-Fold를 극단까지 밀면 폴드 크기가 1이 된다. 각 샘플의 인코딩 값을 자기 자신만 뺀 같은 범주 전체의 평균으로 계산하는 방식이다.
@@ -227,8 +217,6 @@ def loo_encode(df, col, target):
 ```
 
 폴드를 나눌 필요가 없어 구현이 간단하다. 그런데 여기에 미묘한 함정이 있다. 분자에서 빼는 값이 자기 타겟이므로, 같은 범주 안에서도 $y_i = 1$인 샘플의 인코딩 값이 $y_i = 0$인 샘플보다 항상 낮게 나온다. 범주별로 정확히 두 개의 값만 존재하고, 둘 중 어느 쪽인지가 곧 타겟이다. 트리 모델은 이 두 값 사이에 분할점 하나만 놓으면 타겟을 그대로 읽어낼 수 있다. 누수를 막으려고 도입한 방식이 다른 경로로 누수를 만드는 셈이라, 실전에서는 K-Fold 쪽이 안전하다.
-
----
 
 ## CatBoost의 순서 기반 인코딩
 
@@ -254,15 +242,9 @@ K-Fold와의 차이는 같은 범주에 붙는 값의 다양성이다. K-Fold에
 ```python
 from catboost import CatBoostClassifier
 
-model = CatBoostClassifier(
-    iterations=1000,
-    learning_rate=0.05,
-    cat_features=['city', 'region', 'product_type'],
-)
-model.fit(X_train, y_train, verbose=100)
+model = CatBoostClassifier(cat_features=['city', 'region', 'product_type'])
+model.fit(X_train, y_train)
 ```
-
----
 
 ## Weight of Evidence
 
@@ -301,11 +283,9 @@ $$\text{IV} = \sum_i \left( \frac{E_i}{E} - \frac{N_i}{N} \right) \text{WoE}(c_i
 
 :::
 
----
-
 ## James-Stein Encoding
 
-Smoothing의 $m$을 직접 고르는 대신 데이터가 정하게 하는 방법이다. 1961년 Charles Stein이 증명한 결과에서 출발한다. 세 개 이상의 그룹 평균을 동시에 추정할 때, 각 그룹의 표본 평균보다 전체 평균 쪽으로 적당히 수축시킨 값이 평균제곱오차가 더 작다는 정리다.
+Smoothing의 $m$을 직접 고르는 대신 데이터가 정하게 하는 방법이다. 1961년 William James와 Charles Stein이 낸 결과에서 출발한다. 세 개 이상의 그룹 평균을 동시에 추정할 때, 각 그룹의 표본 평균보다 전체 평균 쪽으로 적당히 수축시킨 값이 평균제곱오차가 더 작다는 정리다.
 
 $$\text{encoded}(c_i) = (1 - B_i)\,\bar{y}_i + B_i\,\bar{y}, \qquad B_i = \frac{\sigma_i^2}{\sigma_i^2 + n_i \tau^2}$$
 
@@ -321,9 +301,7 @@ def james_stein_encode(df, col, target):
     return df[col].map((1 - B) * agg['mean'] + B * global_mean)
 ```
 
-수축 강도를 자동으로 정할 뿐, 자기 타겟을 참조한다는 문제는 그대로 남는다. 이것도 K-Fold 안에서 써야 한다.
-
----
+수축 강도를 자동으로 정할 뿐, 자기 타겟을 참조한다는 문제는 그대로 남는다. 이것도 K-Fold 안에서 써야 한다. 뒤에서 볼 sklearn `TargetEncoder`의 `smooth='auto'`가 정확히 이 $B_i$를 쓴다.
 
 ## 무엇을 언제 쓰나
 
@@ -340,41 +318,45 @@ def james_stein_encode(df, col, target):
 
 정리하면 카디널리티가 20 미만이면 One-Hot으로 충분하고, 그 위로 올라가면 K-Fold Target Encoding에 Smoothing을 얹는 조합이 기본이다. CatBoost를 쓸 계획이라면 인코딩하지 말고 범주형 그대로 넘긴다. 금융이나 보험처럼 변수별 근거를 설명해야 하는 도메인이라면 WoE와 IV로 인코딩과 변수 선택을 한 번에 처리한다.
 
----
-
 ## 라이브러리와 Pipeline
 
-위 방식들을 직접 구현할 필요는 없다. `category_encoders`가 sklearn과 같은 인터페이스로 전부 제공한다.
+위 방식들을 직접 구현할 필요는 없다. scikit-learn 1.3부터 `TargetEncoder`가 들어왔고, 기본값이 앞에서 조합한 K-Fold + Smoothing 그대로다. `cv=5`로 교차 적합해 인코딩 값을 만들고, `smooth='auto'`가 수축 강도를 데이터에서 추정한다.
+
+여기에 걸려 넘어지기 쉬운 지점이 하나 있다. 교차 적합은 `fit_transform`에서만 일어난다. `fit(X, y).transform(X)`는 전체 타겟으로 만든 통계를 그대로 돌려주므로 두 결과가 다르고, 뒤쪽에는 자기 참조가 살아 있다.
 
 ```python
-import category_encoders as ce   # pip install category_encoders
-
-encoder = ce.TargetEncoder(cols=['city'])
-X_train_enc = encoder.fit_transform(X_train, y_train)
-X_test_enc = encoder.transform(X_test)
-
-# ce.LeaveOneOutEncoder, ce.WOEEncoder, ce.JamesSteinEncoder도 같은 방식
-```
-
-`fit`은 훈련 데이터에서만 하고 테스트에는 `transform`만 적용한다는 원칙은 다른 전처리와 똑같지만, 타겟 인코딩에서는 이걸 어겼을 때의 대가가 훨씬 크다. 스케일러가 테스트 통계를 보면 점수가 조금 부풀지만, 인코더가 테스트 타겟을 보면 그 컬럼이 정답표가 된다.
-
-그래서 인코더는 반드시 Pipeline 안에 넣는다.
-
-```python
+import numpy as np
+from sklearn.preprocessing import TargetEncoder
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_val_score
 
-pipeline = Pipeline([
-    ('encoder', ce.TargetEncoder(cols=['city', 'region', 'product'])),
-    ('model', GradientBoostingClassifier(n_estimators=200)),
-])
-scores = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc')
+rng = np.random.default_rng(0)                              # 범주 300개, 3,000행
+cats = np.array([f'c{i}' for i in range(300)])
+city = rng.choice(cats, 3000)
+rate = {c: rng.uniform(0.15, 0.85) for c in cats}
+X = city.reshape(-1, 1)
+y = (rng.random(3000) < np.array([rate[c] for c in city])).astype(int)
+
+enc = TargetEncoder(target_type='binary', random_state=0)   # cv=5, smooth='auto'
+model = HistGradientBoostingClassifier()
+
+# 파이프라인 안: 폴드마다 검증 폴드를 뺀 데이터로 인코더를 새로 적합한다
+pipe = Pipeline([('enc', enc), ('model', model)])
+print(round(cross_val_score(pipe, X, y, cv=5, scoring='roc_auc').mean(), 3))
+
+# 파이프라인 밖: 전체 타겟으로 한 번 인코딩해두고 그 결과를 검증한다
+print(round(cross_val_score(model, enc.fit(X, y).transform(X), y, cv=5, scoring='roc_auc').mean(), 3))
 ```
 
-파이프라인 밖에서 미리 인코딩해두고 `cross_val_score`를 돌리면, 인코딩 값에 이미 검증 폴드의 타겟이 녹아 있는 상태로 검증을 하게 된다. 점수는 잘 나오고 실제 성능은 그렇지 않은데, 이 조합은 배포 전까지 발견되지 않는다.
+```text
+0.655
+0.77
+```
 
----
+같은 데이터, 같은 모델인데 AUC가 0.655와 0.77로 갈린다. 뒤쪽이 높은 이유는 모델이 좋아서가 아니라 검증 폴드의 타겟이 인코딩 값에 이미 녹아 있어서다. 배포하면 나오는 숫자는 앞쪽인데, 그 사실은 배포 전까지 드러나지 않는다. 스케일러가 테스트 통계를 보면 점수가 조금 부풀지만, 인코더가 테스트 타겟을 보면 그 컬럼이 정답표가 된다.
+
+WoE, Leave-One-Out, James-Stein은 sklearn에 없다. `category_encoders`가 `ce.WOEEncoder`, `ce.LeaveOneOutEncoder`, `ce.JamesSteinEncoder`로 같은 인터페이스에 맞춰 제공한다.
 
 ## 마치며
 
@@ -386,15 +368,11 @@ Target Encoding은 고카디널리티 범주형 변수를 다루는 거의 유�
 
 다음 글에서는 결측치 처리를 다룬다. 지울지, 채울지, 모델에 맡길지가 결측이 생긴 이유에 따라 완전히 달라진다.
 
----
-
 ## 함께 보면 좋은 글
 
 - [범주형 데이터 인코딩](/ml/categorical-encoding/) : One-Hot, Label, Ordinal 등 기본 인코딩과 선택 기준
 - [교차 검증](/ml/cross-validation/) : K-Fold 인코딩이 빌려온 분할 구조
 - [편향-분산 트레이드오프](/ml/bias-variance/) : Smoothing이 줄이려는 분산의 정체
-
----
 
 ## 참고자료
 

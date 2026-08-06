@@ -21,11 +21,67 @@ import numpy as np
 np.random.seed(42)
 x = np.linspace(0, 1, 20)
 y = np.sin(2 * np.pi * x) + np.random.normal(0, 0.3, 20)
+
+for deg in (1, 4, 15):
+    fit = np.polyfit(x, y, deg)
+    print(deg, f"{np.mean((np.polyval(fit, x) - y) ** 2):.4f}")
 ```
 
-![과적합 비교: 다항 회귀 차수별 피팅](./overfitting-comparison.png)
+```text
+1 0.3543
+4 0.0613
+15 0.0100
+```
 
-차수 1은 곡선 패턴을 전혀 못 잡고(과소적합), 차수 4는 노이즈를 무시하고 전체 경향을 따라가고, 차수 15는 모든 점을 꿰뚫는다. 마지막 것의 훈련 오차는 거의 0인데, 점과 점 사이에서 곡선이 위아래로 크게 요동친다. 새 데이터가 그 사이에 떨어지면 예측이 크게 빗나간다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 580" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 20개 점에 다항 회귀를 차수 1, 4, 15로 맞춘 결과를 위에서 아래로 쌓아 비교한 그림. 차수 1은 직선이라 곡선을 따라가지 못하고, 차수 4는 참 함수에 가깝게 붙고, 차수 15는 점 사이에서 크게 요동치다 패널 밖으로 벗어난다">
+<style>
+.of-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.of-pt { fill: var(--text-muted, #6d6762); }
+.of-true { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.6; stroke-dasharray: 5 4; stroke-opacity: 0.75; }
+.of-fit { fill: none; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+.of-zero { stroke: var(--text-muted, #6d6762); stroke-width: 1; stroke-dasharray: 3 4; stroke-opacity: 0.4; }
+.of-tick { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.of-h { font-size: 17px; font-weight: 700; }
+</style>
+<text x="200" y="20" text-anchor="middle" class="of-tick">점 = 관측값 20개 · 점선 = 참 sin 곡선</text>
+<!-- 차수 1 -->
+<text x="200" y="44" text-anchor="middle" class="of-h" fill="var(--accent, #9d5604)">차수 1 · 과소적합</text>
+<rect x="56" y="56" width="310" height="140" rx="5" class="of-panel"/>
+<line x1="56" y1="126" x2="366" y2="126" class="of-zero"/>
+<text x="48" y="64.1" text-anchor="end" class="of-tick">2</text>
+<text x="48" y="130.8" text-anchor="end" class="of-tick">0</text>
+<text x="48" y="197.5" text-anchor="end" class="of-tick">-2</text>
+<path class="of-true" d="M 56.0,126.0 L 68.9,117.4 81.8,109.3 94.8,102.4 107.7,97.1 120.6,93.8 133.5,92.7 146.4,93.8 159.3,97.1 172.2,102.4 185.2,109.3 198.1,117.4 211.0,126.0 223.9,134.6 236.8,142.7 249.8,149.6 262.7,154.9 275.6,158.2 288.5,159.3 301.4,158.2 314.3,154.9 327.2,149.6 340.2,142.7 353.1,134.6 366.0,126.0"/>
+<circle cx="56.0" cy="121.0" r="3.2" class="of-pt"/><circle cx="72.3" cy="116.6" r="3.2" class="of-pt"/><circle cx="88.6" cy="99.0" r="3.2" class="of-pt"/><circle cx="104.9" cy="82.9" r="3.2" class="of-pt"/><circle cx="121.3" cy="96.0" r="3.2" class="of-pt"/><circle cx="137.6" cy="95.1" r="3.2" class="of-pt"/><circle cx="153.9" cy="79.7" r="3.2" class="of-pt"/><circle cx="170.2" cy="93.8" r="3.2" class="of-pt"/><circle cx="186.5" cy="114.8" r="3.2" class="of-pt"/><circle cx="202.8" cy="115.1" r="3.2" class="of-pt"/><circle cx="219.2" cy="136.1" r="3.2" class="of-pt"/><circle cx="235.5" cy="146.5" r="3.2" class="of-pt"/><circle cx="251.8" cy="148.1" r="3.2" class="of-pt"/><circle cx="268.1" cy="175.7" r="3.2" class="of-pt"/><circle cx="284.4" cy="176.5" r="3.2" class="of-pt"/><circle cx="300.7" cy="163.9" r="3.2" class="of-pt"/><circle cx="317.1" cy="164.0" r="3.2" class="of-pt"/><circle cx="333.4" cy="143.3" r="3.2" class="of-pt"/><circle cx="349.7" cy="145.9" r="3.2" class="of-pt"/><circle cx="366.0" cy="140.1" r="3.2" class="of-pt"/>
+<path class="of-fit" stroke="var(--accent, #9d5604)" d="M 56.0,91.1 L 366.0,164.3"/>
+<!-- 차수 4 -->
+<text x="200" y="230" text-anchor="middle" class="of-h" fill="var(--primary, #0a756c)">차수 4 · 적절한 적합</text>
+<rect x="56" y="242" width="310" height="140" rx="5" class="of-panel"/>
+<line x1="56" y1="312" x2="366" y2="312" class="of-zero"/>
+<text x="48" y="250.1" text-anchor="end" class="of-tick">2</text>
+<text x="48" y="316.8" text-anchor="end" class="of-tick">0</text>
+<text x="48" y="383.5" text-anchor="end" class="of-tick">-2</text>
+<path class="of-true" d="M 56.0,312.0 L 68.9,303.4 81.8,295.3 94.8,288.4 107.7,283.1 120.6,279.8 133.5,278.7 146.4,279.8 159.3,283.1 172.2,288.4 185.2,295.3 198.1,303.4 211.0,312.0 223.9,320.6 236.8,328.7 249.8,335.6 262.7,340.9 275.6,344.2 288.5,345.3 301.4,344.2 314.3,340.9 327.2,335.6 340.2,328.7 353.1,320.6 366.0,312.0"/>
+<circle cx="56.0" cy="307.0" r="3.2" class="of-pt"/><circle cx="72.3" cy="302.6" r="3.2" class="of-pt"/><circle cx="88.6" cy="285.0" r="3.2" class="of-pt"/><circle cx="104.9" cy="268.9" r="3.2" class="of-pt"/><circle cx="121.3" cy="282.0" r="3.2" class="of-pt"/><circle cx="137.6" cy="281.1" r="3.2" class="of-pt"/><circle cx="153.9" cy="265.7" r="3.2" class="of-pt"/><circle cx="170.2" cy="279.8" r="3.2" class="of-pt"/><circle cx="186.5" cy="300.8" r="3.2" class="of-pt"/><circle cx="202.8" cy="301.1" r="3.2" class="of-pt"/><circle cx="219.2" cy="322.1" r="3.2" class="of-pt"/><circle cx="235.5" cy="332.5" r="3.2" class="of-pt"/><circle cx="251.8" cy="334.1" r="3.2" class="of-pt"/><circle cx="268.1" cy="361.7" r="3.2" class="of-pt"/><circle cx="284.4" cy="362.5" r="3.2" class="of-pt"/><circle cx="300.7" cy="349.9" r="3.2" class="of-pt"/><circle cx="317.1" cy="350.0" r="3.2" class="of-pt"/><circle cx="333.4" cy="329.3" r="3.2" class="of-pt"/><circle cx="349.7" cy="331.9" r="3.2" class="of-pt"/><circle cx="366.0" cy="326.1" r="3.2" class="of-pt"/>
+<path class="of-fit" stroke="var(--primary, #0a756c)" d="M 56.0,314.7 L 65.4,302.3 74.8,292.2 84.2,284.4 93.6,278.7 103.0,274.8 112.4,272.7 121.8,272.1 131.2,272.9 140.5,275.0 149.9,278.1 159.3,282.1 168.7,286.9 178.1,292.3 187.5,298.1 196.9,304.3 206.3,310.7 215.7,317.0 225.1,323.3 234.5,329.3 243.9,335.0 253.3,340.1 262.7,344.6 272.1,348.4 281.5,351.2 290.8,353.0 300.2,353.7 309.6,353.1 319.0,351.2 328.4,347.8 337.8,342.8 347.2,336.1 356.6,327.7 366.0,317.3"/>
+<!-- 차수 15 -->
+<text x="200" y="416" text-anchor="middle" class="of-h" fill="var(--text-danger, #cb2121)">차수 15 · 과적합</text>
+<rect x="56" y="428" width="310" height="140" rx="5" class="of-panel"/>
+<line x1="56" y1="498" x2="366" y2="498" class="of-zero"/>
+<text x="48" y="436.1" text-anchor="end" class="of-tick">2</text>
+<text x="48" y="502.8" text-anchor="end" class="of-tick">0</text>
+<text x="48" y="569.5" text-anchor="end" class="of-tick">-2</text>
+<path class="of-true" d="M 56.0,498.0 L 68.9,489.4 81.8,481.3 94.8,474.4 107.7,469.1 120.6,465.8 133.5,464.7 146.4,465.8 159.3,469.1 172.2,474.4 185.2,481.3 198.1,489.4 211.0,498.0 223.9,506.6 236.8,514.7 249.8,521.6 262.7,526.9 275.6,530.2 288.5,531.3 301.4,530.2 314.3,526.9 327.2,521.6 340.2,514.7 353.1,506.6 366.0,498.0"/>
+<circle cx="56.0" cy="493.0" r="3.2" class="of-pt"/><circle cx="72.3" cy="488.6" r="3.2" class="of-pt"/><circle cx="88.6" cy="471.0" r="3.2" class="of-pt"/><circle cx="104.9" cy="454.9" r="3.2" class="of-pt"/><circle cx="121.3" cy="468.0" r="3.2" class="of-pt"/><circle cx="137.6" cy="467.1" r="3.2" class="of-pt"/><circle cx="153.9" cy="451.7" r="3.2" class="of-pt"/><circle cx="170.2" cy="465.8" r="3.2" class="of-pt"/><circle cx="186.5" cy="486.8" r="3.2" class="of-pt"/><circle cx="202.8" cy="487.1" r="3.2" class="of-pt"/><circle cx="219.2" cy="508.1" r="3.2" class="of-pt"/><circle cx="235.5" cy="518.5" r="3.2" class="of-pt"/><circle cx="251.8" cy="520.1" r="3.2" class="of-pt"/><circle cx="268.1" cy="547.7" r="3.2" class="of-pt"/><circle cx="284.4" cy="548.5" r="3.2" class="of-pt"/><circle cx="300.7" cy="535.9" r="3.2" class="of-pt"/><circle cx="317.1" cy="536.0" r="3.2" class="of-pt"/><circle cx="333.4" cy="515.3" r="3.2" class="of-pt"/><circle cx="349.7" cy="517.9" r="3.2" class="of-pt"/><circle cx="366.0" cy="512.1" r="3.2" class="of-pt"/>
+<path class="of-fit" stroke="var(--text-danger, #cb2121)" d="M 56.0,493.0 L 57.1,428.0 M 68.0,428.0 L 68.5,436.8 70.6,468.5 72.6,491.5 74.7,505.5 76.8,511.5 78.9,511.0 81.0,505.7 83.0,497.4 85.1,487.7 87.2,477.8 89.3,468.7 91.4,461.1 93.4,455.2 95.5,451.2 97.6,449.1 99.7,448.8 101.8,449.8 103.9,451.9 105.9,454.7 108.0,457.9 110.1,461.2 112.2,464.2 114.3,467.0 116.3,469.1 118.4,470.7 120.5,471.5 122.6,471.8 124.7,471.4 126.7,470.5 128.8,469.2 130.9,467.6 133.0,465.8 135.1,463.9 137.1,462.0 139.2,460.3 141.3,458.7 143.4,457.4 145.5,456.5 147.5,455.8 149.6,455.5 151.7,455.6 153.8,456.0 155.9,456.7 157.9,457.6 160.0,458.8 162.1,460.2 164.2,461.7 166.3,463.3 168.3,465.0 170.4,466.8 172.5,468.6 174.6,470.4 176.7,472.2 178.8,473.9 180.8,475.7 182.9,477.5 185.0,479.2 187.1,480.9 189.2,482.6 191.2,484.4 193.3,486.1 195.4,487.8 197.5,489.6 199.6,491.3 201.6,493.1 203.7,494.8 205.8,496.5 207.9,498.2 210.0,499.9 212.0,501.4 214.1,503.0 216.2,504.4 218.3,505.8 220.4,507.0 222.4,508.2 224.5,509.3 226.6,510.4 228.7,511.3 230.8,512.3 232.8,513.2 234.9,514.2 237.0,515.2 239.1,516.3 241.2,517.5 243.2,518.8 245.3,520.3 247.4,521.9 249.5,523.7 251.6,525.7 253.7,527.8 255.7,530.0 257.8,532.4 259.9,534.8 262.0,537.3 264.1,539.7 266.1,542.0 268.2,544.1 270.3,546.1 272.4,547.7 274.5,549.0 276.5,549.9 278.6,550.4 280.7,550.4 282.8,550.0 284.9,549.2 286.9,548.0 289.0,546.5 291.1,544.7 293.2,542.8 295.3,540.9 297.3,538.9 299.4,537.2 301.5,535.7 303.6,534.6 305.7,533.8 307.7,533.5 309.8,533.6 311.9,534.0 314.0,534.7 316.1,535.4 318.1,536.0 320.2,536.2 322.3,535.8 324.4,534.5 326.5,532.1 328.6,528.5 330.6,523.6 332.7,517.6 334.8,510.7 336.9,503.5 339.0,496.8 341.0,491.7 343.1,489.5 345.2,491.6 347.3,499.6 349.4,514.8 351.4,537.8 353.5,568.0 M 365.0,568.0 L 366.0,512.1"/>
+</svg>
+</div>
+
+차수 1은 곡선 패턴을 전혀 못 잡고(과소적합), 차수 4는 노이즈를 무시하고 전체 경향을 따라가고, 차수 15는 점 하나하나를 쫓아간다. 훈련 오차만 보면 차수 15가 압도적이다. 그런데 그 곡선은 점과 점 사이에서 위아래로 크게 요동치고, 양 끝에서는 아예 그림 밖으로 튀어 나간다. 새 데이터가 그 사이에 떨어지면 예측이 크게 빗나간다.
 
 왜 이렇게 되나. 변수가 $n$개면 가중치도 $n$개다. 데이터 수 $m$보다 $n$이 커지면 훈련 데이터를 정확히 맞추는 해가 무한히 많아지고, 그중에는 가중치가 극단적으로 큰 해도 섞여 있다. 가중치가 크다는 건 입력이 조금 흔들릴 때 출력이 크게 튄다는 뜻이다. 노이즈에 민감해지고, 그게 과적합의 메커니즘이다.
 
@@ -177,7 +233,7 @@ $$\min_{\mathbf{w}} \frac{1}{m}\sum_{i=1}^{m}(\hat{y}_i - y_i)^2 \quad \text{s.t
 
 Ridge의 안정성과 Lasso의 변수 선택을 같이 원하면 두 패널티를 섞는다. sklearn의 정의는 이렇다.
 
-$$J = \mathrm{MSE} + \alpha\left[\rho \sum_j \lvert w_j \rvert + \frac{1-\rho}{2}\sum_j w_j^2\right]$$
+$$J = \frac{1}{2m}\sum_{i=1}^{m}(\hat{y}_i - y_i)^2 + \alpha\left[\rho \sum_j \lvert w_j \rvert + \frac{1-\rho}{2}\sum_j w_j^2\right]$$
 
 $\alpha$는 전체 규제 강도, $\rho$(`l1_ratio`)는 L1이 차지하는 비율이다. 1이면 Lasso, 0이면 Ridge가 된다.
 
@@ -201,17 +257,7 @@ ElasticNet이 빛나는 자리는 상관된 변수가 여럿일 때다. Lasso는
 | 해의 유일성 | 항상 유일 | 특성이 데이터보다 많으면 최대 $m$개까지만 선택 | 항상 유일 |
 | 쓰는 자리 | 변수가 대체로 유의미할 때 | 쓸모없는 변수가 많을 때 | 상관된 변수 그룹이 있을 때 |
 
-![Ridge vs Lasso 가중치 비교](./ridge-vs-lasso.png)
-
-변수 8개짜리 예시다. Ridge는 여덟 개를 모두 0이 아닌 값으로 남기고, Lasso는 그중 넷을 지운다.
-
-:::tip
-
-**고르는 순서**
-
-변수가 적고 대부분 쓸모 있으면 Ridge, 변수가 많고 일부만 중요하면 Lasso, 변수끼리 상관이 높으면 ElasticNet이다. 판단이 안 서면 `ElasticNet(l1_ratio=0.5)`으로 시작해서 비율을 옮겨본다.
-
-:::
+판단이 안 서면 `ElasticNet(l1_ratio=0.5)`으로 시작해서 비율을 옮겨보는 쪽이 빠르다.
 
 ## λ는 교차 검증으로 고른다
 

@@ -13,8 +13,6 @@ thumbnail: './thumbnail.png'
 
 결정 트리는 수식 대신 **질문**을 쓴다. "꽃잎 길이가 2.45cm 이하인가?"로 데이터를 두 덩어리로 가르고, 각 덩어리에 또 질문을 던진다. 질문이 쌓이면서 범위가 좁아지고 더 나눌 것이 없어진 지점에서 답을 내놓는다. 사람이 판단을 좁혀가는 방식과 거의 같아서, 학습이 끝난 모델을 그림 한 장으로 펼쳐놓고 왜 그렇게 예측했는지 따라갈 수 있다.
 
----
-
 ## 트리를 이루는 노드
 
 Iris 데이터를 깊이 2까지만 키우면 트리는 이런 모양이 된다.
@@ -71,8 +69,6 @@ Iris 데이터를 깊이 2까지만 키우면 트리는 이런 모양이 된다.
 
 각 노드가 담는 조건은 언제나 **특성 하나 + 임계값 하나**다. 데이터 포인트는 예/아니오로 답하며 리프까지 내려가고, 도착한 리프의 다수 클래스가 예측값이 된다.
 
----
-
 ## 좋은 분할이란 무엇인가
 
 트리가 풀어야 할 문제는 하나다. **어떤 특성의 어떤 임계값으로 쪼갤 것인가.** 가능한 조합을 전부 시도해보고 가장 좋은 것을 고른다.
@@ -127,9 +123,51 @@ $$IG = H(\text{parent}) - \sum_j \frac{n_j}{n} \, H(\text{child}_j)$$
 
 같은 첫 분할을 넣으면 루트가 $\log_2 3 = 1.585$ 비트, 왼쪽이 0비트, 오른쪽이 1비트다. 가중 평균은 $\frac{100}{150} \times 1 = 0.667$ 비트이고, 정보 이득은 0.918비트다.
 
-![지니 불순도와 엔트로피 곡선 비교](./gini-impurity.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 300" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="이진 분류에서 클래스 비율 p에 따른 지니 불순도와 엔트로피 곡선. 둘 다 p가 0이나 1일 때 0이고 p가 0.5일 때 최대이며, 최댓값은 엔트로피가 1.0, 지니가 0.5다">
+<style>
+.dt3-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.dt3-gini { stroke: var(--primary, #0a756c); stroke-width: 2.5; fill: none; }
+.dt3-ent { stroke: var(--accent, #9d5604); stroke-width: 2.5; fill: none; stroke-dasharray: 7 4; }
+.dt3-guide { stroke: var(--border, #e7e5e4); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+.dt3-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.dt3-l { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.dt3-p { fill: var(--primary, #0a756c); font-size: 14px; font-weight: 600; }
+.dt3-a { fill: var(--accent, #9d5604); font-size: 14px; font-weight: 600; }
+</style>
+<text class="dt3-t" x="200" y="26" text-anchor="middle">지니 불순도와 엔트로피 (이진 분류)</text>
+<!-- 축과 눈금 -->
+<path class="dt3-ax" d="M 66 250 L 378 250"/>
+<path class="dt3-ax" d="M 66 250 L 66 58"/>
+<path class="dt3-ax" d="M 61 250 L 66 250 M 61 159 L 66 159 M 61 68 L 66 68"/>
+<path class="dt3-ax" d="M 66 250 L 66 255 M 219 250 L 219 255 M 372 250 L 372 255"/>
+<text class="dt3-l" x="57" y="255" text-anchor="end">0</text>
+<text class="dt3-l" x="57" y="164" text-anchor="end">0.5</text>
+<text class="dt3-l" x="57" y="73" text-anchor="end">1.0</text>
+<text class="dt3-l" x="66" y="270" text-anchor="middle">0</text>
+<text class="dt3-l" x="219" y="270" text-anchor="middle">0.5</text>
+<text class="dt3-l" x="372" y="270" text-anchor="middle">1</text>
+<text class="dt3-l" x="219" y="292" text-anchor="middle">클래스 1의 비율 p</text>
+<text class="dt3-l" x="22" y="155" text-anchor="middle" transform="rotate(-90 22 155)">불순도</text>
+<path class="dt3-guide" d="M 219 250 L 219 68"/>
+<!-- 엔트로피 -->
+<path class="dt3-ent" d="M 66 250 L 81.3 197.9 L 96.6 164.6 L 111.9 139 L 127.2 118.6 L 142.5 102.3 L 157.8 89.6 L 173.1 80 L 188.4 73.3 L 203.7 69.3 L 219 68 L 234.3 69.3 L 249.6 73.3 L 264.9 80 L 280.2 89.6 L 295.5 102.3 L 310.8 118.6 L 326.1 139 L 341.4 164.6 L 356.7 197.9 L 372 250"/>
+<!-- 지니 -->
+<path class="dt3-gini" d="M 66 250 L 81.3 232.7 L 96.6 217.2 L 111.9 203.6 L 127.2 191.8 L 142.5 181.8 L 157.8 173.6 L 173.1 167.2 L 188.4 162.6 L 203.7 159.9 L 219 159 L 234.3 159.9 L 249.6 162.6 L 264.9 167.2 L 280.2 173.6 L 295.5 181.8 L 310.8 191.8 L 326.1 203.6 L 341.4 217.2 L 356.7 232.7 L 372 250"/>
+<circle cx="219" cy="68" r="4" fill="var(--accent, #9d5604)"/>
+<circle cx="219" cy="159" r="4" fill="var(--primary, #0a756c)"/>
+<!-- 범례 -->
+<path class="dt3-ent" d="M 74 74 L 94 74"/>
+<text class="dt3-a" x="98" y="79">엔트로피</text>
+<path class="dt3-gini" d="M 74 98 L 94 98"/>
+<text class="dt3-p" x="98" y="103">지니</text>
+</svg>
+</div>
 
-둘 다 $p = 0.5$ 에서 최대, $p = 0$ 이나 $p = 1$ 에서 0이 된다. 곡선의 높이는 다르지만 어느 분할이 더 나은지를 두고는 거의 항상 같은 답을 낸다.
+둘 다 $p = 0$ 이나 $p = 1$ 에서 0이고 $p = 0.5$ 에서 최대다. 최댓값은 엔트로피가 1, 지니가 0.5로 두 배 차이가 나지만, 어느 분할이 더 나은지를 두고는 거의 항상 같은 답을 낸다.
 
 | 기준 | 수식 | sklearn 인자 | 성격 |
 |---|---|---|---|
@@ -137,8 +175,6 @@ $$IG = H(\text{parent}) - \sum_j \frac{n_j}{n} \, H(\text{child}_j)$$
 | 엔트로피 | $-\sum p_i \log_2 p_i$ | `criterion='entropy'` | 정보량으로 해석된다. 조금 더 균형 잡힌 트리 |
 
 성능 차이는 실무에서 거의 없다. 기본값인 지니를 그대로 쓰면 된다.
-
----
 
 ## 분할을 직접 찾아보기
 
@@ -181,8 +217,6 @@ petal length (cm) <= 1.90, 감소량 0.3333
 
 특성이 $m$ 개, 각 특성의 고유값이 평균 $n$ 개면 노드 하나당 $O(mn)$ 번의 불순도 계산이 든다. sklearn은 특성을 한 번 정렬해두고 임계값을 옮겨가며 클래스 카운트를 증분 갱신해서 이 비용을 줄인다.
 
----
-
 ## 결정 경계가 계단 모양인 이유
 
 분할 조건이 늘 "특성 하나 $\le$ 임계값" 이라는 것은 곧 결정 경계가 **축에 평행한 직선**뿐이라는 뜻이다. 깊이 2 트리가 꽃잎 길이와 꽃잎 너비 평면을 나누는 모습을 그려보면 이렇다.
@@ -194,39 +228,98 @@ petal length (cm) <= 1.90, 감소량 0.3333
      role="img" aria-label="꽃잎 길이와 꽃잎 너비 평면이 두 번의 축 평행 분할로 세 영역으로 나뉜 그림. 꽃잎 길이 2.45 왼쪽은 setosa, 오른쪽은 꽃잎 너비 1.75를 기준으로 위가 virginica, 아래가 versicolor다">
 <text x="200" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text, #1c1917)">축에 평행한 두 번의 분할</text>
 <!-- 영역 -->
-<rect x="62" y="48" width="108.5" height="220" fill="var(--bg-success, #f0fdf4)" stroke="var(--border, #e7e5e4)"/>
-<rect x="170.5" y="48" width="201.5" height="72" fill="var(--bg-warn, #fffbeb)" stroke="var(--border, #e7e5e4)"/>
-<rect x="170.5" y="120" width="201.5" height="148" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<rect x="62" y="48" width="75" height="220" fill="var(--bg-success, #f0fdf4)" stroke="var(--border, #e7e5e4)"/>
+<rect x="137" y="48" width="235" height="72" fill="var(--bg-warn, #fffbeb)" stroke="var(--border, #e7e5e4)"/>
+<rect x="137" y="120" width="235" height="148" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
 <!-- 분할선 -->
-<line x1="170.5" y1="48" x2="170.5" y2="268" stroke="var(--primary, #0a756c)" stroke-width="2"/>
-<line x1="170.5" y1="120" x2="372" y2="120" stroke="var(--primary, #0a756c)" stroke-width="2"/>
-<text x="170.5" y="40" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">분기 1</text>
-<text x="206" y="113" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">분기 2</text>
+<line x1="137" y1="48" x2="137" y2="268" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<line x1="137" y1="120" x2="372" y2="120" stroke="var(--primary, #0a756c)" stroke-width="2"/>
+<text x="137" y="40" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">분기 1</text>
+<text x="175" y="113" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">분기 2</text>
 <!-- 영역 라벨 -->
-<text x="116" y="168" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">setosa</text>
-<text x="271" y="90" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">virginica</text>
-<text x="271" y="200" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">versicolor</text>
+<text x="99.5" y="168" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">setosa</text>
+<text x="254.5" y="90" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">virginica</text>
+<text x="254.5" y="200" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">versicolor</text>
 <!-- 축 -->
 <line x1="62" y1="268" x2="372" y2="268" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
 <line x1="62" y1="48" x2="62" y2="268" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
-<text x="170.5" y="286" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">2.45</text>
+<text x="137" y="286" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">2.45</text>
 <text x="56" y="125" text-anchor="end" font-size="14" fill="var(--text-muted, #6d6762)">1.75</text>
 <text x="217" y="308" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">꽃잎 길이 (cm)</text>
 <text x="18" y="158" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)" transform="rotate(-90 18 158)">꽃잎 너비 (cm)</text>
 </svg>
 </div>
 
-리프 하나가 영역 하나에 대응한다. 깊이를 늘리면 영역이 더 잘게 쪼개지면서 경계가 계단처럼 촘촘해지고, 제한을 두지 않으면 결국 훈련 데이터의 점 하나하나를 감싸는 영역까지 만들어진다.
+리프 하나가 영역 하나에 대응한다. 깊이를 늘리면 영역이 더 잘게 쪼개지면서 경계가 계단처럼 촘촘해진다. 같은 두 특성으로 깊이 제한 없이 키우면 리프가 셋에서 여덟으로 늘어난다.
 
-![max_depth에 따른 결정 경계 비교](./decision-boundary-comparison.png)
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 320" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 꽃잎 길이와 꽃잎 너비 평면을 깊이 제한 없이 키운 트리가 여덟 개 영역으로 나눈 그림. 꽃잎 너비 1.75 바로 아래의 좁은 띠가 세 조각으로 잘려 있고, 각 조각은 샘플 한두 개만 담는다">
+<defs>
+<marker id="dt5Arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M0 0 L8 4 L0 8 Z" fill="var(--text-danger, #cb2121)"/>
+</marker>
+</defs>
+<text x="200" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text, #1c1917)">제한 없이 키운 트리의 결정 경계</text>
+<!-- 영역 -->
+<rect x="62" y="48" width="75" height="220" fill="var(--bg-success, #f0fdf4)"/>
+<rect x="137" y="48" width="235" height="72" fill="var(--bg-warn, #fffbeb)"/>
+<rect x="137" y="120" width="129" height="8" fill="var(--bg-warn, #fffbeb)"/>
+<rect x="137" y="128" width="129" height="140" fill="var(--bg-subtle, #f5f4f2)"/>
+<rect x="266" y="120" width="26" height="17" fill="var(--bg-subtle, #f5f4f2)"/>
+<rect x="292" y="120" width="80" height="17" fill="var(--bg-warn, #fffbeb)"/>
+<rect x="266" y="137" width="106" height="131" fill="var(--bg-warn, #fffbeb)"/>
+<rect x="62" y="48" width="310" height="220" fill="none" stroke="var(--border, #e7e5e4)"/>
+<!-- 분할선 -->
+<g stroke="var(--primary, #0a756c)" stroke-width="1.6">
+<line x1="137" y1="48" x2="137" y2="268"/>
+<line x1="137" y1="120" x2="372" y2="120"/>
+<line x1="266" y1="120" x2="266" y2="268"/>
+<line x1="137" y1="128" x2="266" y2="128"/>
+<line x1="266" y1="137" x2="372" y2="137"/>
+<line x1="292" y1="120" x2="292" y2="137"/>
+<line x1="261" y1="48" x2="261" y2="120"/>
+</g>
+<!-- 얇은 리프 -->
+<g fill="none" stroke="var(--text-danger, #cb2121)" stroke-width="1.6">
+<rect x="137" y="120" width="129" height="8"/>
+<rect x="266" y="120" width="26" height="17"/>
+<rect x="292" y="120" width="80" height="17"/>
+</g>
+<!-- 영역 라벨 -->
+<g text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">
+<text x="99.5" y="168">setosa</text>
+<text x="199" y="90">virginica</text>
+<text x="201.5" y="205">versicolor</text>
+<text x="319" y="243">virginica</text>
+</g>
+<line x1="318" y1="155" x2="318" y2="141" stroke="var(--text-danger, #cb2121)" stroke-width="1.4" marker-end="url(#dt5Arrow)"/>
+<g text-anchor="middle" font-size="14" font-weight="600" fill="var(--text-danger, #cb2121)">
+<text x="318" y="177">샘플 1~2개를</text>
+<text x="318" y="194">감싼 리프 3개</text>
+</g>
+<!-- 축 -->
+<line x1="62" y1="268" x2="372" y2="268" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
+<line x1="62" y1="48" x2="62" y2="268" stroke="var(--text-muted, #6d6762)" stroke-width="1.5"/>
+<g font-size="14" fill="var(--text-muted, #6d6762)">
+<text x="137" y="286" text-anchor="middle">2.45</text>
+<text x="266" y="286" text-anchor="middle">4.95</text>
+<text x="56" y="125" text-anchor="end">1.75</text>
+<text x="217" y="308" text-anchor="middle">꽃잎 길이 (cm)</text>
+<text x="18" y="158" text-anchor="middle" transform="rotate(-90 18 158)">꽃잎 너비 (cm)</text>
+</g>
+</svg>
+</div>
+
+새로 생긴 다섯 영역 중 셋은 꽃잎 너비 1.75 바로 아래에 깔린 좁은 띠를 세 조각으로 자른 것이고, 조각마다 훈련 샘플이 한두 개씩만 들어 있다. 이런 영역은 그 안에 들어온 몇 개 점의 위치가 그대로 규칙이 된 것이라, 데이터가 조금만 달라져도 사라지거나 자리를 옮긴다. 과적합이 결정 경계에 드러나는 모습이 이것이다.
 
 45도로 기운 경계가 필요한 문제라면 트리는 그것을 계단으로 근사해야 하고, 그만큼 분할이 많이 필요해진다. 반대로 특성 축이 곧 의미 있는 기준인 데이터(임계값이 실제로 존재하는 센서 값, 나이 구간 등)에서는 이 제약이 오히려 잘 맞는다.
 
----
-
 ## 과적합과 규제
 
-깊이 제한이 없으면 트리는 리프마다 샘플이 하나 남을 때까지 쪼개면서 훈련 데이터를 통째로 외운다. 깊이를 3으로 묶으면 훈련 점수를 조금 내주는 대신 그 암기를 막는다.
+깊이 제한이 없으면 트리는 모든 리프가 순수해질 때까지 쪼갠다. 클래스가 섞인 구석마다 분할을 하나씩 더 붙이는 셈이라 훈련 데이터의 잡음까지 규칙으로 새긴다. 깊이를 3으로 묶으면 훈련 점수를 조금 내주는 대신 그 암기를 막는다.
 
 ```python
 from sklearn.tree import DecisionTreeClassifier
@@ -244,7 +337,7 @@ print(f"훈련 {clf.score(X_train, y_train):.4f} / 테스트 {clf.score(X_test, 
 훈련 0.9524 / 테스트 1.0000
 ```
 
-깊이를 바꿔가며 재보면 훈련 정확도는 단조롭게 오른다.
+깊이를 바꿔가며 재보면 훈련 정확도는 단조롭게 오른다. 훈련·테스트 열은 위와 같은 7:3 분할에서, 교차검증 열은 나누지 않은 150건 전체에 `cross_val_score(..., cv=5)`를 돌려 얻은 값이고, 트리는 모두 `random_state=42`다.
 
 | max_depth | 훈련 | 테스트 | 5겹 교차검증 |
 |---|---|---|---|
@@ -272,15 +365,13 @@ Iris는 클래스가 잘 갈라져 있어서 테스트 정확도가 떨어지지
 
 훈련 데이터를 조금만 바꿔도 루트의 분할 기준이 통째로 달라지고, 그 아래 트리 전체가 다시 그려진다. 편향은 낮지만 분산이 큰 전형적인 모델이다.
 
-깊이 제한은 이 분산을 눌러주는 대신 편향을 올린다. 분산만 줄이고 싶다면 트리 하나를 규제하는 대신 여러 그루를 학습해 평균을 내는 편이 낫고, 랜덤 포레스트와 부스팅이 그 방향에서 나왔다.
+깊이 제한은 이 분산을 눌러주는 대신 편향을 올린다. 규제 파라미터로 얻을 수 있는 것은 이 맞바꿈까지다.
 
 :::
 
----
-
 ## 학습된 트리 읽기
 
-`plot_tree`로 그린 그림에서 노드 하나는 다섯 줄로 표시된다.
+`plot_tree`로 그린 그림에서 내부 노드 하나는 다섯 줄로 표시된다. 리프는 분할 조건이 없어 네 줄이다.
 
 ```python
 from sklearn.tree import plot_tree
@@ -289,7 +380,7 @@ plot_tree(clf, feature_names=iris.feature_names,
           class_names=iris.target_names, filled=True, rounded=True)
 ```
 
-![sklearn plot_tree로 그린 Iris 결정 트리](./decision-tree-structure.png)
+위에서 학습한 깊이 3 트리의 루트는 이렇게 찍힌다.
 
 | 줄 | 뜻 |
 |---|---|
@@ -299,9 +390,7 @@ plot_tree(clf, feature_names=iris.feature_names,
 | `value = [31, 37, 37]` | 클래스별 샘플 수 |
 | `class = versicolor` | 다수 클래스, 즉 이 노드의 예측값 |
 
-`filled=True`를 주면 다수 클래스에 따라 노드 색이 달라지고, 색이 진할수록 순수한 노드다. 예측이 이상할 때 이 그림을 따라 내려가면 어느 분할에서 갈라졌는지 바로 보인다.
-
----
+이 루트는 versicolor와 virginica가 37개로 동점인데, sklearn은 이럴 때 클래스 순서가 앞선 쪽을 택한다. `filled=True`를 주면 다수 클래스에 따라 노드 색이 달라지고, 색이 진할수록 순수한 노드다. 예측이 이상할 때 이 그림을 따라 내려가면 어느 분할에서 갈라졌는지 바로 보인다.
 
 ## 자주 하는 실수
 
@@ -313,25 +402,19 @@ plot_tree(clf, feature_names=iris.feature_names,
 clf_balanced = DecisionTreeClassifier(class_weight='balanced', random_state=42)
 ```
 
----
-
 ## 마치며
 
 결정 트리의 학습은 결국 한 문장으로 줄어든다. **불순도를 가장 많이 줄이는 분할을 탐욕적으로 반복한다.** 지니와 엔트로피는 그 불순도를 재는 두 가지 자일 뿐이고, 어느 쪽을 쓰든 트리의 모양은 거의 같다.
 
-이 단순함이 장점과 약점을 동시에 만든다. 스케일링도 인코딩도 크게 신경 쓸 필요가 없고 학습된 모델을 그림으로 읽을 수 있는 것이 장점이라면, 매 단계 눈앞의 이득만 보고 고르기 때문에 데이터가 조금만 달라져도 위쪽 분할이 바뀌고 그 아래가 전부 흔들리는 것이 약점이다.
+이 단순함이 강점과 약점을 한꺼번에 만든다. 값의 순서만 보므로 스케일링에 손댈 일이 없고, 학습된 규칙을 그대로 읽을 수 있다. 대신 매 단계 눈앞의 이득만 보고 고르기 때문에 위쪽 분할 하나가 바뀌면 그 아래가 전부 다시 그려진다.
 
 그래서 실무에서 단일 트리를 그대로 쓰는 일은 드물다. 다음 글에서는 트리 여러 그루를 학습해 예측을 합치는 방법으로 이 분산을 줄인다.
-
----
 
 ## 함께 보면 좋은 글
 
 - [편향-분산 트레이드오프](/ml/bias-variance/) : 트리가 왜 고분산 모델로 분류되는지
 - [앙상블 학습과 배깅](/ml/ensemble-and-bagging/) : 트리 여러 그루를 합쳐 분산을 줄이는 원리
 - [랜덤 포레스트](/ml/random-forest/) : 트리마다 후보 특성을 달리해 상관관계를 낮추는 방법
-
----
 
 ## 참고자료
 

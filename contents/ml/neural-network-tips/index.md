@@ -31,7 +31,7 @@ $$\mathbb{E}\bigl[\mathrm{ReLU}(z)^2\bigr] = \tfrac{1}{2}\mathrm{Var}(z)$$
 
 $$\sigma^2 = \frac{1}{n_{in}} \;(\text{순전파 기준}), \qquad \sigma^2 = \frac{2}{n_{in} + n_{out}} \;(\text{절충안})$$
 
-$n_{in}$ 은 그 층에 들어오는 뉴런 수, $n_{out}$ 은 나가는 뉴런 수다. 순전파에서 분산을 유지하려면 $1/n_{in}$ 이 맞고 역전파 기준으로는 $1/n_{out}$ 이 맞는데, 세 번째 식은 두 값의 조화평균이다.
+$n_{in}$ 은 그 층에 들어오는 뉴런 수, $n_{out}$ 은 나가는 뉴런 수다. 순전파에서 분산을 유지하려면 $1/n_{in}$ 이 맞고 역전파 기준으로는 $1/n_{out}$ 이 맞는다. 절충안은 두 값의 조화평균이다.
 
 시그모이드와 tanh는 입력이 0 근처일 때 기울기가 거의 일정해서 이 선형 가정이 성립한다. 하지만 ReLU에는 맞지 않는다. 위에서 본 $\frac{1}{2}$ 배 손실을 계산에 넣지 않았기 때문이다. 2015년 Kaiming He가 그 절반을 보상하는 값을 제시했다.
 
@@ -39,7 +39,7 @@ $$\sigma^2 = \frac{2}{n_{in}}$$
 
 이 값을 배율식에 넣으면 $\frac{n \cdot (2/n)}{2} = 1$ 로 정확히 떨어진다. 폭이 256인 층 10개를 실제로 통과시켜 보면 차이가 분명하다.
 
-| 초기화 | 층당 배율 | 10층 통과 후 신호 크기 |
+| 초기화 | 층당 배율 | 10층 통과 후 (처음 대비) |
 |---|---|---|
 | 표준편차 0.01 고정 | 0.0128 | 약 $10^{-19}$ |
 | Xavier ($\sigma^2 = 1/n$) | 0.5 | 약 0.001 |
@@ -109,7 +109,7 @@ $$\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad y_i = \ga
 
 마지막 줄이 핵심이다. 정규화만 하고 끝내면 모든 층의 입력이 0 근처에 몰려 활성화 함수의 비선형 구간을 제대로 쓰지 못한다. $\gamma$ 와 $\beta$ 는 학습되는 파라미터로, 극단적으로는 $\gamma = \sigma_B$, $\beta = \mu_B$ 를 학습해 정규화를 통째로 되돌릴 수도 있다. 정규화가 도움이 되는 층에서는 남겨 두고 방해가 되는 층에서는 걷어내는 결정을 망이 직접 하게 만든 장치다.
 
-BatchNorm의 효과가 정말 Internal Covariate Shift 때문인지는 논쟁이 있다. Santurkar 등이 2018년에 낸 반론은 실제 기여가 손실 지형을 매끄럽게 펴서 더 큰 학습률을 견디게 만드는 데 있다고 본다. 원리에 대한 설명은 갈리지만, 학습이 빨라지고 초기값에 덜 민감해지며 미니배치 통계의 잡음이 약한 규제로 작용한다는 관찰 자체는 흔들리지 않았다.
+BatchNorm의 효과가 정말 Internal Covariate Shift 때문인지는 논쟁이 있다. Santurkar 등이 2018년에 낸 반론은 실제 기여가 손실 지형을 매끄럽게 펴서 더 큰 학습률을 견디게 만드는 데 있다고 본다. 원리를 두고는 설명이 갈리지만, 학습이 빨라지고 초기값에 덜 민감해지며 미니배치 통계의 잡음이 약한 규제로 작용한다는 관찰 자체는 양쪽이 함께 인정한다.
 
 넣는 자리는 보통 선형 변환과 활성화 함수 사이다.
 
@@ -207,7 +207,7 @@ BatchNorm은 미니배치 차원으로, 즉 같은 뉴런의 값을 여러 샘�
 </svg>
 </div>
 
-매 스텝 다른 부분망으로 학습하는 셈이라, 뉴런이 $n$ 개면 최대 $2^n$ 개의 서로 다른 부분망이 존재한다. 학습이 끝나고 모든 뉴런을 켜면 그 부분망들을 평균 낸 것과 비슷하게 동작한다. 규제 효과의 다른 설명은 의존 구조 쪽이다. 어떤 뉴런이든 언제든 사라질 수 있으므로, 망은 특정 뉴런 하나에 판단을 몰아주지 못하고 여러 뉴런에 정보를 나눠 갖는 방향으로 학습한다.
+매 스텝 다른 부분망으로 학습하는 셈이라, 뉴런이 $n$ 개면 최대 $2^n$ 개의 서로 다른 부분망이 존재한다. 학습이 끝나고 모든 뉴런을 켜면 그 부분망들을 평균 낸 것과 비슷하게 동작한다. 규제 효과를 설명하는 다른 방식은 뉴런 사이의 의존을 끊는다는 쪽이다. 어떤 뉴런이든 언제든 사라질 수 있으므로, 망은 특정 뉴런 하나에 판단을 몰아주지 못하고 여러 뉴런에 정보를 나눠 갖는 방향으로 학습한다.
 
 여기서 스케일을 맞춰야 한다. 학습 때는 뉴런의 $(1-p)$ 만 살아 있는데 추론 때는 전부 켜지므로 다음 층이 받는 값의 크기가 달라진다. **Inverted Dropout**은 학습 때 살아남은 값을 $\frac{1}{1-p}$ 배로 키워 기댓값을 맞춘다. 그러면 추론 때는 아무것도 하지 않아도 된다.
 
@@ -219,7 +219,7 @@ def dropout_forward(x, p=0.5, training=True):
     return x * mask / (1 - p)
 ```
 
-비율은 은닉층 기준 0.2에서 0.5 사이에서 고른다. $p = 0.5$ 가 가장 다양한 부분망 조합을 만들지만 그만큼 학습이 느려져서, 실무에서는 0.2에서 0.3 정도가 무난하다. 입력층에는 거의 쓰지 않고 출력층에는 쓰지 않는다. 과적합이 심하면 올리고, 훈련 손실조차 안 내려가면 낮추거나 뺀다.
+비율은 은닉층 기준 0.2에서 0.5 사이에서 고른다. $p = 0.5$ 가 가장 다양한 부분망 조합을 만들지만 그만큼 수렴이 느려지니, 0.2에서 0.3으로 시작해 검증 손실을 보며 조정하는 편이 낫다. 입력층에는 거의 쓰지 않고 출력층에는 쓰지 않는다. 과적합이 심하면 올리고, 훈련 손실조차 안 내려가면 낮추거나 뺀다.
 
 :::warning
 
@@ -252,19 +252,9 @@ for epoch in range(max_epochs):
 
 관건은 `patience`다. 검증 손실은 잡음 때문에 일시적으로 올라갔다 내려온다. 너무 작으면 아직 학습 중인 모델을 잘라내고, 너무 크면 이미 과적합된 뒤에야 멈춘다. 보통 5에서 20 사이로 둔다.
 
-과적합의 가장 근본적인 해법은 데이터를 더 모으는 것인데 대개 비싸다. **Data Augmentation**은 기존 데이터를 변형해 새 샘플을 만들어 그 비용을 우회한다. 이미지라면 좌우 반전, 소각도 회전, 랜덤 크롭, 색상 변형이 표준 조합이다.
+과적합의 가장 근본적인 해법은 데이터를 더 모으는 것인데 대개 비싸다. **Data Augmentation**은 기존 데이터를 변형해 새 샘플을 만들어 그 비용을 우회한다. 이미지라면 좌우 반전과 소각도 회전, 랜덤 크롭, 밝기와 대비 변형이 표준 조합이고(`transforms.Compose`로 묶는다), 텍스트에서는 동의어 치환과 한국어를 영어로 옮겼다 되돌리는 역번역을 쓴다.
 
-```python
-train_transform = transforms.Compose([
-    transforms.RandomHorizontalFlip(p=0.5),
-    transforms.RandomRotation(15),
-    transforms.RandomCrop(224, padding=16),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2),
-    transforms.ToTensor(),
-])
-```
-
-텍스트에서는 동의어 치환, 한국어를 영어로 옮겼다 되돌리는 역번역, 무작위 삽입과 삭제를 쓴다. 어느 쪽이든 원본의 의미가 보존되는 변형만 골라야 한다. 고양이 사진은 좌우로 뒤집어도 고양이지만 숫자 6은 상하로 뒤집으면 9가 된다.
+어느 쪽이든 원본의 의미가 보존되는 변형만 골라야 한다. 고양이 사진은 좌우로 뒤집어도 고양이지만 숫자 6은 상하로 뒤집으면 9가 된다.
 
 ## 하나로 합치면
 
@@ -329,3 +319,11 @@ class StableNet(nn.Module):
 - [옵티마이저](/ml/optimizers/) : 초기화 이후 기울기를 어떤 규칙으로 반영할지의 문제
 - [규제](/ml/regularization/) : Dropout과 목적이 같은 파라미터 크기 제약
 - [편향-분산 트레이드오프](/ml/bias-variance/) : 과적합과 과소적합을 가르는 기준
+
+## 참고자료
+
+- [Srivastava et al., Dropout: A Simple Way to Prevent Neural Networks from Overfitting (JMLR 2014)](https://jmlr.org/papers/v15/srivastava14a.html)
+- [Ioffe & Szegedy, Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift (2015)](https://arxiv.org/abs/1502.03167)
+- [Glorot & Bengio, Understanding the Difficulty of Training Deep Feedforward Neural Networks (AISTATS 2010)](https://proceedings.mlr.press/v9/glorot10a.html)
+- [He et al., Delving Deep into Rectifiers (2015)](https://arxiv.org/abs/1502.01852)
+- [Santurkar et al., How Does Batch Normalization Help Optimization? (2018)](https://arxiv.org/abs/1805.11604)

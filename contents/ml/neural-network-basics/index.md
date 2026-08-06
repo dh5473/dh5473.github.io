@@ -15,8 +15,6 @@ thumbnail: './thumbnail.png'
 
 구조 자체는 생각보다 단순하다. 이미 아는 로지스틱 회귀를 옆으로 여러 개 늘어놓고, 그 묶음을 앞뒤로 쌓은 것이다.
 
----
-
 ## 퍼셉트론, 뉴런 하나가 하는 일
 
 1957년 프랭크 로젠블랫이 발표한 **퍼셉트론(Perceptron)** 은 인공 뉴런 하나짜리 모델이다. 하는 일은 두 단계뿐이다. 입력에 가중치를 곱해 전부 더하고, 그 결과를 함수 하나에 통과시킨다.
@@ -51,14 +49,6 @@ $b$는 문턱의 위치를 옮긴다. $b$가 없으면 $z = 0$이라는 경계�
 
 마지막 줄이 결정적이다. 계단 함수는 $z=0$에서 미분이 정의되지 않고 나머지 구간에서는 도함수가 0이라, 경사하강법을 쓸 방법이 없다. 퍼셉트론이 자기만의 학습 규칙을 따로 가져야 했던 이유이자, 신경망이 계단 함수를 버린 이유다.
 
-:::info
-
-**로지스틱 회귀 = 뉴런 하나짜리 신경망**
-
-신경망은 처음부터 새로 배우는 모델이 아니다. 이미 아는 모델을 여러 개 늘어놓고 층으로 쌓은 것이다.
-
-:::
-
 ### 퍼셉트론 학습 규칙
 
 퍼셉트론은 틀린 샘플을 만날 때마다 가중치를 고친다.
@@ -90,8 +80,6 @@ print(epoch, [1 if np.dot(w, xi) + b >= 0 else 0 for xi in X])
 ```
 
 네 번째 에폭에서 오류가 사라진다. 퍼셉트론 수렴 정리는 데이터가 **선형 분리 가능**하기만 하면 퍼셉트론이 유한 번 안에 반드시 답을 찾는다고 보장한다. 문제는 그 조건이다.
-
----
 
 ## XOR, 직선 하나로는 안 되는 문제
 
@@ -152,8 +140,6 @@ AND와 OR은 직선 하나로 갈린다. XOR은 아니다.
 우회로가 없지는 않다. $x_1x_2$ 같은 교차항을 특성으로 직접 추가하면 XOR도 선형 분리가 된다. 다만 이건 어떤 조합이 필요한지 사람이 미리 알아야 한다는 뜻이다. 특성이 수백 개로 늘어나면 그 판단은 불가능해진다.
 
 그래서 방향을 바꾼다. 쓸모 있는 특성 조합을 모델이 직접 만들게 한다.
-
----
 
 ## 은닉층 하나를 넣으면 풀린다
 
@@ -245,8 +231,6 @@ $n^{[l]}$은 층 $l$의 뉴런 수다. 현재 층의 뉴런 하나는 이전 층
 
 :::
 
----
-
 ## 은닉층 하나로 어디까지 갈 수 있나
 
 1989년 조지 사이벤코가 증명한 **범용 근사 정리(Universal Approximation Theorem)** 가 그 상한을 알려준다.
@@ -254,8 +238,6 @@ $n^{[l]}$은 층 $l$의 뉴런 수다. 현재 층의 뉴런 하나는 이전 층
 > 은닉층이 하나이고 뉴런 수가 충분하면, 시그모이드 활성화 함수를 쓰는 신경망은 유계 폐구간 위의 임의의 연속 함수를 원하는 정밀도로 근사할 수 있다.
 
 주의할 점은 이 정리가 그런 가중치의 **존재**만 말한다는 것이다. 어떻게 찾는지는 말하지 않고, 경사하강법이 실제로 그 값에 도달한다는 보장도 없다. "뉴런 수가 충분하면"의 충분함이 현실적으로 감당 못 할 크기일 수도 있다. 특정 함수족에서는 얕은 한 층으로 표현하려면 뉴런이 지수적으로 필요한 반면 층을 나누면 훨씬 적게 든다는 결과들이 알려져 있고, 딥러닝이 넓은 쪽 대신 깊은 쪽을 택한 근거가 여기에 있다.
-
----
 
 ## sklearn으로 확인하기
 
@@ -275,7 +257,7 @@ print(mlp.predict(X), mlp.score(X, y))
 # [0 1 1 0] 1.0
 ```
 
-은닉 뉴런을 2개까지 줄이면 초기값에 따라 실패하기도 한다. 표현할 수 있다는 것과 경사하강법이 실제로 그 해를 찾아낸다는 것은 다른 문제라는 사실이 이런 데서 드러난다.
+은닉 뉴런을 2개로 줄이면 대부분의 초기값에서 실패한다. `random_state`를 0부터 29까지 바꿔 가며 돌리면 은닉 8개는 30번 중 28번 정확도 1.0에 도달하지만 은닉 2개는 4번뿐이다. 표현할 수 있다는 것과 경사하강법이 실제로 그 해를 찾아낸다는 것은 다른 문제라는 사실이 이런 데서 드러난다.
 
 좀 더 현실적인 데이터에서 은닉층 구성에 따라 결정 경계가 어떻게 달라지는지 보자.
 
@@ -286,13 +268,79 @@ X, y = make_moons(n_samples=200, noise=0.2, random_state=42)
 for layers in [(2,), (8,), (16, 8)]:
     mlp = MLPClassifier(hidden_layer_sizes=layers, activation='relu',
                         max_iter=2000, random_state=42).fit(X, y)
+    print(layers, mlp.score(X, y))
 ```
 
-![은닉층 구성에 따른 결정 경계 변화](./mlp-decision-boundaries.png)
+```text
+(2,) 0.85
+(8,) 0.845
+(16, 8) 0.97
+```
 
-뉴런이 2개일 때는 경계가 거의 직선이고, 8개가 되면 한 번 꺾인다. 층을 두 개 쌓았을 때만 반달 모양을 따라 휘면서 정확도가 눈에 띄게 오른다. 물론 복잡할수록 좋은 것은 아니다. 표현력이 커지면 훈련 데이터의 잡음까지 따라가는 과적합 위험도 같이 커진다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 388" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="반달 두 개 모양으로 흩어진 데이터 200개 위에 은닉층 구성이 다른 세 신경망의 결정 경계를 겹쳐 그린 그림. 은닉 뉴런 2개와 8개의 경계는 직선 조각 몇 개로 두 반달을 가로지르고 정확도가 0.85 근처에 머물지만, 층을 두 개 쌓은 16과 8의 경계는 반달 사이를 파고들며 정확도가 0.97로 오른다.">
+<style>
+.nb3-ttl { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.nb3-lab { fill: var(--text, #1c1917); font-size: 15px; }
+.nb3-a { fill: var(--accent, #9d5604); }
+.nb3-b { fill: var(--primary, #0a756c); }
+.nb3-p { fill: none; stroke: var(--text, #1c1917); }
+</style>
+<text class="nb3-ttl" x="200" y="26" text-anchor="middle">은닉층 구성에 따른 결정 경계</text>
+<rect x="44" y="46" width="332" height="211" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<!-- 클래스 0 데이터 100개 -->
+<g class="nb3-a">
+<circle cx="89" cy="167" r="3"/><circle cx="244" cy="136" r="3"/><circle cx="228" cy="126" r="3"/><circle cx="115" cy="108" r="3"/><circle cx="183" cy="101" r="3"/><circle cx="144" cy="124" r="3"/><circle cx="107" cy="137" r="3"/><circle cx="177" cy="58" r="3"/><circle cx="86" cy="114" r="3"/><circle cx="150" cy="121" r="3"/>
+<circle cx="242" cy="121" r="3"/><circle cx="114" cy="136" r="3"/><circle cx="148" cy="118" r="3"/><circle cx="136" cy="116" r="3"/><circle cx="117" cy="117" r="3"/><circle cx="139" cy="92" r="3"/><circle cx="258" cy="153" r="3"/><circle cx="254" cy="122" r="3"/><circle cx="200" cy="95" r="3"/><circle cx="96" cy="119" r="3"/>
+<circle cx="102" cy="128" r="3"/><circle cx="122" cy="124" r="3"/><circle cx="203" cy="112" r="3"/><circle cx="243" cy="118" r="3"/><circle cx="232" cy="120" r="3"/><circle cx="239" cy="124" r="3"/><circle cx="125" cy="140" r="3"/><circle cx="229" cy="181" r="3"/><circle cx="94" cy="110" r="3"/><circle cx="83" cy="173" r="3"/>
+<circle cx="105" cy="183" r="3"/><circle cx="118" cy="153" r="3"/><circle cx="214" cy="101" r="3"/><circle cx="258" cy="152" r="3"/><circle cx="199" cy="128" r="3"/><circle cx="185" cy="102" r="3"/><circle cx="114" cy="130" r="3"/><circle cx="149" cy="67" r="3"/><circle cx="192" cy="112" r="3"/><circle cx="247" cy="95" r="3"/>
+<circle cx="245" cy="165" r="3"/><circle cx="124" cy="120" r="3"/><circle cx="152" cy="76" r="3"/><circle cx="111" cy="140" r="3"/><circle cx="217" cy="109" r="3"/><circle cx="160" cy="78" r="3"/><circle cx="236" cy="113" r="3"/><circle cx="183" cy="124" r="3"/><circle cx="233" cy="127" r="3"/><circle cx="247" cy="142" r="3"/>
+<circle cx="214" cy="99" r="3"/><circle cx="243" cy="170" r="3"/><circle cx="241" cy="90" r="3"/><circle cx="212" cy="120" r="3"/><circle cx="138" cy="89" r="3"/><circle cx="265" cy="178" r="3"/><circle cx="122" cy="111" r="3"/><circle cx="158" cy="91" r="3"/><circle cx="193" cy="95" r="3"/><circle cx="215" cy="105" r="3"/>
+<circle cx="196" cy="84" r="3"/><circle cx="243" cy="89" r="3"/><circle cx="227" cy="105" r="3"/><circle cx="124" cy="157" r="3"/><circle cx="168" cy="94" r="3"/><circle cx="189" cy="73" r="3"/><circle cx="108" cy="161" r="3"/><circle cx="192" cy="113" r="3"/><circle cx="252" cy="159" r="3"/><circle cx="162" cy="96" r="3"/>
+<circle cx="189" cy="72" r="3"/><circle cx="98" cy="132" r="3"/><circle cx="212" cy="73" r="3"/><circle cx="248" cy="130" r="3"/><circle cx="115" cy="149" r="3"/><circle cx="91" cy="138" r="3"/><circle cx="74" cy="125" r="3"/><circle cx="259" cy="154" r="3"/><circle cx="244" cy="173" r="3"/><circle cx="143" cy="78" r="3"/>
+<circle cx="233" cy="157" r="3"/><circle cx="123" cy="107" r="3"/><circle cx="172" cy="107" r="3"/><circle cx="155" cy="103" r="3"/><circle cx="149" cy="98" r="3"/><circle cx="151" cy="97" r="3"/><circle cx="184" cy="77" r="3"/><circle cx="114" cy="154" r="3"/><circle cx="220" cy="115" r="3"/><circle cx="146" cy="116" r="3"/>
+<circle cx="202" cy="86" r="3"/><circle cx="235" cy="182" r="3"/><circle cx="163" cy="96" r="3"/><circle cx="84" cy="171" r="3"/><circle cx="96" cy="119" r="3"/><circle cx="113" cy="127" r="3"/><circle cx="233" cy="124" r="3"/><circle cx="118" cy="121" r="3"/><circle cx="228" cy="146" r="3"/><circle cx="61" cy="144" r="3"/>
+</g>
+<!-- 클래스 1 데이터 100개 -->
+<g class="nb3-b">
+<circle cx="256" cy="194" r="3"/><circle cx="188" cy="170" r="3"/><circle cx="202" cy="146" r="3"/><circle cx="286" cy="179" r="3"/><circle cx="326" cy="173" r="3"/><circle cx="321" cy="185" r="3"/><circle cx="293" cy="202" r="3"/><circle cx="311" cy="155" r="3"/><circle cx="321" cy="173" r="3"/><circle cx="249" cy="211" r="3"/>
+<circle cx="202" cy="166" r="3"/><circle cx="247" cy="227" r="3"/><circle cx="182" cy="184" r="3"/><circle cx="187" cy="209" r="3"/><circle cx="234" cy="193" r="3"/><circle cx="174" cy="144" r="3"/><circle cx="212" cy="189" r="3"/><circle cx="212" cy="191" r="3"/><circle cx="297" cy="206" r="3"/><circle cx="333" cy="111" r="3"/>
+<circle cx="203" cy="165" r="3"/><circle cx="308" cy="121" r="3"/><circle cx="233" cy="193" r="3"/><circle cx="200" cy="150" r="3"/><circle cx="302" cy="186" r="3"/><circle cx="199" cy="201" r="3"/><circle cx="182" cy="180" r="3"/><circle cx="219" cy="204" r="3"/><circle cx="321" cy="188" r="3"/><circle cx="328" cy="166" r="3"/>
+<circle cx="174" cy="150" r="3"/><circle cx="324" cy="181" r="3"/><circle cx="222" cy="176" r="3"/><circle cx="187" cy="209" r="3"/><circle cx="273" cy="174" r="3"/><circle cx="165" cy="175" r="3"/><circle cx="148" cy="183" r="3"/><circle cx="221" cy="211" r="3"/><circle cx="173" cy="97" r="3"/><circle cx="183" cy="145" r="3"/>
+<circle cx="308" cy="129" r="3"/><circle cx="331" cy="151" r="3"/><circle cx="267" cy="200" r="3"/><circle cx="311" cy="159" r="3"/><circle cx="218" cy="192" r="3"/><circle cx="181" cy="146" r="3"/><circle cx="346" cy="151" r="3"/><circle cx="264" cy="201" r="3"/><circle cx="183" cy="165" r="3"/><circle cx="203" cy="213" r="3"/>
+<circle cx="255" cy="226" r="3"/><circle cx="187" cy="144" r="3"/><circle cx="224" cy="207" r="3"/><circle cx="187" cy="140" r="3"/><circle cx="233" cy="205" r="3"/><circle cx="294" cy="185" r="3"/><circle cx="313" cy="115" r="3"/><circle cx="225" cy="184" r="3"/><circle cx="181" cy="184" r="3"/><circle cx="257" cy="214" r="3"/>
+<circle cx="182" cy="151" r="3"/><circle cx="295" cy="201" r="3"/><circle cx="257" cy="179" r="3"/><circle cx="293" cy="156" r="3"/><circle cx="239" cy="228" r="3"/><circle cx="298" cy="181" r="3"/><circle cx="257" cy="212" r="3"/><circle cx="226" cy="205" r="3"/><circle cx="136" cy="158" r="3"/><circle cx="214" cy="194" r="3"/>
+<circle cx="333" cy="171" r="3"/><circle cx="302" cy="204" r="3"/><circle cx="295" cy="157" r="3"/><circle cx="179" cy="139" r="3"/><circle cx="326" cy="170" r="3"/><circle cx="305" cy="179" r="3"/><circle cx="310" cy="186" r="3"/><circle cx="206" cy="184" r="3"/><circle cx="319" cy="207" r="3"/><circle cx="210" cy="200" r="3"/>
+<circle cx="271" cy="190" r="3"/><circle cx="325" cy="174" r="3"/><circle cx="162" cy="158" r="3"/><circle cx="324" cy="174" r="3"/><circle cx="308" cy="209" r="3"/><circle cx="312" cy="182" r="3"/><circle cx="215" cy="208" r="3"/><circle cx="251" cy="205" r="3"/><circle cx="345" cy="184" r="3"/><circle cx="231" cy="218" r="3"/>
+<circle cx="192" cy="200" r="3"/><circle cx="255" cy="194" r="3"/><circle cx="189" cy="130" r="3"/><circle cx="218" cy="154" r="3"/><circle cx="209" cy="199" r="3"/><circle cx="294" cy="119" r="3"/><circle cx="313" cy="162" r="3"/><circle cx="168" cy="153" r="3"/><circle cx="314" cy="179" r="3"/><circle cx="176" cy="133" r="3"/>
+</g>
+<!-- 세 모델의 결정 경계 -->
+<path class="nb3-p" stroke-width="1.8" stroke-dasharray="2 4" d="M 322 46 L 253 121 L 44 221"/>
+<path class="nb3-p" stroke-width="1.8" stroke-dasharray="9 5" d="M 376 100 L 166 160 L 151 172 L 146 180 L 126 257"/>
+<path class="nb3-p" stroke-width="2.6" d="M 346 46 L 336 60 L 305 97 L 249 182 L 245 184 L 235 180 L 209 143 L 190 127 L 181 122 L 172 116 L 159 132 L 129 163 L 102 196 L 81 225 L 63 257"/>
+<!-- 범례 -->
+<circle class="nb3-a" cx="52" cy="282" r="5"/>
+<text class="nb3-lab" x="64" y="287">클래스 0</text>
+<circle class="nb3-b" cx="200" cy="282" r="5"/>
+<text class="nb3-lab" x="212" y="287">클래스 1</text>
+<path class="nb3-p" stroke-width="1.8" stroke-dasharray="2 4" d="M 48 313 L 76 313"/>
+<text class="nb3-lab" x="86" y="318">은닉 (2,)</text>
+<text class="nb3-lab" x="376" y="318" text-anchor="end">정확도 0.850</text>
+<path class="nb3-p" stroke-width="1.8" stroke-dasharray="9 5" d="M 48 341 L 76 341"/>
+<text class="nb3-lab" x="86" y="346">은닉 (8,)</text>
+<text class="nb3-lab" x="376" y="346" text-anchor="end">정확도 0.845</text>
+<path class="nb3-p" stroke-width="2.6" d="M 48 369 L 76 369"/>
+<text class="nb3-lab" x="86" y="374">은닉 (16, 8)</text>
+<text class="nb3-lab" x="376" y="374" text-anchor="end">정확도 0.970</text>
+</svg>
+</div>
 
----
+ReLU를 쓰는 신경망의 결정 경계는 언제나 직선 조각을 이어 붙인 모양이다. 은닉 뉴런이 2개면 꺾이는 곳이 한 군데뿐이고, 8개로 늘려도 세 군데로 느는 데 그친다. 두 반달을 비스듬히 가로지르는 큰 줄기가 그대로라 정확도도 0.850에서 0.845로 제자리다. 층을 하나 더 얹은 (16, 8)에서는 꺾이는 곳이 열 몇 군데로 늘면서 경계가 반달 사이를 파고들고, 정확도가 0.970으로 올라간다. 뉴런을 옆으로 늘리는 것보다 층을 쌓는 쪽이 조각 수를 훨씬 빠르게 불린다. 얕은 한 층으로 표현하려면 뉴런이 지수적으로 필요하다는 앞 절의 결과가 세는 것도 이 조각 수다.
+
+물론 조각이 많을수록 좋은 것은 아니다. 표현력이 커지면 훈련 데이터의 잡음까지 따라가는 과적합 위험도 같이 커진다.
 
 ## 언제 신경망을 쓰나
 
@@ -304,9 +352,7 @@ for layers in [(2,), (8,), (16, 8)]:
 | 해석 | feature importance | 어려움 |
 | 학습 비용 | CPU로 충분 | GPU 필요 |
 
-정형 데이터에서 신경망이 트리 앙상블을 이기기는 쉽지 않다. 반대로 픽셀이나 토큰처럼 사람이 좋은 특성을 설계하기 어려운 입력에서는 신경망 말고 대안이 없다. 어느 쪽이 더 좋은 모델이냐가 아니라, 어떤 데이터에 어느 쪽이 맞느냐의 문제다.
-
----
+어느 쪽이 더 좋은 모델이냐가 아니라, 어떤 데이터에 어느 쪽이 맞느냐의 문제다.
 
 ## 마치며
 
@@ -316,11 +362,17 @@ for layers in [(2,), (8,), (16, 8)]:
 
 빠진 것은 $W$와 $b$의 값을 어떻게 정하느냐다. 층이 여러 개면 손실이 앞쪽 가중치까지 어떤 경로로 전달되는지부터 따져야 한다. 다음 글에서는 그 앞 단계, 입력이 층을 통과해 예측값이 되는 계산부터 정리한다.
 
----
-
 ## 함께 보면 좋은 글
 
 - [로지스틱 회귀](/ml/logistic-regression/) : 뉴런 하나가 하는 계산을 확률 모델로 유도한다
 - [순전파](/ml/forward-propagation/) : 층을 통과하며 값이 계산되는 과정을 행렬 연산으로 정리한다
 - [활성화 함수](/ml/activation-functions/) : 계단 함수 대신 무엇을 쓰고 왜 그런지 다룬다
 - [결정 경계](/ml/decision-boundary/) : 선형 모델이 그릴 수 있는 경계의 모양
+
+## 참고자료
+
+- [Scikit-learn, Neural Network Models (Supervised)](https://scikit-learn.org/stable/modules/neural_networks_supervised.html)
+- [Scikit-learn, MLPClassifier Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)
+- [George Cybenko, Approximation by Superpositions of a Sigmoidal Function (1989)](https://link.springer.com/article/10.1007/BF02551274)
+- [Deep Learning Book, Ch. 6: Deep Feedforward Networks](https://www.deeplearningbook.org/contents/mlp.html)
+- [Stanford CS231n, Neural Networks Part 1](https://cs231n.github.io/neural-networks-1/)

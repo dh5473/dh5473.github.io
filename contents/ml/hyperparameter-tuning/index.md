@@ -11,8 +11,6 @@ thumbnail: './thumbnail.png'
 
 랜덤 포레스트의 트리를 100그루로 할지 500그루로 할지, XGBoost의 `learning_rate`를 0.1로 할지 0.01로 할지. 모델 구조는 그대로인데 이 선택만으로 검증 점수가 몇 퍼센트포인트씩 움직인다. 문제는 후보 조합이 금방 수천 개가 되고, 조합 하나를 평가하려면 교차 검증 폴드 수만큼 모델을 다시 학습시켜야 한다는 것이다. 결국 튜닝은 "가장 좋은 조합을 찾는 문제"가 아니라 **정해진 학습 횟수를 어디에 쓸 것인가**의 문제다.
 
----
-
 ## 파라미터와 하이퍼파라미터
 
 둘은 자주 혼동되지만 정해지는 시점이 다르다.
@@ -23,8 +21,6 @@ thumbnail: './thumbnail.png'
 | 하이퍼파라미터 | 데이터를 보기 전에 사람이 정한다 | 랜덤 포레스트의 `n_estimators`·`max_depth`, XGBoost의 `learning_rate`·`reg_lambda`, 신경망의 학습률·배치 크기·은닉층 수 |
 
 파라미터는 경사 하강법 같은 옵티마이저가 알아서 최적화한다. 하이퍼파라미터에는 그런 자동 장치가 없다. 값을 넣어보고, 학습시키고, 점수를 보고, 다시 넣어보는 수밖에 없다. 그래서 탐색 전략이 필요하다.
-
----
 
 ## 탐색 방법 네 가지
 
@@ -73,8 +69,6 @@ print(rand.best_params_, rand.best_score_)
 ```
 
 두 객체의 차이는 `param_grid` 대 `param_distributions`, 그리고 `n_iter`의 유무다. 이 사소해 보이는 차이가 탐색 결과를 크게 갈라놓는다.
-
----
 
 ## 격자는 예산을 어디에 쓰는가
 
@@ -156,8 +150,6 @@ Bergstra와 Bengio는 2012년 논문 "Random Search for Hyper-Parameter Optimiza
 
 :::
 
----
-
 ## 이전 결과를 활용하는 베이지안 최적화
 
 Grid Search와 Random Search의 공통 약점은 각 시도가 **독립**이라는 것이다. 99번째 결과가 100번째 선택에 아무 영향을 주지 않는다. 좋은 영역을 이미 찾아놓고도 그 근처를 다시 뽑을 이유를 갖지 못한다.
@@ -197,8 +189,6 @@ print(study.best_params, study.best_value)
 
 탐색 공간이 `objective` 함수 **안에서** 정의된다는 점이 sklearn과 다르다. `if` 문으로 조건부 하이퍼파라미터를 쓸 수 있고(부스터가 `dart`일 때만 `rate_drop`을 뽑는 식), 탐색 도중 성능이 나쁜 시도를 중간에 끊는 프루닝도 붙일 수 있다. 끝난 뒤에는 `optuna.visualization.plot_param_importances(study)`로 어떤 하이퍼파라미터가 점수를 움직였는지 확인한다. 다음 라운드에서 탐색 범위를 좁힐 축을 여기서 고른다.
 
----
-
 ## 튜닝 점수를 최종 성능으로 보고하면 안 된다
 
 `grid_search.best_score_`는 하이퍼파라미터를 고르는 데 이미 쓰인 점수다. 수십 개 조합 중 검증 폴드에서 가장 잘 나온 하나를 골랐으니, 그 값에는 검증 데이터에 맞춘 만큼의 낙관적 편향이 섞여 있다. 조합을 많이 시도할수록 편향은 커진다.
@@ -220,8 +210,6 @@ print(f"{outer_scores.mean():.4f} ± {outer_scores.std():.4f}")
 ```
 
 비용은 안쪽 폴드 수와 바깥 폴드 수의 곱이라 만만치 않다. 그래서 실무에서는 역할을 나눈다. 모델 후보를 비교하고 성능을 보고할 때는 Nested CV를 쓰고, 배포할 최종 모델은 전체 데이터에 일반 CV로 튜닝해 학습한다.
-
----
 
 ## 탐색 공간을 설계하는 법
 
@@ -267,8 +255,8 @@ score = model.best_score
 | 라운드 | 남은 후보 | 후보당 데이터 |
 |---|---|---|
 | 1 | 100 | 1배 |
-| 2 | 33 | 3배 |
-| 3 | 11 | 9배 |
+| 2 | 34 | 3배 |
+| 3 | 12 | 9배 |
 | 4 | 4 | 27배 |
 
 전체 데이터로 100번 학습하는 대신 대부분의 후보를 싼 값에 걸러낸다. sklearn에서는 아직 실험적 기능이라 `from sklearn.experimental import enable_halving_search_cv`를 먼저 import해야 한다.
@@ -292,8 +280,6 @@ score = model.best_score
 
 마지막으로 `random_state`와 샘플러 시드를 고정한다. 시드가 흔들리면 두 조합의 점수 차이가 진짜 차이인지 재실행 노이즈인지 구분할 수 없다.
 
----
-
 ## 마치며
 
 하이퍼파라미터 튜닝을 "더 촘촘한 격자를 짜는 일"로 보면 계산량만 늘고 결과는 잘 나아지지 않는다. 정해진 학습 횟수를 어디에 배분할 것인가로 보면 선택이 달라진다. 무작위 탐색이 격자를 이기는 이유도 더 똑똑한 알고리즘이어서가 아니라, 어느 축이 중요한지 모르는 상황에서 모든 축에 고르게 값을 남기기 때문이다. 베이지안 최적화는 여기서 한 걸음 더 나아가, 이미 쓴 예산으로 다음 예산의 방향을 정한다.
@@ -304,11 +290,16 @@ score = model.best_score
 
 다음 글에서는 튜닝을 다 해도 점수가 오르지 않을 때 무엇을 먼저 봐야 하는지, 학습 곡선과 오차 분석으로 진단하는 방법을 다룬다.
 
----
-
 ## 함께 보면 좋은 글
 
 - [교차 검증](/ml/cross-validation/) : 탐색 점수를 믿을 수 있게 만드는 평가 절차
 - [XGBoost와 LightGBM](/ml/xgboost-vs-lightgbm/) : 손댈 하이퍼파라미터가 가장 많은 모델
 - [규제](/ml/regularization/) : 로그 스케일로 탐색해야 하는 대표적인 하이퍼파라미터
 - [랜덤 포레스트](/ml/random-forest/) : 예제에 쓴 모델의 파라미터가 각각 무슨 일을 하는지
+
+## 참고자료
+
+- [Bergstra & Bengio, "Random Search for Hyper-Parameter Optimization", JMLR 13 (2012)](https://jmlr.org/papers/v13/bergstra12a.html)
+- [Bergstra et al., "Algorithms for Hyper-Parameter Optimization", NIPS 2011](https://papers.nips.cc/paper_files/paper/2011/hash/86e8f7ab32cfd12577bc2619bc635690-Abstract.html)
+- [Scikit-learn, Tuning the hyper-parameters of an estimator](https://scikit-learn.org/stable/modules/grid_search.html)
+- [Optuna: A hyperparameter optimization framework](https://optuna.readthedocs.io/en/stable/)

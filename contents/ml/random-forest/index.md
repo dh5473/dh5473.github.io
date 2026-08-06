@@ -13,8 +13,6 @@ thumbnail: './thumbnail.png'
 
 랜덤 포레스트는 남는 쪽을 겨냥한다. 각 노드에서 분기 후보로 쓸 특성을 전체가 아니라 **무작위로 고른 일부**로 제한한다. 이 한 줄짜리 변경이 $\rho$ 를 끌어내린다.
 
----
-
 ## 후보 특성을 무작위로 제한한다
 
 배깅에서 트리들이 닮아버리는 주범은 예측력이 유난히 강한 특성 하나다. 어느 부트스트랩 샘플을 쓰든 그 특성이 불순도를 가장 많이 줄이므로, 모든 트리가 그것을 루트에 놓는다. 데이터는 달랐는데 트리는 같은 자리에서 갈라지고, 결국 같은 샘플에서 나란히 틀린다.
@@ -113,7 +111,7 @@ f3이 가장 강한 특성이지만 후보로 뽑히는 노드에서만 쓰인�
 
 ### max_features
 
-후보 명단의 크기를 정하는 인자가 `max_features`다. 전체 특성 수를 $p$ 라 할 때 분류는 $\sqrt{p}$, 회귀는 $p$ 전체가 sklearn 기본값이고, 회귀에서도 $p/3$ 부근이 좋은 출발점으로 자주 쓰인다.
+후보 명단의 크기를 정하는 인자가 `max_features`다. 전체 특성 수를 $p$ 라 할 때 sklearn 기본값은 분류가 $\sqrt{p}$, 회귀가 $p$ 전체다. 회귀 쪽 기본값은 후보 제한이 아예 없다는 뜻이다. R `randomForest` 패키지와 ESL은 회귀에서 $p/3$ 을 기본으로 잡는다.
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -124,8 +122,6 @@ rf = RandomForestClassifier(n_estimators=100, max_features='sqrt',
 ```
 
 방향은 한 축 위에 있다. `max_features`를 줄이면 트리 간 상관관계가 내려가는 대신 개별 트리가 약해지고, 늘리면 반대가 된다. 값이 $p$ 와 같아지면 후보 제한이 사라져 그냥 배깅이 된다. 최적점은 양 끝이 아니라 가운데 어딘가다.
-
----
 
 ## 배깅과 얼마나 다른가
 
@@ -157,13 +153,85 @@ for name, m in models.items():
 랜덤 포레스트  0.9649
 ```
 
-두 코드 어디에도 `max_features`가 보이지 않지만, 배깅의 기본값은 특성 전체이고 랜덤 포레스트의 기본값은 $\sqrt{p}$ 다. 실질적인 차이는 그것 하나인데 점수는 한 칸 더 올라간다. 유방암 데이터는 반지름·둘레·면적처럼 사실상 같은 것을 재는 특성이 여럿 들어 있어서, 후보를 강제로 흩어놓는 효과가 특히 잘 드러나는 편이다.
+두 코드 어디에도 `max_features`가 보이지 않지만, 배깅의 기본값은 특성 전체이고 랜덤 포레스트의 기본값은 $\sqrt{p}$ 다. 실질적인 차이는 그것 하나다.
 
-![트리 수에 따른 성능 변화](./n-estimators-performance.png)
+다만 이 세 줄의 간격을 그대로 믿으면 안 된다. 테스트셋이 114건이라 한 칸이 0.0088이고, 세 점수는 정확히 한 칸씩 떨어져 있다. 분할을 한 번만 해서는 판별할 수 없는 간격이다. 같은 데이터에 `RepeatedStratifiedKFold(n_splits=5, n_repeats=10, random_state=0)`로 다시 재면 단일 트리 0.9274, 배깅 0.9539, 랜덤 포레스트 0.9583이 나온다. 순서는 그대로지만 배깅과의 격차는 0.004까지 좁아진다.
 
-트리 수는 늘릴수록 좋아지다가 멈춘다. 이 데이터에서는 5그루 0.9474, 10그루 0.9561, 25그루부터 0.9649로 수렴하고 300그루까지 더 올라가지 않는다. 트리를 늘려도 과적합이 생기지는 않으므로 성능이 아니라 학습 시간과 메모리가 상한을 정한다. `oob_score=True`를 켜두면 검증 셋을 따로 떼지 않고도 이 수렴 지점을 눈으로 확인할 수 있다.
+같은 반복 교차 검증으로 트리 수만 훑으면 두 곡선이 갈라지는 지점이 드러난다.
 
----
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 324" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="트리 수를 1개에서 200개까지 로그 축으로 늘리며 잰 랜덤 포레스트와 배깅의 교차 검증 평균 정확도 곡선. 트리가 세 그루 이하일 때는 배깅이 약간 위에 있다가, 열 그루 부근부터 랜덤 포레스트가 확실히 올라서고 두 곡선의 간격이 그대로 유지된 채 각각 평평해진다.">
+<style>
+.rfc-grid { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.rfc-axis { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; }
+.rfc-lab { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.rfc-title { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.rfc-rf { stroke: var(--primary, #0a756c); stroke-width: 2.2; fill: none; }
+.rfc-bg { stroke: var(--accent, #9d5604); stroke-width: 2.2; fill: none; stroke-dasharray: 6 4; }
+.rfc-rfd { fill: var(--primary, #0a756c); }
+.rfc-bgd { fill: var(--accent, #9d5604); }
+</style>
+<text class="rfc-title" x="200" y="22" text-anchor="middle">트리 수와 정확도</text>
+<text class="rfc-lab" x="200" y="44" text-anchor="middle">5-폴드 교차 검증 10회 반복 평균</text>
+<!-- 격자와 y축 눈금 -->
+<line class="rfc-grid" x1="62" y1="70" x2="368" y2="70"/>
+<text class="rfc-lab" x="56" y="75" text-anchor="end">0.96</text>
+<line class="rfc-grid" x1="62" y1="110" x2="368" y2="110"/>
+<text class="rfc-lab" x="56" y="115" text-anchor="end">0.95</text>
+<line class="rfc-grid" x1="62" y1="150" x2="368" y2="150"/>
+<text class="rfc-lab" x="56" y="155" text-anchor="end">0.94</text>
+<line class="rfc-grid" x1="62" y1="190" x2="368" y2="190"/>
+<text class="rfc-lab" x="56" y="195" text-anchor="end">0.93</text>
+<line class="rfc-grid" x1="62" y1="230" x2="368" y2="230"/>
+<text class="rfc-lab" x="56" y="235" text-anchor="end">0.92</text>
+<!-- 축 -->
+<line class="rfc-axis" x1="62" y1="64" x2="62" y2="250"/>
+<line class="rfc-axis" x1="62" y1="250" x2="368" y2="250"/>
+<!-- 배깅 곡선 -->
+<path class="rfc-bg" d="M 62 228.4 L 125.4 151.2 L 155 148.4 L 195 133.6 L 218.4 122.4 L 247.9 111.6 L 287.9 106 L 328 94.4 L 368 92"/>
+<circle class="rfc-bgd" cx="62" cy="228.4" r="3.2"/>
+<circle class="rfc-bgd" cx="125.4" cy="151.2" r="3.2"/>
+<circle class="rfc-bgd" cx="155" cy="148.4" r="3.2"/>
+<circle class="rfc-bgd" cx="195" cy="133.6" r="3.2"/>
+<circle class="rfc-bgd" cx="218.4" cy="122.4" r="3.2"/>
+<circle class="rfc-bgd" cx="247.9" cy="111.6" r="3.2"/>
+<circle class="rfc-bgd" cx="287.9" cy="106" r="3.2"/>
+<circle class="rfc-bgd" cx="328" cy="94.4" r="3.2"/>
+<circle class="rfc-bgd" cx="368" cy="92" r="3.2"/>
+<!-- 랜덤 포레스트 곡선 -->
+<path class="rfc-rf" d="M 62 238.4 L 125.4 167.2 L 155 144.8 L 195 106.8 L 218.4 90 L 247.9 92 L 287.9 80.8 L 328 76.8 L 368 74.4"/>
+<circle class="rfc-rfd" cx="62" cy="238.4" r="3.2"/>
+<circle class="rfc-rfd" cx="125.4" cy="167.2" r="3.2"/>
+<circle class="rfc-rfd" cx="155" cy="144.8" r="3.2"/>
+<circle class="rfc-rfd" cx="195" cy="106.8" r="3.2"/>
+<circle class="rfc-rfd" cx="218.4" cy="90" r="3.2"/>
+<circle class="rfc-rfd" cx="247.9" cy="92" r="3.2"/>
+<circle class="rfc-rfd" cx="287.9" cy="80.8" r="3.2"/>
+<circle class="rfc-rfd" cx="328" cy="76.8" r="3.2"/>
+<circle class="rfc-rfd" cx="368" cy="74.4" r="3.2"/>
+<!-- x축 눈금 -->
+<text class="rfc-lab" x="62" y="270" text-anchor="middle">1</text>
+<text class="rfc-lab" x="155" y="270" text-anchor="middle">5</text>
+<text class="rfc-lab" x="195" y="270" text-anchor="middle">10</text>
+<text class="rfc-lab" x="247.9" y="270" text-anchor="middle">25</text>
+<text class="rfc-lab" x="287.9" y="270" text-anchor="middle">50</text>
+<text class="rfc-lab" x="328" y="270" text-anchor="middle">100</text>
+<text class="rfc-lab" x="368" y="270" text-anchor="middle">200</text>
+<text class="rfc-lab" x="215" y="294" text-anchor="middle">트리 수 (로그 축)</text>
+<!-- 범례 -->
+<line class="rfc-rf" x1="103" y1="310" x2="131" y2="310"/>
+<text class="rfc-lab" x="137" y="315">랜덤 포레스트</text>
+<line class="rfc-bg" x1="235" y1="310" x2="263" y2="310"/>
+<text class="rfc-lab" x="269" y="315">배깅</text>
+</svg>
+</div>
+
+트리가 세 그루 이하일 때는 오히려 배깅이 위에 있다. 후보를 솎아낸 트리 몇 그루로는 개별 트리가 약해진 손해만 남기 때문이다. 열 그루쯤부터 랜덤 포레스트가 올라서고, 그 뒤로는 두 곡선이 나란히 평평해진다. 50그루를 넘기면 랜덤 포레스트가 200그루까지 더 얻는 것이 0.002뿐이다.
+
+트리를 늘려도 과적합이 생기지는 않으므로 상한을 정하는 것은 성능이 아니라 학습 시간과 메모리다. `oob_score=True`를 켜두면 검증셋을 따로 떼지 않고도 이 수렴 지점을 확인할 수 있다.
 
 ## 특성 중요도
 
@@ -233,8 +301,6 @@ worst radius             0.0009 ± 0.0026
 
 :::
 
----
-
 ## 하이퍼파라미터
 
 기본값으로 시작해서 필요한 것만 건드리면 된다. 랜덤 포레스트가 강력한 베이스라인으로 불리는 이유가 여기에 있다.
@@ -253,27 +319,19 @@ worst radius             0.0009 ± 0.0026
 
 배포에서는 메모리를 한 번 계산해보는 것이 좋다. 랜덤 포레스트는 학습된 트리를 전부 들고 있어야 예측할 수 있고, 트리 하나의 크기는 리프 개수에 비례한다. 완전히 자란 트리 1000그루면 직렬화한 모델 파일이 수백 MB에 이르기도 한다. 이럴 때 트리 수를 줄이는 것보다 `min_samples_leaf`를 올리는 쪽이 성능 손실이 적다.
 
----
-
 ## 마치며
 
-랜덤 포레스트가 배깅에 더한 것은 인자 하나다. 각 노드에서 후보 특성을 무작위로 솎아내는 것, 그것뿐이다. 하지만 그 한 줄이 건드리는 지점이 정확하다. 트리를 아무리 늘려도 없어지지 않던 $\rho\sigma^2$ 항을, 트리 수가 아니라 $\rho$ 자체를 낮춰서 줄인다.
-
-거래의 구조도 분명하다. 최선이 아닌 분기를 강요당한 개별 트리는 조금 나빠지고, 대신 트리들이 서로 다른 곳에서 틀리게 된다. 앙상블에서는 후자가 더 값이 나가기 때문에 합계가 이득으로 남는다.
+랜덤 포레스트가 배깅에 더한 것은 인자 하나다. 각 노드에서 후보 특성을 무작위로 솎아내는 것, 그것뿐이다. 그런데 그 한 줄이 건드리는 자리가 정확하다. 트리를 아무리 늘려도 없어지지 않던 $\rho\sigma^2$ 항을 트리 수가 아니라 $\rho$ 자체를 낮춰서 줄인다. 최선이 아닌 분기를 강요당한 개별 트리는 조금 나빠지지만, 앙상블에서는 트리들이 서로 다른 곳에서 틀린다는 쪽이 더 값이 나간다.
 
 특성 중요도는 이 모델에서 가장 쉽게 얻어지는 출력이면서 가장 자주 잘못 읽히는 출력이기도 하다. 지니 중요도와 순열 중요도의 순위가 어긋난다면 어느 한쪽이 틀렸다는 뜻이 아니라 특성들이 서로 겹쳐 있다는 뜻이다.
 
 다음 글에서는 반대편 앙상블을 다룬다. 배깅과 랜덤 포레스트가 트리를 나란히 세워 분산을 줄인다면, 부스팅은 트리를 한 줄로 세워 앞 트리가 틀린 곳에 다음 트리를 붙이면서 편향을 줄인다.
-
----
 
 ## 함께 보면 좋은 글
 
 - [앙상블 학습과 배깅](/ml/ensemble-and-bagging/) : 부트스트랩과 OOB, 분산 감소 공식의 유도
 - [결정 트리](/ml/decision-tree/) : 포레스트를 이루는 트리 한 그루가 어떻게 자라는지
 - [부스팅](/ml/boosting/) : 트리를 순차로 쌓아 편향을 줄이는 반대편 접근
-
----
 
 ## 참고자료
 
