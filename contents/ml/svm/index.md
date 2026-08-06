@@ -1,92 +1,89 @@
 ---
 date: '2026-01-12'
-title: '서포트 벡터 머신(SVM): 마진을 최대화하는 분류의 기하학'
+title: '마진을 최대화하는 분류기 서포트 벡터 머신(SVM)'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 12
-tags: ['SVM', 'Support Vector Machine', '커널 트릭', '마진 최대화', '머신러닝']
-summary: '최대 마진 분류기의 기하학적 직관부터 소프트 마진, 커널 트릭(RBF)까지. 로지스틱 회귀·KNN과 코드로 비교한다.'
+tags: ['SVM', 'Support Vector Machine', '커널 트릭', '마진 최대화', '힌지 손실', '머신러닝']
+summary: '두 클래스 사이에 가장 넓은 도로를 내는 SVM. 마진과 서포트 벡터의 기하학, 힌지 손실과 C 파라미터, 변환 없이 비선형을 다루는 커널 트릭을 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[로지스틱 회귀](/ml/logistic-regression/)는 확률로 분류하고, [KNN](/ml/knn/)은 거리로 분류한다. SVM도 거리를 사용하지만, 발상이 근본적으로 다르다. KNN이 "가장 가까운 이웃이 뭐냐"를 묻는다면, SVM은 **"두 클래스 사이에 가장 넓은 도로를 깔 수 있는 경계는 어디냐"** 를 묻는다.
+두 클래스를 가르는 직선은 무수히 많다. 훈련 데이터를 100% 맞히는 직선만 추려도 여전히 무수히 많다. 그중 어느 것을 고를 것인가에 대한 SVM의 답은 명확하다. **두 클래스 사이에 가장 넓은 도로를 깔 수 있는 선.** 그 도로의 폭이 **마진(Margin)** 이다.
 
-<br>
+## 가장 넓은 도로를 내는 경계
 
-이 "도로의 폭"을 **마진(Margin)** 이라 부르고, 마진이 최대인 경계를 찾는 것이 SVM의 핵심이다. 직관적으로도 도로가 넓을수록 새 데이터가 들어왔을 때 올바른 쪽에 떨어질 가능성이 높다. 이 글에서는 최대 마진의 기하학적 의미부터 시작해, 소프트 마진(C 파라미터), 커널 트릭(RBF), 그리고 sklearn 실전 파이프라인까지 다룬다.
+경계를 초평면 $w^\top x + b = 0$ 으로 두면, 분류는 부호를 보는 일이 된다. $w^\top x + b$ 가 양수면 한쪽 클래스, 음수면 다른 쪽이다. 여기까지는 로지스틱 회귀와 같다. 갈리는 지점은 $w$ 와 $b$ 를 어떤 기준으로 정하느냐다.
 
----
+레이블을 $y_i \in \{-1, +1\}$ 로 두고 모든 점이 경계에서 최소한 이만큼은 떨어져 있어야 한다고 요구한다.
 
-## 최대 마진 분류기
+$$y_i (w^\top x_i + b) \ge 1$$
 
-두 클래스를 분리하는 직선(2차원) 또는 초평면(고차원)은 무수히 많다. 아래 그림에서 A, B, C 모두 두 클래스를 완벽히 구분한다.
+이 부등식을 만족하는 $w$ 중에서 마진이 가장 넓은 것을 고른다. 마진의 폭은 $2 / \lVert w \rVert$ 이므로, 넓히는 것은 곧 $\lVert w \rVert$ 를 줄이는 것과 같다.
 
-```
-        클래스 +              클래스 -
-        ●  ●                  ○  ○
-      ●  ●  ●    A  B  C     ○  ○
-        ●  ●    / | \        ○  ○  ○
-      ●    ●   /  |  \         ○  ○
-              /   |   \
-```
+$$\min_{w,\,b} \frac{1}{2}\lVert w \rVert^2 \quad \text{s.t.} \quad y_i (w^\top x_i + b) \ge 1$$
 
-셋 다 훈련 데이터에서는 100% 정확하다. 하지만 새 데이터가 경계 근처에 떨어지면? A처럼 한쪽에 바짝 붙은 직선은 쉽게 오분류한다. **SVM은 B를 선택한다** — 양쪽 클래스로부터 가장 멀리 떨어진 경계, 즉 마진이 최대인 경계다.
-
-```
-             마진(Margin)
-          ◀──────────────▶
-     ●  ● ┊               ┊ ○  ○
-   ●  [●] ┊───결정 경계───┊ [○]  ○
-     ●  ● ┊               ┊ ○  ○  ○
-   ●    ● ┊               ┊   ○  ○
-     서포트 벡터          서포트 벡터
-```
-
-![SVM Maximum Margin Classifier — support vectors highlighted on margin boundaries](./svm-margin.png)
-
-마진 경계에 딱 걸쳐 있는 데이터 포인트들이 **서포트 벡터(Support Vector)** 다. 이름 그대로 결정 경계를 "지탱하는(support)" 벡터들이다. 사실 결정 경계의 위치는 서포트 벡터만으로 결정되고, 나머지 데이터는 아무리 많아도 경계에 영향을 주지 않는다. 이 성질이 SVM을 독특하게 만드는 핵심이다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 왜 마진이 클수록 좋을까?</strong><br>
-  마진이 넓다는 건, 결정 경계가 양쪽 클래스로부터 충분히 떨어져 있다는 뜻이다. 새 데이터에 약간의 노이즈가 섞여 있어도 올바른 쪽에 떨어질 여유가 있다. 통계 학습 이론에서는 이를 <strong>구조적 위험 최소화(Structural Risk Minimization)</strong>라고 부른다 — 마진을 최대화하면 VC 차원이 제한되어 일반화 오차의 상한이 낮아진다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 360" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="결정 경계와 그 양쪽의 마진 경계, 마진 위에 정확히 놓여 경계를 지탱하는 서포트 벡터를 표시한 그림">
+<defs>
+<marker id="svm1ArrE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--text, #1c1917)"/></marker>
+<marker id="svm1ArrS" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="var(--text, #1c1917)"/></marker>
+</defs>
+<style>
+.svm1-a { fill: var(--primary, #0a756c); }
+.svm1-b { fill: var(--accent, #9d5604); }
+.svm1-h { font-size: 17px; font-weight: 700; fill: var(--text, #1c1917); }
+.svm1-t { font-size: 16px; fill: var(--text, #1c1917); }
+.svm1-s { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.svm1-sv { fill: none; stroke: var(--text, #1c1917); stroke-width: 2; }
+.svm1-m { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.5; stroke-dasharray: 5 4; }
+</style>
+<text x="200" y="24" text-anchor="middle" class="svm1-h">마진이 가장 넓은 경계</text>
+<!-- 마진 띠와 세 직선 -->
+<polygon points="19,209 319,59 361,141 61,291" fill="var(--bg-muted, #eeecea)"/>
+<line x1="19" y1="209" x2="319" y2="59" class="svm1-m"/>
+<line x1="61" y1="291" x2="361" y2="141" class="svm1-m"/>
+<line x1="40" y1="250" x2="340" y2="100" stroke="var(--text, #1c1917)" stroke-width="2.5"/>
+<line x1="49" y1="194" x2="91" y2="276" stroke="var(--text, #1c1917)" stroke-width="1.8" marker-start="url(#svm1ArrS)" marker-end="url(#svm1ArrE)"/>
+<text x="116" y="243" text-anchor="middle" class="svm1-t">마진</text>
+<!-- 클래스 A : 위쪽 -->
+<circle cx="29" cy="154" r="6.5" class="svm1-a"/><circle cx="107" cy="122" r="6.5" class="svm1-a"/><circle cx="138" cy="71" r="6.5" class="svm1-a"/>
+<circle cx="44" cy="107" r="6.5" class="svm1-a"/><circle cx="212" cy="68" r="6.5" class="svm1-a"/><circle cx="119" cy="92" r="6.5" class="svm1-a"/>
+<!-- 클래스 B : 아래쪽 -->
+<polygon points="119,281 126,293 112,293" class="svm1-b"/><polygon points="175,283 182,295 168,295" class="svm1-b"/><polygon points="256,225 263,237 249,237" class="svm1-b"/>
+<polygon points="344,176 351,188 337,188" class="svm1-b"/><polygon points="302,242 309,254 295,254" class="svm1-b"/><polygon points="219,265 226,277 212,277" class="svm1-b"/>
+<!-- 서포트 벡터 : 마진 위에 정확히 놓인 점 -->
+<circle cx="94" cy="172" r="6.5" class="svm1-a"/><circle cx="94" cy="172" r="11" class="svm1-sv"/>
+<circle cx="205" cy="116" r="6.5" class="svm1-a"/><circle cx="205" cy="116" r="11" class="svm1-sv"/>
+<polygon points="196,217 203,229 189,229" class="svm1-b"/><circle cx="196" cy="224" r="11" class="svm1-sv"/>
+<polygon points="295,167 302,179 288,179" class="svm1-b"/><circle cx="295" cy="174" r="11" class="svm1-sv"/>
+<!-- 범례 -->
+<line x1="95" y1="317" x2="123" y2="317" stroke="var(--text, #1c1917)" stroke-width="2.5"/><text x="129" y="322" class="svm1-s">결정 경계</text>
+<line x1="215" y1="317" x2="243" y2="317" class="svm1-m"/><text x="249" y="322" class="svm1-s">마진 경계</text>
+<circle cx="70" cy="339" r="6.5" class="svm1-a"/><text x="80" y="344" class="svm1-s">클래스 A</text>
+<polygon points="152,332 159,344 145,344" class="svm1-b"/><text x="162" y="344" class="svm1-s">클래스 B</text>
+<circle cx="236" cy="339" r="6.5" class="svm1-a"/><circle cx="236" cy="339" r="11" class="svm1-sv"/><text x="252" y="344" class="svm1-s">서포트 벡터</text>
+</svg>
 </div>
 
----
+동그라미가 쳐진 네 점이 마진 경계에 정확히 걸쳐 있다. 부등식이 등호로 성립하는 점들, 즉 **서포트 벡터(Support Vector)** 다. 이름 그대로 경계를 지탱한다. 서포트 벡터가 아닌 점은 아무리 많아도, 아무리 멀리 옮겨도 경계가 움직이지 않고, 반대로 서포트 벡터 하나를 옮기면 경계 전체가 따라 움직인다. 여기서 SVM의 두 가지 성격이 한꺼번에 나온다. 학습이 끝나면 서포트 벡터만 남기고 나머지를 버려도 되니 모델이 가볍고, 데이터의 대다수가 결정에 관여하지 않으니 경계에서 먼 곳의 이상치 몇 개에는 흔들리지 않는다.
 
-## 소프트 마진: 현실의 데이터는 깔끔하지 않다
+## 소프트 마진과 힌지 손실
 
-위의 설명은 **하드 마진(Hard Margin)** — 두 클래스가 완벽히 분리 가능한 경우에만 성립한다. 현실 데이터에서는 클래스가 겹치거나, 이상치가 섞여 있어서 깔끔한 분리가 불가능한 경우가 대부분이다.
+위 부등식은 두 클래스가 직선 하나로 완벽히 갈린다고 가정한다. **하드 마진(Hard Margin)** 이다. 클래스가 조금이라도 겹치면 부등식을 전부 만족하는 $w$ 가 존재하지 않아 해가 없다.
 
-하드 마진 SVM을 이런 데이터에 적용하면 두 가지 중 하나가 발생한다:
-- 해가 존재하지 않는다 (분리 불가)
-- 이상치 하나에 경계가 극단적으로 왜곡된다
+그래서 실제로는 위반을 허용하되 값을 치르게 한다. 점 $i$ 가 마진 안쪽으로 얼마나 들어왔는지를 재는 **힌지 손실(Hinge Loss)** 을 목적 함수에 더하는 것이다. 마진 밖에 제대로 있으면 0이고, 안으로 들어온 만큼 선형으로 커진다. 이것이 **소프트 마진(Soft Margin)** 이다.
 
-**소프트 마진(Soft Margin)** SVM은 일부 데이터가 마진 안에 들어오거나, 심지어 반대쪽으로 넘어가는 것을 허용한다. 대신 그 위반에 대해 **벌점(penalty)** 을 부과한다.
+$$\min_{w,\,b} \; \frac{1}{2}\lVert w \rVert^2 + C \sum_{i=1}^{n} \max\left(0,\; 1 - y_i (w^\top x_i + b)\right)$$
 
-### C 파라미터
+앞의 항은 마진을 넓히려 하고 뒤의 항은 위반을 줄이려 한다. 둘의 힘겨루기를 조절하는 것이 **C**다. C가 크면 위반 하나하나가 비싸지므로 마진을 희생해서라도 훈련 데이터를 맞히려 들고, 작으면 몇 개쯤 틀려도 좋으니 마진을 넓히는 쪽으로 간다. 규제 항이 앞에 붙어 있는 구조이므로 C는 규제 강도의 역수로 동작한다. 이 방향이 헷갈리기 쉬운데, `LogisticRegression(C=1.0)` 의 C도 똑같이 "작을수록 규제가 세다".
 
-이 벌점의 강도를 조절하는 것이 **C 파라미터**다.
+![C 파라미터에 따른 결정 경계 변화. C가 작으면 마진이 넓고 경계가 단순하며, C가 크면 마진이 좁고 경계가 훈련 데이터를 따라 구부러진다](./c-parameter.png)
 
-```
-C가 큰 경우 (예: C=100)              C가 작은 경우 (예: C=0.01)
-┌─────────────────────┐              ┌─────────────────────┐
-│ ● ●  ┊  ○ ○        │              │ ●  ●     ○  ○      │
-│ ●[●] ┊ [○]○        │              │ ●  ● ┊      ○  ○   │
-│ ●  ● ┊  ○ ○  ○     │              │ ●  ●○┊      ○  ○   │
-│    좁은 마진         │              │     넓은 마진        │
-│ → 오분류 거의 없음    │              │ → 일부 오분류 허용    │
-│ → 과적합 위험 ↑      │              │ → 과소적합 위험 ↑    │
-└─────────────────────┘              └─────────────────────┘
-```
-
-- **C가 크면**: "오분류 절대 안 돼!" → 마진이 좁아지고, 훈련 데이터에 과하게 맞추려 한다 → 과적합
-- **C가 작으면**: "오분류 좀 해도 괜찮아" → 마진이 넓어지고, 전체적인 경향만 잡는다 → 과소적합
-
-[규제(Regularization) 글](/ml/regularization/)에서 다뤘던 alpha(lambda)와 정확히 **역수 관계**다. [로지스틱 회귀](/ml/logistic-regression/)의 `LogisticRegression(C=1.0)`도 같은 원리였다 — C는 규제 강도의 역수다.
-
-![Effect of C parameter — small C yields wide margin (underfitting), large C yields narrow margin (overfitting)](./c-parameter.png)
-
-sklearn으로 C에 따른 변화를 확인해보자.
+반달 모양 데이터에서 C만 바꿔가며 교차 검증 정확도를 재보면 양쪽 끝이 모두 나쁘다.
 
 ```python
 from sklearn.svm import SVC
@@ -95,273 +92,165 @@ from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-X, y = make_moons(n_samples=200, noise=0.3, random_state=42)
+X, y = make_moons(n_samples=200, noise=0.35, random_state=42)
 
 for C in [0.01, 0.1, 1, 10, 100]:
-    pipe = Pipeline([
-        ('scaler', StandardScaler()),
-        ('svc', SVC(kernel='rbf', C=C))
-    ])
+    pipe = Pipeline([('scaler', StandardScaler()),
+                     ('svc', SVC(kernel='rbf', C=C))])
     scores = cross_val_score(pipe, X, y, cv=5)
     print(f"C={C:6.2f} | 정확도: {scores.mean():.3f} (±{scores.std():.3f})")
 ```
 
-```
-C=  0.01 | 정확도: 0.840 (±0.036)
-C=  0.10 | 정확도: 0.875 (±0.048)
-C=  1.00 | 정확도: 0.900 (±0.032)
-C= 10.00 | 정확도: 0.895 (±0.037)
-C=100.00 | 정확도: 0.890 (±0.040)
-```
-
-C=1 근처에서 최적 성능을 보인다. C를 100으로 올려도 정확도가 개선되지 않는다 — 오히려 미세하게 떨어진다. 과적합의 신호다.
-
----
-
-## 커널 트릭: 비선형 분류
-
-여기까지의 SVM은 직선(또는 초평면)으로 분류했다. 그런데 데이터가 원형으로 분포하거나, XOR 패턴처럼 직선으로는 절대 분리할 수 없는 경우가 있다.
-
-### 고차원 매핑의 아이디어
-
-핵심 아이디어는 놀랍도록 단순하다: **차원을 올리면 선형 분리가 가능해진다.**
-
-```
-2차원에서 분리 불가능:              3차원으로 올리면 분리 가능:
-
-    ○ ○ ● ○ ○                         ●
-   ○ ● ● ● ○                        ● ● ●
-   ○ ● ● ● ○        φ(x)          ──────── ← 평면으로 분리
-    ○ ○ ● ○ ○       ────▶        ○ ○   ○ ○
-                                 ○   ○   ○
+```text
+C=  0.01 | 정확도: 0.810 (±0.025)
+C=  0.10 | 정확도: 0.840 (±0.025)
+C=  1.00 | 정확도: 0.870 (±0.029)
+C= 10.00 | 정확도: 0.860 (±0.044)
+C=100.00 | 정확도: 0.840 (±0.044)
 ```
 
-2차원에서 원 안에 있는 클래스(●)와 밖에 있는 클래스(○)는 직선으로 분리할 수 없다. 하지만 φ(x₁, x₂) = (x₁, x₂, x₁² + x₂²)처럼 **새 차원을 추가**하면, 3차원에서 평면 하나로 깔끔하게 분리된다.
+C=0.01에서는 경계가 너무 무뎌 과소적합이고, C=100에서는 잡음 하나까지 맞히려다 과적합이다. 표준편차가 C와 함께 커지는 것도 눈여겨볼 만하다. C가 클수록 결정 경계가 어느 폴드가 걸리느냐에 더 민감해진다.
 
-문제는 고차원 변환의 비용이다. 변수가 d개이고 2차 다항식으로 변환하면 O(d²)개의 새 변수가 생기고, 고차로 갈수록 기하급수적으로 늘어난다.
+## 커널 트릭
 
-### 커널 트릭이란
+여기까지의 SVM은 직선만 긋는다. 그런데 한 클래스가 다른 클래스를 원형으로 감싸고 있는 배치라면 어떤 직선으로도 갈라지지 않는다. 해법은 차원을 올리는 것이다. 원점에서의 거리 제곱을 새 축 $z = x_1^2 + x_2^2$ 로 추가하면 안쪽 점들은 $z$ 가 작고 바깥 점들은 크므로, 평면 하나로 깔끔하게 갈린다.
 
-**커널 트릭(Kernel Trick)** 은 이 문제를 우회한다. SVM의 최적화 문제를 자세히 보면, 데이터 포인트 간의 **내적(dot product)** 만으로 계산이 가능하다. 커널 함수 K(xᵢ, xⱼ)는 **고차원에서의 내적을 저차원에서 직접 계산**한다 — 실제로 변환할 필요가 없다.
-
-| 커널 | 수식 | 특징 |
-|------|------|------|
-| Linear | K(x, x') = x · x' | 선형 분리 가능할 때 |
-| Polynomial | K(x, x') = (γx · x' + r)^d | 다항식 경계 |
-| **RBF (Gaussian)** | K(x, x') = exp(-γ\|\|x - x'\|\|²) | **가장 범용적**, 무한 차원 매핑 |
-
-실전에서 가장 많이 쓰이는 건 **RBF(Radial Basis Function)** 커널이다. 두 데이터 포인트 사이의 유클리드 거리를 기반으로 유사도를 계산하며, 이론적으로 **무한 차원**으로의 매핑에 해당한다.
-
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 흔한 오해: "커널 트릭이 실제로 고차원 변환을 수행한다"</strong><br>
-  커널 트릭의 핵심은 변환을 <strong>실제로 하지 않는다</strong>는 것이다. K(xᵢ, xⱼ)는 "만약 변환했다면 내적이 이 값이 되었을 것"을 직접 계산한다. RBF 커널의 경우 무한 차원 변환에 해당하므로, 실제 변환은 물리적으로 불가능하다. 커널 함수 덕분에 변환 없이도 같은 결과를 얻는 것이다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 560" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="2차원에서 한 클래스가 다른 클래스를 원형으로 감싸 직선으로 나눌 수 없지만 원점 거리 제곱을 새 축으로 추가하면 평면 하나로 나뉘는 것을 보여주는 그림">
+<defs>
+<marker id="svm2Arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted, #6d6762)"/></marker>
+</defs>
+<style>
+.svm2-a { fill: var(--primary, #0a756c); }
+.svm2-b { fill: var(--accent, #9d5604); }
+.svm2-h { font-size: 17px; font-weight: 700; fill: var(--text, #1c1917); }
+.svm2-t { font-size: 15px; fill: var(--text, #1c1917); }
+.svm2-s { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.svm2-no { font-size: 15px; fill: var(--text-danger, #cb2121); }
+.svm2-ok { font-size: 15px; fill: var(--text-success, #107836); }
+.svm2-p { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<!-- 위 : 원래의 2차원 -->
+<text x="200" y="24" text-anchor="middle" class="svm2-h">2차원 원본</text>
+<rect x="60" y="40" width="280" height="214" rx="6" class="svm2-p"/>
+<circle cx="200" cy="149" r="6.5" class="svm2-a"/><circle cx="175" cy="135" r="6.5" class="svm2-a"/><circle cx="222" cy="160" r="6.5" class="svm2-a"/><circle cx="190" cy="175" r="6.5" class="svm2-a"/>
+<circle cx="216" cy="128" r="6.5" class="svm2-a"/><circle cx="168" cy="163" r="6.5" class="svm2-a"/><circle cx="205" cy="120" r="6.5" class="svm2-a"/>
+<polygon points="285,142 292,154 278,154" class="svm2-b"/><polygon points="260,82 267,94 253,94" class="svm2-b"/><polygon points="200,57 207,69 193,69" class="svm2-b"/><polygon points="140,82 147,94 133,94" class="svm2-b"/>
+<polygon points="115,142 122,154 108,154" class="svm2-b"/><polygon points="140,202 147,214 133,214" class="svm2-b"/><polygon points="200,227 207,239 193,239" class="svm2-b"/><polygon points="260,202 267,214 253,214" class="svm2-b"/>
+<polygon points="292,104 299,116 285,116" class="svm2-b"/><polygon points="162,50 169,62 155,62" class="svm2-b"/><polygon points="108,180 115,192 101,192" class="svm2-b"/><polygon points="238,234 245,246 231,246" class="svm2-b"/>
+<text x="200" y="274" text-anchor="middle" class="svm2-no">선형 분리 불가</text>
+<line x1="200" y1="290" x2="200" y2="316" stroke="var(--text-muted, #6d6762)" stroke-width="2" marker-end="url(#svm2Arr)"/>
+<text x="212" y="308" class="svm2-t">z = x1² + x2² 추가</text>
+<!-- 아래 : z 축을 더한 공간 -->
+<text x="200" y="340" text-anchor="middle" class="svm2-h">z 축을 더한 공간</text>
+<rect x="60" y="356" width="280" height="148" rx="6" class="svm2-p"/>
+<text x="46" y="434" class="svm2-s">z</text>
+<polygon points="88,385 95,397 81,397" class="svm2-b"/><polygon points="122,371 129,383 115,383" class="svm2-b"/><polygon points="156,391 163,403 149,403" class="svm2-b"/><polygon points="190,375 197,387 183,387" class="svm2-b"/>
+<polygon points="224,387 231,399 217,399" class="svm2-b"/><polygon points="258,369 265,381 251,381" class="svm2-b"/><polygon points="292,383 299,395 285,395" class="svm2-b"/><polygon points="322,393 329,405 315,405" class="svm2-b"/>
+<line x1="64" y1="435" x2="336" y2="435" stroke="var(--primary, #0a756c)" stroke-width="2.5"/>
+<text x="332" y="424" text-anchor="end" class="svm2-s">분리 평면</text>
+<circle cx="95" cy="482" r="6.5" class="svm2-a"/><circle cx="130" cy="470" r="6.5" class="svm2-a"/><circle cx="165" cy="478" r="6.5" class="svm2-a"/><circle cx="200" cy="466" r="6.5" class="svm2-a"/>
+<circle cx="235" cy="480" r="6.5" class="svm2-a"/><circle cx="270" cy="472" r="6.5" class="svm2-a"/><circle cx="305" cy="484" r="6.5" class="svm2-a"/>
+<text x="200" y="522" text-anchor="middle" class="svm2-s">원래 특성 x1</text>
+<text x="200" y="546" text-anchor="middle" class="svm2-ok">선형 분리 가능</text>
+</svg>
 </div>
 
-### gamma 파라미터
+문제는 비용이다. 특성이 $d$ 개일 때 2차 다항식으로 올리면 새 특성이 $O(d^2)$ 개 생기고, 차수를 높이면 그 수가 폭발한다. 무한 차원으로 올리고 싶다면 아예 계산할 방법이 없다.
 
-RBF 커널의 **gamma(γ)** 는 각 데이터 포인트의 영향 범위를 결정한다.
+**커널 트릭(Kernel Trick)** 이 우회하는 지점이 여기다. SVM의 최적화 문제를 쌍대 형태로 바꾸면 데이터가 오직 두 점의 내적으로만 등장한다. 좌표 자체는 필요 없고 내적값만 있으면 된다는 뜻이다. 그렇다면 변환된 공간의 내적을 원래 좌표에서 바로 계산해주는 함수 $K$ 만 있으면, $\phi$ 로 실제로 옮길 이유가 없다.
 
-- **gamma가 작으면**: 영향 범위가 넓다 → 부드러운 결정 경계 → 과소적합 경향
-- **gamma가 크면**: 영향 범위가 좁다 → 각 포인트 주변만 영향 → 복잡한 경계 → 과적합 경향
+$$K(x, x') = \phi(x)^\top \phi(x')$$
 
-![Kernel comparison — Linear, RBF, and Polynomial on non-linearly separable data](./kernel-comparison.png)
+| 커널 | 함수 | 쓰는 자리 |
+|---|---|---|
+| Linear | $K(x,x') = x^\top x'$ | 특성이 많고 선형으로 갈리는 데이터 |
+| Polynomial | $K(x,x') = (\gamma\, x^\top x' + r)^d$ | 차수를 정해둔 곡선 경계 |
+| RBF | $K(x,x') = \exp(-\gamma \lVert x-x' \rVert^2)$ | 기본값. 무한 차원 매핑에 해당 |
 
-Linear 커널과 RBF 커널을 비교해보자.
+RBF 커널이 대응하는 $\phi$ 는 무한 차원이라 물리적으로 계산이 불가능하다. 그런데도 쓸 수 있는 이유가 커널 트릭이다. 옮기지 않고 내적만 구하기 때문이다.
 
-```python
-import numpy as np
-from sklearn.svm import SVC
-from sklearn.datasets import make_moons
-from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
+$\gamma$ 는 각 데이터 포인트의 영향이 미치는 반경을 정한다. 작으면 한 점의 영향이 멀리까지 퍼져 경계가 뭉툭해지고, 크면 각 점 주변에만 좁게 작용해 경계가 점 하나하나를 감싸듯 구불거린다. 결국 C와 같은 방향의 손잡이라, 둘 다 크면 확실하게 과적합한다.
 
-X, y = make_moons(n_samples=300, noise=0.25, random_state=42)
+위의 C 실험과 같은 방식으로 커널만 바꿔가며 반달 데이터 300개(`noise=0.3`)에 5-폴드 교차 검증을 돌리면 이렇게 나온다.
 
-kernels = {
-    'Linear': SVC(kernel='linear', C=1),
-    'RBF (gamma=0.1)': SVC(kernel='rbf', C=1, gamma=0.1),
-    'RBF (gamma=1)': SVC(kernel='rbf', C=1, gamma=1),
-    'RBF (gamma=10)': SVC(kernel='rbf', C=1, gamma=10),
-}
+| 커널 | 교차 검증 정확도 |
+|---|---|
+| linear | 0.857 (±0.025) |
+| rbf, $\gamma = 0.1$ | 0.853 (±0.027) |
+| rbf, $\gamma = 1$ | 0.887 (±0.024) |
+| rbf, $\gamma = 10$ | 0.893 (±0.008) |
+| rbf, $\gamma = 100$ | 0.830 (±0.036) |
 
-for name, svc in kernels.items():
-    pipe = Pipeline([('scaler', StandardScaler()), ('svc', svc)])
-    scores = cross_val_score(pipe, X, y, cv=5)
-    print(f"{name:20s} | 정확도: {scores.mean():.3f} (±{scores.std():.3f})")
-```
+직선으로는 반달 두 개를 가를 수 없어 85.7%에서 멈춘다. $\gamma$ 를 키우면 경계가 휘면서 올라가다가, 100에서는 점 하나하나를 개별로 감싸버려 선형 커널보다도 못해진다.
 
-```
-Linear               | 정확도: 0.873 (±0.025)
-RBF (gamma=0.1)      | 정확도: 0.887 (±0.031)
-RBF (gamma=1)        | 정확도: 0.907 (±0.022)
-RBF (gamma=10)       | 정확도: 0.890 (±0.035)
-```
+:::warning
 
-Linear 커널로는 반달 모양 데이터를 제대로 분리하지 못한다. RBF 커널을 쓰면 비선형 경계가 가능해지면서 정확도가 올라간다. 하지만 gamma=10처럼 너무 높이면 각 데이터 포인트에 과하게 맞추면서 다시 성능이 떨어진다.
+**C와 gamma는 따로 튜닝할 수 없다**
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ C와 gamma는 함께 튜닝해야 한다</strong><br>
-  C는 오분류 허용 정도를, gamma는 결정 경계의 복잡도를 제어한다. 둘 다 높으면 극단적 과적합, 둘 다 낮으면 과소적합이 된다. GridSearchCV로 두 파라미터를 동시에 탐색하는 것이 핵심이다.
-</div>
+C는 위반을 얼마나 봐줄지, gamma는 경계를 얼마나 구불거리게 할지를 정한다. 한쪽을 고정하고 다른 쪽만 최적화하면 고정한 값에 맞춰진 국소해에 갇힌다. `GridSearchCV`로 두 축을 함께 훑어야 한다.
 
----
+:::
 
-## sklearn 실전 코드
+## 실전 파이프라인
 
-Breast Cancer 데이터셋으로 SVM 파이프라인을 구성해보자. 전처리(스케일링), 모델 훈련, 하이퍼파라미터 튜닝까지 한 번에 진행한다.
+Breast Cancer 데이터셋으로 전처리와 탐색을 한 번에 묶어보자. 스케일링은 선택이 아니다. SVM은 두 점의 거리와 내적으로만 데이터를 보기 때문에, 단위가 큰 변수 하나가 커널 값을 독차지하면 나머지 변수는 없는 것이나 마찬가지가 된다.
 
 ```python
-import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, classification_report
 
-# 데이터 준비
-data = load_breast_cancer()
 X_train, X_test, y_train, y_test = train_test_split(
-    data.data, data.target, test_size=0.2, random_state=42
+    *load_breast_cancer(return_X_y=True), test_size=0.2, random_state=42
 )
 
-# 파이프라인: StandardScaler → SVC
-pipe = Pipeline([
-    ('scaler', StandardScaler()),
-    ('svc', SVC())
-])
+pipe = Pipeline([('scaler', StandardScaler()), ('svc', SVC())])
+param_grid = {'svc__C': [0.1, 1, 10, 100],
+              'svc__gamma': ['scale', 0.01, 0.1, 1]}
 
-# GridSearchCV로 C, gamma 동시 탐색
-param_grid = {
-    'svc__C': [0.1, 1, 10, 100],
-    'svc__gamma': ['scale', 0.01, 0.1, 1],
-    'svc__kernel': ['rbf']
-}
-
-grid = GridSearchCV(pipe, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
-grid.fit(X_train, y_train)
-
+grid = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1).fit(X_train, y_train)
 print(f"최적 파라미터: {grid.best_params_}")
-print(f"CV 정확도: {grid.best_score_:.4f}")
-print(f"테스트 정확도: {grid.score(X_test, y_test):.4f}")
+print(f"CV 정확도: {grid.best_score_:.4f}  테스트: {grid.score(X_test, y_test):.4f}")
 ```
 
-```
-최적 파라미터: {'svc__C': 10, 'svc__gamma': 0.01, 'svc__kernel': 'rbf'}
-CV 정확도: 0.9780
-테스트 정확도: 0.9825
-```
-
-30개 특성에서 C=10, gamma=0.01이 최적으로 선택되었다. 98.25%의 테스트 정확도다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ SVM에는 반드시 스케일링이 필요하다</strong><br>
-  SVM은 데이터 포인트 간 거리를 기반으로 작동한다. 변수의 스케일이 다르면 거리 계산이 왜곡된다. <code>Pipeline</code>에 <code>StandardScaler</code>를 넣는 건 선택이 아니라 필수다.
-</div>
-
-### 로지스틱 회귀, KNN과 비교
-
-같은 데이터에서 세 모델의 성능을 비교해보자.
-
-```python
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-
-models = {
-    'Logistic Regression': Pipeline([
-        ('scaler', StandardScaler()),
-        ('model', LogisticRegression(C=1, max_iter=1000))
-    ]),
-    'KNN (k=5)': Pipeline([
-        ('scaler', StandardScaler()),
-        ('model', KNeighborsClassifier(n_neighbors=5))
-    ]),
-    'SVM (RBF)': Pipeline([
-        ('scaler', StandardScaler()),
-        ('model', SVC(C=10, gamma=0.01, kernel='rbf'))
-    ]),
-}
-
-for name, pipe in models.items():
-    pipe.fit(X_train, y_train)
-    train_acc = pipe.score(X_train, y_train)
-    test_acc = pipe.score(X_test, y_test)
-    print(f"{name:25s} | 훈련: {train_acc:.4f} | 테스트: {test_acc:.4f}")
+```text
+최적 파라미터: {'svc__C': 1, 'svc__gamma': 'scale'}
+CV 정확도: 0.9736  테스트: 0.9825
 ```
 
-```
-Logistic Regression       | 훈련: 0.9890 | 테스트: 0.9737
-KNN (k=5)                 | 훈련: 0.9736 | 테스트: 0.9649
-SVM (RBF)                 | 훈련: 0.9912 | 테스트: 0.9825
-```
+기본값이 그대로 최적으로 뽑혔다. `gamma='scale'` 은 특성 수와 분산에서 gamma를 자동으로 계산하는 값이라, 스케일링을 제대로 했다면 출발점으로 나쁘지 않다는 뜻이다. 같은 분할에서 다른 분류기와 견주면 이렇다.
 
-이 데이터셋에서는 SVM이 가장 높은 테스트 정확도를 보인다. 물론 데이터에 따라 결과는 달라진다 — 핵심은 모델마다 강점이 다르다는 것이다.
+| 모델 | 훈련 정확도 | 테스트 정확도 |
+|---|---|---|
+| 로지스틱 회귀 | 0.9868 | 0.9737 |
+| KNN (k=5) | 0.9802 | 0.9474 |
+| SVM (RBF) | 0.9890 | 0.9825 |
 
----
+이 데이터에서 SVM이 가장 좋았고, 훈련 정확도가 가장 높은데도 테스트 정확도까지 가장 높다. 학습된 모델이 참조하는 점은 455개 중 104개뿐이다. 나머지 351개는 마진 밖에 안전하게 놓여 있어 경계 결정에 아무 표도 던지지 않았다.
 
-## SVM의 장단점과 선택 기준
+## 언제 SVM을 고를까
 
-### 분류 모델 비교
+SVM이 확실히 앞서는 자리는 특성 수가 표본 수에 견줄 만큼 많은 경우다. 마진 최대화 자체가 모델 복잡도에 제동을 걸기 때문에, 차원이 높아도 거리 기반 모델처럼 무너지지 않는다. 커널만 갈아 끼우면 결정 경계의 모양을 바꿀 수 있다는 점도 다른 모델에는 없는 유연함이다.
 
-| | Logistic Regression | KNN | SVM |
-|---|---|---|---|
-| **분류 방식** | 확률 (시그모이드) | 최근접 이웃 거리 | 최대 마진 초평면 |
-| **결정 경계** | 선형 (기본) | 비선형 (자동) | 선형/비선형 (커널) |
-| **학습 속도** | 빠름 | 학습 없음 (lazy) | 느림 (O(n²~n³)) |
-| **예측 속도** | 빠름 | 느림 (전체 탐색) | 빠름 (서포트 벡터만) |
-| **확률 출력** | 네이티브 | 가능 | Platt scaling 필요 |
-| **스케일링** | 권장 | 필수 | 필수 |
-| **고차원 데이터** | 보통 | 차원의 저주 | 강함 |
-
-### 장점
-
-SVM이 빛나는 순간들이 있다:
-
-- **고차원 데이터에 강하다**: 텍스트 분류처럼 변수가 수천~수만 개인 경우, SVM은 마진 최대화 덕분에 차원의 저주에 상대적으로 강하다
-- **일반화 성능이 좋다**: 최대 마진 원리 자체가 과적합을 억제하는 메커니즘이다
-- **커널로 비선형 처리**: 커널만 바꾸면 복잡한 결정 경계도 만들 수 있다
-- **서포트 벡터만 저장**: 예측 시 전체 데이터가 아닌 서포트 벡터만 참조하므로 메모리 효율적이다
-
-### 단점
-
-반면 분명한 한계도 있다:
-
-- **대규모 데이터에 느리다**: 학습 시간 복잡도가 O(n²~n³)이어서, 데이터가 10만 개를 넘어가면 실용적이지 않다. 이 영역에서는 트리 기반 모델이나 신경망이 낫다
-- **확률 추정이 비효율적이다**: SVM의 출력은 결정 경계까지의 거리지, 확률이 아니다. 확률이 필요하면 Platt scaling(`probability=True`)을 써야 하는데, 추가 교차 검증이 필요해 느려진다
-- **스케일링 필수**: 거리 기반이므로 Feature Scaling 없이는 성능이 나오지 않는다
-- **하이퍼파라미터 튜닝이 까다롭다**: C와 gamma를 동시에 탐색해야 하고, 최적값이 데이터마다 크게 다르다
-
-### 언제 SVM을 선택할까?
-
-결국 선택 기준은 이렇다:
-
-- **데이터가 중소 규모**(수천~수만)이고, **고차원**이며, **명확한 마진이 존재할 때** → SVM
-- **대규모 데이터**이거나 **빠른 학습이 필요할 때** → 로지스틱 회귀 또는 트리 기반 모델
-- **확률 추정이 중요할 때** → 로지스틱 회귀
-- **해석 가능성이 중요할 때** → 로지스틱 회귀 또는 결정 트리
-
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>SVM</strong>: 두 클래스 사이의 마진을 최대화하는 분류기</li>
-    <li><strong>서포트 벡터</strong>: 마진 경계에 걸친 데이터 포인트. 이것만으로 결정 경계가 결정됨</li>
-    <li><strong>C 파라미터</strong>: 오분류 벌점 강도. 클수록 마진 좁음(과적합), 작을수록 마진 넓음(과소적합). <a href="/ml/regularization/">규제 강도(λ)</a>의 역수</li>
-    <li><strong>커널 트릭</strong>: 고차원 매핑 없이 내적만으로 비선형 분류. RBF가 기본</li>
-    <li><strong>gamma</strong>: RBF의 영향 범위. 클수록 경계 복잡(과적합)</li>
-    <li><strong>스케일링 필수</strong>, C와 gamma는 <code>GridSearchCV</code>로 동시 튜닝</li>
-  </ul>
-</div>
-
----
+발목을 잡는 것은 규모다. 커널 SVM의 학습 비용은 표본 수 $n$ 이 늘어날수록 $O(n^2)$ 에서 $O(n^3)$ 사이로 커져서, 데이터가 십만 건을 넘어가면 현실적으로 돌릴 수 없다. 이 구간에서는 트리 기반 모델이나 신경망이 답이다. 확률이 필요할 때도 불리하다. SVM이 내놓는 값은 경계까지의 부호 있는 거리이지 확률이 아니라서, `probability=True` 로 Platt scaling을 붙여야 하는데 내부에서 교차 검증을 한 번 더 돌리므로 학습이 크게 느려진다.
 
 ## 마치며
 
-확률([로지스틱 회귀](/ml/logistic-regression/)), 거리(KNN), 마진(SVM) — 세 가지 전혀 다른 접근으로 분류하는 법을 배웠다. 하지만 이 모든 모델에는 공통적인 근본 문제가 있다. 모델이 단순하면 데이터의 패턴을 못 잡고, 복잡하면 노이즈까지 외운다. 다음 글에서는 [편향-분산 트레이드오프](/ml/bias-variance/)를 통해 왜 단일 모델은 한계가 있는지, 그리고 이 한계를 어떻게 진단하는지를 알아본다.
+SVM의 핵심은 경계를 하나 고르는 방식에 있다. 훈련 데이터를 맞히는 경계는 얼마든지 있으니 맞히는 것 말고 다른 기준이 필요한데, SVM은 그 기준으로 여백을 골랐다. 양쪽에서 가장 멀리 떨어진 자리에 경계를 놓으면 새 데이터가 조금 흔들려도 같은 쪽에 떨어진다. 이 선택이 만드는 부수 효과가 서포트 벡터다. 경계는 마진에 걸친 소수의 점으로만 정해지고 나머지 데이터는 있으나 마나이며, 모델이 가벼워지고 이상치에 둔감해지는 것이 전부 여기서 나온다. 커널 트릭은 이 구조 위에 얹힌 보너스에 가깝다. 최적화 문제가 내적으로만 데이터를 보게 되어 있었기 때문에, 좌표를 옮기지 않고 커널 함수만 바꿔 끼우는 일이 가능했다.
+
+확률로 가르는 로지스틱 회귀, 거리로 가르는 KNN, 여백으로 가르는 SVM까지 왔다. 다음 글에서는 이 모델들이 공통으로 마주치는 문제, 즉 모델이 단순하면 패턴을 놓치고 복잡하면 잡음까지 외우는 편향과 분산의 맞바꿈을 다룬다.
+
+## 함께 보면 좋은 글
+
+- [K-최근접 이웃](/ml/knn/) : 마진 대신 이웃의 다수결로 경계를 정하는 분류기
+- [규제](/ml/regularization/) : C의 역수에 해당하는 규제 강도를 회귀에서 다루는 방법
+- [편향-분산 트레이드오프](/ml/bias-variance/) : C와 gamma를 왜 함께 조율해야 하는지의 배경
 
 ## 참고자료
 
-- [Andrew Ng — Machine Learning Specialization: Support Vector Machines (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
-- [Scikit-learn — SVM Documentation](https://scikit-learn.org/stable/modules/svm.html)
+- [Scikit-learn: Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html)
 - [StatQuest: Support Vector Machines (YouTube)](https://www.youtube.com/watch?v=efR1C6CvhmE)
-- [An Introduction to Statistical Learning — Chapter 9: Support Vector Machines](https://www.statlearning.com/)
+- [An Introduction to Statistical Learning, Chapter 9](https://www.statlearning.com/)

@@ -1,549 +1,326 @@
 ---
 date: '2026-01-19'
-title: '인공 신경망(ANN) 기초: 퍼셉트론에서 다층 신경망까지'
+title: '퍼셉트론에서 다층 신경망까지, 신경망의 구조'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 19
-tags: ['Neural Network', '신경망', 'Perceptron', '퍼셉트론', 'ANN', '머신러닝']
-summary: '퍼셉트론의 한계부터 다층 신경망(MLP)의 구조까지. 로지스틱 회귀가 신경망의 출발점임을 이해하고, 히든 레이어가 비선형 문제를 푸는 원리를 배운다.'
+tags: ['Neural Network', '신경망', 'Perceptron', '퍼셉트론', 'ANN', 'MLP', '다층 퍼셉트론', '은닉층', '머신러닝']
+summary: '퍼셉트론이 로지스틱 회귀와 같은 계산을 한다는 데서 출발해, 은닉층이 XOR 같은 비선형 문제를 푸는 원리와 가중치 행렬의 차원 규칙까지 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-지금까지 18개의 글에 걸쳐 Classical ML의 핵심 알고리즘을 모두 다뤘다. [선형 회귀](/ml/linear-regression/)로 시작해 [XGBoost와 LightGBM](/ml/xgboost-vs-lightgbm/)까지 — 회귀, 분류, 앙상블을 아우르는 여정이었다. 이제 완전히 새로운 패러다임으로 들어간다. **인공 신경망(Artificial Neural Network)**.
+선형 회귀도, SVM도, 랜덤 포레스트도 사람이 모델의 모양을 정해줘야 했다. 어떤 특성을 넣을지, 다항 항을 몇 차까지 만들지, 커널을 무엇으로 쓸지. 성능의 상당 부분이 이 선택에서 갈렸다.
 
-지금까지 배운 모든 모델에는 한 가지 공통점이 있었다. 사람이 모델의 구조를 정해줘야 한다는 것이다. 선형 회귀에서는 어떤 특성을 넣을지 결정했고, [결정 경계](/ml/decision-boundary/)에서는 다항 특성(polynomial features)을 직접 만들어 비선형 경계를 구현했다. SVM에서는 커널 함수를 선택했고, 랜덤 포레스트에서는 트리 수와 깊이를 조절했다.
+인공 신경망(Artificial Neural Network)은 그 선택을 모델에게 넘긴다. 어떤 특성 조합이 유용한지를 데이터에서 스스로 찾아낸다. 이미지나 음성처럼 사람이 좋은 특성을 설계하기 어려운 영역에서 신경망이 압도적인 이유가 이것이다.
 
-신경망은 다르다. **모델이 스스로 특성을 학습한다.** 어떤 조합이 유용한지를 데이터에서 알아내는 것이다. 이것이 딥러닝 혁명의 핵심이고, 이미지 인식, 자연어 처리, 음성 합성 같은 분야에서 Classical ML을 압도하는 이유다.
-
----
-
-## 생물학적 영감 — 하지만 진짜 이유는 따로 있다
-
-신경망이라는 이름은 뇌의 뉴런에서 왔다. 생물학적 뉴런은 수상돌기(dendrite)로 신호를 받아들이고, 세포체(soma)에서 신호를 합산한 뒤, 역치를 넘으면 축삭돌기(axon)를 통해 다음 뉴런에 신호를 전달한다. 인공 신경망의 노드도 비슷한 구조다 — 입력을 받아 가중합을 구하고, 활성화 함수를 거쳐 출력을 내보낸다.
-
-![생물학적 뉴런과 인공 뉴런의 비교](./neuron-comparison.png)
-
-하지만 솔직히, 생물학적 유사성은 **이름의 유래**일 뿐이다. 현대 신경망이 뇌처럼 작동한다고 보기는 어렵다. 신경망이 강력한 진짜 이유는 수학에 있다. 바로 **범용 근사 정리(Universal Approximation Theorem)** 인데, 이건 뒤에서 자세히 다룬다.
-
-지금은 하나의 뉴런이 무엇을 하는지부터 시작하자.
+구조 자체는 생각보다 단순하다. 이미 아는 로지스틱 회귀를 옆으로 여러 개 늘어놓고, 그 묶음을 앞뒤로 쌓은 것이다.
 
 ---
 
-## 퍼셉트론: 가장 단순한 신경망
+## 퍼셉트론, 뉴런 하나가 하는 일
 
-### 하나의 뉴런이 하는 일
+1957년 프랭크 로젠블랫이 발표한 **퍼셉트론(Perceptron)** 은 인공 뉴런 하나짜리 모델이다. 하는 일은 두 단계뿐이다. 입력에 가중치를 곱해 전부 더하고, 그 결과를 함수 하나에 통과시킨다.
 
-1957년, 프랭크 로젠블랫(Frank Rosenblatt)이 **퍼셉트론(Perceptron)** 을 발표했다. 구조를 보면:
+$$z = w_1x_1 + w_2x_2 + \cdots + w_nx_n + b = \mathbf{w}^\top\mathbf{x} + b$$
 
-```
-입력: x₁, x₂, ..., xₙ
-가중치: w₁, w₂, ..., wₙ
-편향: b
+$$\hat{y} = f(z)$$
 
-1단계 — 가중합: z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b
-2단계 — 활성화: ŷ = f(z)
-```
+$\mathbf{w}$가 가중치, $b$가 편향, $f$가 활성화 함수다. 로젠블랫의 원래 퍼셉트론에서 $f$는 계단 함수였다.
 
-여기서 `f`가 활성화 함수(activation function)다. 원래 퍼셉트론은 계단 함수(step function)를 사용했다:
+$$f(z) = \begin{cases} 1 & (z \ge 0) \\ 0 & (z < 0) \end{cases}$$
 
-```
-f(z) = 1  (z ≥ 0)
-f(z) = 0  (z < 0)
-```
+가중합이 문턱을 넘으면 1, 아니면 0. 인공 뉴런 하나가 하는 일은 여기서 끝난다.
 
-이게 전부다. 입력의 가중합을 구하고, 역치를 넘으면 1, 아니면 0. 이것이 하나의 인공 뉴런이 하는 일이다.
+### 가중치와 편향이 각각 무엇을 정하는가
 
-### 잠깐 — 이거 로지스틱 회귀 아닌가?
+$w_i$는 입력 $x_i$가 결과에 얼마나 세게 작용하는지를 정한다. 부호까지 포함해서다. 양수면 그 입력이 커질 때 출력이 1 쪽으로 밀리고, 음수면 반대로 0 쪽으로 밀린다. 절댓값이 크면 그 입력 하나가 판단을 좌우한다.
 
-맞다. 활성화 함수를 계단 함수 대신 **시그모이드**로 바꾸면, 그게 바로 [로지스틱 회귀](/ml/logistic-regression/)다.
+$b$는 문턱의 위치를 옮긴다. $b$가 없으면 $z = 0$이라는 경계면이 항상 원점을 지나야 해서, 원점을 지나지 않는 경계는 아예 표현할 수 없다. $b$를 키우면 입력이 작아도 쉽게 1이 되고, 줄이면 웬만해서는 0에 머문다. 선형 회귀의 절편이 하는 역할과 같다.
 
-```
-퍼셉트론:     z = wx + b  →  step(z)  →  0 or 1
-로지스틱 회귀: z = wx + b  →  σ(z)     →  0~1 사이의 확률
-```
+### 이건 로지스틱 회귀와 같다
+
+계단 함수 대신 시그모이드를 끼우면 그대로 로지스틱 회귀가 된다.
 
 | 비교 항목 | 퍼셉트론 | 로지스틱 회귀 |
-|----------|---------|-------------|
-| 가중합 | z = wx + b | z = wx + b |
+|---|---|---|
+| 가중합 | $z = \mathbf{w}^\top\mathbf{x} + b$ | 같음 |
 | 활성화 함수 | 계단 함수 | 시그모이드 |
-| 출력 | 0 또는 1 | 0~1 연속값 (확률) |
+| 출력 | 0 또는 1 | 0과 1 사이 확률 |
 | 학습 방법 | 퍼셉트론 규칙 | 경사하강법 + Log Loss |
-| 미분 가능 여부 | 불가 (계단) | 가능 (시그모이드) |
+| 미분 가능 | 불가 | 가능 |
 
-로지스틱 회귀는 "시그모이드를 활성화 함수로 쓰는 1개짜리 뉴런"과 정확히 같다. 이 관점이 중요하다. **신경망은 로지스틱 회귀의 확장**이라고 볼 수 있기 때문이다.
+마지막 줄이 결정적이다. 계단 함수는 $z=0$에서 미분이 정의되지 않고 나머지 구간에서는 도함수가 0이라, 경사하강법을 쓸 방법이 없다. 퍼셉트론이 자기만의 학습 규칙을 따로 가져야 했던 이유이자, 신경망이 계단 함수를 버린 이유다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 핵심 인사이트</strong><br>
-  로지스틱 회귀 = 뉴런 1개짜리 신경망. 신경망을 "처음부터 배우는 새로운 것"으로 생각하지 말자. 이미 배운 것의 확장이다.
-</div>
+:::info
+
+**로지스틱 회귀 = 뉴런 하나짜리 신경망**
+
+신경망은 처음부터 새로 배우는 모델이 아니다. 이미 아는 모델을 여러 개 늘어놓고 층으로 쌓은 것이다.
+
+:::
 
 ### 퍼셉트론 학습 규칙
 
-퍼셉트론은 틀린 샘플을 만날 때마다 가중치를 업데이트한다. 규칙은 간단하다:
+퍼셉트론은 틀린 샘플을 만날 때마다 가중치를 고친다.
 
-```
-예측이 틀렸을 때:
-  w ← w + η × (y - ŷ) × x
-  b ← b + η × (y - ŷ)
+$$\mathbf{w} \leftarrow \mathbf{w} + \eta(y - \hat{y})\mathbf{x}, \qquad b \leftarrow b + \eta(y - \hat{y})$$
 
-η: 학습률 (learning rate)
-y: 실제값, ŷ: 예측값
-```
-
-예를 들어, 실제 y=1인데 ŷ=0으로 예측했다면 (y - ŷ) = 1이므로, 입력 x 방향으로 가중치가 커진다. 다음에는 같은 입력에 대해 z 값이 올라가서 1로 분류될 가능성이 높아지는 것이다.
-
-### NumPy로 퍼셉트론 구현
-
-AND 게이트를 학습하는 퍼셉트론을 만들어보자.
+$\eta$는 학습률이다. 실제 $y=1$인데 $\hat{y}=0$으로 예측했다면 $(y - \hat{y}) = 1$이므로 가중치가 입력 $\mathbf{x}$ 방향으로 커진다. 다음에 같은 입력이 들어오면 $z$가 올라가서 1로 분류될 가능성이 높아진다. 맞힌 샘플에서는 $(y - \hat{y}) = 0$이라 아무 일도 일어나지 않는다.
 
 ```python
 import numpy as np
 
-# AND 게이트 데이터
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([0, 0, 0, 1])
+y = np.array([0, 0, 0, 1])                  # AND
 
-# 퍼셉트론
-np.random.seed(42)
-w = np.random.randn(2) * 0.01
-b = 0.0
-lr = 0.1
-
+w, b, lr = np.zeros(2), 0.0, 0.1
 for epoch in range(20):
     errors = 0
     for xi, yi in zip(X, y):
-        z = np.dot(w, xi) + b
-        y_hat = 1 if z >= 0 else 0
-
+        y_hat = 1 if np.dot(w, xi) + b >= 0 else 0
         if y_hat != yi:
             w += lr * (yi - y_hat) * xi
             b += lr * (yi - y_hat)
             errors += 1
-
     if errors == 0:
-        print(f"Epoch {epoch}: 수렴 완료!")
         break
 
-# 학습 결과 확인
-for xi in X:
-    z = np.dot(w, xi) + b
-    print(f"{xi} → {1 if z >= 0 else 0}")
-
-# [0 0] → 0
-# [0 1] → 0
-# [1 0] → 0
-# [1 1] → 1
+print(epoch, [1 if np.dot(w, xi) + b >= 0 else 0 for xi in X])
+# 3 [0, 0, 0, 1]
 ```
 
-AND, OR 게이트 모두 완벽하게 학습한다. 퍼셉트론 수렴 정리(Perceptron Convergence Theorem)에 의하면, 데이터가 **선형 분리 가능**하면 퍼셉트론은 반드시 답을 찾는다.
-
-하지만 "선형 분리 가능"이라는 조건이 문제다.
+네 번째 에폭에서 오류가 사라진다. 퍼셉트론 수렴 정리는 데이터가 **선형 분리 가능**하기만 하면 퍼셉트론이 유한 번 안에 반드시 답을 찾는다고 보장한다. 문제는 그 조건이다.
 
 ---
 
-## XOR 문제: 퍼셉트론의 근본적 한계
+## XOR, 직선 하나로는 안 되는 문제
 
-### 하나의 직선으로는 안 되는 문제
+AND와 OR은 직선 하나로 갈린다. XOR은 아니다.
 
-XOR(배타적 논리합) 게이트를 보자:
+| $x_1$ | $x_2$ | XOR |
+|---|---|---|
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
 
-| x₁ | x₂ | XOR |
-|----|----|-----|
-| 0  | 0  |  0  |
-| 0  | 1  |  1  |
-| 1  | 0  |  1  |
-| 1  | 1  |  0  |
-
-이걸 2차원 평면에 그리면:
-
-```
-x₂
- 1 |  ●(1)     ○(0)
-   |
- 0 |  ○(0)     ●(1)
-   └──────────── x₁
-      0          1
-
-● = 클래스 1, ○ = 클래스 0
-```
-
-어떻게 직선 하나를 그어도 ●과 ○을 완벽하게 분리할 수 없다. 이것이 **선형 분리 불가능(linearly inseparable)** 한 문제다.
-
-1969년, 마빈 민스키(Marvin Minsky)와 시모어 패퍼트(Seymour Papert)가 저서 *Perceptrons*에서 이 한계를 수학적으로 증명했다. 단일 퍼셉트론으로는 XOR을 절대 풀 수 없다. 이 증명은 신경망 연구를 10년 넘게 얼어붙게 만든 "AI 겨울"의 방아쇠가 됐다.
-
-[결정 경계](/ml/decision-boundary/) 글에서 다항 특성(polynomial features)을 추가해 비선형 경계를 만들었던 것을 떠올려보자. x₁x₂ 같은 교차항을 수동으로 추가하면 XOR도 풀 수 있다. 하지만 이건 사람이 "어떤 특성을 만들어야 하는지" 미리 알아야 한다는 뜻이다. 특성이 수백, 수천 개가 되면 어떤 조합이 유용한지 사람이 판단하기 불가능하다.
-
-그래서 **모델이 스스로 유용한 특성 조합을 학습하게 만들자** — 이것이 다층 신경망의 핵심 아이디어다.
-
-### XOR을 직접 못 푸는 것을 코드로 확인하기
-
-```python
-import numpy as np
-
-# XOR 데이터
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([0, 1, 1, 0])
-
-np.random.seed(42)
-w = np.random.randn(2) * 0.01
-b = 0.0
-lr = 0.1
-
-# 100번 돌려도 수렴하지 않는다
-for epoch in range(100):
-    errors = 0
-    for xi, yi in zip(X, y):
-        z = np.dot(w, xi) + b
-        y_hat = 1 if z >= 0 else 0
-        if y_hat != yi:
-            w += lr * (yi - y_hat) * xi
-            b += lr * (yi - y_hat)
-            errors += 1
-    if epoch % 20 == 0:
-        print(f"Epoch {epoch}: errors = {errors}")
-
-# Epoch 0: errors = 3
-# Epoch 20: errors = 2
-# Epoch 40: errors = 2
-# Epoch 60: errors = 2
-# Epoch 80: errors = 2
-# → 영원히 수렴하지 않는다!
-```
-
-에러가 0으로 떨어지지 않는다. 퍼셉트론이 XOR을 절대 풀 수 없다는 증거다.
-
----
-
-## 다층 퍼셉트론(MLP): 레이어를 쌓으면 해결된다
-
-### 핵심 아이디어
-
-XOR을 하나의 직선으로는 못 가르지만, **직선 두 개를 조합하면** 가를 수 있다.
-
-```
-직선 1: x₁ + x₂ - 0.5 > 0  →  "x₁ OR x₂"
-직선 2: x₁ + x₂ - 1.5 > 0  →  "x₁ AND x₂"
-
-XOR = (직선 1) AND NOT(직선 2)
-    = OR 결과가 1이면서, AND 결과가 0인 경우
-```
-
-이걸 뉴런으로 구성하면:
-
-```
-입력층        히든층         출력층
-            ┌───────┐
-x₁ ────────→│ h₁(OR) │──→
-     ╲    ╱ └───────┘     ╲  ┌──────┐
-      ╲  ╱                  →│ out  │→ ŷ
-      ╱  ╲                ╱  └──────┘
-     ╱    ╲ ┌────────┐   ╱
-x₂ ────────→│h₂(NAND)│──→
-            └────────┘
-```
-
-히든층의 첫 번째 뉴런(h₁)은 OR 역할, 두 번째 뉴런(h₂)은 NAND 역할을 한다. 출력 뉴런이 이 둘의 결과를 AND로 결합하면 XOR이 완성된다. 직선 하나로 안 되는 문제를 **직선 여러 개의 조합**으로 풀어낸 것이다.
-
-이것이 **다층 퍼셉트론(Multi-Layer Perceptron, MLP)** 의 핵심이다. 단순한 함수들을 조합해서 복잡한 함수를 만든다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 레고 블록 비유</strong><br>
-  각 뉴런은 "직선 하나를 긋는" 단순한 작업만 한다. 하지만 이 직선들을 여러 층으로 쌓아 조합하면, 아무리 복잡한 결정 경계도 만들 수 있다. 레고 블록 하나하나는 단순하지만, 조합하면 어떤 형태든 만들 수 있는 것과 같다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 330" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="XOR 데이터를 x1, x2 평면에 그린 그림. 클래스 1인 두 점과 클래스 0인 두 점이 각각 대각선으로 마주 보고 있어서, 직선 하나를 어떻게 그어도 한쪽에 두 클래스가 섞인다.">
+<style>
+.nb1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.nb1-l { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.nb1-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; fill: none; }
+.nb1-cut { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; stroke-dasharray: 6 4; fill: none; }
+.nb1-one { fill: var(--primary, #0a756c); }
+.nb1-zero { fill: var(--bg, #fafaf8); stroke: var(--accent, #9d5604); stroke-width: 2.4; }
+.nb1-bad { stroke: var(--text-danger, #cb2121); stroke-width: 2.4; fill: none; }
+.nb1-dg { fill: var(--text-danger, #cb2121); font-size: 14px; font-weight: 600; }
+</style>
+<text class="nb1-t" x="200" y="24" text-anchor="middle">직선 하나로는 못 가른다</text>
+<!-- 축 -->
+<path class="nb1-ax" d="M 88 258 L 336 258"/>
+<path class="nb1-ax" d="M 88 258 L 88 58"/>
+<text class="nb1-l" x="110" y="278" text-anchor="middle">0</text>
+<text class="nb1-l" x="280" y="278" text-anchor="middle">1</text>
+<text class="nb1-l" x="76" y="235" text-anchor="end">0</text>
+<text class="nb1-l" x="76" y="95" text-anchor="end">1</text>
+<text class="nb1-l" x="344" y="264" text-anchor="start">x₁</text>
+<text class="nb1-l" x="88" y="46" text-anchor="middle">x₂</text>
+<!-- 후보 직선 하나 -->
+<path class="nb1-cut" d="M 150 53 L 330 201"/>
+<!-- 점 네 개 -->
+<circle class="nb1-zero" cx="110" cy="230" r="10"/>
+<circle class="nb1-one" cx="110" cy="90" r="10"/>
+<circle class="nb1-one" cx="280" cy="230" r="10"/>
+<circle class="nb1-zero" cx="280" cy="90" r="10"/>
+<!-- 잘못 분류된 점 -->
+<circle class="nb1-bad" cx="110" cy="230" r="19"/>
+<text class="nb1-dg" x="110" y="202" text-anchor="middle">틀림</text>
+<!-- 범례 -->
+<circle class="nb1-one" cx="118" cy="306" r="9"/>
+<text class="nb1-l" x="134" y="311" text-anchor="start">XOR = 1</text>
+<circle class="nb1-zero" cx="238" cy="306" r="9"/>
+<text class="nb1-l" x="254" y="311" text-anchor="start">XOR = 0</text>
+</svg>
 </div>
 
-### MLP의 구조
+같은 클래스끼리 대각선으로 마주 본다. 어떤 각도로 직선을 그어도 한쪽에 두 클래스가 섞인다. 1969년 마빈 민스키와 시모어 패퍼트가 저서 *Perceptrons*에서 이 한계를 증명했고, 이후 신경망 연구는 10년 넘게 얼어붙었다.
 
-다층 신경망은 세 종류의 레이어로 구성된다:
+우회로가 없지는 않다. $x_1x_2$ 같은 교차항을 특성으로 직접 추가하면 XOR도 선형 분리가 된다. 다만 이건 어떤 조합이 필요한지 사람이 미리 알아야 한다는 뜻이다. 특성이 수백 개로 늘어나면 그 판단은 불가능해진다.
 
-```
-입력층(Input Layer)    히든층(Hidden Layer)    출력층(Output Layer)
-     x₁ ─────────→  h₁  ─────────→
-     x₂ ─────────→  h₂  ─────────→  ŷ
-     x₃ ─────────→  h₃  ─────────→
-          W[1], b[1]       W[2], b[2]
-```
-
-| 레이어 | 역할 | 특징 |
-|--------|------|------|
-| 입력층 | 원본 특성을 받아들임 | 뉴런 수 = 특성 수 |
-| 히든층 | 입력의 새로운 표현(representation) 학습 | 여러 층 가능, 뉴런 수는 하이퍼파라미터 |
-| 출력층 | 최종 예측 생성 | 뉴런 수 = 클래스 수 (분류) 또는 1 (회귀) |
-
-**각 뉴런이 하는 일은 전부 동일하다:** 가중합 → 활성화 함수. 즉 **모든 뉴런은 작은 로지스틱 회귀**다. 이것만 기억하면 아무리 복잡한 신경망도 겁나지 않는다.
+그래서 방향을 바꾼다. 쓸모 있는 특성 조합을 모델이 직접 만들게 한다.
 
 ---
 
-## 범용 근사 정리: 신경망이 강력한 수학적 이유
+## 은닉층 하나를 넣으면 풀린다
 
-1989년, 조지 사이벤코(George Cybenko)가 증명한 **범용 근사 정리(Universal Approximation Theorem)** 는 이렇게 말한다:
+직선 하나로 못 가르는 문제도 직선 두 개를 조합하면 갈린다. XOR은 이렇게 분해된다.
 
-> 히든 레이어가 1개이고, 뉴런 수가 충분하면, 시그모이드 활성화 함수를 가진 신경망은 **임의의 연속 함수**를 원하는 정밀도로 근사할 수 있다.
+- $x_1 + x_2 - 0.5 > 0$: OR에 해당하는 직선
+- $-x_1 - x_2 + 1.5 > 0$: NAND에 해당하는 직선
+- 두 조건이 동시에 참인 영역이 정확히 XOR = 1이다
 
-쉽게 말하면, 세상의 어떤 패턴이든 — 아무리 복잡한 비선형 관계든 — 뉴런을 충분히 넣으면 표현할 수 있다는 것이다.
+$(1,1)$은 OR은 통과하지만 NAND에서 걸리고, $(0,0)$은 NAND는 통과하지만 OR에서 걸린다. 남는 것은 $(0,1)$과 $(1,0)$뿐이다.
 
-```
-이론적으로:
-  1개의 히든 레이어 + 충분한 뉴런 → 모든 연속 함수를 근사 가능
+중간 층의 뉴런 두 개가 각각 OR과 NAND라는 직선을 긋고, 출력 뉴런이 그 둘을 AND로 묶는다. 사람이 교차항을 설계해 넣어주던 일을 중간 층이 대신한 것이다. 이 중간 층을 **은닉층(hidden layer)**, 은닉층을 가진 신경망을 **다층 퍼셉트론(Multi-Layer Perceptron, MLP)** 이라 부른다.
 
-실제로:
-  뉴런을 하나의 층에 수만 개 쌓는 것보다
-  적당한 수의 뉴런을 여러 층으로 쌓는 것(딥러닝)이 효율적
-```
+### 층의 구조와 파라미터
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 범용 근사 정리의 의미</strong><br>
-  이 정리는 "신경망이 답을 <em>찾을 수 있다</em>"는 존재성(existence)만 보장한다. "어떻게 찾느냐"는 별개 문제다. 그 "어떻게"가 바로 다음 글에서 다룰 순전파와 역전파다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 340" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="입력 3개, 은닉 4개, 출력 1개인 신경망 구조. 모든 노드가 다음 층의 모든 노드와 연결되어 있고, 층 사이마다 가중치 행렬 W와 편향 벡터 b의 크기가 표시되어 있다.">
+<style>
+.nb2-edge { stroke: var(--border, #e7e5e4); stroke-width: 1.2; fill: none; }
+.nb2-in { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.8; }
+.nb2-hid { fill: var(--primary, #0a756c); }
+.nb2-out { fill: var(--accent, #9d5604); }
+.nb2-ink { fill: var(--text, #1c1917); font-size: 14px; }
+.nb2-on { fill: var(--on-fill, #ffffff); font-size: 14px; font-weight: 600; }
+.nb2-lab { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.nb2-dim { fill: var(--text, #1c1917); font-size: 14px; font-weight: 600; }
+</style>
+<!-- 연결선: 입력 3 x 은닉 4 -->
+<path class="nb2-edge" d="M 78 125 L 182 95 M 78 125 L 182 155 M 78 125 L 182 215 M 78 125 L 182 275"/>
+<path class="nb2-edge" d="M 78 185 L 182 95 M 78 185 L 182 155 M 78 185 L 182 215 M 78 185 L 182 275"/>
+<path class="nb2-edge" d="M 78 245 L 182 95 M 78 245 L 182 155 M 78 245 L 182 215 M 78 245 L 182 275"/>
+<!-- 연결선: 은닉 4 x 출력 1 -->
+<path class="nb2-edge" d="M 218 95 L 322 185 M 218 155 L 322 185 M 218 215 L 322 185 M 218 275 L 322 185"/>
+<!-- 차원 라벨 -->
+<text class="nb2-dim" x="130" y="52" text-anchor="middle">W[1] : 4×3</text>
+<text class="nb2-lab" x="130" y="72" text-anchor="middle">b[1] : 4×1</text>
+<text class="nb2-dim" x="270" y="52" text-anchor="middle">W[2] : 1×4</text>
+<text class="nb2-lab" x="270" y="72" text-anchor="middle">b[2] : 1×1</text>
+<!-- 입력층 -->
+<circle class="nb2-in" cx="60" cy="125" r="18"/>
+<text class="nb2-ink" x="60" y="130" text-anchor="middle">x₁</text>
+<circle class="nb2-in" cx="60" cy="185" r="18"/>
+<text class="nb2-ink" x="60" y="190" text-anchor="middle">x₂</text>
+<circle class="nb2-in" cx="60" cy="245" r="18"/>
+<text class="nb2-ink" x="60" y="250" text-anchor="middle">x₃</text>
+<!-- 은닉층 -->
+<circle class="nb2-hid" cx="200" cy="95" r="18"/>
+<text class="nb2-on" x="200" y="100" text-anchor="middle">a₁</text>
+<circle class="nb2-hid" cx="200" cy="155" r="18"/>
+<text class="nb2-on" x="200" y="160" text-anchor="middle">a₂</text>
+<circle class="nb2-hid" cx="200" cy="215" r="18"/>
+<text class="nb2-on" x="200" y="220" text-anchor="middle">a₃</text>
+<circle class="nb2-hid" cx="200" cy="275" r="18"/>
+<text class="nb2-on" x="200" y="280" text-anchor="middle">a₄</text>
+<!-- 출력층 -->
+<circle class="nb2-out" cx="340" cy="185" r="18"/>
+<text class="nb2-on" x="340" y="190" text-anchor="middle">ŷ</text>
+<!-- 층 이름 -->
+<text class="nb2-lab" x="60" y="318" text-anchor="middle">입력층</text>
+<text class="nb2-lab" x="200" y="318" text-anchor="middle">은닉층</text>
+<text class="nb2-lab" x="340" y="318" text-anchor="middle">출력층</text>
+</svg>
 </div>
 
-이 정리가 중요한 이유는, 모델 선택의 고민을 줄여준다는 것이다. 결정 트리를 쓸지, SVM을 쓸지, 다항 특성을 몇 차로 할지 — 이런 고민 대신, 신경망은 "충분히 크게 만들면 이론적으로 어떤 함수든 표현 가능"이라는 보장이 있다. 물론 실전에서는 과적합, 계산량, 데이터 양 같은 현실적 제약이 있지만.
+| 층 | 역할 | 뉴런 수 |
+|---|---|---|
+| 입력층 | 원본 특성을 그대로 받는다 | 특성 수 |
+| 은닉층 | 입력을 다른 표현으로 바꾼다 | 하이퍼파라미터 |
+| 출력층 | 최종 예측을 낸다 | 클래스 수, 회귀면 1 |
+
+층이 몇 개든 각 층이 하는 계산은 동일하다.
+
+$$z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}, \qquad a^{[l]} = g(z^{[l]})$$
+
+$l$은 층 번호, $a^{[0]}$은 입력 $x$, $g$는 활성화 함수다. 층 하나가 곧 뉴런 여러 개이므로 가중치는 벡터가 아니라 행렬 $W^{[l]}$이 되고, 크기는 항상 이렇게 정해진다.
+
+$$W^{[l]} : n^{[l]} \times n^{[l-1]}, \qquad b^{[l]} : n^{[l]} \times 1$$
+
+$n^{[l]}$은 층 $l$의 뉴런 수다. 현재 층의 뉴런 하나는 이전 층의 모든 뉴런과 연결되므로 뉴런 하나당 가중치가 $n^{[l-1]}$개 필요하고, 그런 뉴런이 $n^{[l]}$개 있다. 행렬의 각 행이 뉴런 하나의 가중치 벡터인 셈이다. 위 그림의 파라미터 수는 $(4 \times 3 + 4) + (1 \times 4 + 1) = 21$개다.
+
+:::tip
+
+**shape 에러 대부분은 이 규칙 하나로 잡힌다**
+
+`shapes not aligned`가 뜨면 $W$를 (이전 층, 현재 층) 순으로 만들었을 가능성이 높다. NumPy에서 `W @ a` 순으로 곱하려면 (현재 층, 이전 층)이어야 한다. sklearn의 `coefs_`는 반대로 (이전 층, 현재 층)에 저장하니 값을 꺼내 볼 때 헷갈리지 않도록 한다.
+
+:::
 
 ---
 
-## 신경망의 수학적 표기
+## 은닉층 하나로 어디까지 갈 수 있나
 
-신경망 논문이나 교재를 읽으려면 표기법에 익숙해져야 한다. 2층 신경망(히든 1개 + 출력 1개)을 기준으로 정리하자.
+1989년 조지 사이벤코가 증명한 **범용 근사 정리(Universal Approximation Theorem)** 가 그 상한을 알려준다.
 
-### 레이어별 표기
+> 은닉층이 하나이고 뉴런 수가 충분하면, 시그모이드 활성화 함수를 쓰는 신경망은 유계 폐구간 위의 임의의 연속 함수를 원하는 정밀도로 근사할 수 있다.
 
-```
-[0] 입력층       [1] 히든층           [2] 출력층
-
-a[0] = x         z[1] = W[1]a[0] + b[1]   z[2] = W[2]a[1] + b[2]
-(입력 그대로)     a[1] = f(z[1])           a[2] = f(z[2]) = ŷ
-```
-
-| 기호 | 의미 | 예시 |
-|------|------|------|
-| l | 레이어 번호 | l=0 (입력), l=1 (히든), l=2 (출력) |
-| n[l] | l번째 레이어의 뉴런 수 | n[0]=3, n[1]=4, n[2]=1 |
-| W[l] | l번째 레이어의 가중치 행렬 | 크기: n[l] × n[l-1] |
-| b[l] | l번째 레이어의 편향 벡터 | 크기: n[l] × 1 |
-| z[l] | 가중합 (활성화 전) | z[l] = W[l]a[l-1] + b[l] |
-| a[l] | 활성화 출력 | a[l] = f(z[l]) |
-
-### 가중치 행렬의 차원
-
-이 부분을 많이 헷갈려하는데, 규칙은 간단하다:
-
-```
-W[l]의 크기 = (현재 층 뉴런 수) × (이전 층 뉴런 수)
-            = n[l] × n[l-1]
-
-예시: 입력 3개 → 히든 4개 → 출력 1개
-  W[1]: 4 × 3  (히든 4개가 각각 입력 3개와 연결)
-  b[1]: 4 × 1
-  W[2]: 1 × 4  (출력 1개가 히든 4개와 연결)
-  b[2]: 1 × 1
-
-총 파라미터 수 = (4×3 + 4) + (1×4 + 1) = 12 + 4 + 4 + 1 = 21
-```
-
-![2층 신경망의 구조와 차원](./network-architecture.png)
-
-왜 `n[l] x n[l-1]`인지 직관적으로 이해하면: 현재 층의 각 뉴런은 이전 층의 **모든** 뉴런과 연결된다. 뉴런 하나가 필요한 가중치 수 = 이전 층 뉴런 수. 그런 뉴런이 n[l]개이므로, 전체 가중치는 n[l] × n[l-1]개다.
+주의할 점은 이 정리가 그런 가중치의 **존재**만 말한다는 것이다. 어떻게 찾는지는 말하지 않고, 경사하강법이 실제로 그 값에 도달한다는 보장도 없다. "뉴런 수가 충분하면"의 충분함이 현실적으로 감당 못 할 크기일 수도 있다. 특정 함수족에서는 얕은 한 층으로 표현하려면 뉴런이 지수적으로 필요한 반면 층을 나누면 훨씬 적게 든다는 결과들이 알려져 있고, 딥러닝이 넓은 쪽 대신 깊은 쪽을 택한 근거가 여기에 있다.
 
 ---
 
-## 로지스틱 회귀 vs 신경망: 나란히 비교
+## sklearn으로 확인하기
 
-이제 [로지스틱 회귀](/ml/logistic-regression/)와 신경망을 공식으로 나란히 놓아보자.
-
-### 로지스틱 회귀 (뉴런 1개)
-
-```
-z = w₁x₁ + w₂x₂ + w₃x₃ + b
-ŷ = σ(z)
-
-파라미터: w (3개) + b (1개) = 4개
-표현력: 직선 하나 (선형 결정 경계)
-```
-
-### 2층 신경망 (히든 뉴런 4개)
-
-```
-히든층:
-  z₁[1] = w₁₁x₁ + w₁₂x₂ + w₁₃x₃ + b₁
-  z₂[1] = w₂₁x₁ + w₂₂x₂ + w₂₃x₃ + b₂
-  z₃[1] = w₃₁x₁ + w₃₂x₂ + w₃₃x₃ + b₃
-  z₄[1] = w₄₁x₁ + w₄₂x₂ + w₄₃x₃ + b₄
-  a[1] = σ(z[1])  ← 각각 시그모이드 통과
-
-출력층:
-  z[2] = v₁a₁ + v₂a₂ + v₃a₃ + v₄a₄ + c
-  ŷ = σ(z[2])
-
-파라미터: W[1](12) + b[1](4) + W[2](4) + b[2](1) = 21개
-표현력: 직선 4개의 비선형 조합 (복잡한 결정 경계)
-```
-
-히든층의 4개 뉴런은 각각 **서로 다른 직선**을 학습한다. 출력 뉴런이 이 직선들의 결과를 조합해서 최종 결정 경계를 만든다. 직선 하나(로지스틱 회귀)로 안 되는 문제도, 직선 여러 개를 조합하면 풀 수 있는 원리다.
-
-```
-로지스틱 회귀:  x → [직선 1개] → ŷ
-신경망:        x → [직선 4개] → [조합] → ŷ
-                    히든층         출력층
-```
-
----
-
-## 언제 신경망을 쓰고, 언제 Classical ML을 쓸까?
-
-신경망이 만능은 아니다. 데이터 유형에 따라 최적의 모델이 다르다.
-
-| 기준 | Classical ML (XGBoost 등) | 신경망 (MLP, CNN, RNN 등) |
-|------|--------------------------|--------------------------|
-| 정형 데이터 (표) | 강함 — 보통 1등 | 비슷하거나 약간 뒤처짐 |
-| 이미지 | 수동 특성 추출 필요 | 압도적 (CNN) |
-| 텍스트 | TF-IDF + 모델 조합 | 압도적 (Transformer) |
-| 데이터 양 | 적어도 잘 작동 | 많을수록 유리 |
-| 해석 가능성 | 높음 (feature importance) | 낮음 (블랙박스) |
-| 학습 속도 | 빠름 | GPU 필요, 느림 |
-| 하이퍼파라미터 | 상대적으로 적음 | 아키텍처 선택이 곧 설계 |
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 실전 경험칙</strong><br>
-  Kaggle 정형 데이터 대회에서는 XGBoost/LightGBM이 거의 항상 이긴다. 반면 이미지, 텍스트, 음성 같은 비정형 데이터에서는 신경망이 유일한 선택지다. "어떤 모델이 더 좋냐"가 아니라 "어떤 데이터에 어떤 모델이 맞느냐"의 문제다.
-</div>
-
----
-
-## sklearn으로 MLP 실습
-
-이론은 충분하다. sklearn의 `MLPClassifier`로 실제 비선형 분류 문제를 풀어보자.
-
-### XOR 문제 해결
+퍼셉트론이 영원히 못 풀던 XOR을 은닉층 하나로 풀어보자.
 
 ```python
 import numpy as np
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score
 
-# XOR 데이터
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 y = np.array([0, 1, 1, 0])
 
-# MLP: 히든 레이어 1개, 뉴런 4개
-mlp = MLPClassifier(
-    hidden_layer_sizes=(4,),      # 히든층 뉴런 수
-    activation='relu',             # 활성화 함수
-    max_iter=1000,
-    random_state=42
-)
+mlp = MLPClassifier(hidden_layer_sizes=(8,), activation='relu',
+                    max_iter=1000, random_state=42)
 mlp.fit(X, y)
-
-print(f"예측: {mlp.predict(X)}")
-print(f"정확도: {accuracy_score(y, mlp.predict(X)):.2f}")
-
-# 예측: [0 1 1 0]
-# 정확도: 1.00
+print(mlp.predict(X), mlp.score(X, y))
+# [0 1 1 0] 1.0
 ```
 
-퍼셉트론이 절대 풀 수 없었던 XOR을 히든 레이어 하나만 추가해서 완벽하게 풀었다.
+은닉 뉴런을 2개까지 줄이면 초기값에 따라 실패하기도 한다. 표현할 수 있다는 것과 경사하강법이 실제로 그 해를 찾아낸다는 것은 다른 문제라는 사실이 이런 데서 드러난다.
 
-### 비선형 결정 경계 시각화
-
-좀 더 현실적인 데이터로 시각화해보자.
+좀 더 현실적인 데이터에서 은닉층 구성에 따라 결정 경계가 어떻게 달라지는지 보자.
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.neural_network import MLPClassifier
 from sklearn.datasets import make_moons
 
-# 반달 형태의 비선형 데이터 생성
 X, y = make_moons(n_samples=200, noise=0.2, random_state=42)
-
-# 다양한 구조의 MLP 비교
-configs = [
-    ((4,), "히든 (4,)"),
-    ((8, 4), "히든 (8, 4)"),
-    ((16, 8, 4), "히든 (16, 8, 4)")
-]
-
-fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-
-for ax, (layers, title) in zip(axes, configs):
-    mlp = MLPClassifier(
-        hidden_layer_sizes=layers,
-        activation='relu',
-        max_iter=2000,
-        random_state=42
-    )
-    mlp.fit(X, y)
-
-    # 결정 경계 그리기
-    xx, yy = np.meshgrid(
-        np.linspace(X[:, 0].min()-0.5, X[:, 0].max()+0.5, 200),
-        np.linspace(X[:, 1].min()-0.5, X[:, 1].max()+0.5, 200)
-    )
-    Z = mlp.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
-
-    ax.contourf(xx, yy, Z, alpha=0.3, cmap='coolwarm')
-    ax.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm', edgecolors='k', s=20)
-    ax.set_title(f"{title}\nacc: {mlp.score(X, y):.3f}")
-
-plt.tight_layout()
-plt.savefig('mlp_decision_boundaries.png', dpi=150)
-plt.show()
+for layers in [(2,), (8,), (16, 8)]:
+    mlp = MLPClassifier(hidden_layer_sizes=layers, activation='relu',
+                        max_iter=2000, random_state=42).fit(X, y)
 ```
 
-![MLP 구조별 결정 경계 비교](./mlp-decision-boundaries.png)
+![은닉층 구성에 따른 결정 경계 변화](./mlp-decision-boundaries.png)
 
-히든 레이어를 깊게 쌓을수록 더 복잡한 결정 경계를 만들 수 있다. 하지만 무조건 깊다고 좋은 건 아니다 — [편향-분산 트레이드오프](/ml/bias-variance/)를 떠올려보자. 너무 복잡한 모델은 훈련 데이터에 과적합될 수 있다.
-
-### 네트워크 내부 들여다보기
-
-학습된 가중치와 구조를 확인해보자.
-
-```python
-mlp = MLPClassifier(
-    hidden_layer_sizes=(4,),
-    activation='relu',
-    max_iter=1000,
-    random_state=42
-)
-mlp.fit(X, y)
-
-# 가중치 행렬 확인
-print("=== 레이어별 가중치 ===")
-for i, (W, b) in enumerate(zip(mlp.coefs_, mlp.intercepts_)):
-    print(f"W[{i+1}] shape: {W.shape}, b[{i+1}] shape: {b.shape}")
-    print(f"  파라미터 수: {W.size + b.size}")
-
-# W[1] shape: (2, 4), b[1] shape: (4,)   → 입력 2개 × 히든 4개 (sklearn은 (입력, 출력) 순으로 저장)
-#   파라미터 수: 12
-# W[2] shape: (4, 1), b[2] shape: (1,)   → 히든 4개 × 출력 1개
-#   파라미터 수: 5
-# 총 파라미터: 17개
-
-print(f"\n총 파라미터 수: {sum(W.size + b.size for W, b in zip(mlp.coefs_, mlp.intercepts_))}")
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 sklearn의 한계</strong><br>
-  sklearn의 MLPClassifier는 학습 원리를 이해하기엔 좋지만, 실전 딥러닝에서는 사용하지 않는다. GPU 지원이 없고, CNN/RNN 같은 특수 구조를 만들 수 없기 때문이다. 실전에서는 PyTorch나 TensorFlow를 사용한다. 이 시리즈에서도 신경망이 깊어지면 PyTorch로 전환할 예정이다.
-</div>
+뉴런이 2개일 때는 경계가 거의 직선이고, 8개가 되면 한 번 꺾인다. 층을 두 개 쌓았을 때만 반달 모양을 따라 휘면서 정확도가 눈에 띄게 오른다. 물론 복잡할수록 좋은 것은 아니다. 표현력이 커지면 훈련 데이터의 잡음까지 따라가는 과적합 위험도 같이 커진다.
 
 ---
 
-## 정리: 지금까지 배운 것과 앞으로 배울 것
+## 언제 신경망을 쓰나
 
-이번 글에서 다룬 핵심을 정리하면:
+| 기준 | 트리 앙상블(XGBoost 등) | 신경망 |
+|---|---|---|
+| 정형 데이터(표) | 대체로 우세 | 비슷하거나 약간 뒤짐 |
+| 이미지·텍스트·음성 | 특성을 사람이 만들어야 함 | 사실상 유일한 선택지 |
+| 데이터 양 | 적어도 작동 | 많을수록 유리 |
+| 해석 | feature importance | 어려움 |
+| 학습 비용 | CPU로 충분 | GPU 필요 |
 
-1. **퍼셉트론** = 가중합 + 활성화 함수. 로지스틱 회귀와 본질적으로 같다
-2. **XOR 문제**: 단일 퍼셉트론(직선 하나)으로는 비선형 분리가 불가능하다
-3. **다층 신경망(MLP)**: 히든 레이어를 추가하면 비선형 문제를 풀 수 있다. 각 뉴런이 학습한 직선들을 조합하는 원리다
-4. **범용 근사 정리**: 뉴런이 충분하면 어떤 연속 함수든 근사 가능하다
-5. **표기법**: W[l], b[l], z[l], a[l] — 레이어별 행렬 연산으로 정리된다
-6. **선택 기준**: 정형 데이터 → XGBoost, 비정형 데이터 → 신경망
-
-그런데 빠진 것이 있다. 신경망의 **학습 방법**을 아직 다루지 않았다. W[1], W[2], b[1], b[2]의 값을 **어떻게** 찾는 걸까?
-
-[경사하강법](/ml/gradient-descent/)에서 배운 것처럼, 손실 함수를 미분해서 파라미터를 업데이트해야 한다. 하지만 다층 신경망에서는 파라미터가 여러 레이어에 분산되어 있어서, 미분을 구하는 것 자체가 도전이다. 이 문제를 해결하는 알고리즘이 **역전파(Backpropagation)** 이고, 그 전 단계로 네트워크의 출력을 계산하는 **순전파(Forward Propagation)** 를 먼저 이해해야 한다.
+정형 데이터에서 신경망이 트리 앙상블을 이기기는 쉽지 않다. 반대로 픽셀이나 토큰처럼 사람이 좋은 특성을 설계하기 어려운 입력에서는 신경망 말고 대안이 없다. 어느 쪽이 더 좋은 모델이냐가 아니라, 어떤 데이터에 어느 쪽이 맞느냐의 문제다.
 
 ---
 
-## 다음 글 미리보기
+## 마치며
 
-[순전파(Forward Propagation)](/ml/forward-propagation/) — 입력이 네트워크를 통과하며 출력으로 변환되는 과정을 수식과 NumPy 코드로 단계별로 구현한다. 행렬 곱셈 한 줄로 전체 레이어의 연산이 표현되는 벡터화(vectorization)의 위력도 함께 다룬다.
+퍼셉트론은 가중합 하나와 활성화 함수 하나다. 시그모이드를 끼우면 로지스틱 회귀와 같은 모델이 되고, 직선 하나로 가를 수 있는 문제까지만 푼다. XOR이 그 벽이었다.
+
+벽을 넘은 방법은 새로운 알고리즘이 아니라 배치였다. 같은 뉴런을 옆으로 여러 개 늘어놓아 층을 만들고, 그 층을 앞뒤로 쌓았다. 앞 층이 그은 직선들이 뒤 층의 입력이 되면서, 사람이 손으로 만들던 특성 조합을 모델이 만들어낸다. 층의 계산은 어디서나 $z = Wa + b$, $a = g(z)$ 두 줄로 같고, $W$의 크기는 (현재 층 뉴런 수) × (이전 층 뉴런 수)로 고정된다.
+
+빠진 것은 $W$와 $b$의 값을 어떻게 정하느냐다. 층이 여러 개면 손실이 앞쪽 가중치까지 어떤 경로로 전달되는지부터 따져야 한다. 다음 글에서는 그 앞 단계, 입력이 층을 통과해 예측값이 되는 계산부터 정리한다.
+
+---
+
+## 함께 보면 좋은 글
+
+- [로지스틱 회귀](/ml/logistic-regression/) : 뉴런 하나가 하는 계산을 확률 모델로 유도한다
+- [순전파](/ml/forward-propagation/) : 층을 통과하며 값이 계산되는 과정을 행렬 연산으로 정리한다
+- [활성화 함수](/ml/activation-functions/) : 계단 함수 대신 무엇을 쓰고 왜 그런지 다룬다
+- [결정 경계](/ml/decision-boundary/) : 선형 모델이 그릴 수 있는 경계의 모양

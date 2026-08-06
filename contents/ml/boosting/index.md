@@ -1,481 +1,188 @@
 ---
 date: '2026-01-17'
-title: '부스팅(Boosting): 약한 모델을 순차적으로 쌓아 강한 모델 만들기'
+title: '틀린 것만 다시 배우는 부스팅, AdaBoost와 Gradient Boosting'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 17
-tags: ['Boosting', '부스팅', 'AdaBoost', 'Gradient Boosting', '앙상블', '머신러닝 기초']
-summary: '배깅과 달리 순차적으로 이전 모델의 오류를 보완하는 부스팅의 원리를 AdaBoost와 Gradient Boosting으로 이해한다.'
+tags: ['Boosting', '부스팅', 'AdaBoost', 'Gradient Boosting', '약한 학습기', '앙상블', '머신러닝 기초']
+summary: '앞 모델이 남긴 오차를 다음 모델이 이어받는 부스팅의 원리. AdaBoost의 샘플 가중치, Gradient Boosting의 잔차 학습, 학습률과 트리 수의 관계를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-지난 두 글([앙상블과 배깅](/ml/ensemble-and-bagging/), [랜덤 포레스트](/ml/random-forest/))에서 배깅(Bagging)과 랜덤 포레스트를 배웠다. 수백 개의 결정 트리를 **병렬**로 만들고, 각각의 예측을 투표로 합쳐 분산(Variance)을 낮추는 방식이었다. 서로 독립적으로 학습하고, 마지막에 합친다.
+배깅(Bagging)은 트리 수백 그루를 서로 모르는 채로 학습시킨 뒤 투표로 합친다. 어느 트리도 다른 트리가 무엇을 틀렸는지 모른다. 그래서 트리마다 제각각인 들쭉날쭉함은 평균에 깎여 사라지지만, 모든 트리가 공통으로 못 맞추는 부분은 그대로 남는다. 분산은 줄고 편향은 안 준다.
 
-부스팅(Boosting)은 전혀 다른 전략을 쓴다. 트리를 **순차적**으로 만들되, 이전 모델이 틀린 것을 다음 모델이 집중해서 보완한다. "약한 학습기(Weak Learner)를 순서대로 쌓아 강한 모델을 만든다"는 게 핵심이다.
+부스팅(Boosting)은 반대로 간다. 트리를 하나씩 순서대로 만들되, 새 트리는 앞선 모델이 남긴 오차만 겨냥한다. 혼자서는 찍기보다 조금 나은 수준인 약한 학습기(Weak Learner)라도 앞사람의 실수를 이어받으며 쌓이면 편향(Bias)이 낮은 모델이 된다.
 
-[편향-분산 트레이드오프 글](/ml/bias-variance/)에서 배운 것처럼, 배깅은 분산을 낮추고, 부스팅은 편향(Bias)을 낮춘다. 목표가 다르기 때문에 작동 방식도 완전히 다르다.
+## 배깅과 부스팅은 목표가 다르다
 
----
+| 구분 | 배깅 | 부스팅 |
+|------|------|--------|
+| 학습 순서 | 병렬, 서로 독립 | 순차, 앞 모델에 의존 |
+| 줄이는 것 | 분산(Variance) | 편향(Bias) |
+| 각 모델의 타겟 | 원래 정답 | 앞 모델이 남긴 오차 |
+| 과적합 | 트리를 늘려도 잘 안 는다 | 트리를 늘리면 는다 |
+| 이상치 | 둔감 | 민감 |
 
-## 부스팅 vs 배깅: 무엇이 다른가
+순서의 차이는 학습 시간에 그대로 나타난다. 배깅은 트리 100그루를 코어 여러 개에 흩어 동시에 학습시킬 수 있지만, 부스팅은 앞 트리의 예측이 있어야 다음 트리의 타겟이 정해지므로 트리 사이를 병렬화할 방법이 없다. 같은 100그루라도 부스팅 쪽이 몇 배 오래 걸린다.
 
-두 방법의 핵심 차이를 먼저 정리하자.
+노이즈가 많은 데이터, 학습을 병렬로 돌려야 하는 상황이면 배깅이 안전하다. 데이터가 비교적 깨끗하고 마지막 몇 퍼센트를 짜내야 하면 부스팅이다. 정형 데이터 대회에서 상위권 해법이 대체로 Gradient Boosting 계열인 것도 이 때문이다.
 
-![배깅 vs 부스팅 개념 비교](./bagging-vs-boosting.png)
+## AdaBoost
 
-| 구분 | 배깅 (Bagging) | 부스팅 (Boosting) |
-|------|---------------|------------------|
-| 학습 순서 | 병렬 (독립) | 순차 (의존) |
-| 목표 | 분산(Variance) 감소 | 편향(Bias) 감소 |
-| 약점 보완 | 각 모델 독립 | 이전 모델 오류 집중 |
-| 과적합 위험 | 낮음 | 상대적으로 높음 |
-| 대표 알고리즘 | 랜덤 포레스트 | AdaBoost, GradientBoosting |
+1995년 Freund와 Schapire가 제안한, 이론적 보장을 갖춘 첫 부스팅 알고리즘이다. "앞 모델이 틀린 것을 다음 모델이 맡는다"를 **샘플 가중치**로 구현한다. 오분류된 샘플의 가중치를 키워두면, 다음 분류기는 그 샘플을 틀렸을 때 손해가 크므로 자연히 거기에 집중한다.
 
-**배깅**: 데이터를 여러 서브셋으로 나눠 각각 독립적으로 학습 → 투표/평균. 노이즈에 강하고 안정적이다.
+기본 약한 학습기는 깊이 1짜리 결정 트리인 결정 그루터기(Decision Stump)다. 특성 하나와 임계값 하나로 "특성 A가 $\theta$ 이상이면 클래스 1"이라는 규칙만 만든다.
 
-**부스팅**: 처음엔 단순한 모델을 만들고, 틀린 샘플에 집중해 다음 모델을 만들기를 반복 → 가중 합산. 정확도가 높지만 노이즈(이상치)에 민감하다.
+절차는 다섯 줄이다.
 
-### 언제 어떤 것을 쓸까?
+1. 모든 샘플에 같은 가중치 $w_i = 1/N$ 을 준다.
+2. 그 가중치로 약한 분류기 $h_t$ 를 학습한다.
+3. 가중 오류율 $\epsilon_t = \sum_i w_i \mathbf{1}[h_t(x_i) \neq y_i]$ 를 잰다.
+4. 분류기 가중치 $\alpha_t$ 를 정하고, 오분류한 샘플은 $w_i$ 를 $e^{\alpha_t}$ 배로 키우고 맞춘 샘플은 $e^{-\alpha_t}$ 배로 줄인 뒤 합이 1이 되게 정규화한다.
+5. 2번으로 돌아간다.
 
-```
-배깅 선택 → 데이터에 노이즈가 많거나, 빠른 학습이 필요하거나, 과적합이 걱정될 때
-부스팅 선택 → 정확도를 최대로 끌어올려야 할 때, 데이터가 비교적 깨끗할 때
-```
+최종 예측은 분류기들의 가중 투표다.
 
-실전에서는 Gradient Boosting 계열(XGBoost, LightGBM)이 정형 데이터 대회에서 압도적으로 많이 우승한다. 정확도만 놓고 보면 부스팅이 배깅보다 대체로 높다.
+$$H(x) = \operatorname{sign}\left(\sum_{t=1}^{T} \alpha_t h_t(x)\right), \qquad \alpha_t = \frac{1}{2}\ln\frac{1-\epsilon_t}{\epsilon_t}$$
 
----
+$\alpha_t$ 하나가 두 가지 일을 동시에 한다. 잘 맞춘 분류기일수록 최종 투표에서 큰 지분을 갖고, 같은 값이 그 분류기가 틀린 샘플의 가중치를 밀어 올리는 폭도 정한다.
 
-## AdaBoost (Adaptive Boosting)
+| 가중 오류율 $\epsilon_t$ | $\alpha_t$ | 최종 투표에서의 지분 |
+|---|---|---|
+| 0.5 | 0 | 없음. 찍기와 같으므로 버려진다 |
+| 0.3 | 0.42 | 보통 |
+| 0.1 | 1.10 | 큼 |
+| 0.01 | 2.30 | 매우 큼 |
 
-AdaBoost는 1995년 Freund와 Schapire가 제안한 알고리즘이다. 이론적으로 증명된 첫 번째 부스팅 알고리즘이기도 하다.
+오류율이 0.5를 넘으면 $\alpha_t$ 가 음수가 되어, 그 분류기의 예측이 뒤집힌 채 반영된다. 찍기보다 못한 분류기도 버리지 않고 부호를 바꿔 쓰는 셈이다.
 
-### 핵심 아이디어
+![AdaBoost 이터레이션별 샘플 가중치 변화](./adaboost-weights.png)
 
-**이전에 틀린 샘플에 더 높은 가중치를 부여한다.** 다음 모델은 가중치가 높은 샘플을 더 중요하게 학습한다. 결국 어려운 샘플을 전문으로 처리하는 모델들이 순서대로 쌓인다.
+가로축은 샘플 하나하나, 세로축은 그 샘플이 다음 학습에서 갖는 비중이다. 처음에는 20개 샘플이 모두 1/20으로 평평하다. 첫 분류기가 틀린 네 개(인덱스 4, 7, 10, 13)만 0.1로 솟고 나머지는 그만큼 내려간다. 두 번째 이터레이션에서는 17번이 다시 틀리면서 0.15까지 올라간다. 어려운 샘플일수록 봉우리가 계속 높아진다.
 
-### 알고리즘 단계
+:::warning
 
-```
-1. 모든 샘플에 동일한 초기 가중치 부여: w_i = 1/N
+**AdaBoost는 이상치에 취약하다**
 
-2. 반복 (t = 1, 2, ..., T):
-   a. 가중치 w를 사용해 약한 분류기 h_t 학습
-   b. 가중 오류율 계산: ε_t = Σ w_i × 𝟙[h_t(x_i) ≠ y_i]
-   c. 분류기 가중치 계산: α_t = 0.5 × ln((1-ε_t) / ε_t)
-   d. 가중치 업데이트:
-      - 오분류 샘플: w_i ← w_i × exp(+α_t)  (가중치 증가)
-      - 정분류 샘플: w_i ← w_i × exp(-α_t)  (가중치 감소)
-   e. 가중치 정규화: w_i ← w_i / Σw_j
+가중치가 $e^{\alpha_t}$ 배씩 곱해지며 누적된다는 점이 문제가 된다. 라벨이 잘못 붙은 샘플처럼 아무리 학습해도 못 맞추는 데이터가 있으면, 그 샘플의 가중치만 지수적으로 커져 나머지 데이터를 압도한다. 결국 앙상블 전체가 이상치 몇 개를 맞추려고 비틀린다.
 
-3. 최종 예측: H(x) = sign(Σ α_t × h_t(x))
-```
+이상치가 섞인 데이터라면 AdaBoost보다 Gradient Boosting이 낫다. 회귀에서는 `loss='huber'` 로 큰 잔차의 영향을 잘라낼 수 있다.
 
-**α_t 공식의 의미**:
-- ε_t = 0.5 (찍기 수준): α_t = 0 → 이 모델은 최종 예측에 기여 없음
-- ε_t = 0.1 (잘 맞춤): α_t ≈ 1.1 → 큰 가중치로 최종 예측에 기여
-- ε_t = 0.01 (매우 잘 맞춤): α_t ≈ 2.3 → 더 큰 가중치
-
-### NumPy로 핵심 수식 구현
-
-```python
-import numpy as np
-
-def adaboost_alpha(error_rate):
-    """분류기 가중치 계산"""
-    # ε이 0이나 1에 너무 가까우면 클리핑
-    eps = np.clip(error_rate, 1e-10, 1 - 1e-10)
-    return 0.5 * np.log((1 - eps) / eps)
-
-def update_weights(weights, alpha, correct_mask):
-    """샘플 가중치 업데이트 및 정규화"""
-    # 정분류: exp(-alpha), 오분류: exp(+alpha)
-    w = weights.copy()
-    w[correct_mask] *= np.exp(-alpha)
-    w[~correct_mask] *= np.exp(alpha)
-    return w / w.sum()  # 정규화
-
-# 예시: 오류율에 따른 alpha 값
-for err in [0.30, 0.20, 0.12]:
-    alpha = adaboost_alpha(err)
-    print(f"오류율 {err:.2f} → alpha = {alpha:.4f}")
-```
-
-```
-오류율 0.30 → alpha = 0.4236
-오류율 0.20 → alpha = 0.6931
-오류율 0.12 → alpha = 0.9962
-```
-
-오류율이 낮을수록 alpha가 커지고, 최종 예측에 더 크게 기여한다.
-
-### 샘플 가중치 시각화
-
-![AdaBoost 샘플 가중치 변화](./adaboost-weights.png)
-
-처음에는 모든 샘플이 동일한 가중치(1/N)를 갖는다. 첫 번째 분류기가 오분류한 샘플들은 이터레이션 1 이후 가중치가 높아지고, 두 번째 분류기는 이 샘플들에 집중한다. 이 과정이 반복될수록 "어려운" 샘플들이 부각된다.
-
-### sklearn AdaBoostClassifier
+:::
 
 ```python
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 
-cancer = load_breast_cancer()
 X_train, X_test, y_train, y_test = train_test_split(
-    cancer.data, cancer.target, test_size=0.2, random_state=42
+    *load_breast_cancer(return_X_y=True), test_size=0.2, random_state=42
 )
 
-# 기본값: 100개 결정 그루터기(Decision Stump, max_depth=1)
-ada = AdaBoostClassifier(
-    n_estimators=100,
-    learning_rate=1.0,
-    random_state=42
-)
+# 기본 학습기는 max_depth=1 결정 그루터기
+ada = AdaBoostClassifier(n_estimators=100, learning_rate=1.0, random_state=42)
 ada.fit(X_train, y_train)
-
-print(f"훈련 정확도: {ada.score(X_train, y_train):.4f}")
-print(f"테스트 정확도: {ada.score(X_test, y_test):.4f}")
+print(ada.score(X_test, y_test))
 ```
 
+```text
+0.9737
 ```
-훈련 정확도: 1.0000
-테스트 정확도: 0.9737
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 약한 분류기란?</strong><br>
-  AdaBoost의 기본 약한 분류기는 <strong>결정 그루터기(Decision Stump)</strong> — 깊이 1짜리 결정 트리다. 특성 하나와 임계값 하나로 "특성 A ≥ θ이면 클래스 1"처럼 단순한 규칙만 만든다. 이렇게 단순한 분류기 수백 개를 합쳐서 복잡한 패턴을 잡는다.
-</div>
-
----
 
 ## Gradient Boosting
 
-Gradient Boosting은 2001년 Friedman이 제안한 프레임워크로, AdaBoost를 더 일반화한 형태다. **손실 함수의 그래디언트(gradient)를 이용해 부스팅을 한다**는 게 핵심이다.
+2001년 Friedman이 제안한 쪽은 접근이 다르다. AdaBoost가 샘플 가중치를 바꾸며 나아간다면, Gradient Boosting은 **다음 트리에게 아예 다른 타겟을 준다.** 원래 정답 $y$ 대신, 지금까지 만든 모델이 남긴 오차를 맞추라고 시킨다.
 
-### 잔차(Residual) 학습
+목표가 $y = 100$ 인 샘플 하나를 따라가 보자. 첫 모델이 70을 내놓으면 잔차(Residual)는 30이다. 두 번째 트리는 이 30을 타겟으로 학습하고, 학습률 0.1만큼만 반영해서 예측을 73으로 옮긴다. 이제 남은 잔차는 27이고, 세 번째 트리가 그 27을 맡는다.
 
-가장 직관적인 이해는 **잔차(Residual)** 개념이다.
-
-```
-목표: y = 100을 예측하고 싶다
-
-F1(x) = 70 (첫 번째 모델 예측)
-잔차 = y - F1(x) = 100 - 70 = +30
-
-→ h2는 잔차 30을 학습
-F2(x) = F1(x) + η × h2(x) = 70 + 0.1 × 30 = 73
-
-→ h3는 새 잔차 27을 학습
-F3(x) = F2(x) + η × h3(x) = 73 + 0.1 × 27 = 75.7
-
-...반복...
-```
-
-각 모델이 "얼마나 틀렸는지"를 학습하고, 이전 예측에 더해나간다. η(eta)는 학습률이다.
-
-### 수식으로 이해하기
-
-```
-F_0(x) = 초기 예측 (보통 평균값)
-F_m(x) = F_{m-1}(x) + η × h_m(x)
-
-여기서 h_m은 음의 그래디언트(negative gradient)를 타겟으로 학습:
-r_{im} = -∂L(y_i, F(x_i)) / ∂F(x_i)
-
-MSE 손실일 때: r_{im} = y_i - F_{m-1}(x_i)  ← 바로 잔차!
-```
-
-MSE 손실에서는 음의 그래디언트가 잔차와 정확히 같다. 그래서 "잔차를 학습한다"는 직관이 성립한다. 손실 함수가 다르면(예: 로그 손실) 잔차 대신 다른 형태의 그래디언트를 학습하게 된다 — 이게 Gradient Boosting이 일반적인 이유다.
-
-```python
-import numpy as np
-
-# Gradient Boosting 핵심 로직 (MSE 회귀 예시)
-y_true = np.array([100.0, 150.0, 200.0, 250.0, 300.0])
-
-# Step 0: 초기 예측 = 평균
-F = np.full_like(y_true, y_true.mean())
-print(f"F0(x) = {F[0]:.1f} (평균)")
-print(f"잔차(음의 그래디언트): {y_true - F}")
-
-# Step 1: 잔차를 타겟으로 약한 분류기 h1 학습 (단순화: 잔차를 그대로 사용)
-lr = 0.1
-residuals = y_true - F
-# h1이 잔차를 완벽히 예측한다고 가정
-F = F + lr * residuals
-print(f"\nF1(x) = {F}")
-print(f"새 잔차: {(y_true - F).round(2)}")
-```
-
-```
-F0(x) = 200.0 (평균)
-잔차(음의 그래디언트): [-100.  -50.    0.   50.  100.]
-
-F1(x) = [190. 195. 200. 205. 210.]
-새 잔차: [-90. -45.   0.  45.  90.]
-```
-
-학습률 0.1로 한 스텝 나아가니 잔차가 90%로 줄었다. 이 과정을 반복하면 잔차가 점점 0으로 수렴한다.
-
-### 이터레이션과 MSE 변화
-
-![Gradient Boosting 이터레이션에 따른 MSE](./boosting-iterations.png)
-
-초반에는 훈련 MSE와 검증 MSE가 함께 빠르게 감소한다. 어느 지점부터 검증 MSE는 더 이상 감소하지 않거나 오히려 올라가기 시작한다 — 과적합의 시작이다. **조기 종료(Early Stopping)** 는 검증 손실이 증가하기 시작하는 지점에서 학습을 멈추는 전략이다.
-
-### sklearn GradientBoostingClassifier
-
-```python
-from sklearn.ensemble import GradientBoostingClassifier
-
-gb = GradientBoostingClassifier(
-    n_estimators=100,      # 약한 학습기(트리) 수
-    learning_rate=0.1,     # 학습률 η
-    max_depth=3,           # 각 트리의 최대 깊이
-    subsample=1.0,         # 샘플링 비율 (1.0 = 전체 사용)
-    random_state=42
-)
-gb.fit(X_train, y_train)
-
-print(f"훈련 정확도: {gb.score(X_train, y_train):.4f}")
-print(f"테스트 정확도: {gb.score(X_test, y_test):.4f}")
-```
-
-```
-훈련 정확도: 1.0000
-테스트 정확도: 0.9561
-```
-
-<div style="background: #f0f9f6; border-left: 4px solid #0d9488; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 경사하강법과의 연결</strong><br>
-  Gradient Boosting은 "모델 공간에서의 경사하강법"이다. 파라미터 공간에서 <code>w ← w - η × ∇L</code>로 업데이트하는 대신, 함수 공간에서 <code>F_m ← F_{m-1} + η × h_m</code>으로 업데이트한다. h_m은 음의 그래디언트 방향을 학습한다. 이 시각으로 보면 부스팅은 곧 함수에 대한 경사하강법이다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 432" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="목표값 100에 대해 첫 모델이 70을 예측하고 남은 잔차 30을 다음 트리가 학습해 예측이 73, 75.7로 올라가면서 잔차가 0으로 줄어드는 순차 구조">
+<style>
+.bs1-t { fill: var(--text, #1c1917); }
+.bs1-m { fill: var(--text-muted, #6d6762); }
+.bs1-r { fill: var(--text-warn, #9d5604); }
+.bs1-g { fill: var(--text-success, #107836); }
+.bs1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.bs1-done { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.5; }
+.bs1-arrow { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.bs1-dot { fill: var(--text-muted, #6d6762); }
+</style>
+<defs>
+<marker id="bs1Head" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
+<path d="M0,0 L7,3 L0,6 Z" fill="var(--text-muted, #6d6762)" />
+</marker>
+</defs>
+<text x="200" y="24" text-anchor="middle" font-size="17" font-weight="700" class="bs1-t">잔차를 이어받는 순차 학습</text>
+<text x="200" y="46" text-anchor="middle" font-size="14" class="bs1-m">목표 y = 100, 학습률 0.1</text>
+<!-- 1단계 -->
+<rect x="24" y="60" width="352" height="50" rx="8" class="bs1-box" />
+<text x="44" y="91" font-size="17" class="bs1-t">F1(x) = 70</text>
+<text x="356" y="91" text-anchor="end" font-size="16" class="bs1-r">잔차 +30</text>
+<line x1="200" y1="110" x2="200" y2="150" class="bs1-arrow" marker-end="url(#bs1Head)" />
+<text x="212" y="136" font-size="14" class="bs1-m">h2가 잔차 30을 학습</text>
+<!-- 2단계 -->
+<rect x="24" y="152" width="352" height="50" rx="8" class="bs1-box" />
+<text x="44" y="183" font-size="17" class="bs1-t">F2(x) = 73</text>
+<text x="356" y="183" text-anchor="end" font-size="16" class="bs1-r">잔차 +27</text>
+<line x1="200" y1="202" x2="200" y2="242" class="bs1-arrow" marker-end="url(#bs1Head)" />
+<text x="212" y="228" font-size="14" class="bs1-m">h3가 잔차 27을 학습</text>
+<!-- 3단계 -->
+<rect x="24" y="244" width="352" height="50" rx="8" class="bs1-box" />
+<text x="44" y="275" font-size="17" class="bs1-t">F3(x) = 75.7</text>
+<text x="356" y="275" text-anchor="end" font-size="16" class="bs1-r">잔차 +24.3</text>
+<!-- 반복 생략 -->
+<circle cx="200" cy="312" r="2.5" class="bs1-dot" />
+<circle cx="200" cy="324" r="2.5" class="bs1-dot" />
+<circle cx="200" cy="336" r="2.5" class="bs1-dot" />
+<!-- 수렴 -->
+<rect x="24" y="352" width="352" height="50" rx="8" class="bs1-done" />
+<text x="44" y="383" font-size="17" class="bs1-t">Fm(x) → 100</text>
+<text x="356" y="383" text-anchor="end" font-size="16" class="bs1-g">잔차 → 0</text>
+<text x="200" y="422" text-anchor="middle" font-size="14" class="bs1-m">각 트리는 앞 단계가 남긴 잔차만 학습</text>
+</svg>
 </div>
 
----
+한 단계의 업데이트는 이렇게 쓴다.
 
-## XGBoost & LightGBM 소개
+$$F_m(x) = F_{m-1}(x) + \eta \, h_m(x)$$
 
-Gradient Boosting은 강력하지만 느리다. XGBoost와 LightGBM은 이를 대폭 최적화한 버전이다.
+여기서 $h_m$ 이 학습하는 타겟이 정확히 무엇이냐가 이 방법의 핵심이다. 잔차가 아니라 손실 함수의 음의 그래디언트다.
 
-### XGBoost (eXtreme Gradient Boosting)
+$$r_{im} = -\left. \frac{\partial L(y_i, F(x_i))}{\partial F(x_i)} \right|_{F = F_{m-1}}$$
 
-2014년 Tianqi Chen이 공개한 라이브러리에서 시작됐다. 2016년 KDD 논문으로 체계적으로 정리되었고, Kaggle 대회에서 독보적으로 많이 사용되며 유명해졌다.
+제곱 오차 $L = \frac{1}{2}(y - F)^2$ 를 쓰면 이 값이 $y_i - F_{m-1}(x_i)$, 즉 잔차와 정확히 같아진다. "잔차를 학습한다"는 직관이 성립하는 건 이 손실에서다. 분류에 쓰는 로그 손실이라면 타겟이 $y_i - p_i$ 형태로 바뀌지만 절차는 한 글자도 달라지지 않는다. 손실 함수를 갈아 끼워도 부스팅이 그대로 돌아가는 이유가 여기 있다.
 
-**주요 개선점**:
-- **정규화 추가**: 손실 함수에 L1/L2 정규화 항 추가 → 과적합 방지
-- **최적 분할 알고리즘**: 트리 분할 시 그래디언트 통계를 이용한 효율적 탐색
-- **결측값 처리**: 결측값을 자동으로 처리하는 내장 로직
-- **병렬화**: 트리 내 분할 탐색을 병렬화 (순차 학습이지만 분할 자체는 병렬)
+:::info
 
-### LightGBM (Light Gradient Boosting Machine)
+**함수 공간에서의 경사하강법**
 
-Microsoft가 2017년 발표한 프레임워크. XGBoost보다 더 빠르게 동작한다.
+파라미터를 학습할 때는 $w \leftarrow w - \eta \nabla L$ 로 숫자 하나를 옮긴다. Gradient Boosting은 옮기는 대상이 파라미터가 아니라 모델 자체다. $F_m \leftarrow F_{m-1} + \eta h_m$ 에서 $h_m$ 이 음의 그래디언트 방향을 근사하니, 트리 한 그루가 경사하강법의 한 스텝에 해당한다. 학습률 $\eta$ 가 스텝 크기라는 것도 그대로다.
 
-**핵심 차이 — 리프 중심 분할(Leaf-wise growth)**:
+:::
 
-```
-일반 GBM/XGBoost: 레벨 중심(Level-wise)
-  분할: 모든 리프를 한 레벨씩 동시에 확장
-  → 균형 잡힌 트리, 안정적이지만 느림
+![Gradient Boosting 이터레이션 수에 따른 훈련/검증 MSE](./boosting-iterations.png)
 
-LightGBM: 리프 중심(Leaf-wise)
-  분할: 손실 감소가 가장 큰 리프 하나만 확장
-  → 불균형한 트리, 더 빠르고 정확하지만 과적합 위험
-```
+트리를 늘릴수록 훈련 MSE는 0을 향해 계속 내려간다. 검증 MSE도 처음 25그루 사이에 대부분의 이득을 가져가고, 그 뒤로는 거의 평평하다. 두 곡선 사이에 벌어진 간격이 과적합의 크기이고, 검증 곡선이 평평해진 뒤에 쌓는 트리는 훈련 데이터만 더 정확히 외운다. 조기 종료(Early Stopping)는 이 평평해지는 지점을 자동으로 찾아 학습을 멈추는 장치다.
 
-```
-Level-wise:          Leaf-wise:
-    Root               Root
-   /    \             /    \
-  A      B           A      B
- / \    / \         / \
-C   D  E   F       C   D  ← D가 가장 큰 손실 감소
-                        / \
-                       G   H  ← 계속 D 방향 확장
-```
+## 학습률과 트리 수는 함께 움직인다
 
-### sklearn으로 LightGBM 흉내내기 (HistGradientBoosting)
+Gradient Boosting에서 손댈 파라미터가 하나뿐이라면 `learning_rate`, 둘이라면 `n_estimators`까지다. 그리고 이 둘은 따로 정할 수 없다. 학습률은 트리 한 그루의 기여를 얼마나 줄일지 정하므로, 낮추면 같은 지점에 도달하는 데 더 많은 트리가 필요하다. 대략 `learning_rate × n_estimators` 가 총 학습량이라고 보면 된다.
 
-XGBoost와 LightGBM을 설치하지 않고도, sklearn의 `HistGradientBoostingClassifier`가 유사한 히스토그램 기반 알고리즘을 사용한다.
+`n_estimators=200`, `max_depth=3` 으로 고정하고 학습률만 바꿔본 결과다(Breast Cancer, `test_size=0.25`).
 
-```python
-from sklearn.ensemble import HistGradientBoostingClassifier
+| `learning_rate` | 훈련 정확도 | 테스트 정확도 |
+|---|---|---|
+| 0.001 | 0.6291 | 0.6224 |
+| 0.01 | 0.9930 | 0.9580 |
+| 0.1 | 1.0000 | 0.9580 |
+| 1.0 | 1.0000 | 0.9441 |
 
-hgb = HistGradientBoostingClassifier(
-    max_iter=100,
-    learning_rate=0.1,
-    random_state=42
-)
-hgb.fit(X_train, y_train)
+0.001은 200그루를 다 쓰고도 출발점에서 거의 못 벗어났다. 트리가 한참 더 필요하다는 뜻이다. 0.01과 0.1은 같은 테스트 정확도에 도달했는데, 200그루라는 예산 안에서는 둘 다 충분히 수렴했다는 신호다. 1.0은 오히려 가장 낮다. 트리 한 그루가 잔차를 통째로 삼켜버려서, 앙상블이라기보다 초반 몇 그루에 끌려가는 모델이 된다.
 
-print(f"훈련 정확도: {hgb.score(X_train, y_train):.4f}")
-print(f"테스트 정확도: {hgb.score(X_test, y_test):.4f}")
-```
-
-```
-훈련 정확도: 1.0000
-테스트 정확도: 0.9737
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 언제 무엇을 선택할까?</strong><br>
-  <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-    <li><strong>sklearn GradientBoosting</strong>: 간단한 실험, 데이터가 작을 때</li>
-    <li><strong>XGBoost</strong>: 안정성이 중요하고, 파라미터 튜닝을 세밀하게 해야 할 때</li>
-    <li><strong>LightGBM</strong>: 데이터가 크거나, 학습 속도가 중요할 때 (카테고리형 특성 지원도 우수)</li>
-    <li><strong>HistGradientBoosting</strong>: XGBoost/LightGBM을 설치하기 어려울 때, 큰 데이터에 sklearn을 쓸 때</li>
-  </ul>
-</div>
-
----
-
-## 실전 비교: 결정 트리 vs 랜덤 포레스트 vs Gradient Boosting
-
-같은 데이터셋(Breast Cancer)으로 세 모델을 비교해보자.
-
-```python
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-import time
-
-cancer = load_breast_cancer()
-X_train, X_test, y_train, y_test = train_test_split(
-    cancer.data, cancer.target, test_size=0.2, random_state=42
-)
-
-models = {
-    'DecisionTree': DecisionTreeClassifier(random_state=42),
-    'RandomForest': RandomForestClassifier(n_estimators=100, random_state=42),
-    'GradientBoosting': GradientBoostingClassifier(
-        n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42
-    ),
-}
-
-print(f"{'모델':<20} {'훈련 정확도':>12} {'테스트 정확도':>12} {'학습 시간':>10}")
-print("-" * 58)
-for name, m in models.items():
-    t0 = time.time()
-    m.fit(X_train, y_train)
-    elapsed = time.time() - t0
-    tr = m.score(X_train, y_train)
-    te = m.score(X_test, y_test)
-    print(f"{name:<20} {tr:>12.4f} {te:>12.4f} {elapsed:>9.4f}s")
-```
-
-```
-모델                 훈련 정확도   테스트 정확도    학습 시간
-----------------------------------------------------------
-DecisionTree         1.0000       0.9474      0.0035s
-RandomForest         1.0000       0.9649      0.0759s
-GradientBoosting     1.0000       0.9561      0.2109s
-```
-
-![모델 성능 비교](./model-comparison.png)
-
-흥미로운 결과다:
-- 세 모델 모두 훈련 데이터에서는 100% 정확도 (과적합 경향)
-- 테스트 정확도: RandomForest(96.5%) > GradientBoosting(95.6%) > DecisionTree(94.7%)
-- 학습 시간: DecisionTree(최고속) < RandomForest < GradientBoosting(가장 느림)
-
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ GradientBoosting이 RandomForest보다 느린 이유</strong><br>
-  랜덤 포레스트는 100개 트리를 <strong>병렬로</strong> 학습할 수 있다. Gradient Boosting은 이전 트리 결과가 필요해서 <strong>순차적</strong>으로만 학습 가능하다. 데이터가 크고 트리 수가 많아질수록 이 차이가 커진다. XGBoost/LightGBM은 분할 탐색을 병렬화해서 이 단점을 상당히 개선했다.
-</div>
-
-### 특성 중요도 비교
-
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-
-feature_names = cancer.feature_names
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-
-for ax, (name, m) in zip(axes, models.items()):
-    importances = m.feature_importances_
-    top_idx = np.argsort(importances)[-10:]
-    ax.barh(feature_names[top_idx], importances[top_idx], color='#0d9488')
-    ax.set_title(f'{name}\n특성 중요도 Top 10', fontsize=11)
-    ax.set_xlabel('중요도')
-
-plt.tight_layout()
-plt.show()
-```
-
-랜덤 포레스트와 Gradient Boosting 모두 `worst perimeter`, `worst concave points` 같은 특성을 중요하게 본다. 단, Gradient Boosting은 더 소수의 특성에 집중하는 경향이 있어 희소한 특성 중요도를 갖는다.
-
----
-
-## `n_estimators`와 학습률의 관계
-
-Gradient Boosting에서 가장 중요한 두 하이퍼파라미터는 `n_estimators`와 `learning_rate`다.
-
-```python
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-
-cancer = load_breast_cancer()
-X_train, X_test, y_train, y_test = train_test_split(
-    cancer.data, cancer.target, test_size=0.25, random_state=42
-)
-
-learning_rates = [0.001, 0.01, 0.1, 1.0]
-n_est_range = [5, 10, 20, 50, 100, 150, 200]
-
-for lr in learning_rates:
-    gb = GradientBoostingClassifier(
-        n_estimators=200, learning_rate=lr, max_depth=3, random_state=42
-    )
-    gb.fit(X_train, y_train)
-    print(f"lr={lr:.3f}: train={gb.score(X_train, y_train):.4f}, "
-          f"test={gb.score(X_test, y_test):.4f}")
-```
-
-```
-lr=0.001: train=0.6286, test=0.6228
-lr=0.010: train=0.9934, test=0.9561
-lr=0.100: train=1.0000, test=0.9561
-lr=1.000: train=1.0000, test=0.9649
-```
-
-![학습률과 n_estimators 관계](./learning-rate-ntrees.png)
-
-위 그래프에서 핵심 패턴이 보인다:
-
-- **lr=0.001**: `n_estimators=200`으로도 충분히 수렴하지 못했다. 더 많은 트리가 필요하다.
-- **lr=0.01**: 천천히 수렴하지만 최종 성능은 좋다.
-- **lr=0.1**: 적당한 트리 수(50~100)에서 빠르게 수렴한다.
-- **lr=1.0**: 초반에 빠르게 오르지만 과적합 가능성이 있다.
-
-### 황금률: 학습률을 낮추면 더 많은 트리가 필요하다
-
-```
-학습률 × n_estimators ≈ 일정
-
-lr=0.1, n_estimators=100 ≈ lr=0.01, n_estimators=1000
-(같은 "총 학습량", 하지만 낮은 lr이 더 부드럽게 수렴)
-```
-
-실전 권장 설정:
-
-```python
-# 빠른 프로토타이핑
-GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3)
-
-# 최고 성능 추구 (시간이 있다면)
-GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01, max_depth=3,
-                            subsample=0.8)  # subsample < 1.0으로 확률적 GBM
-```
-
-### 조기 종료 (Early Stopping)
-
-최적 트리 수를 자동으로 찾는 방법이다.
+실무에서는 학습률을 0.05 근처로 낮게 잡고 `n_estimators`를 넉넉히 준 다음, 멈추는 시점은 조기 종료에 맡기는 쪽이 편하다.
 
 ```python
 from sklearn.ensemble import GradientBoostingClassifier
@@ -484,112 +191,64 @@ gb = GradientBoostingClassifier(
     n_estimators=500,
     learning_rate=0.05,
     max_depth=3,
-    validation_fraction=0.1,     # 10%를 검증용으로 사용
-    n_iter_no_change=20,         # 20번 개선이 없으면 멈춤
-    tol=1e-4,                    # 개선 임계값
-    random_state=42
+    validation_fraction=0.1,   # 훈련 데이터의 10%를 검증용으로 뗀다
+    n_iter_no_change=20,       # 20라운드 개선이 없으면 중단
+    tol=1e-4,
+    random_state=42,
 )
 gb.fit(X_train, y_train)
-
-print(f"실제 사용된 트리 수: {gb.n_estimators_}")
-print(f"테스트 정확도: {gb.score(X_test, y_test):.4f}")
+print(gb.n_estimators_, gb.score(X_test, y_test))
 ```
 
-```
-실제 사용된 트리 수: 173
-테스트 정확도: 0.9615
+```text
+75 0.9473684210526315
 ```
 
-500개를 지정했지만 173개에서 조기 종료가 일어났다. 학습 시간을 줄이면서도 과적합을 방지하는 효과적인 방법이다.
-
----
+500그루를 지정했지만 75그루에서 멈췄다. 다만 이 설정의 테스트 정확도는 100그루를 끝까지 학습시킨 0.9561보다 낮다. 조기 종료가 찾아주는 건 최고 성능 지점이 아니라 **검증 손실이 더 이상 줄지 않는 지점**이다. 검증용으로 떼어낸 10%가 작을수록 이 판단은 흔들리므로, 데이터가 작다면 `n_iter_no_change`를 넉넉히 주는 편이 안전하다.
 
 ## 흔한 실수
 
-### 1. 학습률과 `n_estimators`를 따로 튜닝한다
+### 트리 수만 늘린다
 
 ```python
-# ❌ n_estimators만 늘린다 (학습률 고정)
+# 학습률은 그대로 두고 트리만 늘렸다
 gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.1)
-# learning_rate=0.1에서 100개면 이미 충분히 수렴했을 수 있다
-# → 1000개는 낭비 + 과적합 위험
 
-# ✅ 학습률을 낮추면서 n_estimators도 함께 늘린다
+# 학습률을 낮추면서 함께 늘려야 의미가 있다
 gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01)
-# 학습률과 트리 수는 함께 조정해야 한다
 ```
 
-두 파라미터는 반비례 관계다. 한쪽을 바꾸면 반드시 다른 쪽도 조정해야 한다.
+`learning_rate=0.1`에서 100그루면 이미 수렴이 끝났을 수 있다. 그 상태로 1000그루를 쌓으면 학습 시간만 10배가 되고, 남는 트리는 훈련 데이터의 노이즈를 외우는 데 쓰인다.
 
-### 2. 이상치를 전처리하지 않는다
-
-```python
-# ❌ 이상치가 있는 데이터를 그대로 부스팅에 넣는다
-ada = AdaBoostClassifier(n_estimators=100)
-ada.fit(X_with_outliers, y)
-# AdaBoost는 오분류 샘플에 가중치를 부여 → 이상치가 계속 높은 가중치를 받음
-# → 이상치를 맞추기 위해 모델이 비틀린다
-
-# ✅ 이상치 제거 또는 RobustScaler 사용, 또는 Huber 손실 함수 사용
-from sklearn.ensemble import GradientBoostingClassifier
-gb = GradientBoostingClassifier(loss='log_loss')  # 분류에는 log_loss가 안정적
-```
-
-AdaBoost는 특히 이상치에 민감하다. 데이터에 이상치가 많다면 Gradient Boosting에 Huber 손실 함수(`loss='huber'`, 회귀 시)를 사용하거나, 랜덤 포레스트를 선택하는 게 더 안전하다.
-
-### 3. max_depth를 너무 크게 설정한다
+### `max_depth`를 키운다
 
 ```python
-# ❌ 깊은 트리 → 각 약한 학습기가 너무 강함 → 한두 번의 부스팅으로 과적합
+# 각 트리가 너무 강해진다
 gb = GradientBoostingClassifier(n_estimators=100, max_depth=8)
 
-# ✅ Gradient Boosting의 권장 max_depth는 3~5
+# 부스팅의 권장 범위는 3에서 5 사이다
 gb = GradientBoostingClassifier(n_estimators=100, max_depth=3)
-# 약한 학습기답게 약해야 부스팅이 제 역할을 한다
 ```
 
-약한 학습기가 "약해야" 한다는 게 핵심이다. `max_depth=1` (결정 그루터기)부터 시작해서, 성능이 부족할 때만 조금씩 늘리는 게 안전한 접근이다.
+깊은 트리는 혼자서도 훈련 데이터를 거의 맞춘다. 그러면 두세 번째 트리가 학습할 잔차가 노이즈밖에 남지 않아, 오차를 나눠 갖는 부스팅의 구조 자체가 무너진다. 약한 학습기는 약해야 한다.
 
----
+## 마치며
 
-## 마치며: 이 시리즈에서 배운 것들
+부스팅의 정체는 오차를 다음 사람에게 넘기는 릴레이다. AdaBoost는 넘기는 방식이 샘플 가중치였고, Gradient Boosting은 타겟 자체를 오차로 바꿔치기했다. 후자가 살아남은 건 성능 때문이라기보다 손실 함수를 자유롭게 고를 수 있어서다. 회귀든 분류든 순위 학습이든 미분 가능한 손실만 있으면 같은 절차가 돌아간다.
 
-이번 글로 선형 모델에서 앙상블까지 이어진 여정이 마무리된다. 돌아보면:
+그래서 튜닝에서 신경 쓸 것도 둘로 좁혀진다. 각 트리를 충분히 약하게 유지하는 것(`max_depth` 3에서 5), 그리고 학습률과 트리 수를 한 쌍으로 다루는 것이다. 나머지는 조기 종료가 대신 판단해준다.
 
-```
-선형 회귀 → 로지스틱 회귀 → 결정 트리 → 배깅(랜덤 포레스트) → 부스팅
-   │              │              │                │                  │
-  직선으로        확률로         질문으로        병렬로            순차로
-  예측           분류           분기            합산              보완
-```
+다만 sklearn의 `GradientBoostingClassifier` 는 분할점 후보를 특성 값 전부에서 찾기 때문에, 데이터가 커지면 감당이 안 될 만큼 느려진다. 이 병목을 정면으로 뜯어고친 것이 XGBoost와 LightGBM이고, 두 라이브러리가 갈라진 지점이 다음 이야기다.
 
-- **선형 모델**: 해석이 쉽고 빠른 베이스라인. 데이터가 선형이면 충분.
-- **결정 트리**: 비선형 패턴을 포착하지만 과적합에 취약.
-- **배깅/랜덤 포레스트**: 분산을 낮춰 안정적이고 빠름. 노이즈에 강함.
-- **부스팅**: 편향을 낮춰 정확도를 끌어올림. 정형 데이터 대회의 왕자.
+## 함께 보면 좋은 글
 
-**다음은 실전 부스팅 모델**이다. sklearn의 GradientBoosting은 느리다는 한계가 있었다. [XGBoost와 LightGBM](/ml/xgboost-vs-lightgbm/)이 이 문제를 어떻게 해결했는지, 그리고 언제 어떤 모델을 골라야 하는지를 비교한다.
-
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>부스팅 vs 배깅</strong>: 배깅은 병렬로 분산 감소, 부스팅은 순차적으로 편향 감소</li>
-    <li><strong>AdaBoost</strong>: 오분류 샘플에 가중치 부여 → α = 0.5 × ln((1-ε)/ε) → 가중 합산</li>
-    <li><strong>Gradient Boosting</strong>: 손실 함수의 음의 그래디언트(잔차)를 순차적으로 학습</li>
-    <li><strong>학습률 × <code>n_estimators</code></strong>: 반비례 관계. 낮은 학습률 + 많은 트리 = 더 부드러운 수렴</li>
-    <li><strong>max_depth</strong>: Gradient Boosting에서는 3~5가 권장. 약한 학습기다워야 한다</li>
-    <li><strong>XGBoost/LightGBM</strong>: 정규화 + 최적화로 속도와 성능 모두 개선한 실전 버전</li>
-    <li><strong>조기 종료</strong>: n_iter_no_change 파라미터로 최적 트리 수를 자동으로 찾는다</li>
-  </ul>
-</div>
-
----
+- [앙상블과 배깅](/ml/ensemble-and-bagging/) : 모델을 병렬로 쌓아 분산을 줄이는 반대편 전략
+- [편향-분산 트레이드오프](/ml/bias-variance/) : 부스팅이 줄이는 편향이 무엇인지
+- [XGBoost와 LightGBM](/ml/xgboost-vs-lightgbm/) : 같은 원리를 실전 속도로 끌어올린 구현체
 
 ## 참고자료
 
-- [Freund & Schapire (1997) — A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting](https://www.sciencedirect.com/science/article/pii/S002200009791504X)
-- [Friedman (2001) — Greedy Function Approximation: A Gradient Boosting Machine](https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-a-gradient-boosting-machine/10.1214/aos/1013203451.full)
-- [Scikit-learn — Ensemble Methods Documentation](https://scikit-learn.org/stable/modules/ensemble.html)
-- [XGBoost — Introduction to Boosted Trees](https://xgboost.readthedocs.io/en/stable/tutorials/model.html)
-- [StatQuest: AdaBoost (YouTube)](https://www.youtube.com/watch?v=LsK-xG1cLYA)
-- [StatQuest: Gradient Boost (YouTube)](https://www.youtube.com/watch?v=3CC4N4z3GJc)
+- [Freund & Schapire (1997), A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting](https://www.sciencedirect.com/science/article/pii/S002200009791504X)
+- [Friedman (2001), Greedy Function Approximation: A Gradient Boosting Machine](https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-a-gradient-boosting-machine/10.1214/aos/1013203451.full)
+- [scikit-learn, Ensemble methods](https://scikit-learn.org/stable/modules/ensemble.html)
+- [XGBoost, Introduction to Boosted Trees](https://xgboost.readthedocs.io/en/stable/tutorials/model.html)

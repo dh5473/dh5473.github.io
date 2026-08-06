@@ -1,224 +1,151 @@
 ---
 date: '2026-01-01'
-title: '머신러닝이란 무엇인가: 지도학습, 비지도학습, 강화학습 한눈에 보기'
+title: '머신러닝은 데이터에서 규칙을 찾는다, 지도·비지도·강화학습'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 1
-tags: ['Machine Learning', '머신러닝', '지도학습', '비지도학습', '강화학습']
-summary: '머신러닝의 세 가지 패러다임인 지도학습, 비지도학습, 강화학습의 개념과 차이를 코드 예제와 함께 명확하게 정리한다.'
+tags: ['Machine Learning', '머신러닝', '지도학습', '비지도학습', '강화학습', 'Supervised Learning', 'Reinforcement Learning']
+summary: '사람이 규칙을 짜던 자리에 데이터를 놓는 것이 머신러닝이다. 이 방향 전환이 무엇을 바꾸는지, 그리고 지도학습·비지도학습·강화학습이 어디에서 갈라지는지 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
 "AI 공부해야 하는데 어디서부터 시작하지?"
 
-막연하게 시작해서 검색하다 보면 금세 딥러닝, 트랜스포머, LLM 같은 단어들이 튀어나온다. 정작 **머신러닝(Machine Learning)** 이 뭔지, 지도학습과 비지도학습이 어떻게 다른지는 누군가 제대로 설명해주지 않는다.
+검색을 시작하면 딥러닝, 트랜스포머, LLM 같은 단어부터 쏟아진다. 정작 **머신러닝(Machine Learning)** 이 기존 프로그래밍과 무엇이 다른지, 지도학습과 비지도학습이 어디에서 갈리는지는 건너뛰기 쉽다. 알고리즘을 하나씩 익히기 전에 이 지도를 먼저 그려두면, 뒤에 무엇을 배우든 그게 왜 거기 쓰이는지가 보인다.
 
-이 글은 머신러닝 시리즈의 첫 번째 글이다. 화려한 알고리즘 전에, 머신러닝이 기존 프로그래밍과 근본적으로 어떻게 다른지부터 짚고 넘어간다. 세 가지 학습 패러다임 — 지도학습, 비지도학습, 강화학습 — 의 개념과 차이를 이해하고 나면, 이후 어떤 알고리즘을 배우든 "이게 왜 여기에 쓰이는지"가 보이기 시작한다.
+## 규칙을 짜는 대신 규칙을 찾는다
 
----
+전통적인 프로그래밍과 머신러닝의 차이는 무엇이 입력이고 무엇이 출력인지에 있다.
 
-## 머신러닝이란?
-
-전통적인 프로그래밍과 머신러닝의 차이를 한 문장으로 표현하면 이렇다.
-
-> **전통적 프로그래밍**: 데이터 + 규칙 → 결과
-> **머신러닝**: 데이터 + 결과 → 규칙
-
-스팸 메일 필터를 예로 들어보자. 전통적인 방식이라면 개발자가 직접 규칙을 작성한다. "제목에 '무료'가 포함되면 스팸", "발신자가 모르는 도메인이면 스팸" 같은 식으로. 처음엔 잘 동작하다가도 스패머들이 규칙을 우회하는 순간 다시 규칙을 추가해야 한다. 끝이 없다.
-
-머신러닝은 다르다. "스팸입니다", "정상입니다"라고 레이블된 수천 개의 메일 데이터를 보여주면, 모델이 스스로 패턴을 찾아낸다. 개발자가 규칙을 명시하지 않아도 된다.
-
-```
-전통적 프로그래밍:
-  Input: 데이터 (메일 본문)
-  Input: 규칙 (if "무료" in 제목 → 스팸)
-  Output: 결과 (스팸 여부)
-
-머신러닝:
-  Input: 데이터 (메일 본문)
-  Input: 결과 (스팸/정상 레이블)
-  Output: 규칙 (모델이 스스로 학습한 패턴)
-```
-
-이 관점에서 보면 머신러닝의 핵심은 **"데이터로부터 패턴을 학습하는 것"** 이다. Arthur Samuel이 1959년에 내린 정의 — *"명시적으로 프로그래밍하지 않아도 스스로 학습하는 능력을 컴퓨터에 부여하는 연구 분야"* — 가 지금도 유효한 이유다.
-
-<br>
-
-그렇다면 머신러닝은 어떻게 "학습"할까? 크게 세 가지 패러다임으로 나뉜다.
-
-| 패러다임 | 핵심 아이디어 | 데이터 형태 |
-|----------|--------------|------------|
-| 지도학습 (Supervised) | 정답이 있는 데이터로 학습 | 입력 + 레이블(정답) |
-| 비지도학습 (Unsupervised) | 정답 없이 패턴을 스스로 발견 | 입력만 |
-| 강화학습 (Reinforcement) | 보상 신호로 최적 행동을 학습 | 상태 + 행동 + 보상 |
-
----
-
-## 지도학습 (Supervised Learning)
-
-지도학습은 머신러닝에서 가장 많이 쓰이는 패러다임이다. **정답(레이블)이 붙어 있는 데이터로 모델을 훈련**시킨다.
-
-학습 방식을 비유하자면 과외 선생님과 학생의 관계다. 선생님이 문제와 정답을 함께 보여주면서 가르친다. "이 입력값에 대한 정답은 이거야"를 반복하다 보면, 모델이 입력과 출력 사이의 관계를 학습한다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 참고</strong><br>
-  지도학습에서 "지도(supervised)"란 레이블이 붙은 데이터가 모델의 학습을 "감독(supervise)"한다는 의미다. 레이블 없는 데이터로는 지도학습이 불가능하다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 268" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif" text-anchor="middle"
+     role="img" aria-label="전통적 프로그래밍은 데이터와 규칙을 넣어 결과를 얻고, 머신러닝은 데이터와 결과를 넣어 규칙을 얻는다는 입출력 방향 비교">
+<defs><marker id="ovwAHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/></marker></defs>
+<text x="200" y="24" font-size="17" font-weight="700" fill="var(--text, #1c1917)">전통적 프로그래밍</text>
+<rect x="14" y="42" width="100" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="64" y="64" font-size="16" fill="var(--text, #1c1917)">데이터</text>
+<rect x="14" y="84" width="100" height="34" rx="6" fill="var(--primary, #0a756c)" stroke="var(--primary, #0a756c)"/><text x="64" y="106" font-size="16" fill="var(--on-fill, #ffffff)">규칙</text>
+<path d="M 118 59 L 146 74" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<path d="M 118 101 L 146 86" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<rect x="152" y="63" width="88" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="196" y="85" font-size="16" fill="var(--text, #1c1917)">프로그램</text>
+<path d="M 244 80 L 270 80" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<rect x="276" y="63" width="104" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="328" y="85" font-size="16" fill="var(--text, #1c1917)">결과</text>
+<line x1="14" y1="138" x2="386" y2="138" stroke="var(--border, #e7e5e4)" stroke-dasharray="4 4"/>
+<text x="200" y="162" font-size="17" font-weight="700" fill="var(--text, #1c1917)">머신러닝</text>
+<rect x="14" y="180" width="100" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="64" y="202" font-size="16" fill="var(--text, #1c1917)">데이터</text>
+<rect x="14" y="222" width="100" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="64" y="244" font-size="16" fill="var(--text, #1c1917)">결과</text>
+<path d="M 118 197 L 146 212" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<path d="M 118 239 L 146 224" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<rect x="152" y="201" width="88" height="34" rx="6" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="196" y="223" font-size="16" fill="var(--text, #1c1917)">학습</text>
+<path d="M 244 218 L 270 218" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwAHead)"/>
+<rect x="276" y="201" width="104" height="34" rx="6" fill="var(--primary, #0a756c)" stroke="var(--primary, #0a756c)"/><text x="328" y="223" font-size="16" fill="var(--on-fill, #ffffff)">규칙</text>
+</svg>
 </div>
 
-지도학습은 다시 두 가지로 나뉜다.
+스팸 메일 필터로 보면 분명하다. 전통적인 방식에서는 개발자가 규칙을 직접 쓴다. "제목에 '무료'가 들어가면 스팸", "모르는 도메인에서 왔으면 스팸". 문제는 스패머가 규칙을 우회할 때마다 사람이 규칙을 하나씩 덧붙여야 한다는 점이다. 규칙 목록은 계속 길어지고, 어느 순간부터 서로 충돌하기 시작한다.
 
-**회귀(Regression)**: 연속적인 숫자 값을 예측한다.
-- 집 면적, 방 개수, 위치를 보고 집값 예측
-- 기온, 습도를 보고 내일 온도 예측
+머신러닝은 규칙을 쓰지 않는다. "스팸", "정상"으로 표시된 메일 수천 통을 넣으면 모델이 그 안에서 판별 기준을 스스로 만든다. 사람이 하는 일은 규칙을 정하는 쪽에서 데이터를 모으고 정답을 붙이는 쪽으로 옮겨간다.
 
-**분류(Classification)**: 데이터를 카테고리로 구분한다.
-- 메일이 스팸인지 아닌지 분류
-- 사진 속 동물이 고양이인지 개인지 분류
+그러면 모델은 무엇을 보고 규칙을 만들까. 어떤 신호를 쥐여주느냐에 따라 세 갈래로 나뉜다. 정답 레이블을 신호로 쓰는 지도학습, 신호 없이 데이터의 구조만 보는 비지도학습, 행동의 결과로 돌아온 보상을 신호로 쓰는 강화학습이다.
 
-코드로 보면 훨씬 직관적이다. scikit-learn으로 집값 예측 모델을 만드는 예시다.
+## 지도학습
+
+지도학습은 **정답이 붙은 데이터로 모델을 훈련**시킨다. 문제와 정답을 함께 보여주는 과외에 가깝다. "이 입력의 정답은 이거야"를 수천 번 반복하면 모델이 입력과 출력 사이의 관계를 잡아낸다. 레이블이 학습을 감독(supervise)한다고 해서 붙은 이름이고, 레이블이 없으면 아예 성립하지 않는다.
+
+예측하려는 정답의 종류에 따라 둘로 갈린다.
+
+- **회귀(Regression)**: 연속적인 숫자를 예측한다. 면적·방 개수·위치로 집값을 맞히거나, 기온·습도로 내일 온도를 맞힌다.
+- **분류(Classification)**: 정해진 카테고리 중 하나를 고른다. 메일이 스팸인지 아닌지, 사진 속 동물이 고양이인지 개인지.
+
+scikit-learn으로 집값 예측 모델을 만들면 이렇다.
 
 ```python
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
-# 훈련 데이터: 면적(m²)과 집값(만원)
-X_train = np.array([[50], [70], [90], [110], [130]])
-y_train = np.array([25000, 33000, 41000, 50000, 59000])
+X_train = np.array([[50], [70], [90], [110], [130]])      # 면적(m²)
+y_train = np.array([25000, 33000, 41000, 50000, 59000])   # 집값(만원)
 
-# 모델 학습
 model = LinearRegression()
 model.fit(X_train, y_train)
-
-# 80m² 집값 예측
-prediction = model.predict([[80]])
-print(f"예측 집값: {prediction[0]:,.0f}만원")
-# 예측 집값: 37,350만원
+model.predict([[80]])   # array([37350.])
 ```
 
-`fit()` 한 줄로 모델이 데이터의 패턴을 학습한다. 면적이 늘어날수록 집값이 어떻게 변하는지 스스로 파악하는 것이다. 이 시리즈에서는 선형 회귀부터 시작해서 의사결정 트리, XGBoost까지 지도학습 알고리즘을 차례로 다룬다.
+`fit()`에 입력 `X_train`과 정답 `y_train`을 함께 넘긴 것이 전부다. 모델은 면적이 1m² 늘 때 값이 425만원 오른다는 관계를 데이터에서 직접 읽어냈고, 80m²에 그 관계를 적용해 37,350만원을 내놓았다.
 
----
+## 비지도학습
 
-## 비지도학습 (Unsupervised Learning)
+비지도학습은 **정답 없이 데이터 자체의 구조를 찾는다**. 같은 `fit()`을 부르지만 인자가 다르다. 지도학습이 `model.fit(X, y)`로 입력과 정답을 함께 넘기는 자리에서, 비지도학습은 `model.fit(X)`로 입력만 넘긴다. 정답을 놓을 자리 자체가 없다.
 
-비지도학습은 **레이블 없이 데이터 자체의 구조와 패턴을 발견**한다. 정답이 없는 상태에서 "비슷한 것들끼리 모아봐" 혹은 "이 데이터의 핵심 구조가 뭐야?"를 묻는 방식이다.
+현실에서 쌓이는 데이터는 대부분 레이블이 없다. 유저 행동 로그, 센서 측정값, 의료 이미지에 사람이 일일이 정답을 붙이려면 비용을 감당할 수 없다. 레이블 없이도 쓸 수 있다는 점이 비지도학습의 존재 이유이고, 쓰임새는 세 갈래다.
 
-현실에서는 레이블 없는 데이터가 훨씬 많다. 유저 행동 로그, 센서 데이터, 의료 이미지 — 이런 데이터에 일일이 사람이 레이블을 붙이는 건 비용이 너무 크다. 비지도학습이 강력한 이유다.
+- **클러스터링(Clustering)**: 비슷한 데이터끼리 묶는다. 구매 패턴이 닮은 고객을 그룹으로 나눠 타겟팅하거나, 뉴스 기사를 주제별로 모은다.
+- **차원 축소(Dimensionality Reduction)**: 수백 개의 특성을 핵심 축 몇 개로 압축한다. 2~3차원까지 줄이면 눈으로 볼 수 있고, 버려지는 축에 노이즈가 함께 실려 나간다.
+- **이상 탐지(Anomaly Detection)**: 정상 패턴에서 벗어난 것을 찾는다. 카드 부정 사용 감지, 공장 장비의 이상 징후 탐지.
 
-대표적인 세 가지 활용 영역이 있다.
+셋 다 "정답이 무엇인가"를 묻지 않고 "무엇이 서로 비슷한가"를 묻는다. 그래서 어떤 패턴이 있는지 아직 모르는 단계, 데이터를 처음 뜯어보는 탐색적 분석에서 특히 자주 쓰인다.
 
-**클러스터링(Clustering)**: 비슷한 데이터끼리 묶는다.
-- 고객 구매 패턴을 분석해서 유사한 고객군으로 분류 (마케팅 타겟팅)
-- 뉴스 기사를 자동으로 주제별로 묶기
+## 강화학습
 
-**차원 축소(Dimensionality Reduction)**: 데이터의 핵심 특성만 추출한다.
-- 수백 개의 특성을 가진 데이터를 2-3차원으로 압축해서 시각화
-- 노이즈를 제거하고 중요한 정보만 남기기
+강화학습은 앞의 둘과 결이 다르다. 정답도 없고, 미리 쌓아둔 데이터셋도 없다. **에이전트(Agent)가 환경(Environment)에서 행동하고, 그 결과로 돌아온 보상(Reward)을 크게 만드는 방향으로 행동 전략을 고쳐나간다.**
 
-**이상 탐지(Anomaly Detection)**: 정상 패턴에서 벗어난 데이터를 찾는다.
-- 신용카드 부정 사용 감지
-- 공장 장비의 이상 징후 탐지
-
-아래는 K-Means로 고객 데이터를 클러스터링하는 간단한 예시다.
-
-```python
-from sklearn.cluster import KMeans
-import numpy as np
-
-# 고객 데이터: [월 구매 횟수, 평균 구매 금액(만원)]
-X = np.array([
-    [1, 5], [2, 7], [1, 6],    # 저빈도 저단가
-    [10, 50], [12, 60], [9, 55], # 고빈도 고단가
-    [15, 8], [14, 10], [16, 9],  # 고빈도 저단가
-])
-
-# 3개 그룹으로 클러스터링
-kmeans = KMeans(n_clusters=3, random_state=42)
-kmeans.fit(X)
-
-print(kmeans.labels_)
-# [2 2 2 0 0 0 1 1 1]  ← 각 고객이 어느 그룹인지
-```
-
-레이블을 한 번도 알려주지 않았는데, 모델이 스스로 세 그룹을 찾아냈다. 이 그룹을 보면 "이 고객군은 VIP, 이 고객군은 가격 민감 유저"처럼 비즈니스 인사이트를 도출할 수 있다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 팁</strong><br>
-  비지도학습은 "탐색적 데이터 분석(EDA)"과 찰떡궁합이다. 어떤 패턴이 있는지 모르는 상태에서 데이터를 이해하는 첫 단계로 자주 쓰인다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 236" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif" text-anchor="middle"
+     role="img" aria-label="에이전트가 환경에 행동을 보내면 환경이 상태와 보상을 돌려주는 강화학습의 순환 구조">
+<defs><marker id="ovwBHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/></marker></defs>
+<rect x="104" y="24" width="192" height="46" rx="8" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/><text x="200" y="53" font-size="16" fill="var(--text, #1c1917)">에이전트 (Agent)</text>
+<path d="M 152 72 L 152 160" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwBHead)"/>
+<text x="142" y="121" font-size="15" text-anchor="end" fill="var(--text, #1c1917)">행동 (Action)</text>
+<path d="M 248 164 L 248 76" fill="none" stroke="var(--text-muted, #6d6762)" stroke-width="1.6" marker-end="url(#ovwBHead)"/>
+<text x="258" y="112" font-size="15" text-anchor="start" fill="var(--text, #1c1917)">상태 (State)</text>
+<text x="258" y="134" font-size="15" font-weight="700" text-anchor="start" fill="var(--accent, #9d5604)">보상 (Reward)</text>
+<rect x="104" y="166" width="192" height="46" rx="8" fill="var(--bg-muted, #eeecea)" stroke="var(--border, #e7e5e4)"/><text x="200" y="195" font-size="16" fill="var(--text, #1c1917)">환경 (Environment)</text>
+</svg>
 </div>
 
----
+아이가 자전거를 배우는 과정과 같다. 페달을 어떻게 밟으라고 알려주는 사람은 없고, 넘어지면 아프고 잘 달리면 즐겁다는 신호만 반복해서 돌아온다. 각 순간에 무엇이 정답이었는지는 끝까지 알 수 없다. 결과가 좋았던 행동의 비중을 조금씩 늘려갈 뿐이다.
 
-## 강화학습 (Reinforcement Learning)
+이 구조가 맞는 문제는 정해져 있다. 지금의 선택이 다음 상황을 바꾸는 순차적 의사결정 문제다. 바둑이나 Dota 2 같은 게임, 물체를 집는 로봇 팔, 클릭과 이탈을 보상으로 삼는 추천 시스템, 차선 유지와 장애물 회피를 배우는 자율주행이 여기 속한다.
 
-강화학습은 앞의 두 패러다임과 결이 다르다. **에이전트(Agent)가 환경(Environment)과 상호작용하며 보상(Reward)을 최대화하는 방향으로 행동 전략을 학습**한다.
+:::warning
 
-아이가 자전거를 배우는 과정을 생각해보자. 처음엔 어떻게 페달을 밟고 균형을 잡아야 하는지 모른다. 넘어지면(페널티), 잘 달리면(보상) — 이런 피드백을 반복하면서 자연스럽게 자전거 타는 법을 익힌다. 명시적인 규칙도 없고, 정답 레이블도 없다.
+**보상으로 배우는 대신 시행착오의 횟수를 지불한다**
 
-```
-강화학습의 핵심 요소:
+한 번의 행동이 좋았는지 나빴는지는 결과가 나올 때까지 알 수 없고, 그래서 필요한 경험의 양이 폭발한다. AlphaGo는 인간 챔피언을 이기기까지 백만 판 단위의 자가 대국을 거쳤다. 레이블을 확보할 수 있는 문제라면 지도학습이 비교할 수 없이 싸다.
 
-  Agent (에이전트)
-    │ 행동(Action)
-    ▼
-  Environment (환경)
-    │ 상태(State) + 보상(Reward)
-    ▼
-  Agent (학습 후 다음 행동 결정)
-```
+:::
 
-강화학습이 빛을 발하는 영역은 명확하다.
+## 무엇을 언제 쓰는가
 
-- **게임**: DeepMind의 AlphaGo, OpenAI Five (Dota 2). 체스나 바둑처럼 수많은 경우의 수가 있는 게임에서 인간을 압도하는 전략을 스스로 학습
-- **로보틱스**: 로봇 팔이 물체를 집는 방법을 시행착오로 학습
-- **추천 시스템**: 사용자가 클릭하면 보상, 이탈하면 페널티를 주며 추천 전략 최적화
-- **자율주행**: 차선 유지, 장애물 회피 전략 학습
+선택은 두 가지로 결정된다. 손에 있는 데이터가 어떤 형태인지, 그리고 무엇을 얻고 싶은지다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의</strong><br>
-  강화학습은 학습에 엄청난 시뮬레이션 비용이 든다. AlphaGo가 인간 챔피언을 이기기까지 수백만 번의 자가 대국이 필요했다. 간단한 문제라면 지도학습이나 비지도학습이 훨씬 실용적이다.
-</div>
+| 가진 것 | 얻고 싶은 것 | 선택 |
+|---|---|---|
+| 입력 + 정답 레이블 | 연속값 예측 | 지도학습 (회귀) |
+| 입력 + 정답 레이블 | 카테고리 판정 | 지도학습 (분류) |
+| 입력만 | 데이터의 구조 파악 | 비지도학습 (클러스터링) |
+| 입력만 | 고차원 데이터 압축·시각화 | 비지도학습 (차원 축소) |
+| 환경과 보상 | 순차적 행동 전략 | 강화학습 |
 
----
-
-## 어떤 방식을 언제 쓸까?
-
-셋 중 무엇을 선택해야 할지는 결국 **"내가 가진 데이터가 어떤 형태인가"** 와 **"무엇을 예측/발견하고 싶은가"** 로 결정된다.
-
-| 상황 | 추천 패러다임 | 이유 |
-|------|------------|------|
-| 레이블된 데이터 있음 + 특정 값 예측 | 지도학습 (회귀) | 정답을 학습해 새 입력에 적용 |
-| 레이블된 데이터 있음 + 카테고리 분류 | 지도학습 (분류) | 정답을 학습해 새 입력에 적용 |
-| 레이블 없음 + 데이터 구조 파악 | 비지도학습 (클러스터링) | 패턴을 스스로 발견 |
-| 레이블 없음 + 고차원 데이터 시각화 | 비지도학습 (차원 축소) | 핵심 구조 추출 |
-| 순차적 의사결정 + 환경 있음 | 강화학습 | 시행착오로 전략 최적화 |
-
-실무에서는 지도학습이 압도적으로 많이 쓰인다. 레이블 데이터를 확보할 수 있고, 예측 목표가 명확한 경우가 대부분이기 때문이다. 비지도학습은 레이블 없는 데이터를 탐색하거나 지도학습의 전처리 단계로 활용된다. 강화학습은 게임이나 로보틱스처럼 환경과의 상호작용이 필요한 특수한 경우에 쓰인다.
-
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>머신러닝</strong>: 데이터로부터 규칙을 스스로 학습하는 것. 전통적 프로그래밍과 반대 방향</li>
-    <li><strong>지도학습</strong>: 레이블된 데이터로 학습. 회귀(연속값 예측)와 분류(카테고리 분류)로 나뉨</li>
-    <li><strong>비지도학습</strong>: 레이블 없이 데이터 자체의 패턴을 발견. 클러스터링, 차원 축소, 이상 탐지</li>
-    <li><strong>강화학습</strong>: 보상 신호로 행동 전략을 최적화. 게임, 로보틱스, 순차적 의사결정</li>
-  </ul>
-</div>
-
----
+실무에서는 지도학습이 압도적으로 많다. 예측 목표가 분명하고 레이블을 어떻게든 확보할 수 있는 문제가 대부분이기 때문이다. 비지도학습은 그 앞단에서 데이터를 훑거나 특성을 만들어내는 역할로 붙는 경우가 많고, 강화학습은 환경과의 상호작용 자체가 문제의 본질인 곳에 한정된다.
 
 ## 마치며
 
-머신러닝의 큰 그림을 그려봤다. 사실 이 세 가지 구분은 공부를 시작할 때 방향을 잡는 나침반 역할이지, 실무에서 항상 명확하게 구분되지는 않는다. 준지도학습(Semi-supervised Learning)처럼 경계를 넘나드는 방식도 있고, 한 시스템 안에 여러 패러다임이 섞이기도 한다.
+머신러닝은 사람이 규칙을 쓰던 자리에 데이터를 놓는다. 이 한 번의 방향 전환에서 나머지가 따라 나온다. 규칙 대신 데이터가 결과를 정하니 데이터의 품질이 곧 모델의 품질이 되고, 규칙을 눈으로 읽을 수 없으니 모델이 왜 그렇게 판단했는지를 따로 물어야 한다. 세 패러다임의 구분도 무엇을 학습 신호로 쓰는지에 따른 것이지 실무의 칸막이는 아니다. 레이블이 일부만 붙은 데이터를 다루는 준지도학습처럼 경계에 걸친 방식도 있고, 하나의 시스템 안에 셋이 섞여 있기도 하다.
 
-이 시리즈는 지도학습 알고리즘을 중심으로 진행된다. 선형 회귀, 경사하강법, 신경망, 트리 기반 모델까지 — 각 알고리즘이 어떤 문제를 어떻게 푸는지를 코드와 함께 깊이 파고들 예정이다.
+다음 글에서는 알고리즘을 고르기 전에 반복해서 지나가야 하는 머신러닝 프로젝트의 전체 흐름을 다룬다.
 
-다음 글에서는 머신러닝 프로젝트의 전 과정 — 데이터 수집부터 모델 배포까지 — 를 큰 그림으로 살펴본다. 어떤 알고리즘을 쓰든 반복되는 공통 워크플로우를 이해해두면, 이후 글들이 훨씬 잘 들어온다.
+## 함께 보면 좋은 글
 
----
+- [머신러닝 프로젝트 전 과정](/ml/workflow/) : 문제 정의부터 배포까지 어떤 단계를 지나는가
+- [선형 회귀](/ml/linear-regression/) : 지도학습에서 가장 단순한 모델이 데이터에 선을 맞추는 방법
+- [K-Means 클러스터링](/ml/kmeans-clustering/) : 레이블 없이 데이터를 그룹으로 나누는 대표적인 알고리즘
 
 ## 참고자료
 
 - [Scikit-learn: Machine Learning in Python](https://scikit-learn.org/stable/)
-- [Andrew Ng — Machine Learning Specialization (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
+- [Andrew Ng, Machine Learning Specialization (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
 - [Stanford CS229: Machine Learning](https://cs229.stanford.edu/)

@@ -1,42 +1,29 @@
 ---
 date: '2026-01-20'
-title: '순전파(Forward Propagation): 신경망이 예측하는 과정'
+title: '입력이 예측이 되기까지, 순전파의 행렬 연산'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 20
-tags: ['Forward Propagation', '순전파', 'Neural Network', '신경망', '행렬 연산', '머신러닝']
-summary: '입력이 신경망을 통과해 예측값이 되기까지의 과정을 수식과 코드로 완전히 이해한다. 행렬 연산으로 효율적으로 계산하는 벡터화까지.'
+tags: ['Forward Propagation', '순전파', 'Neural Network', '신경망', '행렬 연산', '벡터화', 'Softmax', '머신러닝']
+summary: '입력 벡터가 층마다 가중치 행렬과 곱해지고 활성화 함수를 지나 예측값이 되는 과정, 그리고 그 계산을 행렬 곱 한 번으로 묶는 벡터화를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/neural-network-basics/)에서 신경망의 구조를 배웠다. 퍼셉트론이 로지스틱 회귀와 같다는 것, 히든 레이어를 추가하면 XOR도 풀 수 있다는 것. 구조는 이해했다. 이제 핵심 질문 — **입력 데이터가 이 구조를 통과해 출력이 되기까지 정확히 무슨 일이 벌어지는가?**
+신경망은 뉴런을 옆으로 늘어놓아 층을 만들고 그 층을 앞뒤로 쌓은 구조다. 구조를 안다고 계산을 아는 것은 아니다. 입력 벡터 하나가 이 구조를 통과해 숫자 하나로 나오기까지, 각 층에서 정확히 무슨 연산이 일어나는가.
 
-신경망의 "예측" 과정, 즉 입력에서 출력 방향으로 데이터가 흐르는 것을 **순전파(Forward Propagation)** 라고 한다. 학습이든 추론이든, 신경망이 하는 첫 번째 일은 항상 순전파다. 이 과정을 수식과 코드로 완전히 이해해보자.
+입력에서 출력 방향으로 값이 흘러가는 이 계산을 **순전파(Forward Propagation)** 라고 한다. 추론할 때도 순전파, 학습할 때도 첫 단계는 순전파다. 그리고 그 정체는 행렬 곱과 원소별 함수 적용, 딱 두 가지다.
 
 ---
 
-## 뉴런 하나의 순전파: 로지스틱 회귀 복습
+## 뉴런 하나의 계산
 
-신경망의 가장 작은 단위는 뉴런 하나다. 그리고 뉴런 하나의 계산은 [로지스틱 회귀](/ml/logistic-regression/)에서 이미 다뤘다.
+가장 작은 단위부터 본다. 뉴런 하나는 입력에 가중치를 곱해 더하고, 그 결과를 함수 하나에 통과시킨다.
 
-```
-z = w₁x₁ + w₂x₂ + b       ← 선형 결합
-a = σ(z) = 1 / (1 + e⁻ᶻ)   ← 활성화 함수
-```
+$$z = \mathbf{w}^\top\mathbf{x} + b, \qquad a = g(z)$$
 
-두 단계로 나뉜다.
+$g$가 활성화 함수다. 은닉층에서는 보통 ReLU를, 이진 분류의 출력층에서는 시그모이드를 쓴다.
 
-1. **선형 결합**: 입력(x)에 가중치(w)를 곱하고 편향(b)를 더한다 → z
-2. **활성화 함수**: z에 비선형 함수를 적용한다 → a (출력)
-
-벡터로 쓰면 더 깔끔하다.
-
-```
-z = w⃗ · x⃗ + b    (벡터 내적)
-a = σ(z)
-```
-
-이건 [다중 선형 회귀](/ml/multiple-linear-regression/)에서 봤던 벡터화 표기와 동일하다. 결국 뉴런 하나는 **선형 회귀 + 활성화 함수**다. 여기까지는 이미 아는 내용이다.
+$$\text{ReLU}(z) = \max(0, z), \qquad \sigma(z) = \frac{1}{1 + e^{-z}}$$
 
 ```python
 import numpy as np
@@ -44,618 +31,307 @@ import numpy as np
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
-# 뉴런 하나의 순전파
-x = np.array([0.5, 0.3])    # 입력 2개
-w = np.array([0.4, 0.6])    # 가중치 2개
-b = 0.1                      # 편향
+x = np.array([0.5, 0.3])
+w = np.array([0.4, 0.6])
+b = 0.1
 
-z = np.dot(w, x) + b        # 0.4*0.5 + 0.6*0.3 + 0.1 = 0.48
-a = sigmoid(z)               # σ(0.48) = 0.6177
-print(f"z = {z:.4f}, a = {a:.4f}")
-# z = 0.4800, a = 0.6177
+z = np.dot(w, x) + b     # 0.4*0.5 + 0.6*0.3 + 0.1
+a = sigmoid(z)
+print(round(z, 4), round(a, 4))
+# 0.48 0.6177
 ```
 
-핵심은 간단하다. **곱하고 더하고(z), 비선형 함수 통과(a)**. 신경망의 모든 뉴런이 이 두 단계를 반복한다.
+곱하고 더해서 $z$, 비선형 함수를 통과해 $a$. 신경망 안의 모든 뉴런이 예외 없이 이 두 단계만 한다. 나머지는 이 계산을 어떻게 묶느냐의 문제다.
 
 ---
 
-## 레이어 하나의 순전파: 뉴런 여러 개
+## 층 하나는 행렬 곱 한 번이다
 
-실제 신경망에서는 하나의 레이어에 뉴런이 여러 개 있다. 입력이 2개이고, 히든 레이어에 뉴런이 3개인 경우를 생각해보자.
+한 층에 뉴런이 3개 있고 입력이 2개라고 하자. 세 뉴런은 **같은 입력**을 받지만 **각자의 가중치**로 서로 다른 $z$를 만든다.
 
-![레이어 하나의 순전파](./single-layer-forward.png)
+$$z_1 = w_{11}x_1 + w_{12}x_2 + b_1, \quad z_2 = w_{21}x_1 + w_{22}x_2 + b_2, \quad z_3 = w_{31}x_1 + w_{32}x_2 + b_3$$
 
-각 뉴런은 **같은 입력**을 받지만, **자신만의 가중치와 편향**으로 서로 다른 z를 계산한다.
+세 줄을 따로 계산할 이유가 없다. 뉴런 하나의 가중치 벡터를 한 행으로 삼아 쌓으면 행렬 하나가 되고, 세 식이 곱셈 한 번으로 합쳐진다.
 
-```
-뉴런 1: z₁ = w₁₁x₁ + w₁₂x₂ + b₁
-뉴런 2: z₂ = w₂₁x₁ + w₂₂x₂ + b₂
-뉴런 3: z₃ = w₃₁x₁ + w₃₂x₂ + b₃
-```
-
-이걸 하나씩 계산하면 비효율적이다. 행렬로 한 번에 처리할 수 있다.
-
-### 행렬 표기
-
-가중치를 행렬 W로, 편향을 벡터 b로 묶으면:
-
-```
-W = [[w₁₁, w₁₂],     b = [b₁,     x = [x₁,
-     [w₂₁, w₂₂],          b₂,          x₂]
-     [w₃₁, w₃₂]]          b₃]
-```
-
-그러면 레이어 전체의 순전파가 **한 줄**이 된다.
-
-```
-z = W · x + b       (행렬-벡터 곱 + 벡터 덧셈)
-a = g(z)             (원소별 활성화 함수 적용)
-```
-
-여기서 W의 shape은 **(뉴런 수 × 입력 수)** = (3, 2)이고, 결과 z의 shape은 **(뉴런 수,)** = (3,)이다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>표기법 정리</strong><br>
-  <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-    <li><strong>l</strong> — 레이어 번호 (입력층=0, 첫 번째 히든=1, ...)</li>
-    <li><strong>W[l]</strong> — l번째 레이어의 가중치 행렬</li>
-    <li><strong>b[l]</strong> — l번째 레이어의 편향 벡터</li>
-    <li><strong>z[l]</strong> — l번째 레이어의 선형 결합 결과</li>
-    <li><strong>a[l]</strong> — l번째 레이어의 활성화 출력 (a[0] = 입력 x)</li>
-    <li><strong>g</strong> — 활성화 함수 (sigmoid, ReLU 등)</li>
-  </ul>
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 250" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="가중치 행렬 W와 입력 벡터 x의 곱에 편향 b를 더해 z를 만들고, z에 활성화 함수를 적용해 a를 얻는 과정. W의 첫 번째 행이 z의 첫 번째 원소와 색으로 연결되어 있어 행 하나가 뉴런 하나에 대응한다는 것을 보여준다.">
+<style>
+.fp1-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.fp1-hot { fill: var(--primary, #0a756c); stroke: var(--primary, #0a756c); stroke-width: 1.2; }
+.fp1-ink { fill: var(--text, #1c1917); font-size: 14px; }
+.fp1-on { fill: var(--on-fill, #ffffff); font-size: 14px; font-weight: 600; }
+.fp1-op { fill: var(--text, #1c1917); font-size: 18px; font-weight: 600; }
+.fp1-lab { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.fp1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.fp1-arw { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+</style>
+<defs>
+<marker id="fp1Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
+</marker>
+</defs>
+<text class="fp1-t" x="200" y="26" text-anchor="middle">W의 행 하나 = 뉴런 하나</text>
+<!-- W (3x2) -->
+<rect class="fp1-hot" x="60" y="60" width="34" height="30"/>
+<rect class="fp1-hot" x="94" y="60" width="34" height="30"/>
+<text class="fp1-on" x="77" y="80" text-anchor="middle">w₁₁</text>
+<text class="fp1-on" x="111" y="80" text-anchor="middle">w₁₂</text>
+<rect class="fp1-cell" x="60" y="90" width="34" height="30"/>
+<rect class="fp1-cell" x="94" y="90" width="34" height="30"/>
+<text class="fp1-ink" x="77" y="110" text-anchor="middle">w₂₁</text>
+<text class="fp1-ink" x="111" y="110" text-anchor="middle">w₂₂</text>
+<rect class="fp1-cell" x="60" y="120" width="34" height="30"/>
+<rect class="fp1-cell" x="94" y="120" width="34" height="30"/>
+<text class="fp1-ink" x="77" y="140" text-anchor="middle">w₃₁</text>
+<text class="fp1-ink" x="111" y="140" text-anchor="middle">w₃₂</text>
+<text class="fp1-lab" x="94" y="170" text-anchor="middle">W (3×2)</text>
+<!-- x -->
+<text class="fp1-op" x="139" y="111" text-anchor="middle">·</text>
+<rect class="fp1-cell" x="152" y="75" width="34" height="30"/>
+<text class="fp1-ink" x="169" y="95" text-anchor="middle">x₁</text>
+<rect class="fp1-cell" x="152" y="105" width="34" height="30"/>
+<text class="fp1-ink" x="169" y="125" text-anchor="middle">x₂</text>
+<text class="fp1-lab" x="169" y="170" text-anchor="middle">x (2×1)</text>
+<!-- b -->
+<text class="fp1-op" x="198" y="111" text-anchor="middle">+</text>
+<rect class="fp1-cell" x="210" y="60" width="34" height="30"/>
+<text class="fp1-ink" x="227" y="80" text-anchor="middle">b₁</text>
+<rect class="fp1-cell" x="210" y="90" width="34" height="30"/>
+<text class="fp1-ink" x="227" y="110" text-anchor="middle">b₂</text>
+<rect class="fp1-cell" x="210" y="120" width="34" height="30"/>
+<text class="fp1-ink" x="227" y="140" text-anchor="middle">b₃</text>
+<text class="fp1-lab" x="227" y="170" text-anchor="middle">b (3×1)</text>
+<!-- z -->
+<text class="fp1-op" x="256" y="111" text-anchor="middle">=</text>
+<rect class="fp1-hot" x="268" y="60" width="34" height="30"/>
+<text class="fp1-on" x="285" y="80" text-anchor="middle">z₁</text>
+<rect class="fp1-cell" x="268" y="90" width="34" height="30"/>
+<text class="fp1-ink" x="285" y="110" text-anchor="middle">z₂</text>
+<rect class="fp1-cell" x="268" y="120" width="34" height="30"/>
+<text class="fp1-ink" x="285" y="140" text-anchor="middle">z₃</text>
+<text class="fp1-lab" x="285" y="170" text-anchor="middle">z (3×1)</text>
+<!-- 활성화 -->
+<path class="fp1-arw" d="M 306 105 L 330 105" marker-end="url(#fp1Arrow)"/>
+<text class="fp1-lab" x="318" y="96" text-anchor="middle">g</text>
+<rect class="fp1-cell" x="336" y="60" width="34" height="30"/>
+<text class="fp1-ink" x="353" y="80" text-anchor="middle">a₁</text>
+<rect class="fp1-cell" x="336" y="90" width="34" height="30"/>
+<text class="fp1-ink" x="353" y="110" text-anchor="middle">a₂</text>
+<rect class="fp1-cell" x="336" y="120" width="34" height="30"/>
+<text class="fp1-ink" x="353" y="140" text-anchor="middle">a₃</text>
+<text class="fp1-lab" x="353" y="170" text-anchor="middle">a (3×1)</text>
+<!-- 아래 설명 -->
+<text class="fp1-lab" x="200" y="210" text-anchor="middle">첫 행 · x + b₁ = z₁</text>
+<text class="fp1-lab" x="200" y="232" text-anchor="middle">g : 원소별 적용</text>
+</svg>
 </div>
 
-이 표기법을 쓰면, **어떤 레이어든** 순전파 공식은 동일하다.
+이제 층이 몇 번째든 순전파 공식은 두 줄로 같다.
 
-```
-z[l] = W[l] · a[l-1] + b[l]
-a[l] = g(z[l])
+$$z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}, \qquad a^{[l]} = g(z^{[l]})$$
+
+$l$은 층 번호이고 $a^{[0]}$이 입력 $x$다. 크기 규칙도 하나뿐이다. $W^{[l]}$은 (현재 층 뉴런 수) × (이전 층 뉴런 수), $b^{[l]}$은 (현재 층 뉴런 수)다. 층이 아무리 깊어져도 이 두 줄을 반복할 뿐이다.
+
+```python
+def forward_layer(a_prev, W, b, activation=relu):
+    z = np.dot(W, a_prev) + b
+    a = activation(z)
+    return a, (z, a_prev, W)          # 캐시는 역전파에서 쓴다
 ```
 
-이 두 줄이 순전파의 전부다. 레이어가 아무리 깊어져도 이 공식을 반복할 뿐이다.
+반환값에 $z$와 $a^{[l-1]}$을 함께 담아 두는 이유는 학습할 때다. 기울기를 계산하려면 순전파 도중의 중간값이 그대로 필요한데, 그때 다시 계산하면 순전파를 두 번 하는 셈이 된다. 추론만 할 거라면 버려도 된다.
 
 ---
 
-## NumPy로 단일 레이어 순전파 구현
+## 층을 이어 붙이기
+
+입력 2개, 은닉 3개(ReLU), 출력 1개(시그모이드)인 네트워크에 $x = [1.0,\ 0.5]$를 넣어 보자.
+
+$$W^{[1]} = \begin{bmatrix} 0.2 & 0.4 \\ 0.6 & 0.1 \\ 0.3 & 0.7 \end{bmatrix}, \qquad b^{[1]} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$$
+
+첫 행 $[0.2,\ 0.4]$와 입력의 내적이 $0.2 \times 1.0 + 0.4 \times 0.5 = 0.40$이고, 둘째 행과 셋째 행도 같은 방식으로 각각 $0.65$가 나온다.
+
+$$z^{[1]} = [0.40,\ 0.65,\ 0.65] \;\xrightarrow{\ \text{ReLU}\ }\; a^{[1]} = [0.40,\ 0.65,\ 0.65]$$
+
+세 값이 모두 양수라 ReLU를 지나도 그대로다. 두 번째 층은 완전히 같은 연산이 반복될 뿐이다. $W^{[2]} = [0.5,\ 0.3,\ 0.2]$와 $a^{[1]}$의 내적으로 $z^{[2]} = 0.525$가 나오고, 시그모이드를 통과해 $a^{[2]} = 0.6283$이 된다. 정답이 $y = 1$이라면 손실은 $-\ln 0.6283 \approx 0.4647$이다.
+
+바뀐 것은 행렬의 크기와 활성화 함수뿐이다. 층을 100개로 늘려도 달라지는 것은 반복 횟수다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 404" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="순전파의 전체 흐름. 입력 x에서 시작해 선형 결합으로 z를 만들고 활성화 함수로 a를 만드는 과정을 두 층 반복한 뒤 손실을 계산한다. 각 단계 오른쪽에 값의 shape이 적혀 있다.">
+<style>
+.fp2-in { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
+.fp2-lin { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
+.fp2-act { fill: var(--bg-success, #f0fdf4); stroke: var(--text-success, #107836); stroke-width: 1.6; }
+.fp2-loss { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1.6; }
+.fp2-ink { fill: var(--text, #1c1917); font-size: 14px; }
+.fp2-shp { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.fp2-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.fp2-arw { stroke: var(--text-muted, #6d6762); stroke-width: 1.6; fill: none; }
+.fp2-big { stroke: var(--primary, #0a756c); stroke-width: 2.2; fill: none; }
+.fp2-dir { fill: var(--primary, #0a756c); font-size: 14px; font-weight: 600; }
+</style>
+<defs>
+<marker id="fp2Arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-muted, #6d6762)"/>
+</marker>
+<marker id="fp2Big" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0a756c)"/>
+</marker>
+</defs>
+<text class="fp2-t" x="200" y="26" text-anchor="middle">값이 흐르는 방향</text>
+<!-- 방향 표시 -->
+<text class="fp2-dir" x="18" y="52" text-anchor="start">순전파</text>
+<path class="fp2-big" d="M 45 62 L 45 384" marker-end="url(#fp2Big)"/>
+<!-- 입력 -->
+<rect class="fp2-in" x="100" y="44" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="70" text-anchor="middle">x = [1.0, 0.5]</text>
+<text class="fp2-shp" x="302" y="70" text-anchor="start">(2,)</text>
+<path class="fp2-arw" d="M 195 86 L 195 102" marker-end="url(#fp2Arrow)"/>
+<!-- 1층 선형 -->
+<rect class="fp2-lin" x="100" y="104" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="130" text-anchor="middle">z[1] = W[1]x + b[1]</text>
+<text class="fp2-shp" x="302" y="130" text-anchor="start">(3,)</text>
+<path class="fp2-arw" d="M 195 146 L 195 162" marker-end="url(#fp2Arrow)"/>
+<!-- 1층 활성화 -->
+<rect class="fp2-act" x="100" y="164" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="190" text-anchor="middle">a[1] = ReLU(z[1])</text>
+<text class="fp2-shp" x="302" y="190" text-anchor="start">(3,)</text>
+<path class="fp2-arw" d="M 195 206 L 195 222" marker-end="url(#fp2Arrow)"/>
+<!-- 2층 선형 -->
+<rect class="fp2-lin" x="100" y="224" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="250" text-anchor="middle">z[2] = W[2]a[1] + b[2]</text>
+<text class="fp2-shp" x="302" y="250" text-anchor="start">(1,)</text>
+<path class="fp2-arw" d="M 195 266 L 195 282" marker-end="url(#fp2Arrow)"/>
+<!-- 2층 활성화 -->
+<rect class="fp2-act" x="100" y="284" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="310" text-anchor="middle">a[2] = σ(z[2])</text>
+<text class="fp2-shp" x="302" y="310" text-anchor="start">(1,)</text>
+<path class="fp2-arw" d="M 195 326 L 195 342" marker-end="url(#fp2Arrow)"/>
+<!-- 손실 -->
+<rect class="fp2-loss" x="100" y="344" width="190" height="42" rx="6"/>
+<text class="fp2-ink" x="195" y="370" text-anchor="middle">L = loss(y, a[2])</text>
+<text class="fp2-shp" x="302" y="370" text-anchor="start">스칼라</text>
+</svg>
+</div>
 
 ```python
 import numpy as np
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
 def relu(z):
     return np.maximum(0, z)
 
-def forward_layer(A_prev, W, b, activation='relu'):
-    """
-    단일 레이어의 순전파
+W1 = np.array([[0.2, 0.4], [0.6, 0.1], [0.3, 0.7]])
+b1 = np.zeros(3)
+W2 = np.array([[0.5, 0.3, 0.2]])
+b2 = np.zeros(1)
 
-    Parameters:
-        A_prev: 이전 레이어의 출력 (n_prev,)
-        W: 가중치 행렬 (n_current, n_prev)
-        b: 편향 벡터 (n_current,)
-        activation: 'relu' 또는 'sigmoid'
-
-    Returns:
-        A: 현재 레이어의 출력 (n_current,)
-        cache: (Z, A_prev, W) — 역전파에서 사용
-    """
-    Z = np.dot(W, A_prev) + b        # 선형 결합
-
-    if activation == 'relu':
-        A = relu(Z)
-    elif activation == 'sigmoid':
-        A = sigmoid(Z)
-    else:
-        A = Z  # linear (활성화 없음)
-
-    cache = (Z, A_prev, W)           # 나중에 역전파에서 쓸 값들
-    return A, cache
-
-# 예시: 입력 2개 → 뉴런 3개
-x = np.array([0.5, 0.3])
-W1 = np.array([[0.2, 0.4],
-               [0.6, 0.1],
-               [0.3, 0.7]])
-b1 = np.array([0.1, 0.2, 0.05])
-
-A1, cache = forward_layer(x, W1, b1, activation='relu')
-print(f"Z = W·x + b = {np.dot(W1, x) + b1}")
-print(f"A (ReLU 적용 후) = {A1}")
-# Z = W·x + b = [0.32 0.53 0.41]
-# A (ReLU 적용 후) = [0.32 0.53 0.41]
-```
-
-cache에 중간 계산값을 저장해두는 이유는 나중에 [역전파(Backpropagation)](/ml/backpropagation/)에서 이 값들이 필요하기 때문이다. 지금은 무시해도 좋다.
-
----
-
-## 전체 네트워크 순전파: 레이어를 연결하기
-
-이제 레이어를 여러 개 쌓아서 전체 네트워크의 순전파를 해보자. 가장 기본적인 구조로 시작한다.
-
-```
-입력(2) → 히든 레이어(3) → 출력(1)
-```
-
-![전체 네트워크 순전파 흐름](./full-network-forward.png)
-
-### 구체적인 숫자로 따라가기
-
-입력 x = [1.0, 0.5]를 넣고, 각 레이어를 하나씩 통과시켜 보자.
-
-**레이어 1 (히든): 입력 2개 → 뉴런 3개, ReLU**
-
-```
-W[1] = [[0.2, 0.4],      b[1] = [0.0,
-         [0.6, 0.1],              0.0,
-         [0.3, 0.7]]              0.0]
-
-z[1] = W[1] · x + b[1]
-     = [[0.2×1.0 + 0.4×0.5],     = [0.40,
-        [0.6×1.0 + 0.1×0.5],       0.65,
-        [0.3×1.0 + 0.7×0.5]]       0.65]
-
-a[1] = ReLU(z[1]) = [0.40, 0.65, 0.65]
-(모두 양수이므로 ReLU 통과 후 값이 그대로)
-```
-
-**레이어 2 (출력): 뉴런 3개 → 출력 1개, Sigmoid**
-
-```
-W[2] = [[0.5, 0.3, 0.2]]    b[2] = [0.0]
-
-z[2] = W[2] · a[1] + b[2]
-     = 0.5×0.40 + 0.3×0.65 + 0.2×0.65 + 0.0
-     = 0.20 + 0.195 + 0.13
-     = 0.525
-
-a[2] = σ(0.525) = 0.6283
-```
-
-결과: 입력 [1.0, 0.5]에 대해 네트워크의 예측값은 **0.6283**. 이진 분류에서 threshold 0.5를 적용하면 **클래스 1**로 예측한다.
-
-### NumPy 전체 구현
-
-```python
-import numpy as np
-
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
-def relu(z):
-    return np.maximum(0, z)
-
-# ── 네트워크 파라미터 초기화 ──
-np.random.seed(42)
-params = {
-    'W1': np.random.randn(3, 2) * 0.5,   # 히든 레이어: (3, 2)
-    'b1': np.zeros(3),                     # (3,)
-    'W2': np.random.randn(1, 3) * 0.5,   # 출력 레이어: (1, 3)
-    'b2': np.zeros(1),                     # (1,)
-}
-
-# ── 순전파 ──
-def forward(x, params):
-    """
-    2층 신경망 전체 순전파
-    x: 입력 벡터 (2,)
-    """
-    # 레이어 1: 히든 (ReLU)
-    z1 = np.dot(params['W1'], x) + params['b1']
-    a1 = relu(z1)
-
-    # 레이어 2: 출력 (Sigmoid)
-    z2 = np.dot(params['W2'], a1) + params['b2']
-    a2 = sigmoid(z2)
-
-    caches = {
-        'z1': z1, 'a1': a1,
-        'z2': z2, 'a2': a2,
-    }
-    return a2, caches
-
-# ── 실행 ──
 x = np.array([1.0, 0.5])
-prediction, caches = forward(x, params)
-
-print("=== 순전파 과정 ===")
-print(f"입력:        x  = {x}")
-print(f"히든 z:     z1 = {caches['z1'].round(4)}")
-print(f"히든 a:     a1 = {caches['a1'].round(4)}")
-print(f"출력 z:     z2 = {caches['z2'].round(4)}")
-print(f"출력 a:     a2 = {caches['a2'].round(4)} ← 최종 예측")
+a1 = relu(np.dot(W1, x) + b1)
+a2 = sigmoid(np.dot(W2, a1) + b2)
+print(a1.round(4), a2.round(4))
+# [0.4  0.65 0.65] [0.6283]
 ```
-
-흐름을 정리하면:
-
-| 단계 | 연산 | 입력 shape | 출력 shape |
-|------|------|-----------|-----------|
-| 레이어 1 선형 | z[1] = W[1]·x + b[1] | (3,2)·(2,) + (3,) | (3,) |
-| 레이어 1 활성화 | a[1] = ReLU(z[1]) | (3,) | (3,) |
-| 레이어 2 선형 | z[2] = W[2]·a[1] + b[2] | (1,3)·(3,) + (1,) | (1,) |
-| 레이어 2 활성화 | a[2] = σ(z[2]) | (1,) | (1,) |
-
-매 레이어에서 W의 shape은 **(현재 뉴런 수, 이전 뉴런 수)** 다. 이 규칙만 기억하면 레이어가 아무리 많아도 shape이 헷갈리지 않는다.
 
 ---
 
-## 왜 행렬 곱셈인가: 벡터화의 위력
+## 왜 행렬 곱인가
 
-"for문으로 뉴런 하나씩 계산하면 안 되나?" 물론 된다. 하지만 **느리다**.
-
-[다중 선형 회귀](/ml/multiple-linear-regression/)에서 벡터화의 장점을 이미 봤다. 신경망에서는 그 차이가 더 극적이다. NumPy의 행렬 연산은 내부적으로 C로 작성된 BLAS 라이브러리를 호출하기 때문에, 파이썬 루프보다 **수십~수백 배** 빠르다.
+뉴런 하나씩 for문으로 돌려도 결과는 같다. 다만 느리다. 입력 1,000개, 뉴런 500개, 샘플 10,000개로 같은 계산을 두 방식으로 재 보면 차이가 분명하다.
 
 ```python
-import numpy as np
-import time
-
-n_inputs = 1000    # 입력 크기
-n_neurons = 500    # 뉴런 수
-n_samples = 10000  # 데이터 수
-
-X = np.random.randn(n_samples, n_inputs)
-W = np.random.randn(n_neurons, n_inputs)
-b = np.zeros(n_neurons)
-
-# ── 방법 1: 파이썬 루프 ──
-start = time.time()
 Z_loop = np.zeros((n_samples, n_neurons))
 for i in range(n_samples):
     for j in range(n_neurons):
-        Z_loop[i, j] = np.dot(W[j], X[i]) + b[j]
-loop_time = time.time() - start
+        Z_loop[i, j] = np.dot(W[j], X[i]) + b[j]     # 약 6초
 
-# ── 방법 2: 벡터화 (행렬 곱) ──
-start = time.time()
-Z_vec = X @ W.T + b    # (10000, 1000) @ (1000, 500) + (500,)
-vec_time = time.time() - start
-
-print(f"루프: {loop_time:.3f}초")
-print(f"벡터화: {vec_time:.4f}초")
-print(f"속도 차이: {loop_time / vec_time:.0f}배")
-# 루프: 23.415초
-# 벡터화: 0.0312초
-# 속도 차이: 750배
+Z_vec = X @ W.T + b                                   # 약 0.04초
 ```
 
-750배. 이게 벡터화의 위력이다. 실제 딥러닝에서 레이어 수십 개, 뉴런 수천 개, 데이터 수백만 개를 다루는데, 루프로 계산하면 학습에 며칠이 걸릴 것을 벡터화로 몇 시간으로 줄인다. GPU가 빠른 이유도 본질적으로 같다 — 행렬 곱을 수천 개 코어에서 동시에 처리하기 때문이다.
+100배가 넘는 차이다. NumPy의 행렬 곱은 C로 작성된 BLAS 루틴을 호출해서, 캐시에 맞게 블록을 쪼개고 SIMD 명령을 쓰고 코어를 나눠 쓴다. 파이썬 루프는 반복마다 인터프리터를 거치므로 그 최적화를 하나도 받지 못한다. GPU가 빠른 이유도 결이 같다. 행렬 곱은 서로 독립적인 곱셈 덧셈의 묶음이라 코어 수천 개에 그대로 흩뿌릴 수 있다.
 
-<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>배치 처리와 벡터화</strong><br>
-  위 코드에서 <code>X @ W.T</code>는 데이터 10,000개를 <strong>한 번에</strong> 계산한다. 이것을 <strong>배치(batch) 연산</strong>이라고 한다. 데이터 하나씩 for문을 돌리는 것과 행렬 한 번 곱하는 것의 차이가 바로 750배다.
-</div>
+`X @ W.T`가 한 일이 하나 더 있다. 샘플 10,000개를 한 번에 처리했다. 데이터를 하나씩 넣지 않고 묶어서 넣는 것을 **배치(batch)** 라고 하는데, 샘플 축을 행에 얹으면 순전파 공식은 그대로 두고 배치 처리가 된다. 실제 학습이 미니배치 단위로 도는 것도 이 성질 덕분이다.
 
 ---
 
-## 계산 그래프: 순전파를 시각화하다
+## 출력층과 손실 함수
 
-순전파의 흐름을 **계산 그래프(Computation Graph)** 로 그리면 각 연산의 관계가 명확해진다.
+은닉층은 대체로 ReLU면 된다. 반면 출력층의 활성화 함수와 손실 함수는 풀려는 문제가 정한다. 이 둘은 한 쌍으로 움직인다.
 
-![순전파 계산 그래프](./computation-graph.png)
+| 문제 유형 | 출력 뉴런 수 | 출력 활성화 | 손실 함수 |
+|---|---|---|---|
+| 이진 분류 | 1 | 시그모이드 | Binary Cross-Entropy |
+| 다중 클래스 분류 | K | Softmax | Categorical Cross-Entropy |
+| 회귀 | 1 또는 n | 없음(Linear) | MSE |
 
-2층 네트워크의 계산 그래프를 글로 표현하면:
+회귀에 활성화 함수를 붙이지 않는 이유는 출력 범위를 막으면 안 되기 때문이다. 집값 예측에 시그모이드를 씌우면 결과가 0과 1 사이에 갇힌다.
 
-```
-x ──→ [W[1]·x + b[1]] ──→ z[1] ──→ [ReLU] ──→ a[1]
-                                                   │
-a[1] ──→ [W[2]·a[1] + b[2]] ──→ z[2] ──→ [σ] ──→ a[2] ──→ [Loss] ──→ L
-                                                              ↑
-                                                              y (정답)
-```
+**Softmax**는 K개의 점수를 합이 1인 확률로 바꾼다.
 
-왼쪽에서 오른쪽으로 데이터가 흐른다 — 그래서 **순전파(forward)** 다.
+$$\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{k=1}^{K} e^{z_k}}$$
 
-이 그래프를 그려두는 이유는 [역전파(Backpropagation)](/ml/backpropagation/)를 이해하기 위해서다. 역전파는 이 그래프를 **오른쪽에서 왼쪽으로** 거슬러 올라가면서, 각 파라미터가 Loss에 얼마나 기여했는지(= 기울기)를 계산한다. 순전파의 중간 결과(z, a)를 cache에 저장해둔 이유가 여기에 있다 — 역전파에서 이 값들이 그대로 쓰인다.
-
-지금은 "순전파의 각 단계를 기록해두면, 나중에 기울기 계산이 가능하다" 정도만 기억하자.
-
----
-
-## 출력 레이어 설계: 문제에 따라 달라지는 마지막 레이어
-
-히든 레이어는 보통 ReLU를 쓴다. 하지만 **출력 레이어**는 풀려는 문제에 따라 활성화 함수가 달라진다.
-
-| 문제 유형 | 출력 뉴런 수 | 활성화 함수 | 출력 범위 | 예시 |
-|-----------|------------|-----------|----------|------|
-| 이진 분류 | 1 | Sigmoid | (0, 1) | 스팸 여부 |
-| 다중 클래스 분류 | K | Softmax | 각각 (0,1), 합=1 | 숫자 인식 (0~9) |
-| 회귀 | 1 (또는 n) | 없음 (Linear) | (-inf, +inf) | 집값 예측 |
-
-### 이진 분류: Sigmoid
-
-[로지스틱 회귀](/ml/logistic-regression/)와 동일하다. 출력 뉴런 1개에 Sigmoid를 적용해서 확률을 출력한다.
-
-```
-a = σ(z) = 1 / (1 + e⁻ᶻ)
-```
-
-출력이 0.5 이상이면 클래스 1, 미만이면 클래스 0으로 판단한다.
-
-### 다중 클래스 분류: Softmax
-
-[결정 경계 글](/ml/decision-boundary/)에서 다뤘던 Softmax다. K개 클래스 각각의 점수(z)를 확률로 변환한다.
-
-```
-softmax(zᵢ) = e^zᵢ / (e^z₁ + e^z₂ + ... + e^zₖ)
-```
-
-K개 출력의 합이 정확히 1이 된다. 가장 높은 확률의 클래스를 예측값으로 선택한다.
+지수 함수라 $z$가 조금만 커도 오버플로가 난다. 분자와 분모에 같은 상수를 곱해도 값이 변하지 않는다는 성질을 이용해, 최댓값을 빼고 계산하는 것이 표준이다.
 
 ```python
 def softmax(z):
-    """수치적으로 안정한 Softmax"""
-    exp_z = np.exp(z - np.max(z))  # overflow 방지
+    exp_z = np.exp(z - np.max(z))    # 최댓값을 빼도 결과는 동일
     return exp_z / np.sum(exp_z)
 
-# 숫자 인식 (0~9): 출력 뉴런 10개
-z_output = np.array([2.1, 0.5, 0.3, 8.2, 0.1, 0.4, 0.2, 1.1, 0.7, 0.3])
-probs = softmax(z_output)
-print(f"각 클래스 확률: {probs.round(4)}")
-print(f"예측 클래스: {np.argmax(probs)}")
-print(f"확률 합: {probs.sum():.4f}")
-# 각 클래스 확률: [0.0022 0.0005 0.0004 0.9942 0.0003 0.0004 0.0003 0.0008 0.0005 0.0004]
-# 예측 클래스: 3
-# 확률 합: 1.0000
+z = np.array([2.1, 0.5, 0.3, 8.2, 0.1, 0.4, 0.2, 1.1, 0.7, 0.3])
+p = softmax(z)
+print(p.argmax(), p.max().round(4), p.sum().round(4))
+# 3 0.9942 1.0
 ```
 
-### 회귀: Linear (활성화 없음)
+**Binary Cross-Entropy**는 이진 분류에서 예측 확률과 정답의 거리를 잰다.
 
-집값 예측 같은 회귀 문제에서는 출력에 활성화 함수를 적용하지 않는다. z 값 자체가 예측값이다.
+$$L = -\left[\, y \log a + (1-y)\log(1-a) \,\right]$$
 
-```
-a = z    (활성화 함수 없음)
-```
-
-출력 범위에 제한이 없어야 하기 때문이다. 집값이 -100만 원이 나올 수도 있고 10억이 나올 수도 있다.
+$y=1$이면 $-\log a$만 남아서 예측이 1에 가까울수록 0으로 내려간다. $y=0$이면 $-\log(1-a)$가 같은 일을 반대편에서 한다. 어느 쪽이든 확신을 갖고 틀리면 로그가 발산하면서 손실이 급격히 커진다. 예측이 0.9면 손실 0.1054, 0.1이면 2.3026이다. 구현할 때는 $a$를 $[10^{-15},\ 1-10^{-15}]$로 잘라서 $\log 0$을 막는다.
 
 ---
 
-## 신경망의 손실 함수
+## 차원이 어긋날 때
 
-순전파의 마지막 단계는 **예측값(a)과 정답(y)의 차이를 하나의 숫자로 측정**하는 것이다. 이 숫자가 **손실(Loss)** 이고, 이 손실을 줄이는 방향으로 파라미터를 업데이트하는 것이 [경사하강법](/ml/gradient-descent/)이었다.
+직접 구현하면 가장 자주 만나는 에러가 `shapes not aligned`다. 행렬 곱 $(m, n) \times (n, p)$에서 가운데 두 수가 같아야 한다는 규칙 하나가 전부인데, 신경망에서는 다음 세 가지가 반복해서 어긋난다.
 
-출력 레이어와 마찬가지로, 손실 함수도 문제 유형에 따라 달라진다.
-
-### 이진 교차 엔트로피 (Binary Cross-Entropy)
-
-이진 분류에서 사용한다. [로지스틱 회귀](/ml/logistic-regression/)에서 봤던 Log Loss와 동일하다.
-
-```
-L = -[y × log(a) + (1-y) × log(1-a)]
-```
-
-- y=1일 때: L = -log(a). 예측이 1에 가까울수록 Loss가 0에 가까워진다.
-- y=0일 때: L = -log(1-a). 예측이 0에 가까울수록 Loss가 0에 가까워진다.
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| `shapes (2,3) and (2,) not aligned` | $W$를 (입력, 뉴런) 순으로 만듦 | (뉴런, 입력)으로 만들거나 `W.T` 사용 |
+| `operands could not be broadcast` | $b$의 길이가 뉴런 수와 다름 | $b$를 현재 층 뉴런 수에 맞춤 |
+| 샘플 하나는 되는데 배치에서 실패 | 배치 축을 빼먹음 | 입력을 `(batch, features)`로 맞춤 |
 
 ```python
-def binary_cross_entropy(y, a):
-    epsilon = 1e-15  # log(0) 방지
-    a = np.clip(a, epsilon, 1 - epsilon)
-    return -(y * np.log(a) + (1 - y) * np.log(1 - a))
+W = np.random.randn(2, 3)     # (입력, 뉴런) 순서라 거꾸로다
+np.dot(W, x)                  # ValueError
 
-# y=1인데 예측이 0.9 → 낮은 Loss
-print(f"y=1, a=0.9: L = {binary_cross_entropy(1, 0.9):.4f}")   # 0.1054
-
-# y=1인데 예측이 0.1 → 높은 Loss
-print(f"y=1, a=0.1: L = {binary_cross_entropy(1, 0.1):.4f}")   # 2.3026
+W = np.random.randn(3, 2)     # (뉴런, 입력)
+np.dot(W, x)                  # (3,)
 ```
 
-### 범주형 교차 엔트로피 (Categorical Cross-Entropy)
-
-다중 클래스 분류에서 사용한다. 정답 클래스의 예측 확률에만 관심이 있다.
-
-```
-L = -Σ yₖ × log(aₖ)    (k = 1, ..., K)
-```
-
-원-핫 인코딩에서 정답 클래스만 y=1이므로, 결국 **정답 클래스의 log 확률**에 마이너스를 붙인 것이다.
-
-```python
-def categorical_cross_entropy(y_onehot, probs):
-    epsilon = 1e-15
-    probs = np.clip(probs, epsilon, 1.0)
-    return -np.sum(y_onehot * np.log(probs))
-
-# 정답: 클래스 3 (원-핫)
-y = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
-
-# 좋은 예측 (클래스 3에 높은 확률)
-good_pred = softmax(np.array([0.1, 0.1, 0.1, 5.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]))
-print(f"좋은 예측 Loss: {categorical_cross_entropy(y, good_pred):.4f}")  # 0.0649
-
-# 나쁜 예측 (클래스 3에 낮은 확률)
-bad_pred = softmax(np.array([3.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]))
-print(f"나쁜 예측 Loss: {categorical_cross_entropy(y, bad_pred):.4f}")   # 3.3023
-```
-
-### MSE (Mean Squared Error)
-
-회귀 문제에서 사용한다. [비용 함수 글](/ml/cost-function/)에서 다뤘던 바로 그것이다.
-
-```
-L = (y - a)²
-```
-
-예측값과 정답의 차이를 제곱한다. 단순하지만 회귀에서는 여전히 강력하다.
-
-| 문제 유형 | 출력 활성화 | 손실 함수 |
-|-----------|-----------|----------|
-| 이진 분류 | Sigmoid | Binary Cross-Entropy |
-| 다중 클래스 | Softmax | Categorical Cross-Entropy |
-| 회귀 | Linear | MSE |
+층마다 `print(W.shape, a.shape)`를 찍어 보면 어디서 꼬였는지 대개 한 번에 보인다. PyTorch로 넘어가도 이 습관은 그대로 쓰인다.
 
 ---
 
-## 전체 순전파: 입력부터 Loss까지
+## 마치며
 
-지금까지 배운 모든 것을 합쳐서, 입력이 들어와서 Loss가 계산되기까지의 **완전한 순전파**를 구현해보자. 이진 분류 문제로 가정한다.
+순전파는 두 줄이다. 가중치 행렬을 곱하고 편향을 더해 $z$를 만들고, 원소마다 활성화 함수를 적용해 $a$를 만든다. 층이 2개든 100개든 이 두 줄을 반복할 뿐이고, 층마다 달라지는 것은 행렬의 크기와 활성화 함수뿐이다.
 
-```python
-import numpy as np
+행렬로 묶는 것은 표기의 편의가 아니라 성능의 문제다. 뉴런을 행으로 쌓아 한 번에 곱하면 BLAS와 GPU가 개입할 수 있고, 여기에 샘플까지 축 하나로 더 쌓으면 배치 처리가 공짜로 따라온다. 같은 계산이 100배 넘게 빨라진다.
 
-# ── 활성화 함수 ──
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
-def relu(z):
-    return np.maximum(0, z)
-
-# ── 손실 함수 ──
-def binary_cross_entropy(y, a):
-    epsilon = 1e-15
-    a = np.clip(a, epsilon, 1 - epsilon)
-    return -(y * np.log(a) + (1 - y) * np.log(1 - a))
-
-# ── 네트워크 정의 ──
-# 구조: 입력(2) → 히든1(4, ReLU) → 히든2(3, ReLU) → 출력(1, Sigmoid)
-np.random.seed(42)
-params = {
-    'W1': np.random.randn(4, 2) * 0.5,
-    'b1': np.zeros(4),
-    'W2': np.random.randn(3, 4) * 0.5,
-    'b2': np.zeros(3),
-    'W3': np.random.randn(1, 3) * 0.5,
-    'b3': np.zeros(1),
-}
-
-# ── 전체 순전파 ──
-def forward_full(x, y, params):
-    """
-    입력 → 히든1 → 히든2 → 출력 → Loss
-    """
-    # 레이어 1
-    z1 = np.dot(params['W1'], x) + params['b1']
-    a1 = relu(z1)
-
-    # 레이어 2
-    z2 = np.dot(params['W2'], a1) + params['b2']
-    a2 = relu(z2)
-
-    # 레이어 3 (출력)
-    z3 = np.dot(params['W3'], a2) + params['b3']
-    a3 = sigmoid(z3)
-
-    # 손실 계산
-    loss = binary_cross_entropy(y, a3)
-
-    caches = {
-        'z1': z1, 'a1': a1,
-        'z2': z2, 'a2': a2,
-        'z3': z3, 'a3': a3,
-    }
-    return a3, loss, caches
-
-# ── 실행 ──
-x = np.array([1.5, -0.7])   # 입력
-y = 1                        # 정답 레이블
-
-prediction, loss, caches = forward_full(x, y, params)
-
-print("=== 전체 순전파 결과 ===")
-print(f"입력: {x}")
-print(f"히든1 출력: {caches['a1'].round(4)}")
-print(f"히든2 출력: {caches['a2'].round(4)}")
-print(f"최종 예측: {prediction[0]:.4f}")
-print(f"정답: {y}")
-print(f"Loss: {loss[0]:.4f}")
-```
-
-출력을 보면 데이터가 어떻게 흘러가는지 한눈에 보인다:
-
-```
-입력 [1.5, -0.7]
-  → 히든1 (4개 뉴런, ReLU) → [0.4209, 0.0000, 0.0000, 0.9158]
-  → 히든2 (3개 뉴런, ReLU) → [0.0000, 0.0000, 0.0000]
-  → 출력 (1개 뉴런, Sigmoid) → 0.5000
-  → Loss = 0.6931
-```
-
-예측이 0.5000이고 정답은 1이니, 모델이 틀렸다. Loss가 0.6931(= ln2)로 꽤 높다. 히든2 출력이 전부 0인 것은 초기 가중치와 입력의 조합이 좋지 않아 ReLU에 음수만 들어간 결과다. 학습 중에 뉴런이 영구적으로 0만 출력하는 "dying ReLU" 현상과는 다르지만, ReLU의 음수 차단 특성이 신호를 소실시킬 수 있다는 점에서 같은 맥락이다 — 자세한 내용은 [활성화 함수](/ml/activation-functions/) 글에서 다룬다. 이제 이 Loss를 줄이기 위해 W와 b를 업데이트해야 하는데 — 그게 바로 역전파다.
+남은 문제는 $W$와 $b$의 값이다. 지금까지 쓴 숫자들은 임의로 정한 것이고, 손실 0.4647은 그래서 나온 값이다. 이 손실을 줄이려면 각 가중치를 어느 방향으로 얼마나 밀어야 하는지 알아야 하는데, 층이 여러 개면 앞쪽 가중치의 영향이 뒤쪽 층들을 전부 거쳐서 손실에 닿는다. 다음 글에서는 그 경로를 거꾸로 따라가는 방법을 다룬다.
 
 ---
 
-## 자주 발생하는 차원 불일치 문제
+## 함께 보면 좋은 글
 
-순전파를 직접 구현하다 보면 가장 많이 만나는 에러가 `shapes not aligned`이다. 행렬 곱에서 차원이 맞지 않으면 발생한다.
-
-### 차원 규칙 정리
-
-행렬 곱 `A @ B`가 가능하려면 **A의 열 수 = B의 행 수**여야 한다.
-
-```
-(m, n) @ (n, p) = (m, p)
-  ↑         ↑
-  이 둘이 같아야 함
-```
-
-신경망에서:
-
-```
-W[l]의 shape  = (현재 레이어 뉴런 수, 이전 레이어 뉴런 수)
-a[l-1]의 shape = (이전 레이어 뉴런 수,)
-b[l]의 shape   = (현재 레이어 뉴런 수,)
-```
-
-### 자주 하는 실수와 해결법
-
-| 실수 | 에러 메시지 | 해결 |
-|------|-----------|------|
-| W shape을 (입력, 뉴런)으로 설정 | `shapes (2,3) and (2,) not aligned` | W를 (뉴런, 입력)으로 바꾸거나 W.T 사용 |
-| b의 크기가 뉴런 수와 불일치 | `operands could not be broadcast` | b의 shape을 현재 뉴런 수에 맞춤 |
-| 배치 차원을 빼먹음 | 단일 샘플은 동작하지만 배치에서 에러 | 입력을 (batch, features)로 reshape |
-
-```python
-# ❌ 잘못된 예
-W = np.random.randn(2, 3)  # (입력, 뉴런) — 거꾸로!
-x = np.array([1.0, 0.5])   # (2,)
-# np.dot(W, x) → 에러! (2,3) @ (2,) 불가
-
-# ✅ 올바른 예
-W = np.random.randn(3, 2)  # (뉴런, 입력)
-x = np.array([1.0, 0.5])   # (2,)
-z = np.dot(W, x)            # (3,2) @ (2,) = (3,) ✓
-```
-
-<div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>디버깅 팁</strong><br>
-  순전파에서 에러가 나면, 각 레이어마다 <code>print(f"W{l}.shape={W.shape}, a.shape={a.shape}")</code>를 찍어보자. shape을 눈으로 확인하면 어디서 차원이 꼬였는지 바로 보인다. PyTorch나 TensorFlow 같은 프레임워크에서도 디버깅의 90%는 shape 확인이다.
-</div>
-
----
-
-## 순전파 정리
-
-전체 흐름을 한 번 더 정리하자.
-
-```
-입력 x
-  ↓
-[z[1] = W[1]·x + b[1]]  →  [a[1] = ReLU(z[1])]     ← 히든 레이어 1
-  ↓
-[z[2] = W[2]·a[1] + b[2]]  →  [a[2] = ReLU(z[2])]   ← 히든 레이어 2
-  ↓
-[z[L] = W[L]·a[L-1] + b[L]]  →  [a[L] = σ(z[L])]    ← 출력 레이어
-  ↓
-Loss = L(y, a[L])                                       ← 손실 계산
-```
-
-**핵심 세 가지:**
-
-1. **모든 레이어의 순전파 공식은 동일하다**: z = W·a + b, a = g(z)
-2. **행렬 연산으로 벡터화하면 수백 배 빠르다**: 루프 대신 `np.dot` 한 줄
-3. **중간 결과(z, a)를 저장해둔다**: 역전파에서 기울기 계산에 필요
-
-순전파 자체는 어렵지 않다. 곱하고, 더하고, 활성화 함수 통과 — 이걸 레이어 수만큼 반복할 뿐이다. 진짜 어려운 건 다음이다: 이 순전파의 결과(Loss)를 보고, **각 가중치를 얼마나, 어떤 방향으로 바꿔야 하는가?**
-
----
-
-## 다음 글 미리보기
-
-순전파로 예측하고, Loss를 계산했다. 이제 남은 건 **Loss를 줄이기 위해 W와 b를 업데이트**하는 것이다. 경사하강법의 원리는 이미 안다 — 기울기(gradient)를 구해서 반대 방향으로 이동하면 된다.
-
-문제는, 신경망에서 기울기를 구하는 게 단순하지 않다는 것이다. 레이어가 여러 개 쌓여 있으니, 출력의 Loss가 첫 번째 레이어의 가중치에 어떤 영향을 미쳤는지 알려면 **체인룰(chain rule)** 로 층층이 거슬러 올라가야 한다.
-
-다음 글에서는 이 과정 — **[역전파(Backpropagation)](/ml/backpropagation/)** — 을 수식과 코드로 완전히 분해한다.
+- [신경망 기초](/ml/neural-network-basics/) : 퍼셉트론과 은닉층, 여기서 쓴 구조가 어떻게 만들어졌는지
+- [역전파](/ml/backpropagation/) : 순전파로 얻은 손실에서 각 가중치의 기울기를 구하는 방법
+- [활성화 함수](/ml/activation-functions/) : ReLU와 시그모이드를 어디에 왜 쓰는지
+- [비용 함수](/ml/cost-function/) : 손실 함수가 무엇을 재는지

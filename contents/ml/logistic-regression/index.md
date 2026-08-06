@@ -1,29 +1,21 @@
 ---
 date: '2026-01-07'
-title: '로지스틱 회귀(Logistic Regression): 분류 문제의 시작점'
+title: '선형 회귀에 시그모이드를 얹어 만드는 로지스틱 회귀'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 7
-tags: ['Logistic Regression', '로지스틱 회귀', 'Classification', 'Sigmoid', '머신러닝 기초']
-summary: '선형 회귀로는 풀 수 없는 분류 문제를 시그모이드 함수와 Log Loss로 해결하는 로지스틱 회귀의 원리를 수학과 코드로 완전히 이해한다.'
+tags: ['Logistic Regression', '로지스틱 회귀', 'Classification', 'Sigmoid', 'Log Loss', '머신러닝 기초']
+summary: '선형 회귀가 분류에서 무너지는 이유, 시그모이드가 실수를 확률로 바꾸는 원리, 로그 손실이 볼록해지는 이유를 따라가며 로지스틱 회귀의 구조를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/multiple-linear-regression/)에서 변수를 여러 개로 늘려 더 정확한 예측 모델을 만들었다. 선형 회귀, 비용 함수, 경사하강법, Feature Scaling — 하나의 흐름으로 연결되는 이 개념들은 모두 **연속적인 값을 예측**하는 회귀 문제를 다뤘다. 그런데 현실에서는 다른 종류의 질문이 훨씬 많다.
+이 이메일이 스팸인가. 이 종양이 악성인가. 이 고객이 이탈할 것인가. 답이 Yes 아니면 No, 0 아니면 1로 떨어지는 문제를 **분류(Classification)** 라고 한다. 연속적인 값을 맞히는 회귀와는 목표가 다르다.
 
-"이 이메일이 스팸인가, 아닌가?"
-"이 종양이 양성인가, 악성인가?"
-"이 고객이 이탈할 것인가, 아닌가?"
+분류를 푸는 가장 기본적인 모델이 **로지스틱 회귀(Logistic Regression)** 다. 선형 회귀를 조금 변형한 것이라는 직감은 맞다. 다만 어디를 어떻게 변형하느냐가 전부다.
 
-Yes 또는 No. 0 또는 1. 이런 문제를 **분류(Classification)** 라고 한다. 그리고 이 분류 문제를 푸는 가장 기본적인 모델이 **로지스틱 회귀(Logistic Regression)** 다. 직감적으로 "선형 회귀를 살짝 변형하면 되지 않을까?"라는 생각이 드는데 — 실제로 그 직감이 맞다. 다만, **어디를 어떻게 변형하는지**가 핵심이다.
+## 선형 회귀로 분류하면 어디가 깨지나
 
----
-
-## 왜 선형 회귀로는 분류할 수 없을까?
-
-가장 먼저 떠오르는 아이디어: 선형 회귀의 출력이 0.5 이상이면 1, 미만이면 0으로 분류하면 되지 않을까?
-
-간단한 예로 확인해보자. 공부 시간(x)에 따른 합격 여부(y = 0 또는 1) 데이터가 있다.
+가장 먼저 떠오르는 아이디어는 선형 회귀의 출력이 0.5 이상이면 1, 미만이면 0으로 자르는 것이다. 공부 시간에 따른 합격 여부 데이터로 확인해보자.
 
 ```python
 import numpy as np
@@ -31,185 +23,139 @@ from sklearn.linear_model import LinearRegression
 
 x = np.array([0.5, 1, 1.5, 2, 4, 5, 6]).reshape(-1, 1)
 y = np.array([0, 0, 0, 0, 1, 1, 1])
+print(np.round(LinearRegression().fit(x, y).predict(x), 2))
+# [-0.13 -0.01  0.11  0.23  0.7   0.93  1.17]
 
-model = LinearRegression()
-model.fit(x, y)
-print(f"예측값: {np.round(model.predict(x), 2)}")
-# 예측값: [-0.13 -0.01  0.11  0.23  0.7   0.93  1.17]
+# 20시간 공부한 합격자 한 명 추가
+x2 = np.append(x, [[20]], axis=0)
+y2 = np.append(y, 1)
+print(np.round(LinearRegression().fit(x2, y2).predict(x2), 2))
+# [0.26 0.29 0.32 0.34 0.45 0.5   0.55 1.29]
 ```
 
-threshold 0.5를 기준으로 나누면, 2시간 이하는 불합격(< 0.5), 4시간 이상은 합격(≥ 0.5)으로 전부 맞게 분류된다. 꽤 잘 동작하는 것처럼 보인다.
-
-문제는 **이상치(outlier)** 가 들어오면 터진다. 공부 시간이 20시간인 합격자 데이터 하나를 추가해보자.
-
-```python
-x2 = np.array([0.5, 1, 1.5, 2, 4, 5, 6, 20]).reshape(-1, 1)
-y2 = np.array([0, 0, 0, 0, 1, 1, 1, 1])
-
-model2 = LinearRegression()
-model2.fit(x2, y2)
-print(f"예측값: {np.round(model2.predict(x2), 2)}")
-# 예측값: [0.26  0.29  0.32  0.34  0.45  0.5   0.55  1.29]
-```
-
-이상치 하나에 **직선이 눌려 평평해지면서**, x=4인 합격자의 예측값이 0.70에서 0.45로 떨어졌다. 기존에 맞던 것까지 틀리게 된 것이다.
+첫 번째 결과는 0.5로 자르면 일곱 개를 전부 맞힌다. 그런데 이상치 하나가 들어오자 직선이 눌려 평평해지면서, 4시간 공부한 합격자의 예측값이 0.70에서 0.45로 떨어졌다. 원래 맞던 것까지 틀리게 됐다.
 
 ![선형 회귀로 분류를 시도하면 생기는 문제](./linear-classification-fail.png)
 
-선형 회귀가 분류에 실패하는 근본 원인은 두 가지다:
+두 가지가 근본 원인이다. 하나는 출력 범위다. 선형 회귀의 출력은 음의 무한대에서 양의 무한대까지 열려 있어서 1.29 같은 값이 나오는데, 이건 확률로 읽을 수 없다. 다른 하나는 이상치 민감도다. 직선 하나가 모든 점과의 제곱 오차를 줄이려 하므로, 클래스 내부에서 멀리 떨어진 점 하나가 직선 전체를 끌고 간다.
 
-1. **출력 범위**: 선형 회귀의 출력은 −∞ ~ +∞다. 확률(0~1)이 아니라서 해석이 불가능하다
-2. **이상치 민감도**: 직선 하나가 모든 데이터를 관통해야 하므로, 극단적 데이터 하나에 전체가 흔들린다
+출력을 0과 1 사이에 가두는 장치가 필요하다.
 
-분류에는 "출력을 0과 1 사이로 가두는" 새로운 장치가 필요하다.
+## 시그모이드가 실수를 확률로 바꾼다
 
----
+**시그모이드 함수(Sigmoid Function)** 는 실수 전체를 (0, 1) 구간으로 옮긴다.
 
-## 시그모이드 함수: 실수를 확률로 바꾸는 장치
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
 
-**시그모이드 함수(Sigmoid Function)** 는 실수 전체를 (0, 1) 범위로 매핑하는 함수다.
-
-> **σ(z) = 1 / (1 + e⁻ᶻ)**
-
-![시그모이드 함수 그래프](./sigmoid-function.png)
-
-핵심 성질을 정리하면:
-
-| z 값 | σ(z) | 해석 |
-|------|------|------|
-| z → +∞ | → 1 | 거의 확실히 양성 |
-| z = 0 | 0.5 | 반반 |
-| z → −∞ | → 0 | 거의 확실히 음성 |
-
-z가 0에서 멀어질수록 출력이 0 또는 1에 빠르게 수렴한다. "확신이 강할수록 극단에 가까워지는" 직관적인 형태다.
-
-### "Logistic"이라는 이름의 유래
-
-시그모이드가 왜 분류에 자연스러운 선택인지, odds와 logit의 관계에서 이해할 수 있다.
-
-어떤 사건이 일어날 확률이 p라면, **승산(Odds)** 은 "일어날 확률 / 일어나지 않을 확률"이다.
-
-> **Odds = p / (1 − p)**
-
-합격 확률이 0.8이면, Odds = 0.8 / 0.2 = 4. "불합격 1번당 합격 4번"이라는 뜻이다.
-
-여기에 로그를 씌운 것이 **로짓(Logit)**:
-
-> **logit(p) = log(p / (1 − p))**
-
-Logit의 범위는 −∞ ~ +∞다. 이걸 선형 모델 wx + b와 같다고 놓으면:
-
-```
-log(p / (1 − p)) = wx + b
-```
-
-이 식을 p에 대해 풀면 — 바로 시그모이드가 나온다:
-
-```
-p = 1 / (1 + e^(-(wx + b))) = σ(wx + b)
-```
-
-시그모이드는 "억지로 갖다 붙인 함수"가 아니라, **확률과 선형 모델을 잇는 자연스러운 다리**인 셈이다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 시그모이드의 미분</strong><br>
-  σ'(z) = σ(z) × (1 − σ(z)). 미분 결과가 자기 자신으로 표현된다. 이 성질 덕분에 경사하강법 계산이 깔끔해진다. 뒤에서 직접 확인한다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 292" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="시그모이드 곡선. 입력 z가 0일 때 출력이 0.5이고, 이 값을 임계값으로 삼아 왼쪽은 클래스 0, 오른쪽은 클래스 1로 예측한다.">
+<style>
+.lr1-axis { stroke: var(--text-muted, #6d6762); stroke-width: 1.2; fill: none; }
+.lr1-curve { stroke: var(--primary, #0a756c); stroke-width: 2.4; fill: none; }
+.lr1-dash { stroke: var(--accent, #9d5604); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.lr1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.lr1-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.lr1-a { fill: var(--accent, #9d5604); font-size: 14px; font-weight: 600; }
+.lr1-m { fill: var(--text-muted, #6d6762); font-size: 15px; font-weight: 600; }
+.lr1-p { fill: var(--primary, #0a756c); font-size: 15px; font-weight: 600; }
+.lr1-b0 { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.lr1-b1 { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1.2; }
+</style>
+<text class="lr1-t" x="200" y="24" text-anchor="middle">시그모이드와 임계값 0.5</text>
+<!-- 축과 눈금 -->
+<path class="lr1-axis" d="M 60 40 L 60 212"/>
+<path class="lr1-axis" d="M 56 208 L 378 208"/>
+<text class="lr1-n" x="52" y="53" text-anchor="end">1.0</text>
+<text class="lr1-n" x="52" y="133" text-anchor="end">0.5</text>
+<text class="lr1-n" x="52" y="213" text-anchor="end">0</text>
+<!-- 임계값 보조선 -->
+<path class="lr1-dash" d="M 60 128 L 370 128"/>
+<path class="lr1-dash" d="M 215 48 L 215 208"/>
+<text class="lr1-a" x="368" y="120" text-anchor="end">임계값 0.5</text>
+<text class="lr1-n" x="222" y="60" text-anchor="start">z = 0</text>
+<!-- 시그모이드 곡선 -->
+<polyline class="lr1-curve" points="60,207.6 85.8,206.9 111.7,205.1 137.5,200.4 150.4,195.9 163.3,188.9 176.3,178.8 189.2,165.0 202.1,147.6 215,128 227.9,108.4 240.8,91.0 253.8,77.2 266.7,67.1 279.6,60.1 292.5,55.6 318.3,50.9 344.2,49.1 370,48.4"/>
+<!-- 예측이 갈리는 두 구간 -->
+<rect class="lr1-b0" x="60" y="216" width="155" height="40" rx="5"/>
+<text class="lr1-m" x="137" y="234" text-anchor="middle">클래스 0</text>
+<text class="lr1-n" x="137" y="250" text-anchor="middle">&#963;(z) &lt; 0.5</text>
+<rect class="lr1-b1" x="215" y="216" width="155" height="40" rx="5"/>
+<text class="lr1-p" x="292" y="234" text-anchor="middle">클래스 1</text>
+<text class="lr1-n" x="292" y="250" text-anchor="middle">&#963;(z) &#8805; 0.5</text>
+<text class="lr1-n" x="215" y="276" text-anchor="middle">z = w &#183; x + b</text>
+</svg>
 </div>
 
----
+$z$가 0에서 멀어질수록 출력이 0이나 1에 빠르게 붙고, $z = 0$에서 정확히 0.5를 지난다. 확신이 강할수록 극단에 가까워지는 모양이다.
+
+이 함수가 분류에 자연스럽게 들어맞는 이유는 승산에서 나온다. 어떤 사건의 확률이 $p$일 때 **승산(Odds)** 은 일어날 확률을 일어나지 않을 확률로 나눈 값이고, 여기에 로그를 씌운 것이 **로짓(Logit)** 이다.
+
+$$\text{Odds} = \frac{p}{1-p}, \qquad \text{logit}(p) = \log\frac{p}{1-p}$$
+
+합격 확률이 0.8이면 승산은 4다. 불합격 한 번당 합격 네 번이라는 뜻이다. 확률은 0과 1 사이에 갇혀 있지만 로짓의 범위는 실수 전체다. 그래서 로짓이라면 선형 모델이 그대로 맞힐 수 있다. 이 등식을 $p$에 대해 풀면 시그모이드가 그냥 튀어나온다.
+
+$$\log\frac{p}{1-p} = wx + b \quad \Longrightarrow \quad p = \frac{1}{1 + e^{-(wx+b)}} = \sigma(wx+b)$$
+
+시그모이드는 범위를 맞추려고 갖다 붙인 함수가 아니라, 확률과 선형 모델을 잇는 다리다.
+
+:::note
+
+**분류 모델인데 이름이 회귀인 이유**
+
+최종 출력은 클래스지만, 모델이 실제로 맞히는 대상은 로그 승산이라는 연속량이다. 1958년 통계학에서 이 형태가 제안될 때 이름이 붙었고 그대로 굳었다.
+
+:::
 
 ## 로지스틱 회귀 모델
 
-[선형 회귀](/ml/linear-regression/)의 가설 함수 h(x) = wx + b에 시그모이드를 씌우면, 로지스틱 회귀가 된다.
+선형 회귀의 가설 함수에 시그모이드를 씌우면 그대로 로지스틱 회귀가 된다.
 
-> **h(x) = σ(wx + b) = 1 / (1 + e⁻⁽ʷˣ⁺ᵇ⁾)**
+$$h(x) = \sigma(w \cdot x + b) = \frac{1}{1 + e^{-(w \cdot x + b)}}$$
 
-이 출력을 **"y = 1일 확률"** 로 해석한다:
+이 출력을 $y = 1$일 확률로 읽는다. 즉 $P(y=1 \mid x) = h(x)$이고 $P(y=0 \mid x) = 1 - h(x)$다. 예측은 $h(x) \ge 0.5$면 클래스 1, 미만이면 클래스 0으로 자른다.
 
-```
-P(y = 1 | x) = h(x)
-P(y = 0 | x) = 1 − h(x)
-```
+$\sigma$가 0.5를 지나는 지점은 $z = 0$ 하나뿐이므로, 예측이 갈리는 자리는 $w \cdot x + b = 0$을 만족하는 점들이다. 2차원 입력이면 직선이고 3차원이면 평면인 이 집합을 **결정 경계(Decision Boundary)** 라고 부른다.
 
-분류 기준은 단순하다:
+선형 회귀와 다른 것은 시그모이드 하나뿐이다. 비용 함수를 정하고 경사하강법으로 파라미터를 움직이는 틀은 그대로 간다. 다만 비용 함수는 갈아 끼워야 한다.
 
-```
-h(x) ≥ 0.5 → 클래스 1로 예측
-h(x) < 0.5 → 클래스 0으로 예측
-```
+## 로그 손실
 
-h(x) = 0.5가 되는 지점, 즉 **wx + b = 0**이 **결정 경계(Decision Boundary)** 다. 이 경계를 기준으로 양쪽이 갈린다. 결정 경계에 대한 자세한 분석은 다음 글에서 다룬다.
+회귀에서 쓰던 MSE를 그대로 가져오면 문제가 생긴다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 핵심 차이</strong><br>
-  선형 회귀: h(x) = wx + b → 연속값 출력<br>
-  로지스틱 회귀: h(x) = σ(wx + b) → 0~1 확률 출력<br>
-  차이는 <strong>시그모이드 하나</strong>뿐이다. 나머지 학습 프레임워크(비용 함수 → 경사하강법)는 동일한 구조를 따른다.
-</div>
+$$J(w, b) = \frac{1}{m}\sum_{i=1}^{m}\left(h(x_i) - y_i\right)^2$$
 
----
+$h$가 시그모이드라서 이 $J$는 볼록하지 않다. 곡면에 지역 최솟값이 여러 개 생기고, 경사하강법이 어디서 출발하느냐에 따라 다른 곳에 멈춘다. 전역 최솟값에 닿는다는 보장이 사라진다.
 
-## 비용 함수: Binary Cross-Entropy
+로지스틱 회귀는 대신 **Binary Cross-Entropy**(로그 손실)를 쓴다.
 
-### MSE를 쓰면 안 되는 이유
+$$J(w, b) = -\frac{1}{m}\sum_{i=1}^{m}\left[y_i \log h(x_i) + (1 - y_i) \log \left(1 - h(x_i)\right)\right]$$
 
-[비용 함수 글](/ml/cost-function/)에서 배운 MSE를 그대로 쓰면 안 될까?
+$y$가 0 아니면 1이므로 대괄호 안의 두 항 중 하나는 항상 0이 되어 사라진다. $y=1$이면 $-\log h(x)$만, $y=0$이면 $-\log(1 - h(x))$만 남는다. 두 경우 모두 **모델이 정답 클래스에 부여한 확률에 로그를 씌워 부호를 뒤집은 값**이다.
 
-> **J(w, b) = (1/m) × Σᵢ(h(xᵢ) − yᵢ)²**
+| 정답에 부여한 확률 | 비용 | |
+|---|---|---|
+| 0.99 | 0.01 | 확신 있게 맞힘 |
+| 0.5 | 0.69 | 반반 |
+| 0.01 | 4.61 | 확신 있게 틀림 |
 
-문제는 h(x)가 시그모이드라서 **J(w, b)가 non-convex**가 된다는 것이다. 볼록하지 않은 곡면에는 지역 최솟값(local minimum)이 여러 개 존재하고, [경사하강법](/ml/gradient-descent/)이 전역 최솟값을 찾는다는 보장이 사라진다.
+![Log Loss 곡선](./log-loss-curve.png)
 
-### Log Loss
+벌이 대칭이 아니라는 게 핵심이다. 잘 맞힌 쪽의 이득은 0에서 멈추지만, 확신 있게 틀린 쪽의 벌은 로그를 따라 발산한다. 정답 확률을 0에 가깝게 준 예측 하나가 나머지 수백 건의 잘 맞힌 예측을 상쇄할 만큼 커진다. 그리고 이 함수는 볼록하다.
 
-로지스틱 회귀에서는 **Binary Cross-Entropy**(또는 Log Loss)를 사용한다.
+## 경사하강법 업데이트가 선형 회귀와 같은 이유
 
-> **J(w, b) = −(1/m) × Σᵢ [yᵢ × log(h(xᵢ)) + (1 − yᵢ) × log(1 − h(xᵢ))]**
+$J$를 $w$와 $b$로 편미분하면 이렇게 된다.
 
-복잡해 보이지만, 케이스를 나눠보면 직관적이다.
+$$\frac{\partial J}{\partial w} = \frac{1}{m}\sum_{i=1}^{m}\left(h(x_i) - y_i\right) x_i, \qquad \frac{\partial J}{\partial b} = \frac{1}{m}\sum_{i=1}^{m}\left(h(x_i) - y_i\right)$$
 
-**y = 1일 때** → 비용 = −log(h(x))
+선형 회귀에서 MSE를 미분한 결과와 형태가 똑같다. 달라진 것은 $h$의 정의뿐이다.
 
-| h(x) 값 | 비용 | 해석 |
-|----------|------|------|
-| 1.0 | 0 | 확신 있게 맞춤 → 벌 없음 |
-| 0.5 | 0.69 | 애매하게 맞춤 → 약간의 벌 |
-| 0.01 | 4.61 | 확신 있게 틀림 → 큰 벌 |
+우연이 아니다. $-\log h$를 미분하면 $-1/h$가 나오고, 시그모이드를 미분하면 $\sigma'(z) = \sigma(z)\left(1 - \sigma(z)\right)$, 즉 $h(1-h)$가 나온다. 연쇄 법칙으로 둘을 곱하는 순간 $h$가 약분되면서 $(h - y)x$만 남는다. 앞에서 MSE를 버리고 로그 손실을 고른 대가로 곡면이 볼록해졌는데, 그 로그가 시그모이드의 미분과 정확히 맞물려 업데이트 규칙까지 단순하게 만들어준다.
 
-**y = 0일 때** → 비용 = −log(1 − h(x))
-
-| h(x) 값 | 비용 | 해석 |
-|----------|------|------|
-| 0.0 | 0 | 확신 있게 맞춤 → 벌 없음 |
-| 0.5 | 0.69 | 애매하게 맞춤 → 약간의 벌 |
-| 0.99 | 4.61 | 확신 있게 틀림 → 큰 벌 |
-
-![Log Loss 곡선: 확신 있게 틀리면 큰 벌](./log-loss-curve.png)
-
-핵심 직관은 이거다: **"확신 있게 틀리면 큰 벌을 받는다."** 정답이 1인데 h(x) = 0.01이라고 예측하면, −log(0.01) ≈ 4.6이라는 큰 벌. 반대로 정답이 1이고 h(x) = 0.99면, −log(0.99) ≈ 0.01로 거의 벌 없음.
-
-이 비용 함수는 **볼록(convex)** 하다. 경사하강법이 전역 최솟값을 확실히 찾을 수 있다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 Cross-Entropy의 정보이론적 의미</strong><br>
-  Cross-Entropy는 원래 정보이론에서 "두 확률분포의 차이"를 측정하는 개념이다. 여기서 두 분포는 실제 레이블의 분포(y)와 모델이 예측한 분포(h(x))다. 이 둘의 차이를 최소화하는 것이 곧 모델을 학습시키는 것이다.
-</div>
-
----
-
-## 경사하강법으로 학습
-
-비용 함수 J(w, b)를 w와 b에 대해 편미분하면:
-
-```
-∂J/∂w = (1/m) × Σᵢ(h(xᵢ) − yᵢ) × xᵢ
-∂J/∂b = (1/m) × Σᵢ(h(xᵢ) − yᵢ)
-```
-
-놀라운 사실 — [선형 회귀의 경사하강법](/ml/gradient-descent/)과 **형태가 완전히 동일**하다. 차이는 h(x)의 정의뿐이다. 선형 회귀에서는 h(x) = wx + b였고, 로지스틱 회귀에서는 h(x) = σ(wx + b)다. 시그모이드의 미분 성질(σ' = σ(1−σ))이 수식을 이렇게 깔끔하게 만들어준다.
-
-왜 이렇게 되는가? Log Loss를 w로 미분하면, -log의 미분에서 나오는 1/h(x)와 시그모이드의 미분 h(x)(1-h(x))가 곱해지면서 상쇄가 일어난다. 결과적으로 (h(x) - y) × x라는 깔끔한 형태만 남는다. 시그모이드와 Log Loss가 수학적으로 "궁합이 좋은" 쌍이라서 가능한 것이다.
-
-NumPy로 구현해보자.
+그래서 구현은 짧다.
 
 ```python
 import numpy as np
@@ -217,188 +163,111 @@ import numpy as np
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
-def logistic_regression(X, y, lr=0.1, epochs=1000):
+def fit(X, y, lr=0.5, epochs=300):
     m = len(y)
-    w = np.zeros(X.shape[1])
-    b = 0
-    costs = []
-
-    for epoch in range(epochs):
-        # 순전파
-        z = X @ w + b
-        h = sigmoid(z)
-
-        # 비용 계산 (epsilon으로 log(0) 방지)
-        cost = -np.mean(y * np.log(h + 1e-8) + (1 - y) * np.log(1 - h + 1e-8))
-        costs.append(cost)
-
-        # 경사하강법
-        dw = (1 / m) * X.T @ (h - y)
-        db = (1 / m) * np.sum(h - y)
-        w -= lr * dw
-        b -= lr * db
-
-    return w, b, costs
+    w, b = np.zeros(X.shape[1]), 0.0
+    for _ in range(epochs):
+        h = sigmoid(X @ w + b)
+        w -= lr * (X.T @ (h - y)) / m
+        b -= lr * np.sum(h - y) / m
+    return w, b
 ```
 
-핵심은 `1e-8`을 더한 부분이다. h가 정확히 0이나 1이 되면 log(0) = −∞가 되어 계산이 터진다. 이걸 방지하는 작은 값(epsilon)을 더해주는 건 실전에서 흔한 패턴이다.
+비용값을 함께 찍고 싶다면 `np.log(h + 1e-8)`처럼 작은 값을 더한다. $h$가 0이나 1에 정확히 닿는 순간 $\log 0$이 되어 계산이 `-inf`로 무너지기 때문이다.
 
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 실전에서는...</strong><br>
-  로지스틱 회귀는 새 데이터셋을 만났을 때 <strong>가장 먼저 돌려보는 베이스라인 모델</strong>로 적합하다. 구현이 단순하고, 결과가 확률로 나오며, 학습이 빠르다. 이 베이스라인을 깬 뒤에야 더 복잡한 모델(트리, SVM, 신경망)을 시도하는 게 실무 순서다.
-</div>
-
-아까의 합격/불합격 데이터에 적용하면:
+앞의 합격/불합격 데이터에 돌리면 이렇게 나온다.
 
 ```python
 from sklearn.preprocessing import StandardScaler
 
-x = np.array([0.5, 1, 1.5, 2, 4, 5, 6]).reshape(-1, 1)
-y = np.array([0, 0, 0, 0, 1, 1, 1])
+X = StandardScaler().fit_transform(x)
+w, b = fit(X, y.astype(float))
+h = sigmoid(X @ w + b)
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(x)
-
-w, b, costs = logistic_regression(X_scaled, y, lr=0.5, epochs=300)
-
-# 예측
-h = sigmoid(X_scaled @ w + b)
-predictions = (h >= 0.5).astype(int)
-
-print(f"확률: {np.round(h, 3)}")
-print(f"예측: {predictions}")
-print(f"정답: {y}")
+print(np.round(h, 3))          # [0.001 0.003 0.012 0.05  0.941 0.996 1.   ]
+print((h >= 0.5).astype(int))  # [0 0 0 0 1 1 1]
 ```
 
-```
-확률: [0.001 0.003 0.012 0.05  0.941 0.996 1.   ]
-예측: [0 0 0 0 1 1 1]
-정답: [0 0 0 0 1 1 1]
-```
-
-전부 맞았다. 선형 회귀와 달리 출력이 0~1 사이의 확률로 나오고, 이상치에도 흔들리지 않는다.
+출력이 0과 1 사이의 확률로 나오고, 일곱 개를 전부 맞힌다.
 
 ![학습 과정에서 비용 함수의 변화](./training-cost-curve.png)
 
-비용이 매 반복마다 감소하면서 수렴하는 모습 — 경사하강법이 정상적으로 동작하고 있다는 신호다.
+## sklearn으로 쓸 때
 
----
-
-## sklearn으로 실전 적용
-
-실전에서는 직접 구현 대신 `LogisticRegression`을 쓴다. 유방암 진단 데이터셋으로 실습해보자.
+실무에서는 직접 구현 대신 `LogisticRegression`을 쓴다. 유방암 진단 데이터로 확인해보자.
 
 ```python
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score
 
-# 데이터 로드
 data = load_breast_cancer()
 X_train, X_test, y_train, y_test = train_test_split(
     data.data, data.target, test_size=0.2, random_state=42
 )
 
-# 파이프라인: 스케일링 → 로지스틱 회귀
 pipe = Pipeline([
     ('scaler', StandardScaler()),
-    ('lr', LogisticRegression(C=1.0, max_iter=1000))
+    ('lr', LogisticRegression(C=1.0, max_iter=1000)),
 ])
-
 pipe.fit(X_train, y_train)
-y_pred = pipe.predict(X_test)
 
-print(f"정확도: {accuracy_score(y_test, y_pred):.4f}")
-print(f"\n혼동 행렬:\n{confusion_matrix(y_test, y_pred)}")
+print(f"{accuracy_score(y_test, pipe.predict(X_test)):.4f}")   # 0.9737
 ```
 
-```
-정확도: 0.9737
+30개 특성으로 악성과 양성을 가르는데 테스트 114건 중 3건만 틀린다.
 
-혼동 행렬:
-[[41  2]
- [ 1 70]]
-```
+스케일러를 파이프라인에 묶은 건 장식이 아니다. 로지스틱 회귀도 반복 최적화로 푸는 모델이라, 변수 간 스케일 차이가 크면 등고선이 길쭉해져 수렴이 느려진다. `max_iter`를 다 쓰고도 수렴하지 못했다는 경고가 뜬다면 스케일링을 빠뜨렸을 확률이 가장 높다.
 
-30개의 특성으로 악성/양성을 구분하는데, 정확도가 97%다. 114개 테스트 데이터 중 3개만 틀렸다.
+:::info
 
-### 혼동 행렬 읽는 법
+**C 파라미터**
 
-![혼동 행렬(Confusion Matrix)](./confusion-matrix.png)
+`LogisticRegression(C=1.0)`의 `C`는 규제 강도의 **역수**다. C가 크면 규제가 약해 가중치가 커질 수 있고(과적합 쪽), C가 작으면 가중치를 강하게 눌러 경계가 단순해진다(과소적합 쪽). 규제 계수를 직접 받는 다른 모델과 방향이 반대라 헷갈리기 쉽다.
 
-|  | 예측: 악성(0) | 예측: 양성(1) |
-|---|---|---|
-| **실제: 악성(0)** | **TN = 41** (정확) | FP = 2 (오진) |
-| **실제: 양성(1)** | FN = 1 (놓침) | **TP = 70** (정확) |
-
-- **TN (True Negative)**: 악성인데 악성으로 맞춤 → 41개
-- **TP (True Positive)**: 양성인데 양성으로 맞춤 → 70개
-- **FP (False Positive)**: 실제 악성인데 양성으로 잘못 예측 → 2개
-- **FN (False Negative)**: 실제 양성인데 악성으로 잘못 예측 → 1개
-
-97%라는 높은 정확도에도 3건의 오류가 존재한다. 이 오류 유형을 더 체계적으로 분석하는 방법은 [분류 모델 평가 지표 글](/ml/classification-metrics/)에서 Precision, Recall, F1-Score로 상세히 다룬다.
-
-> **Positive 정의에 주의**: sklearn의 `load_breast_cancer`에서는 1=benign(양성, 정상), 0=malignant(악성, 암)이다. 즉 여기서 Positive는 "정상"이고, 의료 도메인에서 흔히 쓰는 "Positive=질병"과 **반대**다. 아래 해석은 이 데이터셋의 정의를 따른다.
-
-여기서 가장 위험한 건 **FP=2** — 실제로 악성 종양인데 양성으로 오진한 사례다. 암을 놓치는 것이므로 의료 진단에서 치명적이다. 반면 FN=1은 양성 종양을 악성으로 잘못 판단한 것으로, 불필요한 추가 검사로 이어지지만 생명에 직결되지는 않는다. 이런 오류 유형 간 균형은 threshold 조정으로 바꿀 수 있는데, "흔한 실수" 섹션에서 다시 다룬다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ C 파라미터</strong><br>
-  sklearn의 <code>LogisticRegression(C=1.0)</code>에서 C는 <strong>규제 강도의 역수</strong>다. C가 크면 규제가 약하고(과적합 위험↑), C가 작으면 규제가 강하다(과소적합 위험↑). 뒤에서 다룰 <a href="/ml/regularization/">규제(Regularization) 글</a>의 α(lambda)와 반대 관계인 셈이다. 기본값 C=1.0은 대부분의 경우 잘 동작한다.
-</div>
-
----
+:::
 
 ## 흔한 실수
 
-### 1. "회귀인데 왜 분류에 쓰나요?"
+### 임계값 0.5를 고정으로 쓴다
 
-이름 때문에 혼란스러울 수 있다. "로지스틱 **회귀**"인데 실제로는 **분류 모델**이다. 역사적으로 이 모델이 처음 등장했을 때(1958년), 출력이 연속적인 확률값이라서 "회귀"라는 이름이 붙었다. 최종 예측은 분류이지만, 내부적으로는 **확률을 회귀**하는 것이라고 이해하면 된다.
+0.5는 확률의 중간값일 뿐 아무 근거가 없는 기본값이다. 두 종류의 오분류가 같은 비용이라는 가정이 깔려 있는데, 현실에서 그런 경우는 드물다.
 
-### 2. Feature Scaling을 빠뜨린다
+- 암 진단에서는 실제 환자를 놓치는 쪽이 과잉 진단보다 훨씬 치명적이다. 임계값을 낮춰 양성 판정을 관대하게 만든다.
+- 스팸 필터에서는 정상 메일을 스팸함으로 보내는 쪽이 스팸 하나를 통과시키는 것보다 나쁘다. 임계값을 올려 스팸 판정을 엄격하게 만든다.
 
-```python
-# ❌ 스케일링 없이 바로 학습
-lr = LogisticRegression()
-lr.fit(X_train, y_train)  # 수렴이 느리거나 실패할 수 있음
+임계값을 옮기면 정밀도와 재현율이 서로 반대로 움직인다. 어느 쪽을 얼마나 포기할지는 통계가 아니라 도메인이 정한다.
 
-# ✅ 반드시 스케일링 먼저
-pipe = Pipeline([
-    ('scaler', StandardScaler()),
-    ('lr', LogisticRegression())
-])
-```
+### 정확도 하나로 판단한다
 
-로지스틱 회귀도 경사하강법으로 학습한다. [다중 선형 회귀 글](/ml/multiple-linear-regression/)에서 봤듯이, 변수 간 스케일이 다르면 경사하강법이 지그재그로 수렴하거나 아예 수렴하지 않는다.
+앞의 유방암 예제에서 정확도 97%가 좋아 보였던 건 두 클래스의 비율이 비슷했기 때문이다. 비율이 무너지면 이 숫자는 아무것도 말해주지 않는다.
 
-### 3. threshold 0.5를 무조건 쓴다
+:::warning
 
-기본 threshold 0.5가 항상 최적은 아니다. 특히 **오분류 비용이 비대칭인 경우**:
+**클래스 불균형**
 
-- **암 진단**: FN(양성을 놓침)이 FP(과잉 진단)보다 치명적 → threshold를 낮춰서 양성 판정을 더 관대하게
-- **스팸 필터**: FP(정상 메일을 스팸으로)가 FN(스팸을 통과시킴)보다 나쁨 → threshold를 높여서 스팸 판정을 더 엄격하게
+사기 탐지처럼 양성 비율이 0.1%인 데이터에서는 전부 "정상"으로 찍어도 정확도가 99.9%다. 이런 데이터에서는 `class_weight='balanced'`로 소수 클래스의 손실 가중치를 올리거나, 정확도 대신 정밀도와 재현율을 함께 보는 지표를 기준으로 삼아야 한다.
 
-threshold 조정은 Precision-Recall Trade-off와 연결되는데, 이건 모델 평가 시리즈에서 자세히 다룬다.
-
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 주의: 클래스 불균형</strong><br>
-  사기 탐지처럼 양성 비율이 0.1%인 데이터에서는, 모든 걸 "정상"으로 예측해도 정확도 99.9%가 나온다. 정확도만 보면 안 되는 이유다. 이런 경우 <code>class_weight='balanced'</code> 옵션을 사용하거나, F1 Score 같은 다른 지표를 봐야 한다.
-</div>
-
----
+:::
 
 ## 마치며
 
-선형 회귀에 **시그모이드 하나**를 얹었을 뿐인데, 연속값 예측이 확률 기반 분류로 바뀐다. 비용 함수가 MSE에서 Log Loss로 바뀌지만, 경사하강법의 업데이트 규칙은 놀랍도록 같은 형태를 유지한다. 개인적으로 로지스틱 회귀는 새 데이터셋을 만나면 가장 먼저 돌려보는 모델이다. 구현이 단순하고, 결과가 확률로 나오며, 베이스라인으로 충분히 강력하다.
+선형 회귀에 시그모이드 하나를 얹으면 출력이 확률이 된다. 그런데 바뀌는 건 출력만이 아니다. MSE를 그대로 두면 곡면이 볼록하지 않아 학습이 불안정해지므로 비용 함수를 로그 손실로 갈아야 하고, 그 로그가 시그모이드의 미분과 약분되면서 업데이트 규칙은 다시 선형 회귀와 같은 모양으로 돌아온다. 세 조각이 서로를 붙들고 있어서 하나만 바꿔 끼울 수 없다.
 
-다음 글에서는 로지스틱 회귀가 만드는 **결정 경계(Decision Boundary)** 를 자세히 분석한다. 직선 하나로 데이터를 가르는 과정, 비선형 결정 경계를 만드는 방법, 그리고 모델 출력의 확률적 해석까지 다룬다.
+로지스틱 회귀가 오래 살아남은 이유는 성능이 아니라 이 구조가 훤히 들여다보인다는 데 있다. 계수 하나하나가 로그 승산에 대한 기여로 읽히고, 출력이 확률이라 임계값을 도메인 사정에 맞게 옮길 수 있다. 새 분류 데이터셋을 받았을 때 먼저 돌려보는 기준선으로 쓰기 좋은 것도 그래서다.
+
+남은 질문은 학습이 끝난 $w$와 $b$가 입력 공간을 실제로 어떤 모양으로 가르느냐다.
+
+## 함께 보면 좋은 글
+
+- [결정 경계](/ml/decision-boundary/) : 학습된 가중치가 입력 공간을 가르는 선의 모양
+- [비용 함수](/ml/cost-function/) : 로그 손실 이전에 MSE가 맡던 역할
+- [분류 모델 평가 지표](/ml/classification-metrics/) : 정확도 대신 볼 정밀도와 재현율
 
 ## 참고자료
 
-- [Andrew Ng — Machine Learning Specialization: Classification (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
-- [Scikit-learn — LogisticRegression Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
-- [StatQuest: Logistic Regression (YouTube)](https://www.youtube.com/watch?v=yIYKR4sgzI8)
-- [Stanford CS229 — Lecture Notes on Logistic Regression](https://cs229.stanford.edu/main_notes.pdf)
+- [Andrew Ng, Machine Learning Specialization: Classification (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
+- [Scikit-learn, LogisticRegression Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+- [Stanford CS229, Lecture Notes on Logistic Regression](https://cs229.stanford.edu/main_notes.pdf)

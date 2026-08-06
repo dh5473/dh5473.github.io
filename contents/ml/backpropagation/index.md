@@ -1,560 +1,260 @@
 ---
 date: '2026-01-21'
-title: '역전파(Backpropagation): 신경망이 학습하는 원리'
+title: '연쇄 법칙으로 기울기를 되돌리는 역전파'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 21
-tags: ['Backpropagation', '역전파', 'Chain Rule', '연쇄 법칙', 'Neural Network', '머신러닝']
-summary: '순전파로 예측하고, 역전파로 학습한다. 연쇄 법칙(Chain Rule)으로 각 가중치의 기여도를 계산하는 역전파의 수학적 원리를 완전히 이해한다.'
+tags: ['Backpropagation', '역전파', 'Chain Rule', '연쇄 법칙', '기울기 소실', 'Neural Network', '머신러닝']
+summary: '손실에서 출발해 각 층의 가중치가 오차에 얼마나 기여했는지를 연쇄 법칙으로 역산하는 과정, 그리고 그 곱셈 사슬이 기울기 소실을 낳는 이유를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/forward-propagation/)에서 순전파를 배웠다. 입력이 네트워크를 통과해 예측값이 되고, 손실 함수로 "얼마나 틀렸는지" 측정했다. 이제 핵심 — **이 오차를 줄이려면 각 가중치를 얼마나, 어느 방향으로 바꿔야 하는가?** 답은 역전파(Backpropagation)다.
+경사하강법의 업데이트 규칙 자체는 간단하다.
 
-[경사하강법](/ml/gradient-descent/)에서 파라미터 업데이트 규칙을 배웠다.
+$$w \leftarrow w - \alpha \frac{\partial L}{\partial w}$$
 
-> **w := w - α × ∂L/∂w**
+필요한 것은 $\partial L / \partial w$ 하나다. 선형 회귀에서는 이 미분을 손으로 바로 구할 수 있었다. 신경망은 다르다. 손실은 마지막 층의 출력에서 계산되는데, 첫 층의 가중치는 그 출력에 닿기까지 층을 몇 개나 거친다. 각 층에는 활성화 함수까지 끼어 있어서, 입력에서 손실까지가 합성 함수를 겹겹이 쌓아 올린 구조가 된다.
 
-핵심은 ∂L/∂w, 즉 손실 함수를 각 가중치로 편미분한 값(gradient)이다. 단순한 선형 회귀에서는 이 미분을 직접 계산할 수 있었다. 그런데 신경망은 층이 여러 개고, 각 층에 활성화 함수가 끼어 있다. 입력부터 손실까지 합성 함수가 겹겹이 쌓여 있는 구조다. 이 복잡한 합성 함수의 미분을 효율적으로 계산하는 알고리즘이 바로 **역전파(Backpropagation)** 다.
+**역전파(Backpropagation)** 는 이 합성 함수의 편미분을 층마다 딱 한 번씩만 계산해서 전부 구해내는 알고리즘이다. 새로운 수학은 없다. 미적분의 연쇄 법칙 하나를 출력 쪽에서 입력 쪽으로 순서대로 적용할 뿐이다.
 
 ---
 
-## 연쇄 법칙(Chain Rule) 복습
+## 연쇄 법칙 하나면 된다
 
-역전파의 수학적 기반은 미적분의 **연쇄 법칙** 단 하나다. 이것만 확실히 이해하면 역전파 전체가 보인다.
+합성 함수의 미분은 바깥 함수의 미분과 안쪽 함수의 미분을 곱한 것이다.
 
-### 기본 형태
+$$y = f(g(x)) \quad \Longrightarrow \quad \frac{dy}{dx} = \frac{dy}{dg} \cdot \frac{dg}{dx}$$
 
-함수가 합성되어 있을 때, 바깥 함수의 미분과 안쪽 함수의 미분을 **곱한다**.
+$g(x) = 3x+1$, $f(g) = g^2$이라면 $dg/dx = 3$이고 $df/dg = 2g = 2(3x+1)$이므로 $dy/dx = 6(3x+1)$이다. $y = 9x^2+6x+1$로 전개해서 미분한 $18x+6$과 같은 식이다.
 
-```
-y = f(g(x)) 일 때,
+함수가 셋 이상 겹쳐도 규칙은 그대로다. 중간 항이 하나 늘어나면 곱할 항이 하나 늘어난다.
 
-dy/dx = dy/dg × dg/dx
-```
+$$y = f(g(h(x))) \quad \Longrightarrow \quad \frac{dy}{dx} = \frac{dy}{dg} \cdot \frac{dg}{dh} \cdot \frac{dh}{dx}$$
 
-구체적인 예를 보자.
+신경망에 그대로 대입해 보면 이 사슬이 왜 필요한지가 보인다. 손실 $L$은 예측값 $a$의 함수이고, $a$는 가중합 $z$의 함수이고, $z$는 가중치 $w$의 함수다. $L \to a \to z \to w$라는 사슬을 따라 편미분을 줄줄이 곱해야 $\partial L / \partial w$가 나온다.
 
-```
-g(x) = 3x + 1
-f(g) = g²
+---
 
-y = f(g(x)) = (3x + 1)²
-```
+## 작은 네트워크로 한 번 따라가기
 
-연쇄 법칙을 적용하면:
+입력 하나, 뉴런 하나짜리 은닉층 하나, 출력 하나인 최소 구조로 손 계산을 해 본다. 편향은 생략하고, 활성화 함수는 시그모이드, 손실은 $L = (y - a_2)^2$다.
 
-```
-dg/dx = 3
-df/dg = 2g = 2(3x + 1)
+$$x \xrightarrow{\ w_1\ } z_1 \xrightarrow{\ \sigma\ } a_1 \xrightarrow{\ w_2\ } z_2 \xrightarrow{\ \sigma\ } a_2 \longrightarrow L$$
 
-dy/dx = df/dg × dg/dx = 2(3x + 1) × 3 = 6(3x + 1)
-```
+$x = 0.5$, $y = 1$, 초기 가중치는 $w_1 = 0.8$, $w_2 = 0.6$이다. 순전파를 돌리면 $z_1 = 0.4$, $a_1 = \sigma(0.4) \approx 0.5987$, $z_2 = 0.3592$, $a_2 \approx 0.5888$이 나오고 손실은 $(1 - 0.5888)^2 \approx 0.169$다.
 
-x = 2를 넣으면 dy/dx = 6 × 7 = 42다. 직접 전개해서 미분해도 같은 결과가 나온다: y = 9x² + 6x + 1, dy/dx = 18x + 6 = 42.
+### 출력에 가까운 쪽부터
 
-### 함수가 3개 이상 합성되면?
+$w_2$가 손실에 닿는 경로는 $z_2$ 하나뿐이라 사슬이 짧다.
 
-```
-y = f(g(h(x))) 일 때,
+$$\frac{\partial L}{\partial w_2} = \frac{\partial L}{\partial a_2} \cdot \frac{\partial a_2}{\partial z_2} \cdot \frac{\partial z_2}{\partial w_2}$$
 
-dy/dx = dy/dg × dg/dh × dh/dx
-```
+$w_1$은 한 층 더 앞에 있으니 $a_1$과 $z_1$을 거치는 만큼 사슬이 길어진다.
 
-**체인(chain)** 처럼 편미분을 줄줄이 곱한다. 이름이 "연쇄(chain) 법칙"인 이유다. 신경망의 각 층이 하나의 함수라고 생각하면, 역전파는 이 연쇄 법칙을 출력층에서 입력층 방향으로 적용하는 것에 불과하다.
+$$\frac{\partial L}{\partial w_1} = \frac{\partial L}{\partial a_2} \cdot \frac{\partial a_2}{\partial z_2} \cdot \frac{\partial z_2}{\partial a_1} \cdot \frac{\partial a_1}{\partial z_1} \cdot \frac{\partial z_1}{\partial w_1}$$
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>핵심 포인트</strong><br>
-  신경망에서 연쇄 법칙이 필수인 이유: 손실 L은 예측값 a의 함수이고, a는 z의 함수이고, z는 w의 함수다. L → a → z → w. 이 체인을 따라 미분을 곱해야 ∂L/∂w를 구할 수 있다.
+두 식의 앞 두 항이 글자 하나까지 똑같다. 역전파가 출력 쪽에서부터 거슬러 오는 이유가 여기에 있다.
+
+각 항은 전부 이미 아는 미분이다. 시그모이드의 도함수는 $\sigma'(z) = a(1-a)$이고, 곱셈 노드의 편미분은 상대편 값 그 자체다.
+
+| 항 | 무엇을 미분한 것인가 | 값 |
+|---|---|---|
+| $\partial L / \partial a_2$ | $L = (y-a_2)^2$를 $a_2$로 | $-2(1 - 0.5888) = -0.8223$ |
+| $\partial a_2 / \partial z_2$ | 시그모이드 도함수 $a_2(1-a_2)$ | $0.5888 \times 0.4112 = 0.2421$ |
+| $\partial z_2 / \partial w_2$ | $z_2 = w_2 a_1$을 $w_2$로 | $a_1 = 0.5987$ |
+| $\partial z_2 / \partial a_1$ | $z_2 = w_2 a_1$을 $a_1$로 | $w_2 = 0.6$ |
+| $\partial a_1 / \partial z_1$ | 시그모이드 도함수 $a_1(1-a_1)$ | $0.5987 \times 0.4013 = 0.2403$ |
+| $\partial z_1 / \partial w_1$ | $z_1 = w_1 x$를 $w_1$로 | $x = 0.5$ |
+
+표의 첫 세 항을 곱하면 $\partial L/\partial w_2 \approx -0.1192$이고, 세 번째 항 자리에 나머지 세 항을 이어 붙이면 $\partial L/\partial w_1 \approx -0.0143$이다. 둘 다 음수이니 두 가중치 모두 키우는 방향으로 손실이 줄어든다. 학습률 $0.5$로 한 걸음 옮기면 $w_2$는 $0.6596$, $w_1$은 $0.8072$가 된다.
+
+주목할 것은 크기 차이다. $w_1$의 기울기가 $w_2$의 8분의 1 수준이다. 두 사슬의 앞 두 항이 같으니 차이는 뒤쪽에서만 났다. $w_2$ 쪽은 $a_1 = 0.5987$ 한 항으로 끝나는데, $w_1$ 쪽은 그 자리에 $0.6 \times 0.2403 \times 0.5 = 0.072$가 들어간다. 1보다 작은 수를 곱하는 횟수가 늘수록 값이 깎인다. 출력에서 멀수록 기울기가 작아지는 이 경향이 뒤에서 다룰 기울기 소실의 씨앗이다.
+
+---
+
+## 왜 뒤에서부터인가
+
+| 방향 | 흐르는 것 | 순서 |
+|---|---|---|
+| 순전파 | 값 ($z$, $a$) | 입력 → 출력 |
+| 역전파 | 기울기 ($dz$, $dW$) | 출력 → 입력 |
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 226" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 계산 그래프 위에서 순전파는 입력에서 손실 방향으로 값을 흘려보내고, 역전파는 손실에서 입력 방향으로 기울기를 되돌려 보낸다. 두 화살표의 방향만 서로 반대다.">
+<style>
+.bp1-box { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
+.bp1-end { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.6; }
+.bp1-ink { fill: var(--text, #1c1917); font-size: 14px; }
+.bp1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 600; }
+.bp1-fwd { stroke: var(--primary, #0a756c); stroke-width: 2.2; fill: none; }
+.bp1-bwd { stroke: var(--text-danger, #cb2121); stroke-width: 2.2; fill: none; stroke-dasharray: 7 4; }
+.bp1-fl { fill: var(--primary, #0a756c); font-size: 14px; font-weight: 600; }
+.bp1-bl { fill: var(--text-danger, #cb2121); font-size: 14px; font-weight: 600; }
+.bp1-note { fill: var(--text-muted, #6d6762); font-size: 14px; }
+</style>
+<defs>
+<marker id="bp1Fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary, #0a756c)"/>
+</marker>
+<marker id="bp1Bwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #cb2121)"/>
+</marker>
+</defs>
+<text class="bp1-t" x="200" y="24" text-anchor="middle">같은 망, 반대 방향</text>
+<!-- 순전파 화살표 -->
+<text class="bp1-fl" x="200" y="52" text-anchor="middle">순전파 : 값</text>
+<path class="bp1-fwd" d="M 28 66 L 376 66" marker-end="url(#bp1Fwd)"/>
+<!-- 계산 그래프 노드 -->
+<rect class="bp1-end" x="24" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="48" y="110" text-anchor="middle">x</text>
+<rect class="bp1-box" x="88" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="112" y="110" text-anchor="middle">z[1]</text>
+<rect class="bp1-box" x="152" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="176" y="110" text-anchor="middle">a[1]</text>
+<rect class="bp1-box" x="216" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="240" y="110" text-anchor="middle">z[2]</text>
+<rect class="bp1-box" x="280" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="304" y="110" text-anchor="middle">a[2]</text>
+<rect class="bp1-end" x="344" y="84" width="48" height="42" rx="6"/>
+<text class="bp1-ink" x="368" y="110" text-anchor="middle">L</text>
+<!-- 역전파 화살표 -->
+<path class="bp1-bwd" d="M 376 146 L 28 146" marker-end="url(#bp1Bwd)"/>
+<text class="bp1-bl" x="200" y="170" text-anchor="middle">역전파 : 기울기</text>
+<!-- 재사용 고지 -->
+<text class="bp1-note" x="200" y="204" text-anchor="middle">역전파 입력 = 순전파가 남긴 z, a</text>
+</svg>
 </div>
 
----
+역방향인 이유는 중복 계산 때문이다. 손 계산에서 본 두 사슬을 다시 보면, $\partial L/\partial w_1$의 앞 두 항 $\partial L/\partial a_2$와 $\partial a_2/\partial z_2$는 $\partial L/\partial w_2$를 구할 때 이미 계산한 값이다. 출력층에서 먼저 구해 두면 그 앞 층에서 그대로 재사용할 수 있다.
 
-## 작은 네트워크에서 손으로 역전파 해보기
+입력층부터 시작하면 이 재사용이 불가능하다. $w_1$의 기울기를 구하려고 뒤쪽 층의 편미분을 전부 계산해 놓고, $w_2$의 기울기를 구할 때 그중 상당수를 또 계산하게 된다. 층이 깊어질수록 낭비가 제곱으로 불어난다. 역방향으로 훑으면 각 층을 정확히 한 번씩만 지나면서 모든 기울기가 나온다.
 
-이론만으로는 감이 오지 않는다. 가장 단순한 신경망에서 실제 숫자로 역전파를 수행해보자.
-
-### 네트워크 구조
-
-```
-입력(x) → [w1] → z1 → σ(z1) → a1 → [w2] → z2 → σ(z2) → a2(=y_hat) → L
-```
-
-- 입력: x = 0.5
-- 은닉층 1개, 뉴런 1개 (편향 생략하여 핵심에 집중)
-- 활성화 함수: 시그모이드 σ(z) = 1 / (1 + e^(-z))
-- 손실 함수: L = (y - y_hat)² (단일 샘플 MSE)
-- 정답: y = 1
-
-### 순전파 (Forward Pass)
-
-초기 가중치를 w1 = 0.8, w2 = 0.6으로 설정한다.
-
-```
-z1 = w1 × x = 0.8 × 0.5 = 0.4
-a1 = σ(0.4) = 1 / (1 + e^(-0.4)) ≈ 0.5987
-
-z2 = w2 × a1 = 0.6 × 0.5987 ≈ 0.3592
-a2 = σ(0.3592) ≈ 0.5889
-
-L = (1 - 0.5889)² = (0.4111)² ≈ 0.1690
-```
-
-예측값 0.5889, 정답 1. 손실 0.1690. 이제 이 손실을 줄이기 위해 w1과 w2를 어떻게 바꿔야 하는지 계산한다.
-
-### 역전파 Step 1: ∂L/∂w2 계산
-
-w2에 가까운 쪽부터 시작한다. 연쇄 법칙을 적용하면:
-
-```
-∂L/∂w2 = ∂L/∂a2 × ∂a2/∂z2 × ∂z2/∂w2
-```
-
-각 항을 계산하자.
-
-**1) ∂L/∂a2**: 손실 함수 L = (y - a2)²를 a2로 미분
-
-```
-∂L/∂a2 = -2(y - a2) = -2(1 - 0.5889) = -0.8222
-```
-
-**2) ∂a2/∂z2**: 시그모이드의 미분. σ'(z) = σ(z)(1 - σ(z))
-
-```
-∂a2/∂z2 = a2 × (1 - a2) = 0.5889 × 0.4111 ≈ 0.2421
-```
-
-**3) ∂z2/∂w2**: z2 = w2 × a1이므로
-
-```
-∂z2/∂w2 = a1 = 0.5987
-```
-
-체인을 곱하면:
-
-```
-∂L/∂w2 = (-0.8222) × 0.2421 × 0.5987 ≈ -0.1192
-```
-
-기울기가 음수 → w2를 키우면 손실이 줄어든다.
-
-### 역전파 Step 2: ∂L/∂w1 계산
-
-w1은 네트워크 더 앞쪽에 있다. 체인이 더 길다.
-
-```
-∂L/∂w1 = ∂L/∂a2 × ∂a2/∂z2 × ∂z2/∂a1 × ∂a1/∂z1 × ∂z1/∂w1
-```
-
-앞 두 항은 이미 계산했다. 나머지:
-
-**4) ∂z2/∂a1**: z2 = w2 × a1이므로
-
-```
-∂z2/∂a1 = w2 = 0.6
-```
-
-**5) ∂a1/∂z1**: 시그모이드 미분
-
-```
-∂a1/∂z1 = a1 × (1 - a1) = 0.5987 × 0.4013 ≈ 0.2403
-```
-
-**6) ∂z1/∂w1**: z1 = w1 × x이므로
-
-```
-∂z1/∂w1 = x = 0.5
-```
-
-체인을 곱하면:
-
-```
-∂L/∂w1 = (-0.8222) × 0.2421 × 0.6 × 0.2403 × 0.5 ≈ -0.0143
-```
-
-<div style="background: #fff8f0; border-left: 4px solid #f59f00; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>관찰</strong><br>
-  w1의 기울기(-0.0143)가 w2의 기울기(-0.1192)보다 훨씬 작다. w1은 출력에서 더 멀리 떨어져 있기 때문이다. 연쇄 법칙에서 곱하는 항이 많아질수록 기울기는 작아지는 경향이 있다. 이게 바로 <strong>기울기 소실(vanishing gradient)</strong> 문제의 씨앗이다.
-</div>
-
-### 가중치 업데이트
-
-학습률 α = 0.5로 업데이트한다.
-
-```
-w2_new = 0.6 - 0.5 × (-0.1192) = 0.6 + 0.0596 = 0.6596
-w1_new = 0.8 - 0.5 × (-0.0143) = 0.8 + 0.0072 = 0.8072
-```
-
-예상대로 두 가중치 모두 증가했다. 이 새 가중치로 순전파를 다시 하면 예측값이 1에 더 가까워지고, 손실이 줄어든다. 이 과정을 수백~수천 번 반복하면 네트워크가 **학습**한다.
+계산 그래프의 언어로 말하면, 각 노드는 자기 지역 미분(local gradient)만 알고 있으면 된다. 곱셈 노드 $z = w \cdot a$의 지역 미분은 $\partial z/\partial w = a$와 $\partial z/\partial a = w$다. 역전파에서 노드가 하는 일은 상류에서 흘러온 기울기에 자기 지역 미분을 곱해 하류로 넘기는 것뿐이고, 전체 네트워크의 모양은 알 필요가 없다. PyTorch와 TensorFlow의 자동 미분이 임의의 연산 조합을 다 처리할 수 있는 이유가 이것이다.
 
 ---
 
-## 왜 "역(Back)" 전파인가?
+## 행렬로 일반화
 
-이름에 답이 있다.
+뉴런이 수백 개일 때도 사슬의 구조는 같다. 스칼라 곱이 행렬 곱으로 바뀔 뿐이다. 층 $l$의 순전파가 $z^{[l]} = W^{[l]}a^{[l-1]} + b^{[l]}$, $a^{[l]} = g(z^{[l]})$일 때, 역전파는 마지막 층 $L$에서 시작한다.
 
-| 방향 | 이름 | 하는 일 | 흐름 |
-|------|------|---------|------|
-| 순방향 | Forward Pass | 예측값 계산 | 입력 → 은닉 → 출력 |
-| 역방향 | Backward Pass | 기울기 계산 | 출력 → 은닉 → 입력 |
+$$dz^{[L]} = a^{[L]} - y$$
 
-순전파에서는 입력이 가중치, 활성화 함수를 거쳐 예측값이 된다. 역전파에서는 손실에서 시작해서 각 층의 기울기를 **역순으로** 계산한다.
+이 깔끔한 형태는 출력에 시그모이드를 쓰고 손실에 cross-entropy를 쓸 때 나온다. 시그모이드의 도함수 $a(1-a)$가 cross-entropy 미분의 분모와 정확히 약분되기 때문이다. 손 계산에서 쓴 MSE로는 이렇게 되지 않고 $a(1-a)$가 그대로 남는다. 이진 분류에서 MSE 대신 cross-entropy가 표준인 실질적인 이유 중 하나다.
 
-왜 역순이어야 하는가? 위의 손 계산에서 보았듯이, ∂L/∂w1을 구하려면 ∂L/∂a2, ∂a2/∂z2가 필요하다. 이건 ∂L/∂w2를 구할 때 이미 계산한 값이다. 즉, **출력층에서 먼저 기울기를 구해놓으면, 그 앞 층의 기울기를 구할 때 재사용**할 수 있다.
+시작점만 정해지면 나머지는 두 식의 반복이다. 현재 층의 $dz$에서 그 층의 파라미터 기울기를 뽑고,
 
-만약 입력층부터 시작하면? w1의 기울기를 구하기 위해 뒷층의 모든 편미분을 계산해야 하고, w2의 기울기를 구할 때 또 비슷한 계산을 반복해야 한다. 역방향으로 가면 중복 계산이 사라진다. 이게 역전파가 **효율적인** 이유다.
+$$dW^{[l]} = \frac{1}{m} \, dz^{[l]} \left( a^{[l-1]} \right)^\top, \qquad db^{[l]} = \frac{1}{m} \sum dz^{[l]}$$
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>핵심 통찰</strong><br>
-  역전파의 핵심 아이디어는 "오차의 원인을 추적"하는 것이다. 출력에서 발생한 오차가 각 층의 가중치에 얼마나 기인하는지를, 연쇄 법칙을 통해 역추적한다. 마치 사고의 원인을 결과부터 거슬러 올라가며 분석하는 것과 같다.
-</div>
+같은 $dz$를 이전 층으로 넘긴다.
 
----
+$$dz^{[l-1]} = \left( W^{[l]} \right)^\top dz^{[l]} \odot g'(z^{[l-1]})$$
 
-## 다층 네트워크의 일반 공식
-
-실제 신경망은 뉴런이 1개가 아니라 수백, 수천 개다. 행렬 표기법으로 일반화하자.
-
-L개 층을 가진 신경망에서, 층 l의 연산:
-
-```
-z[l] = W[l] · a[l-1] + b[l]
-a[l] = g(z[l])
-```
-
-여기서 g는 활성화 함수, a[0] = X (입력)이다.
-
-### 역전파 공식
-
-출력층(L번째 층)에서 시작해서 거꾸로 내려간다.
-
-> 위의 손 계산에서는 이해의 편의를 위해 MSE를 사용했지만, 실전에서 이진 분류 문제에는 **Cross-Entropy**를 사용하는 것이 표준이다. Cross-Entropy + Sigmoid 조합을 쓰면 출력층의 기울기가 아래처럼 매우 깔끔한 형태가 되기 때문이다.
-
-**출력층의 기울기 (시작점):**
-
-```
-dz[L] = a[L] - y          (cross-entropy + sigmoid 조합일 때)
-```
-
-[로지스틱 회귀](/ml/logistic-regression/)에서 도출한 것과 동일한 형태다.
-
-**각 층의 가중치/편향 기울기:**
-
-```
-dW[l] = (1/m) × dz[l] · a[l-1]^T
-db[l] = (1/m) × Σ dz[l]      (열 방향 합)
-```
-
-**이전 층으로 기울기 전파:**
-
-```
-dz[l-1] = W[l]^T · dz[l]  ⊙  g'(z[l-1])
-```
-
-여기서 ⊙는 원소별 곱(element-wise multiplication), g'는 활성화 함수의 도함수다.
+$\odot$는 원소별 곱이다. 마지막 식이 역전파의 전부라고 해도 된다. 가중치 행렬의 전치를 곱해 기울기를 이전 층의 차원으로 되돌리고, 그 층 활성화 함수의 도함수를 원소마다 곱한다. 순전파에서 $W$를 곱해 앞으로 갔던 만큼 $W^\top$을 곱해 뒤로 오는 셈이다.
 
 | 기호 | 의미 | 차원 |
-|------|------|------|
-| dz[l] | 층 l의 선형 출력에 대한 손실의 기울기 | (n[l], m) |
-| dW[l] | 가중치 행렬의 기울기 | (n[l], n[l-1]) |
-| db[l] | 편향 벡터의 기울기 | (n[l], 1) |
-| a[l-1]^T | 이전 층 활성화의 전치 | (m, n[l-1]) |
+|---|---|---|
+| $dz^{[l]}$ | 층 $l$의 선형 출력에 대한 손실의 기울기 | $n^{[l]} \times m$ |
+| $dW^{[l]}$ | 가중치 행렬의 기울기 | $n^{[l]} \times n^{[l-1]}$ |
+| $db^{[l]}$ | 편향 벡터의 기울기 | $n^{[l]} \times 1$ |
 
-여기서 n[l]은 층 l의 뉴런 수, m은 샘플 수다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>패턴을 보자</strong><br>
-  <code>dz[l-1] = W[l]^T · dz[l] ⊙ g'(z[l-1])</code> — 이 공식이 역전파의 핵심이다. 현재 층의 기울기(dz[l])에 가중치 행렬의 전치(W[l]^T)를 곱하고, 활성화 함수의 도함수(g')를 원소별로 곱한다. 이 연산을 층마다 반복하면 모든 가중치의 기울기를 구할 수 있다.
-</div>
+$n^{[l]}$은 층 $l$의 뉴런 수, $m$은 배치 안의 샘플 수다. $dW$가 $W$와 같은 크기로 나오는지 확인하는 것만으로도 구현 실수의 절반은 걸러진다.
 
 ---
 
 ## NumPy 구현
 
-이론을 코드로 옮기자. 2층 신경망(은닉층 1개)을 처음부터 구현한다.
-
-### 순전파 — 캐시 저장이 핵심
+은닉층 하나짜리 네트워크의 역전파는 여섯 줄이면 끝난다.
 
 ```python
 import numpy as np
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
 def sigmoid_derivative(a):
-    """시그모이드 출력 a로부터 도함수 계산"""
-    return a * (1 - a)
+    return a * (1 - a)          # 시그모이드 출력 a로부터 도함수를 얻는다
 
-def forward(X, W1, b1, W2, b2):
-    """순전파: 예측값과 역전파에 필요한 캐시를 반환"""
-    # 은닉층
-    z1 = W1 @ X + b1
-    a1 = sigmoid(z1)
-
-    # 출력층
-    z2 = W2 @ a1 + b2
-    a2 = sigmoid(z2)
-
-    cache = (z1, a1, z2, a2)
-    return a2, cache
-```
-
-순전파에서 z1, a1, z2, a2를 **캐시에 저장**한다. 역전파에서 이 값들이 필요하기 때문이다. 이걸 저장하지 않으면 역전파 때 다시 계산해야 해서 비효율적이다.
-
-### 역전파 — 층별 기울기 계산
-
-```python
 def backward(X, y, cache, W2):
-    """역전파: 모든 가중치/편향의 기울기를 반환"""
     z1, a1, z2, a2 = cache
-    m = X.shape[1]  # 샘플 수
+    m = X.shape[1]
 
-    # 출력층 기울기
-    dz2 = a2 - y                          # (1, m)
-    dW2 = (1/m) * dz2 @ a1.T              # (1, n_hidden)
-    db2 = (1/m) * np.sum(dz2, axis=1, keepdims=True)  # (1, 1)
+    dz2 = a2 - y
+    dW2 = (1 / m) * dz2 @ a1.T
+    db2 = (1 / m) * np.sum(dz2, axis=1, keepdims=True)
 
-    # 은닉층 기울기 — 핵심: W2^T로 기울기를 역전파
-    dz1 = (W2.T @ dz2) * sigmoid_derivative(a1)  # (n_hidden, m)
-    dW1 = (1/m) * dz1 @ X.T              # (n_hidden, n_input)
-    db1 = (1/m) * np.sum(dz1, axis=1, keepdims=True)  # (n_hidden, 1)
+    dz1 = (W2.T @ dz2) * sigmoid_derivative(a1)
+    dW1 = (1 / m) * dz1 @ X.T
+    db1 = (1 / m) * np.sum(dz1, axis=1, keepdims=True)
 
-    grads = {'dW1': dW1, 'db1': db1, 'dW2': dW2, 'db2': db2}
-    return grads
+    return {'dW1': dW1, 'db1': db1, 'dW2': dW2, 'db2': db2}
 ```
 
-`dz1 = (W2.T @ dz2) * sigmoid_derivative(a1)` — 이 한 줄이 역전파의 핵심이다. 출력층의 기울기(dz2)를 가중치 전치(W2.T)로 변환하고, 은닉층 활성화 함수의 도함수를 곱한다.
+`dz1 = (W2.T @ dz2) * sigmoid_derivative(a1)` 한 줄이 앞의 마지막 수식 그대로다. `cache`에 담긴 `a1`은 순전파에서 이미 계산한 값이고, 시그모이드 도함수를 $z$가 아니라 $a$로부터 얻는 덕분에 지수 함수를 다시 부르지 않아도 된다.
 
-### 가중치 업데이트
+학습 한 번은 네 단계다. 순전파로 예측과 캐시를 만들고, 손실을 재고, 역전파로 기울기를 구하고, 기울기 반대 방향으로 파라미터를 옮긴다.
 
 ```python
-def update_params(W1, b1, W2, b2, grads, learning_rate):
-    """경사하강법으로 파라미터 업데이트"""
-    W1 = W1 - learning_rate * grads['dW1']
-    b1 = b1 - learning_rate * grads['db1']
-    W2 = W2 - learning_rate * grads['dW2']
-    b2 = b2 - learning_rate * grads['db2']
-    return W1, b1, W2, b2
+for epoch in range(epochs):
+    a2, cache = forward(X, W1, b1, W2, b2)                       # 1. 순전파
+    loss = -np.mean(y * np.log(a2) + (1 - y) * np.log(1 - a2))   # 2. 손실
+    grads = backward(X, y, cache, W2)                            # 3. 역전파
+    for param, key in [(W1, 'dW1'), (b1, 'db1'), (W2, 'dW2'), (b2, 'db2')]:
+        param -= learning_rate * grads[key]                      # 4. 업데이트
 ```
 
-### 전체 학습 루프
+:::warning
 
-```python
-def train(X, y, n_hidden=4, learning_rate=1.0, epochs=10000):
-    n_input = X.shape[0]
-    n_output = 1
+**기울기가 맞는지 먼저 확인한다**
 
-    # 가중치 초기화 (작은 랜덤 값)
-    np.random.seed(42)
-    W1 = np.random.randn(n_hidden, n_input) * 0.01
-    b1 = np.zeros((n_hidden, 1))
-    W2 = np.random.randn(n_output, n_hidden) * 0.01
-    b2 = np.zeros((n_output, 1))
+미분 공식을 하나 틀려도 코드는 잘 돌아간다. 손실이 안 줄거나 발산할 뿐이라 버그를 찾기가 매우 어렵다. 구현 직후에는 아주 작은 $\epsilon$으로 수치 미분을 구해 비교한다.
 
-    for epoch in range(epochs):
-        # 1. 순전파
-        a2, cache = forward(X, W1, b1, W2, b2)
+$$\frac{\partial L}{\partial w} \approx \frac{L(w + \epsilon) - L(w - \epsilon)}{2\epsilon}$$
 
-        # 2. 손실 계산
-        m = y.shape[1]
-        loss = -(1/m) * np.sum(y * np.log(a2) + (1-y) * np.log(1-a2))
+양쪽으로 흔드는 중앙 차분이 한쪽 차분보다 오차가 작다($O(\epsilon^2)$ 대 $O(\epsilon)$). 두 기울기 벡터의 차이를 크기의 합으로 나눈 상대 오차가 $10^{-7}$ 아래면 통과로 본다. 다만 이건 디버깅 전용이다. 파라미터 하나마다 순전파를 두 번 돌려야 해서, 학습에 켜 두면 감당이 안 된다.
 
-        # 3. 역전파
-        grads = backward(X, y, cache, W2)
-
-        # 4. 업데이트
-        W1, b1, W2, b2 = update_params(W1, b1, W2, b2, grads, learning_rate)
-
-        if epoch % 2000 == 0:
-            print(f"Epoch {epoch:5d} | Loss: {loss:.6f}")
-
-    return W1, b1, W2, b2
-```
-
-```
-Epoch     0 | Loss: 0.693148
-Epoch  2000 | Loss: 0.284710
-Epoch  4000 | Loss: 0.073521
-Epoch  6000 | Loss: 0.035142
-Epoch  8000 | Loss: 0.022618
-```
-
-순전파 → 손실 → 역전파 → 업데이트. 이 4단계가 한 번의 **학습 반복(iteration)** 이다. 이걸 수천 번 반복하면 손실이 꾸준히 줄어들면서 네트워크가 학습한다.
+:::
 
 ---
 
-## 계산 그래프 관점
+## 기울기 소실과 폭발
 
-역전파를 이해하는 또 다른 방법은 **계산 그래프(Computation Graph)** 다.
+손 계산에서 이미 조짐이 보였다. 두 층짜리 네트워크에서도 앞쪽 가중치의 기울기가 8분의 1로 줄었는데, 층이 열 개면 어떻게 되는가.
 
-모든 연산을 노드로 표현한 그래프를 그린다고 생각해보자.
+$$dz^{[l-1]} = \left( W^{[l]} \right)^\top dz^{[l]} \odot g'(z^{[l-1]})$$
 
-```
-x ─── [×w1] ─── z1 ─── [σ] ─── a1 ─── [×w2] ─── z2 ─── [σ] ─── a2 ─── [L]
-```
+층을 하나 거칠 때마다 $g'(z)$가 한 번씩 곱해진다. 시그모이드 도함수의 최댓값은 $z=0$일 때의 $0.25$이고, 그 바깥에서는 더 작다. 즉 층을 지날 때마다 기울기가 최소한 4분의 1로 깎인다.
 
-순전파: 왼쪽에서 오른쪽으로 값을 계산한다.
-역전파: 오른쪽에서 왼쪽으로 기울기를 계산한다.
+| 층 깊이 | 시그모이드 ($\times 0.25$) | ReLU ($\times 1$) |
+|---|---|---|
+| 1층 | 0.25 | 1 |
+| 5층 | 0.00098 | 1 |
+| 10층 | 0.00000095 | 1 |
 
-각 노드는 **지역 미분(local gradient)** 을 알고 있다. 예를 들어 곱셈 노드 z = w × a의 지역 미분은:
+앞쪽 층의 기울기가 사실상 0이 되고, 0인 기울기로는 가중치가 움직이지 않는다. 깊은 네트워크의 앞부분이 학습을 멈추는 **기울기 소실(vanishing gradient)** 이다. ReLU가 시그모이드를 밀어낸 가장 큰 이유가 여기 있다. ReLU의 도함수는 양수 구간에서 정확히 1이라, 곱해도 기울기 크기가 줄지 않는다.
 
-```
-∂z/∂w = a    (가중치에 대한 기울기 = 입력값)
-∂z/∂a = w    (입력에 대한 기울기 = 가중치)
-```
+반대 방향의 사고도 있다. $W$의 원소가 크면 $W^\top$을 곱할 때마다 기울기가 커져서, 층마다 2배씩만 불어나도 10층이면 1024배가 된다. 업데이트 폭이 폭발하면서 손실이 발산하고 곧 NaN이 뜬다. 학습 중 갑자기 NaN을 보면 십중팔구 **기울기 폭발(exploding gradient)** 이다.
 
-역전파에서 각 노드는 "상류(upstream)에서 흘러온 기울기"와 "자신의 지역 미분"을 곱해서 "하류(downstream)으로 전달"한다. 이게 연쇄 법칙의 계산 그래프 해석이다.
-
-이 관점의 강력함은 **복잡한 네트워크도 노드 단위로 분해**할 수 있다는 것이다. 각 노드는 자신의 지역 미분만 알면 되고, 전체 네트워크의 구조를 알 필요가 없다. PyTorch와 TensorFlow가 자동 미분(autograd)을 구현하는 원리가 바로 이것이다.
-
----
-
-## 기울기 검증(Gradient Checking)
-
-역전파를 직접 구현했을 때 가장 위험한 것은 **미분 공식의 오류**다. 코드가 실행은 되지만 기울기가 틀리면, 학습이 잘 안 되거나 아예 발산한다. 버그를 찾기도 어렵다.
-
-해결책: **수치 미분(numerical gradient)** 으로 해석적 기울기를 검증한다.
-
-수치 미분의 원리는 간단하다. 미분의 정의 그대로 아주 작은 ε만큼 파라미터를 변화시켜 기울기를 근사한다.
-
-```
-∂L/∂w ≈ [L(w + ε) - L(w - ε)] / (2ε)
-```
-
-양쪽으로 ε을 더하고 빼는 **중앙 차분(central difference)** 이 한쪽 차분보다 정확하다 (O(ε²) vs O(ε)).
-
-```python
-def compute_loss(a2, y):
-    """Binary Cross-Entropy 손실"""
-    m = y.shape[1]
-    return -(1/m) * np.sum(y * np.log(a2 + 1e-15) + (1-y) * np.log(1-a2 + 1e-15))
-
-def gradient_check(X, y, W1, b1, W2, b2, epsilon=1e-7):
-    """수치 미분과 역전파 기울기를 비교"""
-    # 역전파로 기울기 계산
-    a2, cache = forward(X, W1, b1, W2, b2)
-    grads = backward(X, y, cache, W2)
-
-    # W1의 각 원소에 대해 수치 미분
-    numerical_grads = np.zeros_like(W1)
-    for i in range(W1.shape[0]):
-        for j in range(W1.shape[1]):
-            W1_plus = W1.copy()
-            W1_plus[i, j] += epsilon
-            loss_plus = compute_loss(forward(X, W1_plus, b1, W2, b2)[0], y)
-
-            W1_minus = W1.copy()
-            W1_minus[i, j] -= epsilon
-            loss_minus = compute_loss(forward(X, W1_minus, b1, W2, b2)[0], y)
-
-            numerical_grads[i, j] = (loss_plus - loss_minus) / (2 * epsilon)
-
-    # 차이 계산
-    diff = np.linalg.norm(grads['dW1'] - numerical_grads)
-    diff /= np.linalg.norm(grads['dW1']) + np.linalg.norm(numerical_grads)
-
-    if diff < 1e-7:
-        print(f"기울기 검증 통과! 차이: {diff:.2e}")
-    else:
-        print(f"기울기 검증 실패. 차이: {diff:.2e}")
-```
-
-```
-기울기 검증 통과! 차이: 3.41e-10
-```
-
-<div style="background: #fff8f0; border-left: 4px solid #f59f00; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>실전 주의사항</strong><br>
-  기울기 검증은 <strong>디버깅 전용</strong>이다. 수치 미분은 파라미터마다 순전파를 2번씩 해야 하므로 극도로 느리다. 학습 시에는 절대 사용하지 않는다. 구현이 올바른지 확인한 후에는 반드시 끈다.
-</div>
+| 문제 | 대응 |
+|---|---|
+| 기울기 소실 | ReLU 계열 활성화 함수, skip connection |
+| 기울기 폭발 | gradient clipping, 학습률 낮추기 |
+| 양쪽 모두 | He/Xavier 초기화, 배치 정규화 |
 
 ---
 
-## 기울기 소실과 기울기 폭발
+## 마치며
 
-위의 손 계산에서 w1의 기울기가 w2보다 훨씬 작았다. 2층 네트워크에서도 이런 차이가 나는데, 10층, 50층이면 어떨까?
+역전파는 이름 그대로 방향에 관한 알고리즘이다. 손실을 각 가중치로 편미분하는 일 자체는 연쇄 법칙을 적용하면 되지만, 그 사슬을 입력 쪽에서부터 세우면 같은 편미분을 몇 번씩 다시 계산하게 된다. 출력 쪽에서부터 세우면 앞 층이 필요로 하는 항이 이미 손에 있다. 순전파가 남긴 $z$와 $a$를 캐시로 들고 내려오면서, 각 층을 한 번씩만 지나 모든 기울기를 얻는다.
 
-### 기울기 소실 (Vanishing Gradient)
+실무에서 이 미분을 손으로 짤 일은 거의 없다. PyTorch와 TensorFlow가 연산 하나하나의 지역 미분을 알고 있고, 사슬을 엮는 일은 자동 미분이 대신한다. 그래도 구조를 알아야 하는 이유는 $dz^{[l-1]} = (W^{[l]})^\top dz^{[l]} \odot g'(z^{[l-1]})$ 이 한 줄에 딥러닝의 고질적인 문제가 통째로 들어 있기 때문이다. 층마다 곱해지는 $g'$가 1보다 작으면 기울기가 사라지고, $W$가 크면 폭발한다. ReLU도, 가중치 초기화 방법도, 배치 정규화도, ResNet의 skip connection도 전부 이 곱셈 사슬을 1 근처로 붙들어 두려는 시도다.
 
-역전파 공식을 다시 보자.
-
-```
-dz[l-1] = W[l]^T · dz[l] ⊙ g'(z[l-1])
-```
-
-층을 거칠 때마다 g'(z)를 곱한다. 시그모이드의 도함수 최댓값은 0.25다 (z=0일 때). 즉, 층을 한 번 거칠 때마다 기울기가 최대 1/4로 줄어든다.
-
-```
-10층 네트워크: 기울기 × 0.25^10 ≈ 0.25^10 ≈ 0.000001
-```
-
-앞쪽 층의 기울기가 거의 0에 수렴한다. 기울기가 0이면 가중치가 업데이트되지 않는다. 앞쪽 층은 학습이 멈춘다. 이것이 **기울기 소실(vanishing gradient)** 문제다.
-
-### 기울기 폭발 (Exploding Gradient)
-
-반대로, 가중치 행렬 W의 원소가 크면 층을 거칠 때마다 기울기가 기하급수적으로 **커진다**.
-
-```
-각 층에서 기울기가 2배 → 10층: 2^10 = 1024배
-```
-
-기울기가 너무 커지면 가중치 업데이트가 폭발적으로 커져서 학습이 발산한다. NaN이 출력되기 시작하면 십중팔구 기울기 폭발이다.
-
-### 이 문제를 어떻게 해결하는가?
-
-| 문제 | 해결 방법 |
-|------|----------|
-| 기울기 소실 | ReLU 등 도함수가 1인 활성화 함수 사용 |
-| 기울기 폭발 | gradient clipping, 적절한 가중치 초기화 |
-| 두 문제 모두 | He/Xavier 초기화, BatchNorm, ResNet의 skip connection |
-
-활성화 함수의 선택이 이 문제에 직접적인 영향을 미친다. 다음 글에서 자세히 다룬다.
+그중 가장 직접적인 것이 활성화 함수의 선택이다. $g'$의 모양이 곧 기울기가 살아남는 정도이므로, 다음 글에서는 활성화 함수마다 도함수가 어떻게 생겼고 어디에 무엇을 쓰는지 다룬다.
 
 ---
 
-## 전체 학습 과정 정리
+## 함께 보면 좋은 글
 
-신경망 학습의 전체 흐름을 한 번에 정리하자.
-
-```
-반복 (epoch = 1, 2, ..., N):
-  │
-  ├─ 1. 순전파 (Forward Pass)
-  │     입력 X → 각 층의 z, a 계산 → 예측값 y_hat
-  │     (중간 결과 z, a를 캐시에 저장)
-  │
-  ├─ 2. 손실 계산 (Loss)
-  │     L = loss(y, y_hat)
-  │
-  ├─ 3. 역전파 (Backward Pass)
-  │     출력층부터 입력층 방향으로
-  │     dz[L] → dW[L], db[L] → dz[L-1] → ... → dW[1], db[1]
-  │
-  └─ 4. 가중치 업데이트 (Gradient Descent)
-        W[l] = W[l] - α × dW[l]
-        b[l] = b[l] - α × db[l]
-```
-
-이 4단계가 한 번의 반복이다. 수천~수만 번 반복하면 손실이 수렴하고 네트워크가 패턴을 학습한다.
-
-[순전파](/ml/forward-propagation/)는 예측을 만들고, [비용 함수](/ml/cost-function/)는 오차를 측정하고, 역전파는 각 가중치의 책임을 계산하고, [경사하강법](/ml/gradient-descent/)은 그 정보로 가중치를 업데이트한다. 네 가지가 합쳐져서 비로소 "학습"이 된다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>요약</strong><br>
-  <ul>
-    <li>역전파 = 연쇄 법칙을 출력→입력 방향으로 적용하여 모든 가중치의 기울기를 효율적으로 계산하는 알고리즘</li>
-    <li>핵심 공식: dz[l] = W[l+1]^T · dz[l+1] ⊙ g'(z[l])</li>
-    <li>순전파 때 캐시를 저장해야 역전파가 효율적이다</li>
-    <li>기울기 검증(gradient checking)으로 구현 정확성을 확인한다</li>
-    <li>깊은 네트워크에서는 기울기 소실/폭발 문제가 발생 → 활성화 함수 선택이 중요</li>
-  </ul>
-</div>
-
----
-
-## 다음 글 미리보기
-
-역전파 공식에서 g'(z), 즉 **활성화 함수의 도함수**가 계속 등장했다. 시그모이드의 도함수 최댓값이 0.25라서 기울기 소실이 발생한다는 것도 보았다. 그러면 어떤 활성화 함수를 써야 하는가? ReLU, tanh, Leaky ReLU, Softmax — 각각의 특성과 용도를 다음 글에서 다룬다.
-
-다음 글: [활성화 함수(Activation Functions): 뉴런에 비선형성을 부여하다](/ml/activation-functions/)
+- [순전파](/ml/forward-propagation/) : 역전파가 거슬러 올라가는 계산 경로를 만드는 과정
+- [경사하강법](/ml/gradient-descent/) : 구한 기울기로 파라미터를 실제로 옮기는 절차
+- [활성화 함수](/ml/activation-functions/) : 도함수의 모양이 기울기 소실을 좌우하는 이유
+- [옵티마이저](/ml/optimizers/) : 같은 기울기를 어떻게 쓰느냐에서 갈리는 학습 속도

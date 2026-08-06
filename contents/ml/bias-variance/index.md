@@ -1,667 +1,312 @@
 ---
 date: '2026-01-13'
-title: '편향-분산 트레이드오프(Bias-Variance Tradeoff): 과적합과 과소적합의 근본 원인'
+title: '모델 오차를 쪼개면 드러나는 편향-분산 트레이드오프'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 13
-tags: ['Bias-Variance Tradeoff', '편향-분산 트레이드오프', 'Overfitting', 'Underfitting', '머신러닝 기초']
-summary: '모델 에러를 편향과 분산으로 분해하고, 과소적합과 과적합의 근본 원인을 수학적으로 이해한다. 학습 곡선으로 진단하고 해결책을 찾는 법까지.'
+tags: ['Bias-Variance Tradeoff', '편향-분산 트레이드오프', 'Overfitting', 'Underfitting', '과적합', '과소적합', '학습 곡선']
+summary: '모델 오차는 편향, 분산, 줄일 수 없는 노이즈 세 조각으로 나뉜다. 과소적합과 과적합이 각각 어느 조각에서 오는지, 학습 곡선으로 둘을 어떻게 가려내는지 다룬다.'
 thumbnail: './thumbnail.png'
 ---
 
-지금까지 여러 분류 알고리즘을 배웠다. [로지스틱 회귀](/ml/logistic-regression/)는 선형 경계를 긋고, [나이브 베이즈](/ml/naive-bayes/)는 확률로 접근하고, [KNN](/ml/knn/)은 거리를 재고, [SVM](/ml/svm/)은 마진을 최대화한다. 각각 나름의 강점이 있지만, 동시에 뚜렷한 한계도 보였다. 선형 모델은 복잡한 패턴을 못 잡고, KNN은 차원이 높아지면 무너지고, SVM은 커널 선택에 따라 성능이 크게 갈린다.
+훈련 데이터에서는 오차가 거의 0인데 새 데이터만 만나면 형편없어지는 모델이 있다. 반대로 훈련 데이터조차 제대로 못 맞추는 모델도 있다. 앞이 과적합(Overfitting), 뒤가 과소적합(Underfitting)이다. 여기까지는 감으로도 안다.
 
-왜 **모든** 모델에는 한계가 있을까? 모델이 복잡해지면 훈련 데이터를 거의 완벽하게 외우지만, 새 데이터에는 형편없어진다 — 이게 **과적합(Overfitting)** 이다. 반대로 너무 단순한 모델은 훈련 데이터조차 제대로 못 맞춘다 — **과소적합(Underfitting)** 이다. 이 두 현상을 "감으로" 이해하는 건 쉽다. 그런데 왜 이런 일이 생기는지, 어떻게 **수학적으로** 측정하고 진단할 수 있는지는 다른 이야기다. 편향-분산 트레이드오프(Bias-Variance Tradeoff)가 그 답을 준다.
+정작 어려운 건 눈앞의 모델이 둘 중 어느 쪽이냐다. 검증 점수가 낮다는 사실 하나로는 데이터를 더 모아야 하는지, 모델을 키워야 하는지, 규제를 걸어야 하는지 알 수 없다. 세 처방은 서로 정반대라서 잘못 고르면 며칠을 그냥 버린다.
 
----
+편향-분산 분해는 그 판단에 필요한 좌표를 준다. 모델의 오차를 세 조각으로 나누고, 각 조각이 무엇에 반응하는지 알려준다.
 
-## 모델 에러의 분해
+## 오차는 세 조각으로 나뉜다
 
-모델의 에러를 측정할 때 우리는 보통 **MSE(Mean Squared Error)** 를 쓴다.
+데이터가 $y = f(x) + \varepsilon$ 로 만들어졌다고 하자. $f$ 는 우리가 모르는 진짜 함수이고, $\varepsilon$ 은 평균 0에 분산 $\sigma^2$ 인 노이즈다. 모델 $\hat{f}$ 는 훈련 데이터 한 벌로 학습한 결과이므로, 훈련 데이터를 다시 뽑으면 다른 $\hat{f}$ 가 나온다. 아래 기댓값은 전부 이 "훈련셋을 다시 뽑는" 가상의 반복에 대한 평균이다.
 
-```
-MSE = E[(y - ŷ)²]
-```
+한 지점 $x$ 에서 제곱 오차의 기댓값을 전개하면 세 항으로 갈라진다.
 
-이 수식을 전개하면, MSE가 세 가지 항으로 분해된다는 걸 보일 수 있다. 잠깐 수학 타임이지만, 이게 전체 이야기의 핵심이다.
+$$E[(y - \hat{f})^2] = \underbrace{(f - E[\hat{f}])^2}_{\text{Bias}^2} + \underbrace{E[(\hat{f} - E[\hat{f}])^2]}_{\text{Var}} + \underbrace{\sigma^2}_{\text{줄일 수 없는 노이즈}}$$
 
-### 수식 증명
+전개는 "더하고 빼기" 두 번이면 끝난다. 먼저 $y$ 를 $f + \varepsilon$ 으로 바꾸면 교차항 $2E[(f - \hat{f})\varepsilon]$ 이 생기는데, 새 데이터의 노이즈 $\varepsilon$ 은 훈련으로 만든 $\hat{f}$ 와 독립이고 $E[\varepsilon] = 0$ 이라 이 항은 사라지고 $\sigma^2$ 만 떨어져 나온다. 남은 $E[(f - \hat{f})^2]$ 안에 $E[\hat{f}]$ 를 더하고 빼서 다시 전개하면, 이번에는 $E[E[\hat{f}] - \hat{f}] = 0$ 이라 교차항이 사라지고 편향 제곱과 분산이 남는다.
 
-`f(x)`를 데이터를 생성한 실제 함수, `ε`을 노이즈(평균 0, 분산 σ²), `ŷ`를 모델의 예측이라 하자.
-
-```
-y = f(x) + ε
-```
-
-E[ε] = 0이고, Var(ε) = σ²이다. 모델 ŷ는 특정 훈련 데이터셋으로 학습한 결과이므로, 다른 훈련 데이터셋을 쓰면 다른 ŷ가 나온다. 이 기댓값(여러 훈련 셋에 대한 평균)을 E[ŷ]라 쓴다.
-
-기댓값 MSE를 전개하면:
-
-```
-E[(y - ŷ)²]
-= E[(f + ε - ŷ)²]
-= E[(f - ŷ)²] + 2·E[(f - ŷ)·ε] + E[ε²]
-
-   ε는 새 데이터의 노이즈이므로 훈련된 모델 ŷ와 독립이고, E[ε]=0이므로 2번째 항 = 0
-
-= E[(f - ŷ)²] + σ²
-
-   이제 첫 항을 E[ŷ]를 더하고 빼서 전개:
-
-= E[(f - E[ŷ] + E[ŷ] - ŷ)²] + σ²
-= (f - E[ŷ])² + E[(E[ŷ] - ŷ)²] + σ²          ← E[E[ŷ] - ŷ] = 0이므로 교차항 소멸
-     ↑               ↑              ↑
-   Bias²          Variance      Irreducible Noise
-```
-
-결론:
-
-```
-E[(y - ŷ)²] = Bias(ŷ)² + Var(ŷ) + σ²
-```
-
-왜 이렇게 되는가? 핵심 직관은 이렇다. 모델의 총 에러에는 세 가지 원인이 있다. (1) 모델 구조가 현실을 단순화해서 생기는 체계적 오차(Bias), (2) 훈련 데이터에 따라 예측이 흔들리는 불안정성(Variance), (3) 데이터 자체에 내재한 랜덤 노이즈(σ²). 이 셋을 더한 게 우리가 관측하는 MSE의 전부다.
-
-![편향-분산 트레이드오프 분해도](./bias-variance-decomposition.png)
-
-### 각 항의 의미
-
-| 항 | 수식 | 의미 |
+| 항 | 정의 | 무엇에 반응하나 |
 |---|---|---|
-| **Bias²** | `(f(x) - E[ŷ])²` | 모델 예측의 평균이 실제 값과 얼마나 다른가 (체계적 오차) |
-| **Variance** | `E[(ŷ - E[ŷ])²]` | 훈련 데이터가 바뀔 때 예측이 얼마나 흔들리는가 |
-| **σ²** | 줄일 수 없음 | 데이터 자체의 노이즈 (어떤 모델도 제거 불가) |
+| $\text{Bias}^2$ | $(f - E[\hat{f}])^2$ | 모델 구조. 예측의 평균이 진짜 값에서 얼마나 빗나가 있는가 |
+| $\text{Var}$ | $E[(\hat{f} - E[\hat{f}])^2]$ | 훈련 데이터. 훈련셋이 바뀔 때 예측이 얼마나 흔들리는가 |
+| $\sigma^2$ | 노이즈의 분산 | 아무것에도. 어떤 모델을 써도 남는 하한선 |
 
-총 에러(MSE)는 이 세 항의 합이다. σ²는 어떤 모델을 쓰든 줄일 수 없으므로, 우리가 통제할 수 있는 건 **Bias²와 Variance** 뿐이다.
+$\sigma^2$ 는 손댈 수 없으니 우리가 통제할 수 있는 건 앞의 두 항뿐이다. 그리고 이 둘은 같은 방향으로 움직이지 않는다.
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 왜 기댓값이 필요한가?</strong><br>
-  실제로 우리는 하나의 훈련 데이터셋으로만 모델을 학습한다. 하지만 Bias와 Variance는 "만약 다른 훈련셋으로 반복 학습하면 어떻게 달라질까"라는 가상의 실험을 생각한다. 이 사고 실험이 모델의 구조적 특성을 드러낸다.
+:::info
+
+**하나뿐인 훈련셋으로 어떻게 기댓값을 말하나**
+
+실제로 우리 손에는 훈련 데이터가 한 벌뿐이다. 편향과 분산은 "같은 분포에서 훈련셋을 다시 뽑아 학습을 반복하면 예측이 어떻게 흩어질까"라는 가상의 실험 위에 정의된 양이다. 측정하려고 만든 개념이 아니라 모델 구조의 성질을 드러내려고 만든 개념이다. 실전에서 재는 건 이 값들이 아니라 뒤에 나올 훈련 오차와 검증 오차다.
+
+:::
+
+## 차수를 바꿔가며 세 조각을 재보면
+
+사인 곡선에 노이즈를 얹은 데이터 18개에 다항 회귀를 맞춰 보자. 차수만 바꾸고 나머지는 전부 같다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 420" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 데이터 18개에 차수 1, 3, 12의 다항 회귀를 맞춘 세 패널. 차수 1은 직선이라 사인 곡선을 전혀 따라가지 못하고, 차수 3은 실제 함수와 거의 겹치며, 차수 12는 점 하나하나를 따라가느라 구불구불하다. 훈련 MSE는 각각 0.34, 0.04, 0.02이다.">
+<style>
+.bv1-panel { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.bv1-zero { stroke: var(--border, #e7e5e4); stroke-width: 1; stroke-dasharray: 4 4; }
+.bv1-true { fill: none; stroke: var(--text-muted, #6d6762); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.bv1-fit { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2.6; stroke-linejoin: round; }
+.bv1-dot { fill: var(--text-muted, #6d6762); }
+.bv1-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.bv1-s { fill: var(--text-muted, #6d6762); font-size: 14px; }
+</style>
+<!-- 패널 1: 차수 1 -->
+<text class="bv1-t" x="200" y="20" text-anchor="middle">위 · 차수 1</text>
+<rect class="bv1-panel" x="46" y="30" width="336" height="90" rx="5"/>
+<line class="bv1-zero" x1="46" y1="75" x2="382" y2="75"/>
+<polyline class="bv1-true" points="46.0,75.0 53.0,71.9 60.0,68.9 67.0,65.9 74.0,63.2 81.0,60.6 88.0,58.3 95.0,56.2 102.0,54.5 109.0,53.1 116.0,52.1 123.0,51.5 130.0,51.3 137.0,51.5 144.0,52.1 151.0,53.1 158.0,54.5 165.0,56.2 172.0,58.3 179.0,60.6 186.0,63.2 193.0,65.9 200.0,68.9 207.0,71.9 214.0,75.0 221.0,78.1 228.0,81.1 235.0,84.1 242.0,86.8 249.0,89.4 256.0,91.7 263.0,93.8 270.0,95.5 277.0,96.9 284.0,97.9 291.0,98.5 298.0,98.7 305.0,98.5 312.0,97.9 319.0,96.9 326.0,95.5 333.0,93.8 340.0,91.7 347.0,89.4 354.0,86.8 361.0,84.1 368.0,81.1 375.0,78.1 382.0,75.0"/>
+<polyline class="bv1-fit" points="53.3,55.8 105.1,62.9 156.9,69.9 208.7,77.0 260.5,84.1 312.3,91.1 372.1,99.2"/>
+<g class="bv1-dot"><circle cx="53.3" cy="75.9" r="2.6"/><circle cx="62.4" cy="58.8" r="2.6"/><circle cx="63.1" cy="56.9" r="2.6"/><circle cx="69.4" cy="69.5" r="2.6"/><circle cx="90.8" cy="52.8" r="2.6"/><circle cx="105.8" cy="56.7" r="2.6"/><circle cx="115.2" cy="51.1" r="2.6"/><circle cx="143.1" cy="50.3" r="2.6"/><circle cx="147.6" cy="61.0" r="2.6"/><circle cx="149.5" cy="52.5" r="2.6"/><circle cx="212.6" cy="81.4" r="2.6"/><circle cx="242.1" cy="93.4" r="2.6"/><circle cx="269.1" cy="98.3" r="2.6"/><circle cx="288.2" cy="111.4" r="2.6"/><circle cx="301.0" cy="108.4" r="2.6"/><circle cx="336.2" cy="91.4" r="2.6"/><circle cx="337.4" cy="88.3" r="2.6"/><circle cx="372.1" cy="73.7" r="2.6"/></g>
+<text class="bv1-s" x="52" y="114">훈련 MSE 0.34</text>
+<!-- 패널 2: 차수 3 -->
+<text class="bv1-t" x="200" y="148" text-anchor="middle">가운데 · 차수 3</text>
+<rect class="bv1-panel" x="46" y="158" width="336" height="90" rx="5"/>
+<line class="bv1-zero" x1="46" y1="203" x2="382" y2="203"/>
+<polyline class="bv1-true" points="46.0,203.0 53.0,199.9 60.0,196.9 67.0,193.9 74.0,191.2 81.0,188.6 88.0,186.3 95.0,184.2 102.0,182.5 109.0,181.1 116.0,180.1 123.0,179.5 130.0,179.3 137.0,179.5 144.0,180.1 151.0,181.1 158.0,182.5 165.0,184.2 172.0,186.3 179.0,188.6 186.0,191.2 193.0,193.9 200.0,196.9 207.0,199.9 214.0,203.0 221.0,206.1 228.0,209.1 235.0,212.1 242.0,214.8 249.0,217.4 256.0,219.7 263.0,221.8 270.0,223.5 277.0,224.9 284.0,225.9 291.0,226.5 298.0,226.7 305.0,226.5 312.0,225.9 319.0,224.9 326.0,223.5 333.0,221.8 340.0,219.7 347.0,217.4 354.0,214.8 361.0,212.1 368.0,209.1 375.0,206.1 382.0,203.0"/>
+<polyline class="bv1-fit" points="53.3,199.1 61.2,193.7 69.2,189.3 77.2,185.7 85.1,183.0 93.1,181.1 101.1,179.8 109.1,179.3 117.0,179.3 125.0,180.0 133.0,181.1 140.9,182.7 148.9,184.8 156.9,187.2 164.9,189.8 172.8,192.8 180.8,195.9 188.8,199.3 196.7,202.7 204.7,206.1 212.7,209.6 220.6,212.9 228.6,216.2 236.6,219.4 244.6,222.3 252.5,224.9 260.5,227.2 268.5,229.2 276.4,230.7 284.4,231.8 292.4,232.4 300.3,232.3 308.3,231.7 316.3,230.4 324.3,228.3 332.2,225.4 340.2,221.8 348.2,217.2 356.1,211.7 364.1,205.2 372.1,197.6"/>
+<g class="bv1-dot"><circle cx="53.3" cy="203.9" r="2.6"/><circle cx="62.4" cy="186.8" r="2.6"/><circle cx="63.1" cy="184.9" r="2.6"/><circle cx="69.4" cy="197.5" r="2.6"/><circle cx="90.8" cy="180.8" r="2.6"/><circle cx="105.8" cy="184.7" r="2.6"/><circle cx="115.2" cy="179.1" r="2.6"/><circle cx="143.1" cy="178.3" r="2.6"/><circle cx="147.6" cy="189.0" r="2.6"/><circle cx="149.5" cy="180.5" r="2.6"/><circle cx="212.6" cy="209.4" r="2.6"/><circle cx="242.1" cy="221.4" r="2.6"/><circle cx="269.1" cy="226.3" r="2.6"/><circle cx="288.2" cy="239.4" r="2.6"/><circle cx="301.0" cy="236.4" r="2.6"/><circle cx="336.2" cy="219.4" r="2.6"/><circle cx="337.4" cy="216.3" r="2.6"/><circle cx="372.1" cy="201.7" r="2.6"/></g>
+<text class="bv1-s" x="52" y="242">훈련 MSE 0.04</text>
+<!-- 패널 3: 차수 12 -->
+<text class="bv1-t" x="200" y="276" text-anchor="middle">아래 · 차수 12</text>
+<rect class="bv1-panel" x="46" y="286" width="336" height="90" rx="5"/>
+<line class="bv1-zero" x1="46" y1="331" x2="382" y2="331"/>
+<polyline class="bv1-true" points="46.0,331.0 53.0,327.9 60.0,324.9 67.0,321.9 74.0,319.2 81.0,316.6 88.0,314.3 95.0,312.2 102.0,310.5 109.0,309.1 116.0,308.1 123.0,307.5 130.0,307.3 137.0,307.5 144.0,308.1 151.0,309.1 158.0,310.5 165.0,312.2 172.0,314.3 179.0,316.6 186.0,319.2 193.0,321.9 200.0,324.9 207.0,327.9 214.0,331.0 221.0,334.1 228.0,337.1 235.0,340.1 242.0,342.8 249.0,345.4 256.0,347.7 263.0,349.8 270.0,351.5 277.0,352.9 284.0,353.9 291.0,354.5 298.0,354.7 305.0,354.5 312.0,353.9 319.0,352.9 326.0,351.5 333.0,349.8 340.0,347.7 347.0,345.4 354.0,342.8 361.0,340.1 368.0,337.1 375.0,334.1 382.0,331.0"/>
+<polyline class="bv1-fit" points="53.3,331.5 57.2,315.3 61.2,313.9 65.2,317.8 69.2,321.9 73.2,324.0 77.2,323.7 81.2,321.5 85.1,318.1 89.1,314.4 93.1,311.1 97.1,308.6 101.1,307.2 105.1,306.9 109.1,307.5 113.0,308.8 117.0,310.3 121.0,311.9 125.0,313.2 129.0,314.0 133.0,314.2 137.0,313.8 140.9,312.8 144.9,311.4 148.9,309.8 152.9,308.1 156.9,306.6 160.9,305.5 164.9,304.9 168.8,305.0 172.8,305.8 176.8,307.4 180.8,309.7 184.8,312.6 188.8,316.0 192.7,319.8 196.7,323.8 200.7,327.8 204.7,331.6 208.7,335.1 212.7,338.2 216.7,340.9 220.6,343.0 224.6,344.7 228.6,345.9 232.6,346.8 236.6,347.4 240.6,347.9 244.6,348.4 248.5,349.0 252.5,349.8 256.5,351.0 260.5,352.4 264.5,354.1 268.5,356.1 272.5,358.2 276.4,360.3 280.4,362.2 284.4,363.9 288.4,365.2 292.4,366.0 296.4,366.2 300.3,365.7 304.3,364.7 308.3,363.2 312.3,361.4 316.3,359.2 320.3,357.0 324.3,354.7 328.2,352.3 332.2,349.6 336.2,346.3 340.2,342.0 344.2,336.2 348.2,328.3 352.2,318.2 356.1,306.7 360.1,295.7 364.1,289.6 368.1,296.5 372.1,329.7"/>
+<g class="bv1-dot"><circle cx="53.3" cy="331.9" r="2.6"/><circle cx="62.4" cy="314.8" r="2.6"/><circle cx="63.1" cy="312.9" r="2.6"/><circle cx="69.4" cy="325.5" r="2.6"/><circle cx="90.8" cy="308.8" r="2.6"/><circle cx="105.8" cy="312.7" r="2.6"/><circle cx="115.2" cy="307.1" r="2.6"/><circle cx="143.1" cy="306.3" r="2.6"/><circle cx="147.6" cy="317.0" r="2.6"/><circle cx="149.5" cy="308.5" r="2.6"/><circle cx="212.6" cy="337.4" r="2.6"/><circle cx="242.1" cy="349.4" r="2.6"/><circle cx="269.1" cy="354.3" r="2.6"/><circle cx="288.2" cy="367.4" r="2.6"/><circle cx="301.0" cy="364.4" r="2.6"/><circle cx="336.2" cy="347.4" r="2.6"/><circle cx="337.4" cy="344.3" r="2.6"/><circle cx="372.1" cy="329.7" r="2.6"/></g>
+<text class="bv1-s" x="52" y="370">훈련 MSE 0.02</text>
+<!-- 범례 -->
+<line class="bv1-true" x1="96" y1="399" x2="114" y2="399"/>
+<text class="bv1-s" x="120" y="404">실제 함수</text>
+<line class="bv1-fit" x1="205" y1="399" x2="223" y2="399"/>
+<text class="bv1-s" x="229" y="404">학습된 모델</text>
+</svg>
 </div>
 
----
+차수 1은 직선이라 사인 곡선의 오르내림을 애초에 표현할 수 없다. 데이터를 아무리 더 넣어도 직선은 직선이다. 차수 12는 점 하나하나를 지나가려고 몸을 비틀어서 훈련 MSE가 0.02까지 떨어졌지만, 그 굴곡은 데이터의 패턴이 아니라 그 18개 점에 섞여 있던 노이즈의 모양이다. 훈련셋을 다시 뽑으면 굴곡이 완전히 다른 자리에 생긴다.
 
-## 편향(Bias)이란?
-
-편향은 **체계적 오차(systematic error)** 다. 모델의 평균 예측과 실제 값의 차이다.
-
-```
-Bias(ŷ) = E[ŷ] - f(x)
-```
-
-편향이 높다는 건, 모델이 아무리 많은 데이터로 학습해도 **근본적으로 잘못된 방향으로 예측**한다는 뜻이다.
-
-### 높은 편향 = 과소적합(Underfitting)
-
-사인 곡선 데이터를 1차 다항식(직선)으로 맞추는 걸 생각해보자.
+이 직관은 실제로 측정할 수 있다. 같은 분포에서 훈련셋 300벌을 뽑아 각각 학습시킨 뒤, 예측들의 평균이 진짜 함수에서 얼마나 벗어났는지(편향 제곱)와 예측들이 서로 얼마나 흩어졌는지(분산)를 따로 재면 된다.
 
 ```python
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 
-np.random.seed(42)
-n = 30
-X = np.sort(np.random.uniform(0, 2*np.pi, n)).reshape(-1, 1)
-y = np.sin(X.ravel()) + np.random.normal(0, 0.3, n)
+grid = np.linspace(0.3, 2 * np.pi - 0.3, 60).reshape(-1, 1)
+truth = np.sin(grid.ravel())
 
-# degree=1: 직선
-pipe_d1 = Pipeline([
-    ('poly', PolynomialFeatures(degree=1)),
-    ('lr',   LinearRegression())
-])
-pipe_d1.fit(X, y)
-
-train_mse = np.mean((pipe_d1.predict(X) - y)**2)
-print(f"Degree 1 Train MSE: {train_mse:.4f}")
+def decompose(degree, n_sets=300, n=40):
+    preds = []
+    for s in range(n_sets):
+        r = np.random.RandomState(s)
+        X = r.uniform(0, 2 * np.pi, n).reshape(-1, 1)
+        y = np.sin(X.ravel()) + r.normal(0, 0.3, n)   # sigma^2 = 0.09
+        model = Pipeline([('poly', PolynomialFeatures(degree)),
+                          ('lr', LinearRegression())]).fit(X, y)
+        preds.append(model.predict(grid))
+    P = np.array(preds)
+    return ((P.mean(axis=0) - truth) ** 2).mean(), P.var(axis=0).mean()
 ```
 
-```
-Degree 1 Train MSE: 0.3412
-```
+| 차수 | $\text{Bias}^2$ | $\text{Var}$ | 합 + $\sigma^2$ |
+|---:|---:|---:|---:|
+| 1 | 0.1548 | 0.0161 | 0.2609 |
+| 3 | 0.0031 | 0.0090 | **0.1021** |
+| 5 | 0.0001 | 0.0144 | 0.1044 |
+| 9 | 0.0003 | 0.1066 | 0.1969 |
+| 11 | 0.0348 | 11.4075 | 11.5323 |
 
-직선은 사인 곡선의 전체적인 추세(증가 후 감소)를 전혀 포착하지 못한다. 훈련 데이터에서도, 테스트 데이터에서도 에러가 높다. 이게 **높은 편향**이다.
+편향 제곱은 차수 3에서 이미 거의 0으로 떨어지고 그 뒤로는 더 내려갈 자리가 없다. 반면 분산은 차수 5부터 꾸준히 오르다가 9를 지나면서 폭주한다. 총합이 가장 작은 곳은 양쪽이 다 작은 중간 지점이다.
 
-- 더 많은 훈련 데이터를 넣어도 직선은 여전히 직선이다 → 근본적으로 해결 안 됨
-- 모델의 **표현력(expressivity)** 이 부족한 게 원인
+마지막 줄의 분산 11.4가 이상해 보이지만 계산 오류가 아니다. 표본 40개에 11차 다항식을 맞추면 설계 행렬이 거의 특이해져서 계수가 수백 배로 튀고, 훈련점 사이에서 예측이 크게 요동친다. 훈련셋이 조금만 달라져도 그 요동의 위치와 크기가 통째로 바뀐다.
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 과소적합의 신호</strong><br>
-  훈련 에러 자체가 높다면 편향 문제다. 훈련 데이터를 늘려도 에러가 크게 줄지 않는다. 모델을 더 복잡하게 만들거나, 더 많은 특성을 추가해야 한다.
+## 편향과 분산은 반대로 움직인다
+
+모델을 복잡하게 만들면 편향은 줄고 분산은 는다. 이 둘의 합이 그리는 모양이 편향-분산 트레이드오프의 전부다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 320" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="모델 복잡도를 가로축으로 둔 오차 곡선 세 개. 편향 제곱은 왼쪽에서 높다가 오른쪽으로 갈수록 낮아지고, 분산은 반대로 오른쪽으로 갈수록 치솟는다. 둘의 합에 줄일 수 없는 노이즈를 더한 총 오차는 가운데가 가장 낮은 U자를 그리며, 그 최저점이 최적 복잡도다. 총 오차는 노이즈 수준 아래로는 절대 내려가지 않는다.">
+<style>
+.bv2-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; }
+.bv2-bias { fill: none; stroke: var(--accent, #9d5604); stroke-width: 2.4; }
+.bv2-var { fill: none; stroke: var(--text-danger, #cb2121); stroke-width: 2.4; }
+.bv2-tot { fill: none; stroke: var(--primary, #0a756c); stroke-width: 3.4; }
+.bv2-noise { stroke: var(--text-muted, #6d6762); stroke-width: 1.3; stroke-dasharray: 5 4; }
+.bv2-guide { stroke: var(--text-muted, #6d6762); stroke-width: 1.1; stroke-dasharray: 3 3; }
+.bv2-dot { fill: var(--primary, #0a756c); stroke: var(--bg, #fafaf8); stroke-width: 2; }
+.bv2-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.bv2-l { fill: var(--text, #1c1917); font-size: 15px; }
+.bv2-s { fill: var(--text-muted, #6d6762); font-size: 14px; }
+</style>
+<text class="bv2-t" x="200" y="22" text-anchor="middle">모델 복잡도에 따른 오차</text>
+<!-- 축 -->
+<line class="bv2-ax" x1="62" y1="236" x2="378" y2="236"/>
+<line class="bv2-ax" x1="62" y1="44" x2="62" y2="236"/>
+<text class="bv2-l" x="26" y="146" text-anchor="middle" transform="rotate(-90 26 146)">오차</text>
+<!-- 노이즈 하한 -->
+<line class="bv2-noise" x1="62" y1="212.5" x2="372" y2="212.5"/>
+<text class="bv2-s" x="376" y="217">σ²</text>
+<!-- 편향 제곱 -->
+<polyline class="bv2-bias" points="62,89.2 81.4,115.8 100.8,137.6 120.1,155.4 139.5,170.0 158.9,182.0 178.3,191.8 197.6,199.8 217,206.4 236.4,211.7 255.8,216.1 275.1,219.7 294.5,222.7 313.9,225.1 333.3,227.1 352.6,228.7 372,230.0"/>
+<!-- 분산 -->
+<polyline class="bv2-var" points="62,230.1 81.4,228.8 100.8,227.2 120.1,225.3 139.5,222.9 158.9,220.0 178.3,216.5 197.6,212.2 217,206.9 236.4,200.5 255.8,192.6 275.1,183.0 294.5,171.2 313.9,156.9 333.3,139.4 352.6,118.0 372,91.9"/>
+<!-- 총 오차 -->
+<polyline class="bv2-tot" points="62,59.8 81.4,85.1 100.8,105.3 120.1,121.2 139.5,133.5 158.9,142.5 178.3,148.8 197.6,152.5 217,153.8 236.4,152.7 255.8,149.2 275.1,143.2 294.5,134.4 313.9,122.5 333.3,107.0 352.6,87.2 372,62.4"/>
+<!-- 최적점 -->
+<line class="bv2-guide" x1="218" y1="236" x2="218" y2="160"/>
+<circle class="bv2-dot" cx="218" cy="154" r="4.5"/>
+<text class="bv2-s" x="218" y="138" text-anchor="middle">최적 복잡도</text>
+<!-- 가로축 라벨 -->
+<text class="bv2-s" x="140" y="256" text-anchor="middle">과소적합 구간</text>
+<text class="bv2-s" x="296" y="256" text-anchor="middle">과적합 구간</text>
+<text class="bv2-l" x="217" y="280" text-anchor="middle">모델 복잡도</text>
+<!-- 범례 -->
+<line class="bv2-bias" x1="89" y1="297" x2="107" y2="297"/>
+<text class="bv2-s" x="113" y="302">편향²</text>
+<line class="bv2-var" x1="169" y1="297" x2="187" y2="297"/>
+<text class="bv2-s" x="193" y="302">분산</text>
+<line class="bv2-tot" x1="241" y1="297" x2="259" y2="297"/>
+<text class="bv2-s" x="265" y="302">총 오차</text>
+</svg>
 </div>
 
----
+가로축의 "복잡도"는 다항식의 차수만 뜻하지 않는다. 트리의 최대 깊이, 신경망의 층 수와 폭, 규제 강도의 역수, KNN에서 $k$ 의 역수가 전부 같은 손잡이다. 손잡이의 이름만 다를 뿐 곡선의 모양은 같다.
 
-## 분산(Variance)이란?
+한 가지 더 읽어야 할 것은 점선이다. 총 오차 곡선은 최저점에서도 $\sigma^2$ 선에 닿지 않는다. 편향 제곱과 분산이 동시에 0이 되는 복잡도는 없기 때문이다. 검증 오차가 어느 선 아래로 내려가지 않는다고 해서 모델이 잘못됐다는 뜻은 아니다. 데이터 자체가 정한 바닥일 수 있다.
 
-분산은 **훈련 데이터의 변동에 대한 민감도**다. 훈련 데이터가 조금 달라졌을 때 예측이 얼마나 크게 변하는지를 측정한다.
+## 학습 곡선이 둘을 가른다
 
-```
-Variance = E[(ŷ - E[ŷ])²]
-```
+지금까지의 분해는 진짜 함수 $f$ 를 안다는 전제 위에 있다. 실전에서는 $f$ 를 모르니 편향과 분산을 직접 잴 수 없다. 대신 **훈련 데이터의 양을 늘려가며 훈련 오차와 검증 오차를 함께 그린다.** 두 곡선의 높이와 간격이 어느 쪽 문제인지 알려준다.
 
-분산이 높다는 건, 훈련 데이터의 특정 노이즈까지 외워버린다는 뜻이다. 약간 다른 훈련셋으로 학습하면 완전히 다른 모델이 된다.
-
-### 높은 분산 = 과적합(Overfitting)
-
-같은 데이터에 15차 다항식을 맞추면:
-
-```python
-# degree=15: 15차 다항식
-pipe_d15 = Pipeline([
-    ('poly', PolynomialFeatures(degree=15)),
-    ('lr',   LinearRegression())
-])
-pipe_d15.fit(X, y)
-
-train_mse = np.mean((pipe_d15.predict(X) - y)**2)
-print(f"Degree 15 Train MSE: {train_mse:.4f}")
-
-# 다른 훈련 셋으로 실험
-np.random.seed(99)
-X2 = np.sort(np.random.uniform(0, 2*np.pi, n)).reshape(-1, 1)
-y2 = np.sin(X2.ravel()) + np.random.normal(0, 0.3, n)
-
-pipe_d15_v2 = Pipeline([
-    ('poly', PolynomialFeatures(degree=15)),
-    ('lr',   LinearRegression())
-])
-pipe_d15_v2.fit(X2, y2)
-
-# 두 모델의 예측 차이 (같은 x 위치에서)
-X_test = np.linspace(0, 2*np.pi, 100).reshape(-1, 1)
-diff = np.mean((pipe_d15.predict(X_test) - pipe_d15_v2.predict(X_test))**2)
-print(f"훈련셋이 달라졌을 때 예측 차이 (MSE): {diff:.4f}")
-```
-
-```
-Degree 15 Train MSE: 0.0512
-```
-
-```
-훈련셋이 달라졌을 때 예측 차이 (MSE): 1.8743
-```
-
-훈련 에러는 매우 낮지만(0.05), 조금 다른 훈련셋을 쓰면 예측이 크게 달라진다(차이 1.87). 이게 **높은 분산**이다.
-
-![과소적합 vs 균형 vs 과적합 비교](./underfitting-vs-overfitting.png)
-
-왼쪽(degree=1)은 사인 곡선의 형태를 전혀 잡지 못한다. 가운데(degree=4)는 주요 패턴을 잘 포착한다. 오른쪽(degree=15)은 훈련 데이터의 노이즈까지 따라가며 구불구불해진다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 과적합의 신호</strong><br>
-  훈련 에러는 낮은데 검증 에러가 높다면 분산 문제다. 훈련셋을 더 늘리거나, 모델을 단순하게 만들거나, <a href="/ml/regularization/">규제(Regularization)</a>를 적용해야 한다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 404" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="학습 곡선 두 패널. 위쪽 높은 편향 사례는 훈련 오차와 검증 오차가 모두 목표 수준보다 훨씬 높은 자리에서 만나고 둘 사이 갭이 거의 없다. 아래쪽 높은 분산 사례는 훈련 오차가 바닥에 붙어 있는데 검증 오차는 목표 수준 위에 남아 있어 갭이 크게 벌어진다.">
+<style>
+.bv3-ax { stroke: var(--text-muted, #6d6762); stroke-width: 1.4; }
+.bv3-tr { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2.6; }
+.bv3-va { fill: none; stroke: var(--accent, #9d5604); stroke-width: 2.6; }
+.bv3-goal { stroke: var(--text-muted, #6d6762); stroke-width: 1.3; stroke-dasharray: 5 4; }
+.bv3-lead { stroke: var(--text-muted, #6d6762); stroke-width: 1.1; }
+.bv3-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.bv3-l { fill: var(--text, #1c1917); font-size: 15px; }
+.bv3-s { fill: var(--text-muted, #6d6762); font-size: 14px; }
+</style>
+<defs>
+<marker id="bv3Arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+<path d="M 0 1 L 9 5 L 0 9 z" fill="var(--text-muted, #6d6762)"/>
+</marker>
+</defs>
+<!-- 위 패널 -->
+<text class="bv3-t" x="200" y="22" text-anchor="middle">위 · 높은 편향</text>
+<line class="bv3-ax" x1="58" y1="150" x2="378" y2="150"/>
+<line class="bv3-ax" x1="58" y1="40" x2="58" y2="150"/>
+<text class="bv3-l" x="26" y="96" text-anchor="middle" transform="rotate(-90 26 96)">오차</text>
+<line class="bv3-goal" x1="58" y1="128.4" x2="372" y2="128.4"/>
+<text class="bv3-s" x="62" y="123">목표 수준</text>
+<polyline class="bv3-va" points="58,57.1 136.5,66.6 215,71.2 293.5,72.9 372,74.0"/>
+<polyline class="bv3-tr" points="58,98.6 136.5,87.4 215,82.6 293.5,80.0 372,78.5"/>
+<line class="bv3-lead" x1="300" y1="98" x2="300" y2="84"/>
+<text class="bv3-s" x="300" y="112" text-anchor="middle">갭 작음</text>
+<text class="bv3-s" x="215" y="172" text-anchor="middle">훈련 데이터 크기</text>
+<!-- 아래 패널 -->
+<text class="bv3-t" x="200" y="212" text-anchor="middle">아래 · 높은 분산</text>
+<line class="bv3-ax" x1="58" y1="340" x2="378" y2="340"/>
+<line class="bv3-ax" x1="58" y1="230" x2="58" y2="340"/>
+<text class="bv3-l" x="26" y="286" text-anchor="middle" transform="rotate(-90 26 286)">오차</text>
+<line class="bv3-goal" x1="58" y1="318.4" x2="372" y2="318.4"/>
+<text class="bv3-s" x="62" y="313">목표 수준</text>
+<polyline class="bv3-va" points="58,238.5 136.5,264.0 215,279.5 293.5,288.6 372,294.2"/>
+<polyline class="bv3-tr" points="58,339.1 136.5,336.5 215,334.4 293.5,333.1 372,332.2"/>
+<line class="bv3-lead" x1="346" y1="296" x2="346" y2="329" marker-start="url(#bv3Arrow)" marker-end="url(#bv3Arrow)"/>
+<text class="bv3-s" x="340" y="313" text-anchor="end">갭 큼</text>
+<text class="bv3-s" x="215" y="362" text-anchor="middle">훈련 데이터 크기</text>
+<!-- 범례 -->
+<line class="bv3-tr" x1="58" y1="383" x2="76" y2="383"/>
+<text class="bv3-s" x="82" y="388">훈련 오차</text>
+<line class="bv3-va" x1="157" y1="383" x2="175" y2="383"/>
+<text class="bv3-s" x="181" y="388">검증 오차</text>
+<line class="bv3-goal" x1="256" y1="383" x2="274" y2="383"/>
+<text class="bv3-s" x="280" y="388">목표 수준</text>
+</svg>
 </div>
 
----
-
-## 트레이드오프: 왜 동시에 낮출 수 없나?
-
-편향과 분산은 **반대 방향으로 움직인다**. 모델을 복잡하게 만들수록:
-
-- 편향(Bias)은 낮아진다 → 데이터의 패턴을 더 잘 포착
-- 분산(Variance)은 높아진다 → 노이즈에도 민감해짐
-
-이게 **트레이드오프**의 본질이다.
-
-```python
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import mean_squared_error
-
-np.random.seed(42)
-degrees = range(1, 16)
-train_errors, val_errors = [], []
-
-X_full = np.sort(np.random.uniform(0, 2*np.pi, 100)).reshape(-1, 1)
-y_full = np.sin(X_full.ravel()) + np.random.normal(0, 0.3, 100)
-
-for deg in degrees:
-    pipe = Pipeline([
-        ('poly', PolynomialFeatures(degree=deg)),
-        ('lr',   LinearRegression())
-    ])
-    # 훈련 에러
-    pipe.fit(X_full, y_full)
-    tr_mse = mean_squared_error(y_full, pipe.predict(X_full))
-    # 검증 에러 (5-fold CV)
-    cv_scores = cross_val_score(pipe, X_full, y_full,
-                                 cv=5, scoring='neg_mean_squared_error')
-    train_errors.append(tr_mse)
-    val_errors.append(-cv_scores.mean())
-
-best_deg = degrees[int(np.argmin(val_errors))]
-print(f"최적 Degree: {best_deg}")
-print(f"  Train MSE: {train_errors[best_deg-1]:.4f}")
-print(f"  Val MSE:   {val_errors[best_deg-1]:.4f}")
-```
-
-```
-최적 Degree: 4
-  Train MSE: 0.0731
-  Val MSE:   0.1023
-```
-
-degree가 커질수록 훈련 에러는 계속 줄지만, 검증 에러는 어느 순간부터 다시 올라간다. **검증 에러가 최솟값이 되는 degree=4가 최적**이다. 이 지점이 편향과 분산의 균형점이다.
-
----
-
-## 학습 곡선(Learning Curve)으로 진단
-
-편향과 분산 문제를 실전에서 진단하는 가장 강력한 도구는 **학습 곡선(Learning Curve)** 이다.
-
-학습 곡선은 **훈련 데이터의 크기를 늘려가면서** 훈련 에러와 검증 에러가 어떻게 변하는지를 보여준다.
-
-```python
-from sklearn.model_selection import learning_curve
-
-np.random.seed(42)
-n = 200
-X_lc = np.sort(np.random.uniform(0, 2*np.pi, n)).reshape(-1, 1)
-y_lc = np.sin(X_lc.ravel()) + np.random.normal(0, 0.3, n)
-
-# 과소적합 모델 (degree=1)
-pipe_under = Pipeline([
-    ('poly', PolynomialFeatures(degree=1)),
-    ('lr',   LinearRegression())
-])
-
-train_sizes, train_scores, val_scores = learning_curve(
-    pipe_under, X_lc, y_lc,
-    train_sizes=np.linspace(0.1, 1.0, 10),
-    cv=5,
-    scoring='neg_mean_squared_error'
-)
-
-print("== 과소적합 모델 (Degree=1) ==")
-print(f"{'데이터 수':>8} | {'훈련 MSE':>10} | {'검증 MSE':>10}")
-for sz, tr, val in zip(train_sizes,
-                        -train_scores.mean(axis=1),
-                        -val_scores.mean(axis=1)):
-    print(f"{int(sz):>8} | {tr:>10.4f} | {val:>10.4f}")
-```
-
-```
-== 과소적합 모델 (Degree=1) ==
- 데이터 수 |   훈련 MSE |   검증 MSE
-       20 |     0.3289 |     0.3892
-       40 |     0.3351 |     0.3614
-       60 |     0.3398 |     0.3541
-       80 |     0.3412 |     0.3498
-      100 |     0.3423 |     0.3471
-      120 |     0.3431 |     0.3455
-      140 |     0.3436 |     0.3447
-      160 |     0.3440 |     0.3443
-      180 |     0.3443 |     0.3441
-      200 |     0.3445 |     0.3440
-```
-
-```python
-# 과적합 모델 (degree=15)
-pipe_over = Pipeline([
-    ('poly', PolynomialFeatures(degree=15)),
-    ('lr',   LinearRegression())
-])
-
-train_sizes, train_scores_o, val_scores_o = learning_curve(
-    pipe_over, X_lc, y_lc,
-    train_sizes=np.linspace(0.1, 1.0, 10),
-    cv=5,
-    scoring='neg_mean_squared_error'
-)
-
-print("\n== 과적합 모델 (Degree=15) ==")
-print(f"{'데이터 수':>8} | {'훈련 MSE':>10} | {'검증 MSE':>10}")
-for sz, tr, val in zip(train_sizes,
-                        -train_scores_o.mean(axis=1),
-                        -val_scores_o.mean(axis=1)):
-    print(f"{int(sz):>8} | {tr:>10.4f} | {val:>10.4f}")
-```
-
-```
-== 과적합 모델 (Degree=15) ==
- 데이터 수 |   훈련 MSE |   검증 MSE
-       20 |     0.0000 |    12.4521
-       40 |     0.0001 |     3.8745
-       60 |     0.0023 |     2.1033
-       80 |     0.0198 |     1.4872
-      100 |     0.0312 |     1.1047
-      120 |     0.0428 |     0.8934
-      140 |     0.0487 |     0.7612
-      160 |     0.0511 |     0.6841
-      180 |     0.0523 |     0.6243
-      200 |     0.0531 |     0.5812
-```
-
-![학습 곡선으로 보는 편향-분산 진단](./learning-curves.png)
-
-### 학습 곡선 해석
-
-**왼쪽 (과소적합, 높은 편향):**
-- 훈련 에러와 검증 에러 모두 높다
-- 데이터를 아무리 늘려도 두 곡선이 높은 위치에서 수렴한다
-- **갭이 작다** — 문제는 데이터 부족이 아니라 모델의 표현력 부족
-
-**오른쪽 (과적합, 높은 분산):**
-- 훈련 에러는 매우 낮다
-- 검증 에러와의 **갭이 크다**
-- 데이터를 늘릴수록 갭이 줄어들지만, 여전히 큰 갭이 남는다
-
-<div style="background: #f6fff0; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 학습 곡선 읽는 법</strong><br>
-  <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-    <li><strong>훈련/검증 에러가 모두 높고, 갭이 작다</strong> → 편향 문제(과소적합)</li>
-    <li><strong>훈련 에러는 낮고, 검증 에러는 높다 (갭이 크다)</strong> → 분산 문제(과적합)</li>
-    <li><strong>두 에러가 모두 낮고, 갭이 작다</strong> → 이상적인 상태</li>
-  </ul>
-</div>
-
----
-
-## 실전 진단 체크리스트
-
-편향-분산 분석은 이론이 아니라 실전 디버깅 도구다.
-
-```python
-from sklearn.model_selection import train_test_split
-
-# 전형적인 진단 코드
-def diagnose_model(model, X, y, cv=5):
-    """모델의 편향-분산 상태를 진단한다."""
-    from sklearn.model_selection import cross_val_score
-
-    # 훈련/검증 분리
-    X_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-    model.fit(X_tr, y_tr)
-
-    train_mse = mean_squared_error(y_tr, model.predict(X_tr))
-    val_mse   = mean_squared_error(y_val, model.predict(X_val))
-    gap       = val_mse - train_mse
-
-    print(f"훈련 MSE:  {train_mse:.4f}")
-    print(f"검증 MSE:  {val_mse:.4f}")
-    print(f"갭(Gap):   {gap:.4f}")
-    print()
-
-    # 임계값 (데이터마다 다를 수 있음)
-    baseline_mse = 0.15   # 허용 가능한 에러 수준
-
-    if train_mse > baseline_mse:
-        print("⚠️  높은 편향 (과소적합)")
-        print("   → 더 복잡한 모델 사용")
-        print("   → 더 많은 특성 추가")
-        print("   → 규제 강도 줄이기")
-    elif gap > baseline_mse:
-        print("⚠️  높은 분산 (과적합)")
-        print("   → 더 많은 훈련 데이터 수집")
-        print("   → 규제(L1/L2) 적용")
-        print("   → 앙상블 방법 (배깅, 랜덤 포레스트)")
-        print("   → 특성 수 줄이기 (PCA 등)")
-    else:
-        print("✅ 균형 잡힌 모델")
-
-# 예시
-pipe_d1  = Pipeline([('poly', PolynomialFeatures(1)),  ('lr', LinearRegression())])
-pipe_d4  = Pipeline([('poly', PolynomialFeatures(4)),  ('lr', LinearRegression())])
-pipe_d15 = Pipeline([('poly', PolynomialFeatures(15)), ('lr', LinearRegression())])
-
-for name, pipe in [("Degree 1", pipe_d1), ("Degree 4", pipe_d4), ("Degree 15", pipe_d15)]:
-    print(f"=== {name} ===")
-    diagnose_model(pipe, X_full, y_full)
-```
-
-```
-=== Degree 1 ===
-훈련 MSE:  0.3401
-검증 MSE:  0.3582
-갭(Gap):   0.0181
-
-⚠️  높은 편향 (과소적합)
-   → 더 복잡한 모델 사용
-   → 더 많은 특성 추가
-   → 규제 강도 줄이기
-
-=== Degree 4 ===
-훈련 MSE:  0.0731
-검증 MSE:  0.1023
-갭(Gap):   0.0292
-
-✅ 균형 잡힌 모델
-
-=== Degree 15 ===
-훈련 MSE:  0.0189
-검증 MSE:  0.5847
-갭(Gap):   0.5658
-
-⚠️  높은 분산 (과적합)
-   → 더 많은 훈련 데이터 수집
-   → 규제(L1/L2) 적용
-   → 앙상블 방법 (배깅, 랜덤 포레스트)
-   → 특성 수 줄이기 (PCA 등)
-```
-
-### 편향 문제 해결: 더 복잡한 모델
-
-```python
-from sklearn.linear_model import Ridge
-
-# Degree를 올려서 편향 해결
-for deg in [1, 2, 4, 6]:
-    pipe = Pipeline([
-        ('poly', PolynomialFeatures(degree=deg)),
-        ('ridge', Ridge(alpha=1.0))
-    ])
-    cv_mse = -cross_val_score(pipe, X_full, y_full,
-                               cv=5, scoring='neg_mean_squared_error').mean()
-    print(f"Degree {deg:2d} | CV MSE: {cv_mse:.4f}")
-```
-
-```
-Degree  1 | CV MSE: 0.3541
-Degree  2 | CV MSE: 0.1893
-Degree  4 | CV MSE: 0.0987
-Degree  6 | CV MSE: 0.1102
-```
-
-degree=4에서 검증 에러가 최소다. 이 이상 올리면 다시 올라간다.
-
-### 분산 문제 해결: 규제 적용
-
-```python
-# 규제를 적용해서 분산 감소
-pipe_overfit = Pipeline([
-    ('poly', PolynomialFeatures(degree=15)),
-    ('ridge', Ridge(alpha=100.0))   # 강한 규제
-])
-
-cv_mse = -cross_val_score(pipe_overfit, X_full, y_full,
-                            cv=5, scoring='neg_mean_squared_error').mean()
-print(f"Degree 15 + Ridge(alpha=100) | CV MSE: {cv_mse:.4f}")
-
-# 규제 없는 경우와 비교
-pipe_no_reg = Pipeline([
-    ('poly', PolynomialFeatures(degree=15)),
-    ('lr',   LinearRegression())
-])
-cv_mse_no_reg = -cross_val_score(pipe_no_reg, X_full, y_full,
-                                   cv=5, scoring='neg_mean_squared_error').mean()
-print(f"Degree 15 (규제 없음)         | CV MSE: {cv_mse_no_reg:.4f}")
-```
-
-```
-Degree 15 + Ridge(alpha=100) | CV MSE: 0.1147
-Degree 15 (규제 없음)         | CV MSE: 1.2384
-```
-
-같은 degree=15라도 [Ridge 규제](/ml/regularization/)를 적용하면 검증 MSE가 1.24에서 0.11로 크게 줄었다. 규제가 모델의 가중치를 억제해서 분산을 줄인 것이다.
-
----
-
-## 편향-분산의 4가지 경우
-
-![편향-분산 4가지 조합](./bias-variance-table.png)
-
-| 편향 | 분산 | 상태 | 조치 |
-|:---:|:---:|:---:|---|
-| 낮음 | 낮음 | 이상적 | 현재 상태 유지 |
-| 높음 | 낮음 | 과소적합 | 복잡한 모델, 더 많은 특성 |
-| 낮음 | 높음 | 과적합 | 규제, 더 많은 데이터, 앙상블 |
-| 높음 | 높음 | 최악 | 모델 구조 재검토 |
-
-실전에서 "높은 편향 + 높은 분산"이 되려면, 예를 들어 모델이 전체 공간에서는 단순하게 행동하지만 특정 영역에서만 과도하게 복잡해지는 경우다. 트리 기반 모델에서 일부 가지만 깊게 자라는 상황이 이에 해당한다.
-
----
-
-## 앙상블 방법: 분산을 줄이는 강력한 도구 (예고)
-
-편향-분산 관점에서, 개별 복잡한 모델은 낮은 편향을 가지지만 높은 분산을 가진다. 그렇다면 **여러 모델의 예측을 평균**내면 어떨까?
-
-```python
-import numpy as np
-
-# 10개의 서로 다른 훈련셋으로 학습한 모델들의 예측 시뮬레이션
-np.random.seed(42)
-n_models = 10
-x_test = 2.0
-
-individual_preds = []
-for i in range(n_models):
-    # 각기 다른 훈련셋
-    X_i = np.sort(np.random.uniform(0, 2*np.pi, 50)).reshape(-1, 1)
-    y_i = np.sin(X_i.ravel()) + np.random.normal(0, 0.3, 50)
-
-    pipe = Pipeline([
-        ('poly', PolynomialFeatures(degree=15)),
-        ('ridge', Ridge(alpha=0.1))
-    ])
-    pipe.fit(X_i, y_i)
-    pred = pipe.predict([[x_test]])[0]
-    individual_preds.append(pred)
-
-true_val = np.sin(x_test)
-ensemble_pred = np.mean(individual_preds)
-
-print(f"실제 값:           {true_val:.4f}")
-print(f"개별 예측 분산:    {np.var(individual_preds):.4f}")
-print(f"앙상블 예측:       {ensemble_pred:.4f}")
-print(f"앙상블 에러:       {(ensemble_pred - true_val)**2:.4f}")
-print(f"평균 개별 에러:    {np.mean([(p - true_val)**2 for p in individual_preds]):.4f}")
-```
-
-```
-실제 값:           0.9093
-개별 예측 분산:    0.1823
-앙상블 예측:       0.9218
-앙상블 에러:       0.0016
-평균 개별 에러:    0.1840
-```
-
-앙상블의 에러(0.0016)가 개별 모델의 평균 에러(0.1840)보다 훨씬 낮다. 이게 **배깅(Bagging)** 의 핵심 원리다. 개별 모델들의 랜덤한 오차(분산)가 평균을 내는 과정에서 서로 상쇄된다.
-
-이 원리는 뒤에서 다룰 **배깅(Bagging)과 랜덤 포레스트(Random Forest)** 의 핵심이다. 수백 개의 결정 트리를 서로 다른 훈련셋과 특성으로 학습시켜 분산을 획기적으로 낮추는 방법이다.
-
----
-
-## 흔한 실수
-
-### 1. 테스트 에러만 보고 진단한다
-
-```python
-# ❌ 잘못된 접근
-model.fit(X_train, y_train)
-test_mse = mean_squared_error(y_test, model.predict(X_test))
-print(f"테스트 MSE: {test_mse:.4f}")   # 이것만으로는 원인을 모른다
-
-# ✅ 올바른 접근: 훈련/검증 에러 모두 확인
-train_mse = mean_squared_error(y_train, model.predict(X_train))
-val_mse   = mean_squared_error(y_val,   model.predict(X_val))
-print(f"훈련 MSE: {train_mse:.4f}")
-print(f"검증 MSE: {val_mse:.4f}")
-print(f"갭:       {val_mse - train_mse:.4f}")
-```
-
-테스트 에러가 높다는 것만으로는 편향 문제인지 분산 문제인지 알 수 없다. **훈련 에러와 검증 에러를 함께** 봐야 원인을 진단할 수 있다.
-
-### 2. 데이터를 늘리는 게 항상 해결책이라 믿는다
-
-```python
-# ❌ 편향 문제에 데이터를 더 넣어봤자
-pipe_under = Pipeline([('poly', PolynomialFeatures(1)), ('lr', LinearRegression())])
-
-for n_data in [50, 200, 1000, 5000]:
-    X_n = np.sort(np.random.uniform(0, 2*np.pi, n_data)).reshape(-1, 1)
-    y_n = np.sin(X_n.ravel()) + np.random.normal(0, 0.3, n_data)
-    pipe_under.fit(X_n, y_n)
-    mse = mean_squared_error(y_n, pipe_under.predict(X_n))
-    print(f"n={n_data:5d} | Train MSE: {mse:.4f}")
-```
-
-```
-n=   50 | Train MSE: 0.3298
-n=  200 | Train MSE: 0.3401
-n= 1000 | Train MSE: 0.3445
-n= 5000 | Train MSE: 0.3451
-```
-
-직선(degree=1)은 데이터를 5000개로 늘려도 Train MSE가 0.34 수준에서 수렴한다. **편향 문제는 데이터로 해결할 수 없다.** 모델 구조를 바꿔야 한다.
-
-### 3. 규제를 강하게 적용하면 항상 좋다고 생각한다
-
-```python
-from sklearn.linear_model import Ridge
-
-# ❌ 규제가 너무 강하면 편향이 생긴다
-for alpha in [0.001, 1, 100, 10000]:
-    pipe = Pipeline([
-        ('poly', PolynomialFeatures(degree=4)),
-        ('ridge', Ridge(alpha=alpha))
-    ])
-    cv_mse = -cross_val_score(pipe, X_full, y_full,
-                               cv=5, scoring='neg_mean_squared_error').mean()
-    print(f"alpha={alpha:7.3f} | CV MSE: {cv_mse:.4f}")
-```
-
-```
-alpha=  0.001 | CV MSE: 0.1124
-alpha=  1.000 | CV MSE: 0.0987
-alpha=100.000 | CV MSE: 0.1253
-alpha=10000.000 | CV MSE: 0.3318
-```
-
-alpha=1이 최적이다. alpha가 너무 크면(10000) 모델이 지나치게 단순해져서 오히려 편향이 높아진다. 규제 강도도 **하이퍼파라미터 튜닝**이 필요하다.
-
----
+위 패널은 두 곡선이 목표 수준보다 한참 높은 자리에서 만난다. 데이터를 더 넣어도 만나는 높이가 내려가지 않는다. 모델이 표현할 수 있는 함수의 집합 안에 정답이 없기 때문이고, 데이터는 그 집합을 넓혀주지 못한다. 앞의 차수 1 실험이 정확히 이 모양이다. 표본을 50개에서 5만 개로 천 배 늘려도 훈련 MSE는 0.23에서 0.28 사이를 벗어나지 않는다.
+
+아래 패널은 훈련 오차가 바닥에 붙어 있는데 검증 오차만 위에 남아 있다. 모델이 훈련셋 하나를 외운 상태다. 이때는 데이터를 늘리는 게 실제로 듣는다. 외워야 할 점이 많아질수록 노이즈를 통째로 기억하기 어려워지고 갭이 좁혀진다.
+
+| 진단 | 신호 | 듣는 처방 | 헛수고 |
+|---|---|---|---|
+| 높은 편향 | 훈련 오차 자체가 높고 검증 오차와 거의 붙어 있다 | 복잡도 올리기, 특성 추가, 규제 완화 | 데이터 더 모으기 |
+| 높은 분산 | 훈련 오차는 낮은데 검증 오차와 크게 벌어진다 | 규제, 데이터 추가, 앙상블, 특성 줄이기 | 모델 더 키우기 |
+
+분산 쪽 처방에서 규제가 앞자리에 있는 이유는 복잡도를 깎지 않고도 듣기 때문이다. 사인 데이터 100개로 실험해 보면, 차수 15 다항 회귀의 5-폴드 CV MSE는 규제 없이 0.124인데 Ridge를 alpha=1로 걸면 0.091까지 내려간다. 차수는 그대로 두고 계수 크기만 눌러 분산을 깎은 결과다. 다만 애초에 차수 3으로 맞춘 모델의 0.083에는 끝내 못 미친다. 규제는 과한 복잡도를 사후에 다듬는 도구이지 맞는 복잡도를 고르는 일을 대신해주지는 않는다.
+
+:::warning
+
+**검증 오차 하나만 보면 진단이 안 된다**
+
+검증 MSE 하나만 들고서는 편향 문제인지 분산 문제인지 가릴 수 없고, 두 문제의 처방은 서로 반대다. 훈련 오차를 같이 찍어보는 데는 코드 한 줄이면 충분한데 이걸 건너뛰고 하이퍼파라미터 탐색부터 돌리는 경우가 많다. `cross_validate(..., return_train_score=True)` 로 훈련 점수를 같이 받아두면 된다.
+
+:::
+
+## 분산을 줄이는 또 하나의 손잡이
+
+복잡도를 낮추는 것 말고도 분산을 줄이는 방법이 있다. 여러 모델의 예측을 평균내는 것이다. 분산이 $\sigma_m^2$ 인 모델 $M$ 개가 서로 완전히 독립이라면, 평균의 분산은 $\sigma_m^2 / M$ 로 줄어든다. 편향은 그대로다. 복잡도를 낮추지 않고 분산만 깎을 수 있다는 뜻이다.
+
+현실에서는 모델들이 같은 데이터에서 나오니 완전히 독립일 수 없다. 예측들 사이의 상관계수를 $\rho$ 라 하면 평균의 분산은 이렇게 된다.
+
+$$\text{Var}\left(\frac{1}{M}\sum_{m=1}^{M} \hat{f}_m\right) = \rho\,\sigma_m^2 + \frac{1 - \rho}{M}\,\sigma_m^2$$
+
+$M$ 을 아무리 키워도 둘째 항만 0으로 가고 첫째 항 $\rho\sigma_m^2$ 는 남는다. 모델 수를 늘리는 것보다 모델들 사이의 상관을 낮추는 게 더 중요하다는 결론이 여기서 나온다. 랜덤 포레스트가 각 분기마다 특성을 무작위로 골라 트리들을 일부러 다르게 만드는 이유다.
+
+## 흔한 오해
+
+### 데이터를 더 모으면 웬만한 건 해결된다
+
+분산 문제에만 해당한다. 편향은 모델이 표현할 수 있는 함수의 범위에서 오는 것이고, 데이터의 양은 그 범위를 넓히지 못한다. 앞의 직선 실험이 그 증거다. 데이터 수집은 대개 가장 비싸고 오래 걸리는 작업이니, 착수하기 전에 학습 곡선을 그려 좁힐 갭이 실제로 있는지부터 확인하는 편이 낫다.
+
+### 규제는 세게 걸수록 안전하다
+
+규제는 복잡도 손잡이를 왼쪽으로 미는 일이다. 너무 밀면 반대편 낭떠러지로 떨어진다. 같은 사인 데이터 100개에 차수 4 다항 회귀를 맞추고 Ridge 강도만 바꿔가며 5-폴드 CV MSE를 재보면 이렇다.
+
+| alpha | 0.1 | 1 | 100 | 10000 |
+|---|---|---|---|---|
+| CV MSE | 0.086 | 0.097 | 0.122 | 0.236 |
+
+alpha가 10000이면 CV MSE 0.236으로, 차수 1 직선의 0.261과 거의 같은 수준까지 떨어진다. 규제를 극단까지 밀면 4차 다항식이 사실상 직선이 되기 때문이다. 규제 강도도 다른 하이퍼파라미터와 똑같이 검증으로 골라야 한다.
 
 ## 마치며
 
-편향-분산 트레이드오프는 머신러닝에서 모든 모델 선택의 근간이 되는 개념이다. 정리하면:
+편향-분산 분해가 실전에서 하는 일은 하나다. "성능이 안 나온다"는 막연한 상태를 "편향 문제다" 또는 "분산 문제다"라는 결정 가능한 상태로 바꾼다. 그 뒤로는 할 일이 정해져 있다.
 
-- **편향(Bias)**: 모델이 데이터의 실제 패턴을 얼마나 못 따라가는가 (과소적합의 원인)
-- **분산(Variance)**: 모델이 훈련 데이터의 노이즈에 얼마나 민감한가 (과적합의 원인)
-- **총 에러 = Bias² + Variance + σ²** — 줄일 수 없는 노이즈가 하한선을 정한다
-- 학습 곡선으로 어떤 문제인지 진단하고, 그에 맞는 해결책을 적용한다
+이 분해는 특정 알고리즘의 성질이 아니라 제곱 오차의 대수적 항등식이다. 선형 회귀든 트리든 신경망이든 복잡도 손잡이가 있는 한 같은 U자 곡선 위에 있고, 최적점 위치만 다르다. 새로운 모델을 배울 때마다 "이 모델의 복잡도 손잡이는 무엇인가"를 먼저 찾으면 튜닝의 절반은 끝난 셈이다.
 
-다음 글에서는 선형 모델과 완전히 다른 방식으로 예측하는 **결정 트리(Decision Tree)** 를 다룬다. 수식 대신 "질문"으로 데이터를 쪼개는 이 알고리즘이 높은 분산이라는 치명적 약점을 가지고 있다는 걸 확인하고, 이후 앙상블 방법으로 이를 어떻게 극복하는지까지 이어갈 예정이다.
+한편 총 오차를 $\sigma^2$ 아래로 내리는 방법은 없다. 검증 점수를 더 짜내려고 씨름하기 전에, 지금 바닥이 모델의 한계인지 데이터의 한계인지 구분하는 게 먼저다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>MSE 분해</strong>: E[(y - ŷ)²] = Bias² + Variance + σ²</li>
-    <li><strong>높은 편향</strong> = 과소적합 → 훈련/검증 에러 모두 높음, 갭은 작음 → 모델을 더 복잡하게</li>
-    <li><strong>높은 분산</strong> = 과적합 → 훈련 에러 낮음, 검증 에러 높음, 갭 큼 → 규제, 앙상블, 데이터 추가</li>
-    <li><strong>학습 곡선</strong>: 훈련 데이터 크기 변화에 따른 훈련/검증 에러로 문제를 시각적으로 진단</li>
-    <li><strong>σ²</strong>: 줄일 수 없는 노이즈, 모든 모델의 에러 하한선</li>
-    <li><strong>앙상블</strong>: 여러 모델의 예측을 평균내어 분산을 줄임 — 배깅/랜덤 포레스트의 원리</li>
-  </ul>
-</div>
+## 함께 보면 좋은 글
 
----
+- [교차 검증](/ml/cross-validation/) : 검증 오차를 한 번의 분할에 맡기지 않고 재는 방법
+- [규제](/ml/regularization/) : 파라미터 크기에 제약을 걸어 분산을 낮추는 방법
+- [앙상블과 배깅](/ml/ensemble-and-bagging/) : 예측을 평균내 분산을 줄이는 절차
+- [하이퍼파라미터 튜닝](/ml/hyperparameter-tuning/) : 복잡도 손잡이를 자동으로 찾는 탐색 전략
 
 ## 참고자료
 
-- [Andrew Ng — Machine Learning Specialization: Bias and Variance (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
-- [Scikit-learn — Learning Curves Documentation](https://scikit-learn.org/stable/modules/learning_curve.html)
-- [The Elements of Statistical Learning, Ch. 7 — Hastie, Tibshirani, Friedman](https://hastie.su.domains/ElemStatLearn/)
-- [Understanding the Bias-Variance Tradeoff — Scott Fortmann-Roe](http://scott.fortmann-roe.com/docs/BiasVariance.html)
-- [StatQuest: Bias and Variance (YouTube)](https://www.youtube.com/watch?v=EuBBz3bI-aA)
+- [The Elements of Statistical Learning, Ch. 7](https://hastie.su.domains/ElemStatLearn/)
+- [scikit-learn: Underfitting vs. Overfitting](https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html)
+- [scikit-learn: Learning Curve](https://scikit-learn.org/stable/modules/learning_curve.html)
+- [Understanding the Bias-Variance Tradeoff (Scott Fortmann-Roe)](http://scott.fortmann-roe.com/docs/BiasVariance.html)

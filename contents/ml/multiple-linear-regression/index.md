@@ -1,83 +1,39 @@
 ---
 date: '2026-01-06'
-title: '다중 선형 회귀(Multiple Linear Regression): 변수가 늘어나면 달라지는 것들'
+title: '변수가 늘어나면 달라지는 것들, 다중 선형 회귀'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 6
-tags: ['Multiple Linear Regression', 'Feature Scaling', 'Standardization', '머신러닝 기초', 'sklearn']
-summary: '변수 하나에서 여러 개로 확장하는 다중 선형 회귀의 원리와 벡터화 구현. Feature Scaling이 왜 필수인지, 어떤 방법을 써야 하는지 코드로 완전히 이해한다.'
+tags: ['Multiple Linear Regression', '다중 선형 회귀', '다중공선성', '정규 방정식', 'Feature Scaling', '머신러닝 기초']
+summary: '변수가 여러 개인 선형 회귀에서 달라지는 세 가지. 정규 방정식으로 해를 한 번에 구하는 법, 겹친 변수가 계수 해석을 무너뜨리는 다중공선성, 스케일 차이가 경사하강법의 수렴을 막는 이유.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/gradient-descent/)에서 경사하강법으로 면적 → 가격 예측 모델을 만들었다. 잘 동작했지만, 한 가지 찜찜한 점이 있었다 — **b가 수렴을 안 한다는 것**. 5,000번 반복해도 b는 최적값(-0.08)에 한참 못 미치는 -0.0003에 머물렀다. 원인은 입력값의 **스케일 차이**였다.
+집값은 면적 하나로 정해지지 않는다. 방 개수, 층수, 역까지의 거리, 건축 연도까지 변수가 수십 개일 수 있다. 변수를 하나에서 여러 개로 늘려도 모델의 생김새는 거의 그대로다. 각 변수에 가중치를 붙이고 전부 더하면 된다.
 
-현실은 이보다 더 복잡하다. 집값은 면적 하나로 정해지지 않는다. 방 개수, 층수, 역까지 거리, 건축 연도... 변수가 수십 개일 수도 있다. 변수가 늘어나면 모델은 어떻게 바뀌고, 스케일 문제는 얼마나 심각해질까?
+달라지는 건 푸는 방법과, 그 과정에서 새로 생기는 함정이다. 해를 한 번에 구하는 공식이 생기고, 서로 겹치는 변수가 섞이면 계수를 읽을 수 없게 되고, 변수마다 값의 범위가 다르면 경사하강법이 수렴하지 못한다. 이 세 가지를 차례로 본다.
 
----
+## 여러 변수를 벡터로 묶는다
 
-## 단일 변수에서 다중 변수로
+$$\hat{y} = w_1 x_1 + w_2 x_2 + \cdots + w_n x_n + b$$
 
-[선형 회귀 글](/ml/linear-regression/)에서 다룬 모델은 변수가 하나였다.
+각 $w_j$는 "다른 변수를 고정했을 때 $x_j$가 1 늘면 $\hat{y}$가 $w_j$만큼 변한다"는 뜻이다. 면적이 1평 늘 때의 가격 상승분과 방이 하나 늘 때의 상승분을 따로 떼어 볼 수 있다.
 
-```
-ŷ = wx + b
-```
+변수가 많아지면 항을 일일이 쓰기 어렵다. 데이터 하나의 특성을 벡터 $\mathbf{x}$, 가중치를 벡터 $\mathbf{w}$로 묶으면 예측은 내적 하나로 줄어든다.
 
-변수가 여러 개면 각각에 가중치를 붙인다.
+$$\hat{y} = \mathbf{x} \cdot \mathbf{w} + b$$
 
-```
-ŷ = w₁x₁ + w₂x₂ + w₃x₃ + ... + wₙxₙ + b
-```
+데이터가 $m$개면 행이 데이터이고 열이 특성인 $(m \times n)$ 행렬 $X$로 전부 한 번에 계산한다.
 
-예를 들어 면적(x₁), 방 수(x₂), 층수(x₃)로 집값을 예측한다면:
+$$\hat{\mathbf{y}} = X\mathbf{w} + b$$
 
-```
-가격 = w₁ × 면적 + w₂ × 방수 + w₃ × 층수 + b
-```
+코드로는 `y_pred = X @ w + b` 한 줄이다. 행렬 곱이 모든 데이터의 예측을 동시에 처리한다. $n$은 특성 수, $m$은 데이터 수, $X$는 $(m \times n)$이라는 이 표기는 scikit-learn과 PyTorch가 공통으로 쓰는 규약이다.
 
-각 wᵢ의 의미는 **"다른 변수를 고정했을 때, xᵢ가 1 증가하면 ŷ가 wᵢ만큼 변한다"** 는 것이다. 면적이 1평 늘어날 때 가격이 얼마나 오르는지, 방이 하나 추가될 때 가격이 얼마나 오르는지를 각각 독립적으로 파악할 수 있다.
-
-### 벡터화 표기
-
-변수가 많아지면 수식을 일일이 쓰기 어렵다. 행렬로 한 번에 표현하면 깔끔하다.
-
-데이터 하나를 벡터로 쓰면:
-
-```
-x = [x₁, x₂, x₃]    (특성 벡터)
-w = [w₁, w₂, w₃]    (가중치 벡터)
-```
-
-예측값:
-
-```
-ŷ = x · w + b    (내적 + 편향)
-```
-
-데이터가 m개면 행렬 X(m × n)로 한 번에 계산한다.
-
-```
-ŷ = Xw + b
-```
-
-코드로 쓰면 `y_pred = X @ w + b` — 한 줄이다. NumPy의 행렬 곱(`@`)이 모든 데이터 포인트에 대한 예측을 동시에 처리한다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 표기법 정리</strong><br>
-  <strong>n</strong>: 특성(변수) 수, <strong>m</strong>: 데이터 포인트 수.<br>
-  X는 (m × n) 행렬 — 행이 데이터, 열이 특성. w는 (n,) 벡터. 이 표기가 scikit-learn, PyTorch 등 거의 모든 ML 라이브러리의 표준이다.
-</div>
-
----
-
-## 다중 선형 회귀 구현
-
-실제 데이터로 구현해보자. 아파트 가격 예측 — 면적(평), 방 수, 층수를 특성으로 사용한다.
+아래 예제는 전부 아파트 20채 데이터를 쓴다. 면적(평), 방 수, 층수로 가격(억원)을 예측한다.
 
 ```python
 import numpy as np
 
-# 아파트 데이터: 면적(평), 방 수, 층수 → 가격(억원)
 X = np.array([
     [142, 5, 23], [91, 2, 20], [132, 4,  3], [54, 2,  5],
     [146, 4, 19], [111, 5,  7], [100, 1, 21], [60, 4,  9],
@@ -86,296 +42,224 @@ X = np.array([
     [143, 4, 20], [63, 4, 15], [42, 3,  7],  [61, 4, 12],
 ], dtype=float)
 
-y = np.array([
-    7.56, 4.63, 6.45, 3.34, 6.88, 6.80, 5.25, 4.84,
-    5.97, 7.28, 6.06, 4.23, 5.01, 5.83, 6.70, 5.45,
-    6.85, 4.73, 3.57, 4.84,
-])
+y = np.array([7.56, 4.63, 6.45, 3.34, 6.88, 6.80, 5.25, 4.84, 5.97, 7.28,
+              6.06, 4.23, 5.01, 5.83, 6.70, 5.45, 6.85, 4.73, 3.57, 4.84])
 ```
 
-경사하강법을 다변수 버전으로 확장하면, 핵심 변화는 `dw`가 스칼라에서 **벡터**가 된다는 것이다.
+## 정규 방정식으로 해를 한 번에 구한다
+
+선형 회귀의 비용 함수는 가중치에 대한 2차식이다. 미분해서 0으로 두면 해가 닫힌 형태로 떨어진다. 편향 $b$를 가중치 안으로 흡수시키려고 $X$ 맨 앞에 1로 채운 열을 붙이고, 그렇게 확장한 가중치를 $\theta$라 하면:
+
+$$\theta = (X^\top X)^{-1} X^\top y$$
 
 ```python
-# 초기화
-n_features = X.shape[1]  # 3
-w = np.zeros(n_features)
-b = 0.0
-lr = 0.00001
-epochs = 5000
-m = len(y)
-
-for epoch in range(epochs):
-    y_pred = X @ w + b                    # (20,) = (20,3) @ (3,)
-    error = y_pred - y                    # (20,)
-    dw = (2/m) * (X.T @ error)            # (3,) = (3,20) @ (20,)
-    db = (2/m) * np.sum(error)            # scalar
-    w = w - lr * dw
-    b = b - lr * db
-
-    if epoch % 1000 == 0:
-        cost = np.mean(error ** 2)
-        print(f"Epoch {epoch:5d} | Cost: {cost:.4f} | w={np.round(w, 4)}")
+X_b = np.c_[np.ones(len(X)), X]          # 맨 앞에 1 열 추가
+theta = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
+print(np.round(theta, 4))
 ```
 
-```
-Epoch     0 | Cost: 32.9157 | w=[0.0129 0.0004 0.0015]
-Epoch  1000 | Cost: 0.8968 | w=[0.0441 0.0298 0.0386]
-Epoch  2000 | Cost: 0.8099 | w=[0.0421 0.0561 0.0505]
-Epoch  3000 | Cost: 0.7449 | w=[0.041  0.081  0.0543]
-Epoch  4000 | Cost: 0.6878 | w=[0.0402 0.1046 0.0552]
+```text
+[1.0321 0.0247 0.4909 0.0262]
 ```
 
-5,000번 반복 후에도 cost가 0.64에서 크게 줄지 않는다. sklearn의 정답(cost ≈ 0.07)과 비교하면 한참 멀다. w₂(방 수)는 0.13인데 정답은 0.49 — 수렴이 안 된 것이다.
+학습률도 반복 횟수도 없다. 한 줄로 최적해가 나온다. `LinearRegression`이 내부에서 하는 일도 이것이다(정확히는 역행렬을 직접 구하는 대신 수치적으로 더 안정한 최소제곱 분해를 쓴다). 그런데도 실무가 경사하강법을 쓰는 이유는 두 가지다. $(X^\top X)^{-1}$의 계산량이 특성 수의 세제곱, 즉 $O(n^3)$이라 특성이 수만 개면 감당이 안 된다. 그리고 $X^\top X$의 역행렬이 아예 존재하지 않는 경우가 있다.
 
-**왜?** 면적은 42\~156, 방 수는 1\~5, 층수는 2\~23. 값의 범위가 전혀 다르다.
+## 겹친 변수가 계수를 무너뜨린다
 
----
+면적을 평으로도 넣고 m²로도 넣어보자. 두 열은 3.3058을 곱한 관계라 사실상 같은 정보다.
 
-## Feature Scaling이 필요한 이유
+```python
+area_m2 = np.round(X[:, 0] * 3.3058, 1)   # 1평 = 3.3058 m²
+X2 = np.c_[X, area_m2]
 
-면적의 범위가 42\~156이고 방 수는 1\~5다. 기울기(gradient) 계산에서 `X.T @ error`를 하면, 면적 열은 값이 크니 기울기도 크고, 방 수 열은 값이 작으니 기울기도 작다.
+X2_b = np.c_[np.ones(len(X2)), X2]
+theta2 = np.linalg.inv(X2_b.T @ X2_b) @ X2_b.T @ y
+print(np.round(theta2, 3))
+```
 
-결과적으로 **하나의 학습률로 모든 변수를 동시에 적절히 업데이트하는 게 불가능**해진다.
+```text
+[ 1.023 -1.492  0.495  0.026  0.459]
+```
 
-- 학습률을 면적에 맞추면 → 방 수와 층수가 너무 느리게 수렴
-- 학습률을 방 수에 맞추면 → 면적이 발산
+면적(평)의 계수가 0.025에서 **-1.492** 로 뒤집혔다. 그대로 읽으면 "면적이 넓을수록 집값이 떨어진다"는 말이 된다. 사실일 리 없다. 반대편에서 m² 열의 계수 0.459가 상쇄하고 있을 뿐이다. 면적이 1평 늘면 m² 열도 3.3058 늘어나니 실제 효과는 이렇게 합쳐진다.
 
-이전 글에서 단일 변수인데도 이 문제를 겪었다. 면적(60\~155)이 크니 w는 빠르게 수렴하는데 b는 느렸다. 변수가 여러 개면 이 문제가 훨씬 심각해진다.
+$$-1.492 + 0.459 \times 3.3058 = 0.025$$
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 등고선으로 이해하기</strong><br>
-  비용 함수를 2D 등고선으로 그리면, 스케일이 다른 변수는 <strong>가늘고 긴 타원</strong>을 만든다. 경사하강법은 이 타원의 긴 축 방향으로 지그재그하며 느리게 수렴한다. 스케일을 맞추면 등고선이 <strong>원</strong>에 가까워지고, 경사하강법은 곧장 최저점으로 내려간다.
+원래 계수와 같다. 예측 성능도 멀쩡하다(R² 0.9508). 무너진 건 예측이 아니라 계수 해석이다.
+
+원인은 정규 방정식에 있다. 두 열이 정확히 비례하면 $X^\top X$의 행렬식이 0이라 역행렬이 존재하지 않는다. 위에서 계산이 되긴 한 건 m²를 0.1 단위로 반올림하면서 미세한 차이가 남았기 때문이고, 그렇게 겨우 뒤집은 행렬이 내놓은 답이라 값이 이렇게 극단적이다. 변수들이 서로 선형관계에 가까운 이 상태를 **다중공선성(Multicollinearity)** 이라 한다.
+
+진단은 VIF(Variance Inflation Factor)로 한다. 변수 $x_j$를 나머지 변수들로 회귀했을 때의 결정계수 $R_j^2$로 정의한다.
+
+$$\mathrm{VIF}_j = \frac{1}{1 - R_j^2}$$
+
+다른 변수들로 $x_j$가 잘 설명될수록 $R_j^2$가 1에 가까워지고 VIF가 폭발한다. 보통 10을 넘으면 의심하고 들여다본다.
+
+```python
+from sklearn.linear_model import LinearRegression
+
+def vif(A):
+    out = []
+    for j in range(A.shape[1]):
+        others = np.delete(A, j, axis=1)
+        r2 = LinearRegression().fit(others, A[:, j]).score(others, A[:, j])
+        out.append(1 / (1 - r2))
+    return np.round(out, 2)
+
+print(vif(X))    # [1.06 1.01 1.05]
+print(vif(X2))   # [15206498.59  1.14  1.08  15206537.23]
+```
+
+겹친 열 하나를 지우는 게 가장 깔끔한 해결이다. 지우기 아깝다면 가중치 크기 자체에 패널티를 거는 규제를 쓴다. 표준화한 `X2`에 `Ridge(alpha=1.0)`을 걸면 면적 두 열의 계수가 0.419씩 고르게 나뉘고, 부호가 뒤집히는 일도 사라진다. 변수를 계속 늘릴 때 훈련 오차는 줄어도 새 데이터에서의 오차가 어느 지점부터 다시 늘어나는 과적합을 막는 것도 규제의 몫이다.
+
+## 스케일이 다르면 수렴하지 못한다
+
+특성이 너무 많아 정규 방정식을 못 쓰면 경사하강법으로 돌아온다. 다변수 버전에서 달라지는 건 `dw`가 스칼라에서 벡터가 된다는 점뿐이다.
+
+```python
+w = np.zeros(X.shape[1])
+b, lr, m = 0.0, 0.00001, len(y)
+
+for epoch in range(5001):
+    error = X @ w + b - y                 # (20,)
+    if epoch in (0, 5000):
+        print(f"{epoch:5d} | cost={np.mean(error**2):.4f} | w={np.round(w, 4)}")
+    w -= lr * (2/m) * (X.T @ error)       # (3,) = (3,20) @ (20,)
+    b -= lr * (2/m) * np.sum(error)
+```
+
+```text
+    0 | cost=32.9157 | w=[0. 0. 0.]
+ 5000 | cost=0.6362 | w=[0.0396 0.127  0.0549]
+```
+
+5,000번을 돌려도 비용이 0.636에서 멈춘다. 정규 방정식이 알려준 최적해에서의 비용은 0.069고, 방 수의 계수는 0.127까지밖에 못 올라갔는데 정답은 0.491이다. 원인은 기울기 크기다. `X.T @ error`에서 면적 열은 값이 42~156이라 기울기가 크고, 방 수 열은 1~5라 기울기가 작다. 학습률은 하나뿐인데 변수마다 필요한 보폭이 수십 배씩 차이 난다. 면적에 맞추면 방 수가 거의 안 움직이고, 방 수에 맞추면 면적이 발산한다.
+
+비용 함수의 등고선으로 보면 이 상황이 그대로 드러난다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 560" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="스케일이 다른 변수의 비용 함수 등고선은 가늘고 긴 타원이라 경사하강법이 지그재그로 내려가고, 표준화 후에는 등고선이 원에 가까워져 최저점으로 곧장 내려간다">
+<defs>
+<marker id="mlr1ArrowBad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-danger, #cb2121)"/>
+</marker>
+<marker id="mlr1ArrowGood" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-success, #107836)"/>
+</marker>
+</defs>
+<!-- 위 패널: 스케일 전 -->
+<text x="200" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="var(--text, #1c1917)">스케일 전</text>
+<text x="200" y="52" text-anchor="middle" font-size="15" fill="var(--text-muted, #6d6762)">등고선이 가늘고 긴 타원</text>
+<ellipse cx="200" cy="150" rx="160" ry="46" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<ellipse cx="200" cy="150" rx="120" ry="34" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<ellipse cx="200" cy="150" rx="80" ry="22" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<ellipse cx="200" cy="150" rx="40" ry="11" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<polyline points="52,120 76,174 104,118 132,184 158,124 180,178 194,134 200,150" fill="none" stroke="var(--text-danger, #cb2121)" stroke-width="2" marker-end="url(#mlr1ArrowBad)"/>
+<circle cx="52" cy="120" r="4" fill="var(--text-muted, #6d6762)"/>
+<text x="52" y="104" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">시작</text>
+<circle cx="200" cy="150" r="5" fill="var(--primary, #0a756c)"/>
+<text x="200" y="218" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">최저점</text>
+<text x="200" y="244" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">지그재그 경로, 수렴 느림</text>
+<line x1="40" y1="272" x2="360" y2="272" stroke="var(--border, #e7e5e4)" stroke-width="1"/>
+<!-- 아래 패널: 스케일 후 -->
+<text x="200" y="302" text-anchor="middle" font-size="17" font-weight="700" fill="var(--text, #1c1917)">스케일 후</text>
+<text x="200" y="326" text-anchor="middle" font-size="15" fill="var(--text-muted, #6d6762)">등고선이 원에 가까움</text>
+<circle cx="200" cy="428" r="78" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<circle cx="200" cy="428" r="58" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<circle cx="200" cy="428" r="39" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<circle cx="200" cy="428" r="20" fill="none" stroke="var(--text-muted, #6d6762)" stroke-opacity="0.6" stroke-width="1.2"/>
+<line x1="140" y1="368" x2="196" y2="424" stroke="var(--text-success, #107836)" stroke-width="2" marker-end="url(#mlr1ArrowGood)"/>
+<circle cx="140" cy="368" r="4" fill="var(--text-muted, #6d6762)"/>
+<text x="140" y="352" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">시작</text>
+<circle cx="200" cy="428" r="5" fill="var(--primary, #0a756c)"/>
+<text x="200" y="524" text-anchor="middle" font-size="14" fill="var(--primary, #0a756c)">최저점</text>
+<text x="200" y="550" text-anchor="middle" font-size="15" fill="var(--text, #1c1917)">곧장 내려감, 수렴 빠름</text>
+</svg>
 </div>
 
-해결책은 간단하다. **모든 변수를 비슷한 범위로 맞춰준다.** 이게 Feature Scaling이다.
+해결은 모든 변수를 비슷한 범위로 맞추는 것이다. 표준화(Standardization)는 각 열에서 그 열의 평균을 빼고 표준편차로 나눈다.
 
----
-
-## Feature Scaling 방법 비교
-
-| 방법 | 공식 | 결과 범위 | 특징 |
-|------|------|----------|------|
-| **Min-Max Normalization** | (x − min) / (max − min) | [0, 1] | 범위가 명확, 이상치에 민감 |
-| **Standardization (Z-score)** | (x − μ) / σ | 평균 0, 표준편차 1 | 이상치에 덜 민감, 가장 범용적 |
-| **Mean Normalization** | (x − μ) / (max − min) | 약 [−0.5, 0.5] | Min-Max와 Standardization의 중간 |
-
-### Min-Max Normalization
-
-모든 값을 0\~1 사이로 압축한다.
+$$z = \frac{x - \mu}{\sigma}$$
 
 ```python
-X_min = X.min(axis=0)
-X_max = X.max(axis=0)
-X_minmax = (X - X_min) / (X_max - X_min)
-# 면적 42 → 0.0, 면적 156 → 1.0
-```
-
-**장점**: 결과가 [0, 1]로 직관적. 이미지 처리 등 범위가 중요한 경우 적합.
-**단점**: 이상치(outlier)가 하나라도 있으면 나머지 데이터가 좁은 범위로 몰린다.
-
-### Standardization (Z-score)
-
-평균을 0, 표준편차를 1로 맞춘다. 실무에서 **가장 많이 쓰는 방법**이다.
-
-```python
-X_mean = X.mean(axis=0)  # [109.25, 3.15, 12.7]
-X_std = X.std(axis=0)    # [34.58, 1.31, 6.79]
-X_scaled = (X - X_mean) / X_std
-```
-
-**장점**: 이상치의 영향이 상대적으로 작다. 대부분의 ML 알고리즘에서 기본 선택.
-**단점**: 결과가 특정 범위로 제한되지 않는다 (보통 -3\~3 정도).
-
-### Mean Normalization
-
-평균을 빼고 범위로 나눈다.
-
-```python
-X_mean_norm = (X - X.mean(axis=0)) / (X.max(axis=0) - X.min(axis=0))
-```
-
-Min-Max와 Standardization 사이의 절충안. Andrew Ng 강의에서 자주 등장하지만, 실무에서는 Standardization이 더 일반적이다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 어떤 방법을 쓸까?</strong><br>
-  확신이 없으면 <strong>Standardization</strong>을 쓴다. 선형 회귀, 로지스틱 회귀, SVM, 신경망 등 경사하강법 기반 알고리즘에서 거의 항상 잘 동작한다. 트리 기반 모델(Decision Tree, Random Forest, XGBoost)은 분할 기준이 크기 비교라서 스케일링이 필요 없다.
-</div>
-
----
-
-## Before/After: 스케일링의 효과
-
-같은 데이터, 같은 경사하강법인데 스케일링 여부만 다르다. 차이가 극적이다.
-
-```python
-# Standardization 적용
-X_mean = X.mean(axis=0)
-X_std = X.std(axis=0)
+X_mean, X_std = X.mean(axis=0), X.std(axis=0)
 X_scaled = (X - X_mean) / X_std
 
 w = np.zeros(3)
-b = 0.0
-lr = 0.01  # 학습률을 1,000배 키울 수 있다!
-m = len(y)
+b, lr = 0.0, 0.01                         # 학습률을 1,000배 키울 수 있다
 
-for epoch in range(5001):
-    y_pred = X_scaled @ w + b
-    error = y_pred - y
-    cost = np.mean(error ** 2)
-    dw = (2/m) * (X_scaled.T @ error)
-    db = (2/m) * np.sum(error)
-    w = w - lr * dw
-    b = b - lr * db
-
-    if epoch in [0, 10, 50, 100, 500, 1000]:
-        print(f"Epoch {epoch:5d} | Cost: {cost:.4f}")
+for epoch in range(1001):
+    error = X_scaled @ w + b - y
+    w -= lr * (2/m) * (X_scaled.T @ error)
+    b -= lr * (2/m) * np.sum(error)
 ```
 
-```
-Epoch     0 | Cost: 32.9157
-Epoch    10 | Cost: 21.9449
-Epoch    50 | Cost: 4.3841
-Epoch   100 | Cost: 0.6392
-Epoch   500 | Cost: 0.0693
-Epoch  1000 | Cost: 0.0693
-```
-
-| | 스케일링 없이 (lr=0.00001) | 스케일링 후 (lr=0.01) |
+| | 스케일링 전 (lr=0.00001) | 스케일링 후 (lr=0.01) |
 |---|---|---|
-| **500 epoch** | Cost: 0.97 | Cost: 0.069 (수렴 완료) |
-| **5000 epoch** | Cost: 0.64 (아직 수렴 안 됨) | Cost: 0.069 |
-| **학습률** | 0.00001 | 0.01 (1,000배) |
-| **수렴 시점** | 수렴 못 함 | ~400 epoch |
+| 100 epoch | cost 1.067 | cost 0.639 |
+| 500 epoch | cost 0.969 | cost 0.069 |
+| 5,000 epoch | cost 0.636 | cost 0.069 |
+| 수렴 시점 | 수렴 못 함 | 300 epoch 부근 |
 
-학습률을 **1,000배** 키울 수 있고, 수백 epoch 만에 수렴한다. 스케일링 없이는 5,000번을 돌려도 못 닿는 cost(0.069)에 말이다.
+학습률을 1,000배 키울 수 있고, 수백 번 만에 끝난다. 스케일링 없이 5,000번을 돌려도 닿지 못한 지점이다.
 
-### 스케일링 후 가중치 해석
-
-스케일링 후의 가중치 `[0.856, 0.645, 0.178]`은 원래 단위가 아니라 **표준화된 단위**다. 원래 스케일로 되돌리려면:
+학습이 끝난 가중치 `[0.856, 0.645, 0.178]`은 원래 단위가 아니라 표준화된 단위다. 원래 스케일로 되돌리려면 표준편차로 나눈다.
 
 ```python
-# 스케일링된 가중치 → 원래 스케일
 w_original = w / X_std
 b_original = b - np.sum(w * X_mean / X_std)
-print(f"원래 스케일: w = {np.round(w_original, 4)}")
-print(f"             b = {b_original:.4f}")
+print(np.round(w_original, 4), round(b_original, 4))
 ```
 
+```text
+[0.0247 0.4909 0.0262] 1.0321
 ```
-원래 스케일: w = [0.0247, 0.4909, 0.0262]
-             b = 1.0321
-```
 
-해석하면:
-- **면적** 1평 증가 → 가격 약 **0.025억(250만원)** 상승
-- **방 수** 1개 증가 → 가격 약 **0.49억(4,900만원)** 상승
-- **층수** 1층 증가 → 가격 약 **0.026억(260만원)** 상승
+정규 방정식의 답과 소수 넷째 자리까지 같다. 면적 1평에 약 250만원, 방 하나에 약 4,900만원, 한 층에 약 260만원이다.
 
-방 수의 영향이 면적이나 층수보다 훨씬 크다. 스케일링 전 가중치(`[0.04, 0.13, 0.05]`)로는 이 사실을 알 수 없었다.
+:::warning
 
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 흔한 오해: "가중치가 크면 중요한 변수다"</strong><br>
-  스케일링 <strong>전</strong>의 가중치로 변수 중요도를 비교하면 안 된다. 면적(42~156)은 값이 크기 때문에 가중치가 작게 나오고, 방 수(1~5)는 값이 작기 때문에 가중치가 크게 나온다. 변수의 상대적 중요도를 비교하려면 반드시 스케일링 후의 가중치를 봐야 한다.
-</div>
+**계수 크기로 변수 중요도를 비교하려면 스케일을 맞춰야 한다**
 
----
+원래 단위 계수만 보면 방 수(0.49)가 면적(0.025)의 20배라 방 수가 압도적으로 중요해 보인다. 하지만 면적은 42에서 156까지 움직이고 방 수는 1에서 5까지밖에 못 움직인다. 각자 표준편차 1만큼 움직였을 때의 효과로 환산하면 면적 0.856, 방 수 0.645로 순서가 뒤집힌다. 단위가 제각각인 계수를 나란히 놓고 크기를 비교하면 안 된다.
 
-## sklearn으로 한 번에
+:::
 
-위에서 직접 구현한 건 원리를 이해하기 위해서였다. 실전에서는 sklearn의 `Pipeline`으로 스케일링과 학습을 한 번에 처리한다.
+## sklearn에서는 파이프라인으로
 
 ```python
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-# 파이프라인: 스케일링 → 선형 회귀를 하나로
-pipe = Pipeline([
-    ('scaler', StandardScaler()),
-    ('lr', LinearRegression())
-])
-
+pipe = Pipeline([('scaler', StandardScaler()), ('lr', LinearRegression())])
 pipe.fit(X, y)
 
-print(f"R² = {pipe.score(X, y):.4f}")
-print(f"coef = {pipe.named_steps['lr'].coef_}")
-print(f"intercept = {pipe.named_steps['lr'].intercept_:.4f}")
+print(f"R2 = {pipe.score(X, y):.4f}")             # 0.9506
+print(pipe.predict(np.array([[85, 3, 10]])))      # [4.869] → 4.87억원
 ```
 
-```
-R² = 0.9506
-coef = [0.8555  0.6452  0.1777]
-intercept = 5.6135
-```
-
-R² = 0.95 — 세 가지 변수로 가격 변동의 95%를 설명한다. `LinearRegression`은 내부적으로 정규 방정식을 쓰기 때문에 스케일링 없이도 정확한 해를 구하지만, 파이프라인에 넣어두면 다른 모델로 교체할 때(로지스틱 회귀, SVM 등) 스케일링이 이미 적용되어 있어 편하다.
-
-```python
-# 새 아파트 예측
-import numpy as np
-new_house = np.array([[85, 3, 10]])  # 면적 85평, 방 3개, 10층
-pred = pipe.predict(new_house)
-print(f"예측 가격: {pred[0]:.2f}억원")  # → 4.87억원
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 Pipeline을 쓰는 진짜 이유</strong><br>
-  스케일링과 모델을 따로 관리하면, 새 데이터를 예측할 때 스케일링을 잊는 실수가 생긴다. Pipeline은 <code>fit</code>, <code>predict</code>, <code>score</code>를 호출하면 전처리와 모델을 자동으로 순서대로 적용한다. 코드가 깔끔해지고 실수가 줄어든다.
-</div>
-
----
-
-## 흔한 실수
-
-### 1. Test 데이터에 Train의 스케일러를 적용하지 않는다
-
-```python
-# ❌ 잘못된 방법: test 데이터를 따로 스케일링
-scaler_train = StandardScaler().fit(X_train)
-X_train_scaled = scaler_train.transform(X_train)
-
-scaler_test = StandardScaler().fit(X_test)  # 별도 fit → 기준이 다름!
-X_test_scaled = scaler_test.transform(X_test)
-```
-
-```python
-# ✅ 올바른 방법: train으로 fit한 scaler를 test에도 적용
-scaler = StandardScaler().fit(X_train)
-X_train_scaled = scaler.transform(X_train)
-X_test_scaled = scaler.transform(X_test)  # 같은 scaler로 transform만
-```
-
-Train 데이터의 평균과 표준편차로 test 데이터를 변환해야 한다. Test 데이터로 별도로 fit하면 기준이 달라져서 모델이 엉뚱한 예측을 한다. Pipeline을 쓰면 이 실수를 구조적으로 방지할 수 있다.
-
-### 2. 범주형 변수에 스케일링을 적용한다
-
-```python
-# ❌ 원-핫 인코딩된 변수까지 스케일링
-# gender: [0, 1], type: [0, 0, 1] → 이미 범위가 정해져 있다
-```
-
-원-핫 인코딩이나 0/1 이진 변수는 스케일링할 필요가 없다. 오히려 스케일링하면 의미가 왜곡된다. 수치형 연속 변수만 스케일링한다.
-
-### 3. 타겟(y)까지 스케일링한다
-
-일반적인 선형 회귀에서 y는 스케일링하지 않는다. y를 스케일링하면 예측값도 스케일링된 단위로 나오기 때문에 다시 역변환해야 하고, 해석이 복잡해진다. 단, 신경망에서 y의 범위가 극단적으로 크면 학습 안정성을 위해 스케일링하기도 한다 — 이건 특수한 경우다.
-
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 데이터 누수(Data Leakage) 주의</strong><br>
-  Train/Test 분할 <strong>전에</strong> 전체 데이터로 스케일링하면, test 데이터의 통계가 train에 섞여 들어간다. 반드시 분할 <strong>후</strong> train 데이터만으로 fit하고, 그 기준으로 test를 transform해야 한다.
-</div>
-
----
+세 변수로 가격 변동의 95%를 설명한다. `LinearRegression`은 정규 방정식을 쓰니 스케일링 없이도 같은 해를 구하지만, 파이프라인에 묶어두면 스케일러의 기준이 모델과 함께 움직인다. train 데이터로 fit한 평균과 표준편차를 test에도 그대로 써야 하는데, 둘을 따로 관리하면 이 순서를 놓치기 쉽다. `pipe.predict()`는 전처리와 예측을 항상 같은 순서로 적용한다. 스케일러로는 표준화 외에 Min-Max 정규화(값을 [0, 1]로 압축)나 RobustScaler(중앙값과 IQR 사용)도 있지만, 경사하강법으로 학습하는 모델에는 표준화가 무난한 기본값이다. 트리 기반 모델은 분할 기준이 크기 비교라서 스케일링 자체가 필요 없다.
 
 ## 마치며
 
-변수가 여러 개가 되면 모델 자체보다 **전처리**가 결과를 좌우한다. 같은 경사하강법, 같은 데이터인데 Feature Scaling 하나로 5,000번 돌려도 안 되던 수렴이 268번 만에 끝난다. 이건 이론적 차이가 아니라 실전에서 매번 마주하는 차이다.
+변수가 여러 개가 되면 모델의 식보다 그 앞뒤가 결과를 좌우한다. 정규 방정식은 반복 없이 정확한 해를 주지만 특성이 많아지면 못 쓰고, 겹친 변수 앞에서는 아예 풀리지 않는다. 경사하강법은 그 제약이 없는 대신 변수들의 스케일이 맞아야 움직인다.
 
-여기까지가 **회귀(Regression)** 의 이야기다. 다음 글에서는 연속값 예측이 아닌, "Yes 또는 No"를 판단하는 **분류(Classification)** 문제로 넘어간다. 선형 회귀에 시그모이드 함수 하나를 얹어 확률을 출력하는 **로지스틱 회귀(Logistic Regression)** 를 다룬다.
+계수를 읽는 일도 마찬가지다. 이 데이터에서 원래 단위 계수는 방 수를 1등으로 지목하고, 표준화 단위 계수는 면적을 1등으로 지목한다. 둘 다 같은 모델의 같은 해인데 결론이 다르다. 어느 단위에서 나온 숫자인지 확인하지 않으면 계수 해석은 언제든 뒤집힌다.
+
+다음 글에서는 연속값 예측이 아니라 "Yes 또는 No"를 판단하는 분류 문제로 넘어간다. 선형 회귀에 시그모이드 함수 하나를 얹어 확률을 출력하는 로지스틱 회귀다.
+
+## 함께 보면 좋은 글
+
+- [선형 회귀](/ml/linear-regression/) : 변수 하나짜리 직선을 데이터에 맞추는 기본형
+- [경사하강법](/ml/gradient-descent/) : 학습률과 반복으로 비용 함수를 내려가는 절차
+- [규제](/ml/regularization/) : 가중치 크기에 패널티를 걸어 겹친 변수의 계수를 붙잡는 방법
 
 ## 참고자료
 
-- [Andrew Ng — Machine Learning Specialization: Multiple Features (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
-- [Scikit-learn — StandardScaler Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html)
-- [Scikit-learn — Pipeline Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html)
-- [Feature Scaling — Why it Matters (Sebastian Raschka)](https://sebastianraschka.com/Articles/2014_about_feature_scaling.html)
+- [Andrew Ng, Machine Learning Specialization: Multiple Features (Coursera)](https://www.coursera.org/specializations/machine-learning-introduction)
+- [Scikit-learn, StandardScaler Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html)
+- [Scikit-learn, LinearRegression Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)

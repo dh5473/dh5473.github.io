@@ -1,71 +1,98 @@
 ---
 date: '2026-01-25'
-title: '분류 모델 평가 지표: Precision, Recall, F1, AUC-ROC 완벽 정리'
+title: 'Accuracy 99%가 거짓말일 때 보는 Precision과 Recall'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 25
-tags: ['Model Evaluation', '모델 평가', 'Precision', 'Recall', 'F1-Score', 'ROC-AUC', 'Confusion Matrix', '머신러닝']
-summary: 'Confusion Matrix에서 Precision, Recall, F1-Score, ROC-AUC까지. 분류 모델의 성능을 정확하게 측정하는 방법과 상황별 지표 선택 기준을 정리한다.'
+tags: ['Model Evaluation', '모델 평가', 'Precision', 'Recall', 'F1-Score', 'ROC-AUC', 'PR-AUC', 'Confusion Matrix', '머신러닝']
+summary: '혼동 행렬의 네 칸에서 Precision, Recall, F1, AUC가 어떻게 나오는지, 클래스가 불균형할 때 어떤 지표가 모델을 과대평가하는지 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-Phase 5까지 24개 글에 걸쳐 긴 여정을 달려왔다. [선형 회귀](/ml/linear-regression/)에서 시작해 [로지스틱 회귀](/ml/logistic-regression/), [결정 트리](/ml/decision-tree/)와 [랜덤 포레스트](/ml/random-forest/), [XGBoost/LightGBM](/ml/xgboost-vs-lightgbm/), 그리고 [신경망](/ml/neural-network-basics/)과 [학습 안정화 기법](/ml/neural-network-tips/)까지 -- 주요 지도학습 알고리즘은 전부 다뤘다. 도구상자는 꽉 찼다.
+신용카드 거래 1만 건 중 사기가 100건이라고 하자. 모든 거래를 "정상"이라고 찍는 모델을 만들면 Accuracy는 99%가 나온다. 사기는 한 건도 못 잡았는데 성적표는 훌륭하다.
 
-이제 핵심 질문이 남았다. **이 모델들 중 어떤 게 더 좋은가?** "좋다"는 걸 어떻게 측정하는가?
+이게 Accuracy Paradox다. 양성이 소수인 데이터에서 Accuracy는 사실상 다수 클래스를 맞힌 비율이고, 정작 궁금한 소수 클래스의 성능은 그 숫자 뒤에 숨는다. 그리고 현실의 분류 문제는 거의 다 이렇다. 스팸 메일, 질병 진단, 이상 탐지, 제조 불량 검출 전부 양성이 소수다.
 
-"정확도(Accuracy) 높은 게 좋은 모델 아니야?"라고 생각할 수 있다. 맞는 것 같지만, 현실은 그렇게 단순하지 않다. 이번 글부터 Phase 6 -- 모델 평가 -- 를 시작한다. 첫 번째 주제는 **분류 모델의 평가 지표**다.
+Accuracy가 못 쓸 지표라는 말은 아니다. 클래스 비율이 대체로 균형 잡혀 있고 두 방향의 오분류 비용이 비슷하다면 Accuracy로 충분하다. 문제는 그런 조건이 드물다는 것이다.
 
----
-
-## 1. Accuracy의 함정
-
-Accuracy(정확도)는 가장 직관적인 지표다.
-
-```
-Accuracy = 정확히 맞힌 수 / 전체 수
-```
-
-테스트 데이터 100개 중 95개를 맞히면 Accuracy 95%. 깔끔하다. 그런데 이런 상황을 보자.
-
-**예시: 신용카드 사기 탐지**
-
-| 구분 | 건수 |
-|------|------|
-| 정상 거래 | 9,900건 |
-| 사기 거래 | 100건 |
-| 합계 | 10,000건 |
-
-여기서 모델이 **모든 거래를 "정상"이라고 예측**하면 어떻게 될까?
-
-```
-Accuracy = 9,900 / 10,000 = 99%
-```
-
-99% 정확도. 숫자만 보면 훌륭하다. 하지만 이 모델은 사기를 **단 하나도** 잡지 못한다. 사기 탐지기로서 완전히 쓸모없다.
-
-이것이 **Accuracy Paradox**다. 클래스 불균형(imbalanced data)이 심한 데이터에서 Accuracy는 모델의 실제 성능을 감춘다. 현실의 데이터는 거의 항상 불균형이다 -- 스팸 메일, 질병 진단, 이상 탐지, 제조 불량 검출... 모두 양성(Positive) 클래스가 소수다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Accuracy가 유용한 경우</strong><br>클래스 비율이 대체로 균형 잡혀 있고(예: 50:50 ~ 70:30), 양성/음성 오분류의 비용이 비슷할 때는 Accuracy도 충분히 좋은 지표다. 문제는 이런 조건이 현실에서 드물다는 것이다.</div>
-
-Accuracy만으로 부족하다면, **어떤 종류의 실수를 얼마나 했는지** 분해해서 봐야 한다. 그 시작점이 Confusion Matrix다.
+그래서 필요한 건 "몇 개 맞혔나"가 아니라 "어떤 종류의 실수를 얼마나 했나"다.
 
 ---
 
-## 2. Confusion Matrix (혼동 행렬)
+## 혼동 행렬의 네 칸
 
-Confusion Matrix는 모델의 예측 결과를 4가지로 분류한 표다.
+예측 결과를 실제 클래스와 예측 클래스의 조합으로 갈라 놓은 표가 혼동 행렬(Confusion Matrix)이다. 이진 분류라면 네 칸이 나온다.
 
-|  | 예측: Positive | 예측: Negative |
-|--|----------------|----------------|
-| **실제: Positive** | True Positive (TP) | False Negative (FN) |
-| **실제: Negative** | False Positive (FP) | True Negative (TN) |
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 275" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="혼동 행렬 2x2. 행은 실제 클래스, 열은 예측 클래스다. 예측 Positive 열 전체가 Precision의 분모이고, 실제 Positive 행 전체가 Recall의 분모다">
+<style>
+.cm1-h { font-size: 15px; fill: var(--text, #1c1917); }
+.cm1-m { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.cm1-code { font-size: 18px; font-weight: 700; }
+.cm1-sub { font-size: 14px; fill: var(--text, #1c1917); }
+.cm1-tag { font-size: 15px; font-weight: 700; }
+.cm1-cell { stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.cm1-mark { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+</style>
+<!-- 축 라벨 -->
+<text class="cm1-m" x="48" y="44" text-anchor="middle">예측 →</text>
+<text class="cm1-h" x="146.5" y="44" text-anchor="middle">Positive</text>
+<text class="cm1-h" x="263.5" y="44" text-anchor="middle">Negative</text>
+<text class="cm1-m" x="48" y="90" text-anchor="middle">실제</text>
+<text class="cm1-h" x="48" y="110" text-anchor="middle">Positive</text>
+<text class="cm1-m" x="48" y="182" text-anchor="middle">실제</text>
+<text class="cm1-h" x="48" y="202" text-anchor="middle">Negative</text>
+<!-- 네 칸 -->
+<rect class="cm1-cell" x="88" y="52" width="117" height="90" rx="4" fill="var(--bg-success, #f0fdf4)"/>
+<rect class="cm1-cell" x="205" y="52" width="117" height="90" rx="4" fill="var(--bg-danger, #fef2f2)"/>
+<rect class="cm1-cell" x="88" y="144" width="117" height="90" rx="4" fill="var(--bg-danger, #fef2f2)"/>
+<rect class="cm1-cell" x="205" y="144" width="117" height="90" rx="4" fill="var(--bg-success, #f0fdf4)"/>
+<!-- 맞음 표시 -->
+<path class="cm1-mark" d="M98 68 l4 5 l9 -12" stroke="var(--text-success, #107836)"/>
+<path class="cm1-mark" d="M215 160 l4 5 l9 -12" stroke="var(--text-success, #107836)"/>
+<!-- 틀림 표시 -->
+<path class="cm1-mark" d="M215 62 l10 10 M225 62 l-10 10" stroke="var(--text-danger, #cb2121)"/>
+<path class="cm1-mark" d="M98 154 l10 10 M108 154 l-10 10" stroke="var(--text-danger, #cb2121)"/>
+<!-- 칸 이름 -->
+<text class="cm1-code" x="146.5" y="95" text-anchor="middle" fill="var(--text-success, #107836)">TP</text>
+<text class="cm1-sub" x="146.5" y="118" text-anchor="middle">진양성</text>
+<text class="cm1-code" x="263.5" y="95" text-anchor="middle" fill="var(--text-danger, #cb2121)">FN</text>
+<text class="cm1-sub" x="263.5" y="118" text-anchor="middle">위음성</text>
+<text class="cm1-code" x="146.5" y="187" text-anchor="middle" fill="var(--text-danger, #cb2121)">FP</text>
+<text class="cm1-sub" x="146.5" y="210" text-anchor="middle">위양성</text>
+<text class="cm1-code" x="263.5" y="187" text-anchor="middle" fill="var(--text-success, #107836)">TN</text>
+<text class="cm1-sub" x="263.5" y="210" text-anchor="middle">진음성</text>
+<!-- 지표가 읽는 구역 -->
+<rect x="86" y="50" width="121" height="186" rx="4" fill="none" stroke="var(--primary, #0a756c)" stroke-width="2" stroke-dasharray="7 4"/>
+<rect x="86" y="50" width="238" height="94" rx="4" fill="none" stroke="var(--accent, #9d5604)" stroke-width="2" stroke-dasharray="2 3"/>
+<text class="cm1-tag" x="146.5" y="258" text-anchor="middle" fill="var(--primary, #0a756c)">Precision</text>
+<text class="cm1-tag" x="361" y="102" text-anchor="middle" fill="var(--accent, #9d5604)">Recall</text>
+</svg>
+</div>
 
-각 칸의 의미를 암 검진 예시로 풀어보자.
+암 검진으로 읽으면 이렇다. TP는 환자를 환자라고 진단한 것, TN은 정상인을 정상이라고 진단한 것이다. FN은 환자를 정상이라고 돌려보낸 것이고, FP는 정상인에게 암 소견을 준 것이다. 같은 오답이지만 무게가 전혀 다르다. FN은 치료 시기를 놓치게 하고 FP는 추가 검사 비용을 만든다.
 
-- **TP (True Positive)**: 실제 암 환자를 "암"이라고 정확히 진단
-- **FN (False Negative)**: 실제 암 환자를 "정상"이라고 놓침 → **가장 위험한 실수**
-- **FP (False Positive)**: 정상인을 "암"이라고 잘못 진단 → 불필요한 추가 검사
-- **TN (True Negative)**: 정상인을 "정상"이라고 정확히 진단
+주요 지표는 전부 이 네 칸의 조합이다. 중요한 건 **각 지표가 표의 어느 방향을 읽느냐**다. Precision은 예측 Positive **열**을 세로로 읽고, Recall은 실제 Positive **행**을 가로로 읽는다. 둘이 TP를 공유하되 분모가 다르다는 것이 이 두 지표를 헷갈리게 만드는 지점이다.
+
+| 지표 | 정의 | 읽는 방향 | 묻는 것 |
+|---|---|---|---|
+| Accuracy | $\frac{TP+TN}{TP+TN+FP+FN}$ | 대각선 대 전체 | 전체 중 맞힌 비율은 |
+| Precision | $\frac{TP}{TP+FP}$ | 예측 Positive 열 | 양성이라 한 것 중 진짜는 |
+| Recall | $\frac{TP}{TP+FN}$ | 실제 Positive 행 | 진짜 양성 중 잡은 것은 |
+| Specificity | $\frac{TN}{TN+FP}$ | 실제 Negative 행 | 진짜 음성 중 걸러낸 것은 |
+
+Precision은 모델이 "이건 양성이다"라고 말했을 때 그 말을 얼마나 믿을 수 있는지를 잰다. Recall은 세상에 존재하는 양성 중 몇 퍼센트를 건져 올렸는지를 잰다.
+
+:::warning
+
+**scikit-learn의 혼동 행렬은 위 그림과 축 순서가 다르다**
+
+`confusion_matrix`는 레이블을 오름차순(0, 1)으로 놓기 때문에 행렬이 `[[TN, FP], [FN, TP]]` 형태로 나온다. 교과서 그림은 보통 Positive를 먼저 놓아서 TP가 좌상단에 오는데, 코드로 뽑으면 TP가 우하단에 있다. 인덱스를 손으로 꺼내 쓸 때 이 순서를 착각하면 Precision과 Recall이 통째로 뒤바뀐다.
+
+:::
 
 ```python
 from sklearn.metrics import confusion_matrix
@@ -73,437 +100,230 @@ from sklearn.metrics import confusion_matrix
 y_true = [1, 0, 1, 1, 0, 1, 0, 0, 1, 0]
 y_pred = [1, 0, 1, 0, 0, 1, 1, 0, 1, 0]
 
-cm = confusion_matrix(y_true, y_pred)
-print(cm)
-# [[4, 1],   ← 실제 Negative: TN=4, FP=1
-#  [1, 4]]   ← 실제 Positive: FN=1, TP=4
+tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+print(tn, fp, fn, tp)   # 4 1 1 4
 ```
-
-Confusion Matrix 자체는 숫자의 나열일 뿐이다. 여기서 **의미 있는 지표**를 뽑아내야 한다.
 
 ---
 
-## 3. Precision (정밀도)
+## 정밀도와 재현율은 같은 손잡이의 양 끝
 
-```
-Precision = TP / (TP + FP)
-```
+Precision과 Recall은 독립적으로 올릴 수 있는 값이 아니다. 로지스틱 회귀든 부스팅이든 확률을 출력하는 모델은 그 확률을 임계값(threshold)과 비교해서 양성/음성을 정한다. 기본값은 0.5지만 이건 그냥 기본값이다. 임계값을 움직이면 두 지표가 반대 방향으로 움직인다.
 
-**"모델이 Positive라고 예측한 것 중에서, 실제로 Positive인 비율"**
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 285" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 열 개 샘플에 임계값 0.25와 0.65를 적용한 비교. 임계값이 낮으면 Recall 5/5에 Precision 5/8, 높으면 Precision 3/3에 Recall 3/5가 된다">
+<style>
+.pr1-t { font-size: 15px; font-weight: 700; fill: var(--text, #1c1917); }
+.pr1-v { font-size: 14px; fill: var(--text, #1c1917); }
+.pr1-m { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.pr1-z { font-size: 14px; fill: var(--primary, #0a756c); }
+.pr1-neg { fill: var(--bg-subtle, #f5f4f2); stroke: var(--text-muted, #6d6762); stroke-width: 1.5; }
+.pr1-pos { fill: var(--primary, #0a756c); }
+.pr1-axis { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.pr1-cut { stroke: var(--accent, #9d5604); stroke-width: 2; }
+.pr1-zone { fill: var(--primary, #0a756c); fill-opacity: 0.10; }
+</style>
+<!-- 범례 -->
+<circle class="pr1-neg" cx="46" cy="14" r="7"/>
+<text class="pr1-m" x="60" y="19">음성 샘플</text>
+<path class="pr1-pos" d="M150 6 l8 14 l-16 0 Z"/>
+<text class="pr1-m" x="164" y="19">양성 샘플</text>
+<!-- 위: 낮은 임계값 -->
+<text class="pr1-t" x="30" y="52">threshold 0.25</text>
+<text class="pr1-v" x="375" y="52" text-anchor="end">Precision 5/8 · Recall 5/5</text>
+<rect class="pr1-zone" x="123.75" y="60" width="251.25" height="54"/>
+<text class="pr1-z" x="249" y="78" text-anchor="middle">양성으로 예측</text>
+<line class="pr1-axis" x1="40" y1="114" x2="375" y2="114"/>
+<line class="pr1-cut" x1="123.75" y1="60" x2="123.75" y2="122"/>
+<circle class="pr1-neg" cx="66.8" cy="95" r="7"/>
+<circle class="pr1-neg" cx="100.3" cy="95" r="7"/>
+<circle class="pr1-neg" cx="140.5" cy="95" r="7"/>
+<circle class="pr1-neg" cx="194.1" cy="95" r="7"/>
+<circle class="pr1-neg" cx="244.35" cy="95" r="7"/>
+<path class="pr1-pos" d="M160.6 87 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M224.25 87 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M274.5 87 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M311.35 87 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M351.55 87 l8 14 l-16 0 Z"/>
+<!-- 아래: 높은 임계값 -->
+<text class="pr1-t" x="30" y="174">threshold 0.65</text>
+<text class="pr1-v" x="375" y="174" text-anchor="end">Precision 3/3 · Recall 3/5</text>
+<rect class="pr1-zone" x="257.75" y="182" width="117.25" height="54"/>
+<text class="pr1-z" x="316" y="200" text-anchor="middle">양성으로 예측</text>
+<line class="pr1-axis" x1="40" y1="236" x2="375" y2="236"/>
+<line class="pr1-cut" x1="257.75" y1="182" x2="257.75" y2="244"/>
+<circle class="pr1-neg" cx="66.8" cy="217" r="7"/>
+<circle class="pr1-neg" cx="100.3" cy="217" r="7"/>
+<circle class="pr1-neg" cx="140.5" cy="217" r="7"/>
+<circle class="pr1-neg" cx="194.1" cy="217" r="7"/>
+<circle class="pr1-neg" cx="244.35" cy="217" r="7"/>
+<path class="pr1-pos" d="M160.6 209 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M224.25 209 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M274.5 209 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M311.35 209 l8 14 l-16 0 Z"/>
+<path class="pr1-pos" d="M351.55 209 l8 14 l-16 0 Z"/>
+<text class="pr1-m" x="207" y="266" text-anchor="middle">모델이 출력한 양성 확률</text>
+</svg>
+</div>
 
-직관적으로 말하면: 모델이 "이건 양성이다"라고 말했을 때, **그 말을 얼마나 믿을 수 있는가?**
+임계값을 0.25로 내리면 양성 다섯 개를 하나도 놓치지 않는다(Recall 100%). 대신 음성 세 개가 딸려 들어와 Precision이 62.5%로 떨어진다. 0.65로 올리면 양성이라 부른 셋이 전부 진짜 양성이지만(Precision 100%), 애매한 위치의 양성 둘을 놓쳐 Recall이 60%가 된다. 두 분포가 완전히 갈라지지 않는 한 이 교환은 피할 수 없다.
 
-### Precision이 중요한 상황
+그래서 지표를 고르는 일은 사실 **어느 쪽 오류를 더 아프게 볼 것인가**를 정하는 일이다.
 
-**False Positive의 비용이 클 때** Precision을 중시한다.
+| 도메인 | 더 아픈 실수 | 우선 지표 |
+|---|---|---|
+| 스팸 필터 | FP. 업무 메일이 스팸함으로 사라진다 | Precision |
+| 상품 추천 | FP. 엉뚱한 추천이 이탈을 부른다 | Precision |
+| 암 조기 검진 | FN. 환자를 정상이라며 돌려보낸다 | Recall |
+| 제조 불량 검출 | FN. 불량품이 그대로 출하된다 | Recall |
+| 악성코드 탐지 | FN. 감염이 조용히 퍼진다 | Recall |
 
-| 상황 | FP의 결과 | Precision 중요도 |
-|------|----------|-----------------|
-| 스팸 메일 필터 | 정상 메일이 스팸함으로 → 중요 메일 놓침 | 매우 높음 |
-| 추천 시스템 | 관련 없는 상품 추천 → 사용자 이탈 | 높음 |
-| 법적 판결 | 무고한 사람 유죄 판결 | 매우 높음 |
-
-스팸 필터를 예로 들면, 중요한 업무 메일이 스팸으로 분류되면 치명적이다. 차라리 스팸을 몇 개 놓치더라도(FN 증가), 스팸이라고 판단한 것은 확실히 스팸이어야 한다(높은 Precision).
-
----
-
-## 4. Recall (재현율, Sensitivity)
-
-```
-Recall = TP / (TP + FN)
-```
-
-**"실제 Positive인 것 중에서, 모델이 Positive로 잡아낸 비율"**
-
-직관적으로: 진짜 양성 케이스를 **얼마나 빠짐없이 잡아내는가?**
-
-### Recall이 중요한 상황
-
-**False Negative의 비용이 클 때** Recall을 중시한다.
-
-| 상황 | FN의 결과 | Recall 중요도 |
-|------|----------|--------------|
-| 암 조기 검진 | 암 환자를 정상으로 판단 → 치료 시기 놓침 | 매우 높음 |
-| 제조 불량 검출 | 불량품이 출하 → 사고/리콜 | 매우 높음 |
-| 바이러스 탐지 | 악성코드를 정상으로 판단 → 시스템 감염 | 매우 높음 |
-
-암 검진에서 실제 암 환자 100명 중 모델이 80명만 잡아내면 Recall은 80%다. 나머지 20명은 "정상"이라는 결과를 받고 집에 간다. 이 20명에게 Accuracy 99%는 의미 없다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 Specificity (특이도)</strong><br>Recall이 "실제 양성 중 양성 예측 비율"이라면, Specificity는 반대쪽이다.<br><br><code>Specificity = TN / (TN + FP)</code><br><br>"실제 음성 중 음성으로 정확히 예측한 비율." ROC 곡선에서 X축이 1 - Specificity(= FPR)다.</div>
-
----
-
-## 5. Precision-Recall Trade-off
-
-Precision과 Recall은 **시소 관계**다. 하나를 올리면 다른 하나가 내려간다.
-
-[로지스틱 회귀](/ml/logistic-regression/)를 떠올려보자. 출력은 0~1 사이의 확률값이고, 기본 threshold는 0.5다. 확률이 0.5 이상이면 Positive, 미만이면 Negative로 분류한다. 이 threshold를 조절하면 Precision-Recall 균형이 바뀐다.
-
-```
-threshold를 낮추면 (예: 0.3):
-→ 더 많은 샘플을 Positive로 분류
-→ 실제 Positive를 더 많이 잡음 → Recall ↑
-→ 하지만 Negative도 Positive로 잘못 분류 → Precision ↓
-
-threshold를 높이면 (예: 0.7):
-→ 확실한 것만 Positive로 분류
-→ Positive라고 한 것은 거의 맞음 → Precision ↑
-→ 하지만 애매한 Positive를 놓침 → Recall ↓
-```
-
-### PR Curve
-
-threshold를 0에서 1까지 변화시키면서 Precision과 Recall을 기록하면 **PR Curve**(Precision-Recall Curve)가 된다.
-
-```python
-from sklearn.metrics import precision_recall_curve
-import matplotlib.pyplot as plt
-
-# y_scores: 모델이 출력한 확률값
-precision, recall, thresholds = precision_recall_curve(y_true, y_scores)
-
-plt.plot(recall, precision)
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.title('Precision-Recall Curve')
-plt.show()
-```
-
-![PR Curve](./pr-curve.png)
-
-이상적인 모델은 Precision과 Recall이 모두 1인 **우상단 꼭짓점**에 가깝다. 곡선 아래 면적(AP, Average Precision)이 클수록 좋다.
+임계값을 0에서 1까지 훑으면서 (Recall, Precision) 쌍을 기록하면 PR 곡선(Precision-Recall Curve)이 된다. 곡선이 우상단 꼭짓점에 붙을수록 좋은 모델이고, 이 곡선 아래 면적을 요약한 값이 AP(Average Precision), 흔히 PR-AUC라 부르는 숫자다.
 
 ---
 
-## 6. F1-Score
+## F1이 조화평균인 이유
 
-Precision과 Recall 중 하나만 보면 전체 그림을 놓친다. 둘을 하나의 숫자로 합치고 싶다. 산술 평균을 쓰면 되지 않을까?
+Precision과 Recall을 한 숫자로 합치고 싶을 때 산술평균을 쓰면 안 된다. Precision 1.0, Recall 0.01인 모델은 양성을 사실상 하나도 못 잡는데 산술평균은 0.505라는 멀쩡한 점수를 준다.
 
-```
-산술 평균 = (Precision + Recall) / 2
+F1은 조화평균을 쓴다.
 
-예시: Precision = 1.0, Recall = 0.01
-산술 평균 = (1.0 + 0.01) / 2 = 0.505
-```
+$$F_1 = 2 \cdot \frac{P \cdot R}{P + R}$$
 
-Recall이 0.01(거의 아무것도 못 잡음)인데 0.505라는 그럴듯한 점수가 나온다. 산술 평균은 극단적인 불균형을 제대로 반영하지 못한다.
+산술평균은 큰 값에 끌려가고 조화평균은 작은 값에 끌려간다. 두 값 중 하나가 0에 가까우면 곱 $P \cdot R$이 먼저 무너지기 때문에 결과도 같이 무너진다. 위 예에서 F1은 $2 \times 0.01 / 1.01 = 0.02$다.
 
-**F1-Score**는 **조화 평균**(harmonic mean)을 사용한다.
-
-```
-F1 = 2 × (Precision × Recall) / (Precision + Recall)
-
-예시: Precision = 1.0, Recall = 0.01
-F1 = 2 × (1.0 × 0.01) / (1.0 + 0.01) = 0.0198
-```
-
-왜 조화 평균인가? 산술 평균은 (a+b)/2로 "크면 보상"이지만, 조화 평균은 2ab/(a+b)로 "작으면 벌점"이다. 속도의 평균(왕복 평균 속도)을 구할 때와 같은 원리다. Precision과 Recall **모두** 적절해야 높은 점수가 나온다.
-
-| Precision | Recall | 산술 평균 | F1 (조화 평균) |
-|-----------|--------|----------|--------------|
+| Precision | Recall | 산술평균 | F1 |
+|---|---|---|---|
 | 0.9 | 0.9 | 0.90 | 0.90 |
-| 1.0 | 0.01 | 0.505 | 0.020 |
+| 0.8 | 0.6 | 0.70 | 0.69 |
 | 0.6 | 0.4 | 0.50 | 0.48 |
-| 0.8 | 0.8 | 0.80 | 0.80 |
+| 1.0 | 0.01 | 0.505 | 0.02 |
 
-Precision과 Recall이 비슷할 때는 두 평균이 거의 같지만, 차이가 벌어질수록 F1이 훨씬 보수적인 점수를 매기는 것을 확인할 수 있다.
+두 값이 비슷하면 두 평균이 거의 같고, 벌어질수록 F1이 훨씬 인색해진다.
 
----
+F1은 Precision과 Recall에 같은 무게를 준다. 한쪽이 더 중요한 상황이라면 $F_\beta$로 기울인다.
 
-## 7. F-beta Score
+$$F_\beta = (1 + \beta^2) \cdot \frac{P \cdot R}{\beta^2 P + R}$$
 
-F1은 Precision과 Recall에 **동일한 가중치**를 준다. 하지만 실무에서는 한쪽이 더 중요한 경우가 대부분이다. 이때 **F-beta Score**를 쓴다.
-
-```
-F_β = (1 + β²) × (Precision × Recall) / (β² × Precision + Recall)
-```
-
-- **β = 1**: F1과 동일. Precision = Recall 동일 비중
-- **β = 0.5**: Precision에 더 큰 가중치. "거짓 알람을 줄이는 게 우선"
-- **β = 2**: Recall에 더 큰 가중치. "놓치지 않는 게 우선"
+$\beta$는 **Recall을 Precision보다 몇 배 중요하게 볼 것인가**를 뜻한다. $\beta = 2$면 놓치지 않는 쪽에 무게를 싣고($F_2$, 암 검진), $\beta = 0.5$면 헛경보를 줄이는 쪽에 무게를 싣는다($F_{0.5}$, 스팸 필터). $\beta = 1$이 F1이다.
 
 ```python
 from sklearn.metrics import fbeta_score
 
-# Recall 중시 (암 검진)
-f2 = fbeta_score(y_true, y_pred, beta=2)
-
-# Precision 중시 (스팸 필터)
-f05 = fbeta_score(y_true, y_pred, beta=0.5)
+f2 = fbeta_score(y_true, y_pred, beta=2)      # 놓치지 않는 게 우선
+f05 = fbeta_score(y_true, y_pred, beta=0.5)   # 헛경보를 줄이는 게 우선
 ```
-
-β의 의미를 직관적으로 풀면: **"Recall이 Precision보다 β배 더 중요하다"**는 뜻이다. β=2이면 Recall을 Precision보다 2배 중시한다.
 
 ---
 
-## 8. ROC Curve와 AUC
+## ROC 곡선과 AUC
 
-### ROC Curve
+ROC(Receiver Operating Characteristic) 곡선도 임계값을 훑으면서 그리지만 세로축과 가로축이 다르다. 세로축은 TPR로 Recall과 같은 값이고, 가로축은 FPR, 즉 실제 음성 중 양성으로 잘못 분류한 비율이다. FPR은 Specificity의 여집합이다.
 
-**ROC(Receiver Operating Characteristic) Curve**는 threshold를 변화시키면서 **TPR(True Positive Rate)**과 **FPR(False Positive Rate)**의 관계를 그린 곡선이다.
+$$\text{TPR} = \frac{TP}{TP+FN}, \qquad \text{FPR} = \frac{FP}{FP+TN} = 1 - \text{Specificity}$$
 
-```
-TPR = TP / (TP + FN)  ← Recall과 동일
-FPR = FP / (FP + TN)  ← 1 - Specificity
-```
-
-- X축: FPR (음성을 양성으로 잘못 분류한 비율)
-- Y축: TPR (양성을 양성으로 올바르게 분류한 비율)
+임계값 1에서 시작하면 아무것도 양성으로 부르지 않으니 원점 (0, 0)이고, 임계값 0이면 전부 양성으로 부르니 (1, 1)이다. 그 사이를 어떻게 지나가느냐가 모델의 실력이다.
 
 ```python
 from sklearn.metrics import roc_curve, roc_auc_score
 
 fpr, tpr, thresholds = roc_curve(y_true, y_scores)
 auc = roc_auc_score(y_true, y_scores)
-
-plt.plot(fpr, tpr, label=f'ROC (AUC = {auc:.3f})')
-plt.plot([0, 1], [0, 1], 'k--', label='Random (AUC = 0.5)')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC Curve')
-plt.legend()
-plt.show()
 ```
 
-![ROC Curve](./roc-curve.png)
+![ROC 곡선과 무작위 분류기 기준선](./roc-curve.png)
 
-### AUC (Area Under the Curve)
+AUC는 이 곡선 아래 면적이다. 무작위로 찍는 분류기는 대각선을 그리므로 AUC가 0.5이고, 완벽한 분류기는 좌상단 꼭짓점을 지나 1이 된다.
 
-**AUC**는 ROC 곡선 아래의 면적이다. 0에서 1 사이 값을 가진다.
-
-| AUC 범위 | 해석 |
-|----------|------|
-| 0.9 ~ 1.0 | 매우 우수 |
-| 0.8 ~ 0.9 | 우수 |
-| 0.7 ~ 0.8 | 보통 |
-| 0.6 ~ 0.7 | 미흡 |
-| 0.5 | 랜덤 추측과 동일 (대각선) |
-
-AUC의 직관적 의미: **임의의 양성 샘플이 임의의 음성 샘플보다 높은 점수를 받을 확률**이다. AUC = 0.85면, 양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때 모델이 양성에 더 높은 점수를 줄 확률이 85%다.
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 AUC의 장점</strong><br>AUC는 threshold에 독립적이다. 특정 threshold를 정하지 않아도 모델의 전반적인 분류 능력을 하나의 숫자로 평가할 수 있다. 서로 다른 모델을 비교할 때 특히 유용하다.</div>
+AUC에는 깔끔한 확률적 해석이 있다. **양성 샘플 하나와 음성 샘플 하나를 무작위로 뽑았을 때, 모델이 양성 쪽에 더 높은 점수를 줄 확률**이 곧 AUC다. AUC 0.85는 그 순서 맞히기를 100번 중 85번 성공한다는 뜻이다. 임계값을 하나로 고정하지 않고 순위 매기는 능력만 보기 때문에, 임계값을 정하기 전 모델끼리 비교하는 데 편하다.
 
 ---
 
-## 9. ROC Curve vs PR Curve
+## 불균형에서는 PR 곡선을 봐라
 
-두 곡선 모두 모델의 성능을 시각화하지만, **어떤 상황에서 어떤 걸 쓸지**가 중요하다.
+AUC가 임계값에 독립적이라는 장점은 그대로 함정이 되기도 한다. 음성이 압도적으로 많으면 FPR의 분모가 커져서 어지간한 오탐으로는 눈금이 움직이지 않는다.
 
-| 기준 | ROC Curve | PR Curve |
-|------|-----------|----------|
-| 축 | FPR vs TPR | Recall vs Precision |
-| 클래스 균형 | 균형 데이터에서 잘 작동 | 불균형 데이터에서 더 정직 |
-| 음성 클래스 영향 | TN 포함 → 음성 많으면 FPR 낮게 유지 | TN 미포함 → 양성 클래스에만 집중 |
-| Random baseline | 대각선 (AUC = 0.5) | 양성 비율에 따라 달라짐 |
+음성 9,900개, 양성 100개인 사기 탐지를 보자. 모델이 200건을 사기로 지목했고 그중 90건이 진짜였다고 하자.
 
-**핵심: 클래스 불균형이 심하면 PR Curve를 써라.**
+$$\text{TPR} = \frac{90}{100} = 0.90, \qquad \text{FPR} = \frac{110}{9900} \approx 0.011$$
 
-이유가 있다. 클래스 비율이 99:1인 데이터에서 ROC Curve는 FPR 계산에 TN이 포함되므로, 음성이 9,900개면 FP가 100개 나와도 FPR은 겨우 1%다. ROC Curve에서는 꽤 좋아 보인다. 하지만 PR Curve에서 Precision을 보면, 실제로 양성이라고 예측한 것 중 절반이 틀린 셈이라 성능이 낮게 나타난다. PR Curve가 더 정직한 평가를 해준다.
+ROC 평면에서 (0.011, 0.90)은 좌상단에 바짝 붙은 훌륭한 점이다. 그런데 같은 결과를 Precision으로 보면 $90 / 200 = 0.45$다. 사기라고 경보를 울린 것의 절반 이상이 헛것이다. 조사 인력을 배정해야 하는 현장에서는 이쪽이 진실에 가깝다.
+
+차이의 원인은 하나다. FPR은 분모에 TN을 쓰고 Precision은 쓰지 않는다. 음성이 많을수록 TN이 FP를 희석해서 ROC 곡선을 낙관적으로 만든다.
+
+| 기준 | ROC 곡선 | PR 곡선 |
+|---|---|---|
+| 축 | FPR 대 TPR | Recall 대 Precision |
+| TN 사용 | 쓴다(FPR의 분모) | 쓰지 않는다 |
+| 무작위 기준선 | 대각선, AUC 0.5 | 양성 비율 높이의 수평선 |
+| 불균형 데이터 | 낙관적으로 보인다 | 성능 저하가 그대로 드러난다 |
+
+무작위 기준선이 다르다는 점도 실무에서 자주 걸린다. ROC-AUC 0.5는 어떤 데이터에서도 무작위지만, PR-AUC의 기준선은 양성 비율 그 자체다. 양성이 1%인 데이터에서 PR-AUC 0.4는 기준선 0.01의 40배이므로 나쁘지 않은 성적이다. 절대값만 보고 낮다고 판단하면 안 된다.
 
 ```python
-from sklearn.metrics import (
-    precision_recall_curve,
-    average_precision_score,
-    roc_curve,
-    roc_auc_score
-)
+from sklearn.metrics import roc_auc_score, average_precision_score
 
-# ROC
-fpr, tpr, _ = roc_curve(y_true, y_scores)
-roc_auc = roc_auc_score(y_true, y_scores)
-
-# PR
-precision, recall, _ = precision_recall_curve(y_true, y_scores)
-pr_auc = average_precision_score(y_true, y_scores)
-
-print(f"ROC-AUC: {roc_auc:.3f}")
-print(f"PR-AUC (AP): {pr_auc:.3f}")
+print(f"ROC-AUC: {roc_auc_score(y_true, y_scores):.3f}")
+print(f"PR-AUC : {average_precision_score(y_true, y_scores):.3f}")
 ```
 
 ---
 
-## 10. 다중 클래스 평가: Macro, Micro, Weighted
+## 다중 클래스에서 평균 내는 세 가지 방법
 
-지금까지는 이진 분류를 다뤘다. [결정 경계](/ml/decision-boundary/)를 여러 클래스로 확장할 때, 각 클래스별 Precision/Recall/F1을 어떻게 하나로 합칠까? 세 가지 평균 방식이 있다.
+클래스가 셋 이상이면 Precision, Recall, F1은 클래스마다 하나씩 나온다. 이걸 대표값 하나로 합치는 방식이 세 가지다.
 
-### Macro Average
+| 방식 | 계산 | 성격 |
+|---|---|---|
+| Macro | 클래스별 지표를 단순 평균 | 클래스마다 같은 무게. 샘플 열 개짜리 소수 클래스가 점수를 크게 흔든다 |
+| Micro | 전체 TP, FP, FN을 먼저 합산한 뒤 계산 | 샘플마다 같은 무게. 다수 클래스가 지배한다 |
+| Weighted | 클래스별 지표를 샘플 수로 가중 평균 | Micro와 Macro 사이. 다수 클래스 쪽으로 기운다 |
 
-각 클래스의 지표를 **단순 평균**한다.
+샘플 하나가 정확히 한 레이블을 갖는 보통의 다중 분류에서는 Micro Precision, Micro Recall, Micro F1이 전부 Accuracy와 같은 값이 된다. 틀린 예측 하나가 예측된 클래스에 FP를, 실제 클래스에 FN을 정확히 하나씩 남기기 때문에 전체 FP 합과 FN 합이 같아지기 때문이다. 그래서 단일 레이블 문제에서 Micro F1을 보고하는 건 Accuracy를 다른 이름으로 부르는 것에 지나지 않는다.
 
-```
-Macro F1 = (F1_class0 + F1_class1 + F1_class2) / 3
-```
-
-모든 클래스를 **동등하게** 취급한다. 소수 클래스의 성능이 전체 점수에 크게 반영된다. 클래스 불균형이 있을 때 소수 클래스 성능을 확인하기 좋다.
-
-### Micro Average
-
-전체 TP, FP, FN을 **합산**한 후 지표를 계산한다.
-
-```
-Micro Precision = 전체 TP / (전체 TP + 전체 FP)
-```
-
-다수 클래스의 영향력이 크다. 전체적인 정확도와 비슷한 값이 나온다.
-
-### Weighted Average
-
-각 클래스의 **샘플 수에 비례**하여 가중 평균한다.
-
-```
-Weighted F1 = Σ (n_i / N) × F1_i
-```
-
-클래스 불균형을 반영하면서도 각 클래스의 기여를 샘플 수에 따라 조절한다.
-
-| 방식 | 계산 | 적합한 상황 |
-|------|------|------------|
-| Macro | 클래스별 단순 평균 | 소수 클래스 성능이 중요할 때 |
-| Micro | 전체 합산 후 계산 | 전체 정확도가 중요할 때 |
-| Weighted | 샘플 수 가중 평균 | 불균형 데이터의 균형잡힌 평가 |
+소수 클래스가 중요한 문제라면 Macro F1을 본다. 클래스마다 같은 표를 주기 때문에 소수 클래스가 망가지면 점수가 바로 내려간다.
 
 ---
 
-## 11. 실전 예제: 여러 모델 비교
+## 지표 고르기
 
-지금까지 배운 지표를 모두 활용해서, [랜덤 포레스트](/ml/random-forest/)와 [XGBoost](/ml/xgboost-vs-lightgbm/) 등 여러 모델을 비교해보자.
+| 상황 | 지표 |
+|---|---|
+| 클래스가 대체로 균형이고 두 오류 비용이 비슷하다 | Accuracy |
+| 헛경보가 비싸다 | Precision, $F_{0.5}$ |
+| 놓치는 게 비싸다 | Recall, $F_2$ |
+| 둘 다 챙겨야 한다 | F1 |
+| 양성이 극소수다 | PR-AUC |
+| 임계값을 정하기 전 모델끼리 비교한다 | ROC-AUC |
+| 클래스가 여럿이고 소수 클래스가 중요하다 | Macro F1 |
 
-```python
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC
-from sklearn.metrics import (
-    classification_report,
-    roc_auc_score,
-    average_precision_score
-)
-import numpy as np
+:::tip
 
-# 불균형 데이터 생성 (양성 10%)
-X, y = make_classification(
-    n_samples=2000,
-    n_features=20,
-    n_informative=10,
-    weights=[0.9, 0.1],  # 90:10 불균형
-    random_state=42
-)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
+**주 지표 하나에 보조 지표 두엇을 붙여라**
 
-# 모델 정의
-models = {
-    'Logistic Regression': LogisticRegression(max_iter=1000),
-    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
-    'Gradient Boosting': GradientBoostingClassifier(n_estimators=100, random_state=42),
-    'SVM (RBF)': SVC(probability=True, random_state=42),
-}
+의사결정 기준은 하나여야 실험이 굴러가지만, 보고에는 반대편 지표를 반드시 같이 적는다. 암 검진 모델의 주 지표를 Recall로 잡았다면 Precision이 어디까지 내려갔는지 함께 본다. 헛경보가 너무 잦으면 의료진이 알림 자체를 무시하기 시작해서, 장부상의 Recall이 현장에서 실현되지 않는다.
 
-# 학습 및 평가
-for name, model in models.items():
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
+:::
 
-    print(f"\n{'='*50}")
-    print(f"  {name}")
-    print(f"{'='*50}")
-    print(classification_report(y_test, y_pred, digits=3))
-    print(f"  ROC-AUC:  {roc_auc_score(y_test, y_proba):.3f}")
-    print(f"  PR-AUC:   {average_precision_score(y_test, y_proba):.3f}")
-```
-
-실행하면 이런 식의 결과가 나온다.
-
-```
-==================================================
-  Gradient Boosting
-==================================================
-              precision    recall  f1-score   support
-
-           0      0.967     0.985     0.976       540
-           1      0.831     0.717     0.770        60
-
-    accuracy                          0.957       600
-   macro avg      0.899     0.851     0.873       600
-weighted avg      0.954     0.957     0.955       600
-
-  ROC-AUC:  0.952
-  PR-AUC:   0.836
-```
-
-이 결과를 읽는 법:
-
-1. **Accuracy는 95.7%**로 높지만, 이건 다수 클래스(0) 덕분이다
-2. **양성 클래스(1)의 Recall은 71.7%** -- 실제 양성 60명 중 약 17명을 놓쳤다
-3. **양성 클래스의 Precision은 83.1%** -- 양성이라고 한 것 중 17%는 오탐
-4. **ROC-AUC 0.952** -- 전반적인 분류 능력은 우수
-5. **PR-AUC 0.836** -- 불균형 상황에서도 양성 탐지 성능이 양호
-
-모델 간 비교 시 **어떤 지표를 기준으로 삼을지**는 비즈니스 맥락에 따라 달라진다.
+불균형 데이터라면 보고서에 양성 비율을 같이 적는 습관도 도움이 된다. 그 숫자가 없으면 PR-AUC를 읽는 사람이 기준선을 모르고, Accuracy를 읽는 사람은 99%가 어디서 왔는지 모른다.
 
 ---
 
-## 12. 지표 선택 가이드
+## 마치며
 
-모든 지표를 알았으니, 이제 실전에서 **언제 어떤 지표를 쓸지** 정리하자.
+분류 지표를 고르는 일은 통계 문제가 아니라 비용 문제다. 혼동 행렬의 네 칸 중 FP와 FN 가운데 무엇이 더 비싼지를 먼저 정하면 지표는 거의 자동으로 따라온다. 그 판단 없이 F1이나 AUC를 습관처럼 집으면, 실제로는 아무도 원하지 않는 균형점에서 모델을 최적화하게 된다.
 
-### 비즈니스 맥락별 선택
+임계값이 하이퍼파라미터라는 사실도 같이 기억할 만하다. 학습이 끝난 모델의 성능은 고정된 하나의 숫자가 아니라 임계값을 따라 움직이는 곡선이고, Precision과 Recall은 그 곡선 위의 서로 다른 두 좌표다. 배포 직전에 검증 데이터로 임계값을 다시 고르는 것만으로 재학습 없이 원하는 균형을 만들 수 있는 경우가 많다.
 
-| 도메인 | 핵심 지표 | 이유 |
-|--------|----------|------|
-| 스팸 필터 | **Precision** | 정상 메일을 스팸으로 분류하면 비즈니스 피해 |
-| 암/질병 검진 | **Recall** | 환자를 놓치면 생명 위험 |
-| 일반적인 균형 분류 | **F1-Score** | Precision/Recall 양쪽 균형 |
-| 정보 검색 | **Precision@K** | 상위 K개 결과의 관련성 |
-| 사기 탐지 | **PR-AUC** | 불균형 + 놓치면 안 됨 |
-| 모델 전반 비교 | **ROC-AUC** | threshold 독립적 비교 |
-| 소수 클래스 중시 | **Macro F1** | 클래스별 동등한 비중 |
-
-### 실전 의사결정 플로우
-
-```
-클래스가 균형인가?
-├── Yes → Accuracy + F1로 충분
-└── No → 불균형 데이터
-    ├── FN 비용 > FP 비용?
-    │   └── Yes → Recall (또는 F2) 중시
-    ├── FP 비용 > FN 비용?
-    │   └── Yes → Precision (또는 F0.5) 중시
-    └── 전반적 비교?
-        └── PR-AUC 사용
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;"><strong>💡 실무 팁: 지표는 하나만 보지 마라</strong><br>보고서에는 주요 지표(primary metric) 하나를 기준으로 삼되, 보조 지표(secondary metrics)도 함께 제시해야 한다. 예를 들어 암 검진 모델이면 Recall을 primary로 삼되, Precision이 너무 낮지 않은지(false alarm이 너무 많으면 의료진이 무시하게 됨) 반드시 확인한다. 지표 하나에 올인하면 다른 쪽이 무너지는 함정에 빠진다.</div>
-
-### 지표와 [결정 경계](/ml/decision-boundary/)의 관계
-
-threshold를 조절하면 [결정 경계](/ml/decision-boundary/)가 이동한다. threshold를 낮추면 경계가 Negative 쪽으로 밀려서 더 많은 샘플이 Positive로 분류된다. 결국 평가 지표 선택은 **"결정 경계를 어디에 그을 것인가"**에 대한 비즈니스 판단과 직결된다.
+다음 글에서는 연속값을 예측하는 회귀 모델을 다룬다. 맞았다와 틀렸다로 나눌 수 없는 예측을 어떤 자로 재는지가 주제다.
 
 ---
 
-## 정리
+## 함께 보면 좋은 글
 
-| 지표 | 공식 | 핵심 질문 |
-|------|------|----------|
-| Accuracy | (TP+TN) / 전체 | 전체 중 맞힌 비율은? |
-| Precision | TP / (TP+FP) | 양성 예측 중 진짜 양성은? |
-| Recall | TP / (TP+FN) | 진짜 양성 중 잡아낸 비율은? |
-| F1 | 2×P×R / (P+R) | P와 R의 균형 점수는? |
-| F-beta | (1+β²)×P×R / (β²×P+R) | P/R에 가중치를 주면? |
-| ROC-AUC | ROC 곡선 아래 면적 | 전반적 분류 능력은? |
-| PR-AUC | PR 곡선 아래 면적 | 불균형 데이터에서의 실력은? |
-
-핵심 원칙을 세 줄로:
-
-1. **Accuracy만 보지 마라** -- 불균형 데이터에서는 거짓말쟁이다
-2. **FP와 FN 중 뭐가 더 치명적인지** 먼저 정하라 -- 그게 지표를 결정한다
-3. **ROC-AUC로 전반적 비교, PR-AUC로 불균형 검증** -- 둘 다 확인하라
-
----
-
-## 다음 글 미리보기
-
-분류 모델의 평가 지표를 정리했다. 하지만 [선형 회귀](/ml/linear-regression/)나 [다중 선형 회귀](/ml/multiple-linear-regression/)처럼 **연속된 값을 예측하는 회귀 모델**은 Precision이나 Recall로 평가할 수 없다. 다음 글에서는 MSE, RMSE, MAE, R² 등 [회귀 모델의 평가 지표](/ml/regression-metrics/)를 다룬다.
+- [로지스틱 회귀](/ml/logistic-regression/) : 임계값과 비교할 확률 출력이 어디서 나오는지
+- [결정 경계](/ml/decision-boundary/) : 임계값을 움직이면 경계가 어느 쪽으로 밀리는지
+- [교차 검증](/ml/cross-validation/) : 이 지표들을 흔들리지 않게 재는 방법

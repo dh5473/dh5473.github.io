@@ -1,769 +1,491 @@
 ---
 date: '2026-02-03'
-title: '결측치 처리 전략: 삭제부터 다중 대체(Multiple Imputation)까지'
+title: '결측치를 지울 것인가 채울 것인가'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 34
-tags: ['Missing Data', '결측치', 'Imputation', 'KNN Imputer', 'Multiple Imputation', 'MICE', '머신러닝']
-summary: '결측치의 세 가지 유형(MCAR, MAR, MNAR)을 이해하고, 단순 삭제부터 KNN Imputer, MICE까지 상황별 최적 전략을 정리한다.'
+tags: ['Missing Data', '결측치', 'Imputation', 'MCAR', 'MAR', 'MNAR', 'KNN Imputer', 'MICE', '머신러닝']
+summary: '결측이 무작위인지, 다른 변수로 설명되는지, 값 자체에 달렸는지에 따라 삭제와 단순 대체, KNN, MICE 중 무엇을 써야 하는지 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/target-encoding/)에서 타겟 인코딩을 다뤘다. 범주형 변수를 타겟 변수와의 관계로 변환하는 강력한 기법이었다. 그런데 인코딩이든 [스케일링](/ml/feature-scaling/)이든, 전처리의 대전제가 하나 있다 — **데이터가 존재해야 한다**. 현실의 데이터에는 빈칸이 있다. 센서 고장, 사용자 미입력, 시스템 오류, 병합 과정의 불일치. 결측치(Missing Data)는 피할 수 없다.
+sklearn의 대부분 모델은 NaN이 하나만 섞여 있어도 `ValueError`를 던진다. 결측치 처리는 취향의 문제가 아니라 학습 전에 반드시 통과해야 하는 관문이다. 문제는 통과하는 길이 하나가 아니라는 데 있다.
 
-결측치를 무시하면 어떻게 되는가? sklearn의 대부분의 모델은 NaN이 있으면 에러를 던진다. 그냥 삭제하면? 데이터가 절반으로 줄 수 있다. 평균으로 채우면? 분산이 과소추정된다. **결측치 처리는 모델 성능을 좌우하는 전처리의 핵심이다.** 이 글에서 결측치의 유형을 이해하고, 상황별 최적 전략을 정리한다.
+결측이 있는 행을 전부 지우면 Titanic 데이터는 891행에서 183행으로 줄어든다. 평균으로 채우면 행 수는 지키지만 분산이 줄고 변수 사이의 상관이 흐려진다. 어느 쪽이 나은지는 남은 행 수를 세어 정할 문제가 아니다. **애초에 그 칸이 왜 비었는지**를 보고 정할 문제다.
 
----
+## 결측이 생긴 이유부터 나눈다
 
-## 1. 결측치의 세 가지 유형
+통계학자 Donald Rubin은 결측을 세 가지로 나눴다. 기준은 하나다. 결측 여부가 무엇에 달려 있는가.
 
-결측치를 처리하기 전에, **왜 데이터가 빠졌는가**를 먼저 파악해야 한다. 통계학자 Donald Rubin이 정의한 세 가지 유형이 있다. 이걸 모르고 처리하면 편향된 결과를 얻는다.
+| 유형 | 결측 여부가 달린 곳 | 예 | 지우면 |
+|------|------------------|-----|-------|
+| **MCAR** | 아무것도 아님 | 입력자가 무작위로 한 칸씩 빠뜨림 | 편향 없음, 표본만 줄어듦 |
+| **MAR** | 관측된 다른 변수 | 자영업자가 소득 항목을 자주 비움 | 남는 행이 회사원 쪽으로 쏠림 |
+| **MNAR** | 가려진 값 자체 | 소득이 높을수록 소득 항목을 비움 | 남는 행의 소득이 실제보다 낮음 |
 
-### MCAR (Missing Completely At Random)
-
-결측이 **완전히 무작위**로 발생한다. 결측 여부가 다른 어떤 변수와도 관련이 없다.
-
-```
-예시: 설문 응답을 입력하는 직원이 랜덤하게 타이핑 실수를 해서 값이 빠짐
-     센서가 무작위로 간헐적 오작동
-
-특징: 결측이 있는 행과 없는 행의 분포가 동일
-처리: 삭제해도 편향이 생기지 않음 (데이터 손실만 문제)
-```
-
-MCAR인지 확인하려면 Little's MCAR Test를 사용하거나, 결측 여부로 그룹을 나눠 다른 변수의 분포를 비교한다. 분포가 같으면 MCAR일 가능성이 높다.
-
-### MAR (Missing At Random)
-
-결측이 **관측된 다른 변수**에 의존한다. "At Random"이라는 이름이 오해를 불러일으키지만, 핵심은 결측 패턴이 다른 관측값으로 설명 가능하다는 것이다.
-
-```
-예시: 고소득자일수록 소득 항목을 비워두는 경향
-     → 결측 여부가 '직업' 변수와 상관 (직업은 관측됨)
-
-     젊은 사용자일수록 주소를 입력하지 않음
-     → 결측 여부가 '나이' 변수와 상관 (나이는 관측됨)
-
-특징: 결측 패턴을 다른 관측 변수로 예측할 수 있음
-처리: 단순 삭제하면 편향 발생! 대체(Imputation)가 필요
-```
-
-### MNAR (Missing Not At Random)
-
-결측이 **결측된 값 자체**에 의존한다. 가장 까다로운 유형이다.
-
-```
-예시: 체중이 많이 나가는 사람일수록 체중 항목을 비워둠
-     → 결측 여부가 체중 값 자체에 의존 (체중은 관측 안 됨)
-
-     우울증이 심한 환자일수록 설문에 응답하지 않음
-     → 결측 여부가 우울증 심각도에 의존
-
-특징: 결측 패턴을 관측된 데이터만으로는 설명할 수 없음
-처리: 어떤 통계적 방법으로도 완전히 보정 불가. 도메인 지식 필요
-```
-
-<div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>왜 유형이 중요한가?</strong><br><br>
-  MCAR이면 삭제해도 괜찮다. MAR이면 다른 변수 정보를 활용한 대체가 효과적이다. MNAR이면 어떤 대체법을 쓰든 편향이 남는다 — 이 경우 도메인 전문가와 협력하거나, 결측 자체를 피처로 활용하는 전략이 필요하다. <strong>처리법 선택의 출발점이 유형 판단</strong>이다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 722" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="같은 직업·소득 표로 결측 세 유형을 비교한 그림. MCAR은 소득 결측이 직업과 무관하게 흩어져 있고, MAR은 직업이 자영업인 행에만 결측이 몰려 있으며, MNAR은 가려진 소득값이 큰 행에만 결측이 있다.">
+<style>
+.md1-t { font-size: 18px; font-weight: 600; fill: var(--text, #1c1917); }
+.md1-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.md1-h { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.md1-v { font-size: 15px; fill: var(--text, #1c1917); }
+.md1-miss { font-size: 15px; font-weight: 600; fill: var(--text-warn, #9d5604); }
+.md1-ghost { font-size: 14px; fill: var(--primary, #0a756c); }
+.md1-key { font-size: 15px; font-weight: 600; fill: var(--primary, #0a756c); }
+.md1-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.md1-cellmiss { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1; }
+.md1-cellkey { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1; }
+</style>
+<!-- ===== MCAR ===== -->
+<text class="md1-t" x="20" y="18">MCAR</text>
+<text class="md1-sub" x="20" y="38">결측 위치가 아무것과도 무관</text>
+<text class="md1-h" x="32" y="62">직업</text>
+<text class="md1-h" x="207" y="62">소득</text>
+<rect class="md1-cell" x="20" y="72" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="72" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="90">회사원</text>
+<text class="md1-v" x="207" y="90">3,200</text>
+<rect class="md1-cell" x="20" y="100" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="100" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="118">자영업</text>
+<text class="md1-miss" x="207" y="118">?</text>
+<rect class="md1-cell" x="20" y="128" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="128" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="146">회사원</text>
+<text class="md1-miss" x="207" y="146">?</text>
+<rect class="md1-cell" x="20" y="156" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="156" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="174">자영업</text>
+<text class="md1-v" x="207" y="174">4,100</text>
+<rect class="md1-cell" x="20" y="184" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="184" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="202">회사원</text>
+<text class="md1-v" x="207" y="202">2,700</text>
+<!-- ===== MAR ===== -->
+<text class="md1-t" x="20" y="258">MAR</text>
+<text class="md1-sub" x="20" y="278">결측 위치가 관측된 직업에 달림</text>
+<text class="md1-h" x="32" y="302">직업</text>
+<text class="md1-h" x="207" y="302">소득</text>
+<rect class="md1-cell" x="20" y="312" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="312" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="330">회사원</text>
+<text class="md1-v" x="207" y="330">3,200</text>
+<rect class="md1-cellkey" x="20" y="340" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="340" width="185" height="26" rx="4"/>
+<text class="md1-key" x="32" y="358">자영업</text>
+<text class="md1-miss" x="207" y="358">?</text>
+<rect class="md1-cell" x="20" y="368" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="368" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="386">회사원</text>
+<text class="md1-v" x="207" y="386">2,700</text>
+<rect class="md1-cellkey" x="20" y="396" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="396" width="185" height="26" rx="4"/>
+<text class="md1-key" x="32" y="414">자영업</text>
+<text class="md1-miss" x="207" y="414">?</text>
+<rect class="md1-cellkey" x="20" y="424" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="424" width="185" height="26" rx="4"/>
+<text class="md1-key" x="32" y="442">자영업</text>
+<text class="md1-miss" x="207" y="442">?</text>
+<!-- ===== MNAR ===== -->
+<text class="md1-t" x="20" y="498">MNAR</text>
+<text class="md1-sub" x="20" y="518">결측 위치가 가려진 값 자체에 달림</text>
+<text class="md1-h" x="32" y="542">직업</text>
+<text class="md1-h" x="207" y="542">소득</text>
+<rect class="md1-cell" x="20" y="552" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="552" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="570">회사원</text>
+<text class="md1-v" x="207" y="570">3,200</text>
+<rect class="md1-cell" x="20" y="580" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="580" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="598">자영업</text>
+<text class="md1-miss" x="207" y="598">?</text>
+<text class="md1-ghost" x="224" y="598">(9,800)</text>
+<rect class="md1-cell" x="20" y="608" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="608" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="626">회사원</text>
+<text class="md1-v" x="207" y="626">2,700</text>
+<rect class="md1-cell" x="20" y="636" width="165" height="26" rx="4"/>
+<rect class="md1-cell" x="195" y="636" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="654">자영업</text>
+<text class="md1-v" x="207" y="654">4,100</text>
+<rect class="md1-cell" x="20" y="664" width="165" height="26" rx="4"/>
+<rect class="md1-cellmiss" x="195" y="664" width="185" height="26" rx="4"/>
+<text class="md1-v" x="32" y="682">회사원</text>
+<text class="md1-miss" x="207" y="682">?</text>
+<text class="md1-ghost" x="224" y="682">(8,600)</text>
+<text class="md1-sub" x="20" y="710">괄호 안은 실제로는 관측되지 않는 값</text>
+</svg>
 </div>
 
----
+MCAR은 결측 여부와 다른 어떤 변수도 상관이 없다. 남은 행은 전체의 축소판이라 지워도 분포가 그대로다. MAR은 이름이 오해를 부르는데, 무작위라는 뜻이 아니라 **결측 패턴이 관측된 변수로 설명된다**는 뜻이다. 자영업자가 소득을 자주 비운다면 결측 여부는 직업이 결정하고, 직업은 데이터에 남아 있다. 그러니 직업 정보를 쓰는 대체법이 통한다.
 
-## 2. 결측치 탐색: 먼저 현황을 파악하라
+MNAR은 결측 여부가 가려진 값 자체에 달려 있다. 소득이 높은 사람이 소득을 비운다면, 관측된 소득만 보고는 안 보이는 소득이 얼마나 높았는지 알 길이 없다. 이 경우 어떤 대체법을 써도 편향이 남는다. 평균 대체는 물론이고 KNN이나 MICE처럼 정교한 방법도 마찬가지다. 그 방법들은 전부 **관측된 값들이 안 보이는 값을 대변한다**는 가정 위에 서 있는데, MNAR은 정확히 그 가정이 깨진 상황이기 때문이다.
 
-처리 전략을 세우려면 먼저 결측의 규모와 패턴을 파악해야 한다.
+:::warning
 
-### 기본 탐색: pandas
+**유형은 데이터가 알려주지 않는다**
+
+Little's MCAR 검정은 MCAR 가설을 기각할 수 있을 뿐이다. 기각되었을 때 그게 MAR인지 MNAR인지는 구별해주지 못한다. 두 유형의 차이는 안 보이는 값에 있고, 안 보이는 값은 데이터에 없다.
+
+MNAR 여부는 도메인 지식에서 판단한다. 고액 연봉자가 소득을 비운다는 것, 상태가 나쁜 환자가 추적 조사에 응하지 않는다는 것. 이런 건 수집 과정을 아는 사람만 안다.
+
+:::
+
+## 현황부터 본다
+
+전략을 세우기 전에 결측의 규모와 패턴을 확인한다.
 
 ```python
 import pandas as pd
 
 df = pd.read_csv('data.csv')
 
-# 컬럼별 결측 수와 비율
 missing = df.isnull().sum()
 missing_pct = (missing / len(df) * 100).round(1)
 
-missing_info = pd.DataFrame({
-    'missing_count': missing,
-    'missing_pct': missing_pct
-}).sort_values('missing_pct', ascending=False)
-
-print(missing_info[missing_info['missing_count'] > 0])
+info = pd.DataFrame({'count': missing, 'pct': missing_pct})
+print(info[info['count'] > 0].sort_values('pct', ascending=False))
 ```
 
+```text
+          count   pct
+cabin       687  77.1
+age         177  19.9
+embarked      2   0.2
 ```
-               missing_count  missing_pct
-cabin                    687         77.1
-age                      177         19.9
-embarked                   2          0.2
-```
 
-Titanic 데이터를 예로 들면, `cabin`은 77%가 결측이다. `age`는 20%. `embarked`는 0.2%. 각각 다른 전략이 필요하다는 게 바로 보인다.
+`cabin`은 77%, `age`는 20%, `embarked`는 0.2%다. 세 컬럼에 같은 전략을 쓸 이유가 전혀 없다는 게 이 표에서 바로 보인다.
 
-### 시각적 탐색: missingno 라이브러리
-
-숫자로만 보면 **패턴**을 놓친다. `missingno` 라이브러리는 결측 패턴을 시각적으로 보여준다.
+숫자만으로는 **패턴**을 놓친다. `missingno`의 매트릭스 플롯에서 흰 줄무늬가 여러 컬럼의 같은 위치에 나타나면, 그 컬럼들이 함께 비어 있다는 뜻이다. 한 번의 수집 실패로 여러 필드가 통째로 빠졌을 때 이런 모양이 나온다. `msno.heatmap(df)`는 이 동반 결측을 상관계수로 보여준다.
 
 ```python
 import missingno as msno
-import matplotlib.pyplot as plt
 
-# 매트릭스 플롯: 흰색이 결측
-msno.matrix(df)
-plt.show()
-
-# 히트맵: 결측 간 상관관계
-msno.heatmap(df)
-plt.show()
-
-# 막대 그래프: 컬럼별 비결측 수
-msno.bar(df)
-plt.show()
+msno.matrix(df)    # 흰색이 결측
+msno.heatmap(df)   # 결측끼리의 상관
 ```
 
-매트릭스 플롯에서 흰색 줄무늬가 특정 컬럼들에서 **같은 위치에** 나타나면, 그 컬럼들의 결측이 연관되어 있다는 뜻이다. 히트맵은 이 상관관계를 수치로 보여준다. 상관계수가 1에 가까우면 "A가 결측이면 B도 결측"이라는 패턴이 있다.
-
----
-
-## 3. 삭제 전략: 언제 써도 되고, 언제 위험한가
+## 지우기
 
 가장 단순한 전략은 결측이 있는 데이터를 버리는 것이다.
 
-### Listwise Deletion (행 삭제)
+```python
+df.dropna()                 # 891행 → 183행
+df.dropna(subset=['age'])   # 891행 → 714행
+```
+
+전체 `dropna()`가 891행을 183행으로 만드는 건 `cabin`의 77% 결측 때문이다. 컬럼 하나 때문에 데이터의 80%를 버리는 셈이라, 이럴 때는 행이 아니라 그 컬럼을 지운다.
 
 ```python
-# 결측이 하나라도 있는 행을 모두 삭제
-df_clean = df.dropna()
-
-# 특정 컬럼 기준으로만 삭제
-df_clean = df.dropna(subset=['age', 'embarked'])
-
-print(f"원본: {len(df)}행 → 삭제 후: {len(df_clean)}행")
-# 원본: 891행 → 삭제 후: 714행 (subset 사용 시)
-# 원본: 891행 → 삭제 후: 183행 (전체 dropna 시)
-```
-
-전체 `dropna()`를 하면 891행에서 183행으로 줄어든다. `cabin`의 77% 결측 때문이다. 데이터의 80%를 버리는 셈이다.
-
-### 언제 삭제가 괜찮은가
-
-```
-삭제가 안전한 조건:
-[1] MCAR인 경우 (삭제해도 편향 없음)
-[2] 결측 비율이 매우 낮은 경우 (5% 이하)
-[3] 데이터가 충분히 많은 경우 (삭제 후에도 샘플 수 충분)
-[4] 결측 행이 소수이고 특이값인 경우
-
-삭제가 위험한 조건:
-[1] MAR/MNAR인 경우 → 편향 발생
-[2] 결측 비율이 높은 경우 → 정보 손실 과다
-[3] 데이터가 적은 경우 → 통계적 검정력 저하
-[4] 여러 컬럼에 산발적 결측 → 행 삭제 시 대부분의 행이 사라짐
-```
-
-### Column Deletion (열 삭제)
-
-결측 비율이 극단적으로 높은 **컬럼 자체**를 제거하는 방법이다.
-
-```python
-# 결측 비율 50% 이상인 컬럼 제거
-threshold = 0.5
-cols_to_drop = missing_pct[missing_pct > threshold * 100].index
+cols_to_drop = missing_pct[missing_pct > 50].index
 df_clean = df.drop(columns=cols_to_drop)
-
-print(f"제거된 컬럼: {list(cols_to_drop)}")
-# 제거된 컬럼: ['cabin']
 ```
 
-`cabin`처럼 77%가 결측이면, 대체해도 신뢰성이 낮다. 차라리 제거하는 게 나을 수 있다. 다만 "결측 여부 자체"가 정보를 담고 있을 수 있으므로(예: cabin이 기록된 승객 = 1등석), 제거 전에 결측 지시 변수(indicator)를 먼저 만들어두는 것이 좋다.
+다만 `cabin`이 기록된 승객은 대부분 1등석이었다. 결측 여부 자체가 등급 정보를 담고 있다는 뜻이다. 컬럼을 지우기 전에 결측 지시 변수를 먼저 만들어 두면 그 정보만 건져 낼 수 있다.
 
----
+| 삭제가 안전한 조건 | 삭제가 위험한 조건 |
+|---|---|
+| MCAR이고 결측 비율이 5% 이하 | MAR·MNAR이라 남는 행이 한쪽으로 쏠림 |
+| 지우고도 표본이 충분히 남음 | 결측이 여러 컬럼에 흩어져 있어 행 삭제로 대부분이 사라짐 |
 
-## 4. 단순 대체: Mean, Median, Mode
+## 단순 대체
 
-삭제 대신 빈칸을 채우는 가장 기본적인 방법이다.
-
-### sklearn의 SimpleImputer
+빈칸을 대푯값 하나로 채운다. sklearn에서는 `SimpleImputer`다.
 
 ```python
 from sklearn.impute import SimpleImputer
-import numpy as np
 
-# 수치형: 평균으로 대체
-mean_imputer = SimpleImputer(strategy='mean')
-df['age_imputed'] = mean_imputer.fit_transform(df[['age']])
+num_imputer = SimpleImputer(strategy='median')       # 수치형
+df[['age']] = num_imputer.fit_transform(df[['age']])
 
-# 수치형: 중앙값으로 대체
-median_imputer = SimpleImputer(strategy='median')
-df['age_imputed'] = median_imputer.fit_transform(df[['age']])
-
-# 범주형: 최빈값으로 대체
-mode_imputer = SimpleImputer(strategy='most_frequent')
-df['embarked_imputed'] = mode_imputer.fit_transform(df[['embarked']])
-
-# 상수로 대체
-const_imputer = SimpleImputer(strategy='constant', fill_value=0)
-df['cabin_imputed'] = const_imputer.fit_transform(df[['cabin']])
+cat_imputer = SimpleImputer(strategy='most_frequent')  # 범주형
+df[['embarked']] = cat_imputer.fit_transform(df[['embarked']])
 ```
 
-### 각 전략의 특성
+| 전략 | 쓰는 곳 | 대가 |
+|------|--------|------|
+| `mean` | 정규분포에 가까운 수치형 | 이상치에 끌려감, 분산 축소 |
+| `median` | 치우친 분포, 이상치가 있는 수치형 | 이상치에는 강하지만 분산은 마찬가지로 축소 |
+| `most_frequent` | 범주형 | 범주가 많으면 최빈값의 대표성이 약해짐 |
+| `constant` | 결측 자체에 의미가 있을 때 | 0이나 -1이 실제 값과 섞이지 않는지 확인 필요 |
 
-| 전략 | 적합한 상황 | 주의점 |
-|------|-----------|--------|
-| **Mean** | 정규분포에 가까운 수치형 | 이상치에 민감, 분산 과소추정 |
-| **Median** | 편향된 분포, 이상치 존재 | Mean보다 강건하지만 여전히 분산 축소 |
-| **Mode** | 범주형 변수 | 범주가 많으면 의미 약화 |
-| **Constant** | 결측 자체에 의미가 있을 때 | 0이나 -1 등으로 "결측"을 명시 |
+분산 축소는 감으로 하는 말이 아니라 계산되는 양이다. 관측값 $n$개의 표본분산이 $s^2$인데 여기에 평균값 $m$개를 채워 넣으면, 채운 값들의 편차가 정확히 0이라 제곱합은 그대로이고 자유도만 늘어난다.
 
-```
-평균 대체의 문제를 직관적으로 보자:
+$$s^2_{\text{대체 후}} = \frac{n-1}{n+m-1}\, s^2$$
 
-원래 분포: [20, 25, 30, 35, 40, NaN, NaN, NaN]
-평균 = 30
+관측값 다섯 개에 평균을 세 개 채우면 분산은 $4/7$, 즉 원래의 57%로 줄어든다. 표준오차와 신뢰구간이 실제보다 좁아지고, 이 변수와 다른 변수의 상관도 같이 흐려진다.
 
-대체 후:   [20, 25, 30, 35, 40, 30, 30, 30]
+:::info
 
-→ 분산이 줄어든다 (평균 주변에 값이 몰림)
-→ 변수 간 상관관계가 왜곡된다
-→ 결측 비율이 높을수록 문제가 심각해진다
-```
+**단순 대체는 불확실성을 지운다**
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>단순 대체는 "임시 방편"이다</strong><br><br>
-  평균/중앙값 대체는 빠르고 쉽지만, 데이터의 불확실성을 무시한다. 결측값은 "30일 수도 있고 50일 수도 있는" 불확실한 상태인데, 평균 대체는 "확실히 30이다"라고 선언하는 것이다. 결측 비율이 5% 이하이고 MCAR이면 무난하지만, 그 외에는 더 정교한 방법이 필요하다.
-</div>
+빈칸의 진짜 값은 30일 수도 50일 수도 있는 상태다. 평균 대체는 여기에 "30이다"라고 확정을 찍는다. 모델은 그 값이 추정치라는 사실을 알 방법이 없고, 관측된 값과 똑같은 무게로 학습한다.
 
----
+결측 비율이 5% 이하이고 MCAR이면 이 왜곡이 무시할 만하다. 그 밖에는 더 나은 방법이 있다.
 
-## 5. 결측 지시 변수 (Missing Indicator)
+:::
 
-결측 여부 자체가 예측에 유용한 정보일 수 있다. 이 정보를 보존하는 기법이다.
+## 결측 지시 변수
+
+값을 채우면 "여기가 비어 있었다"는 사실이 사라진다. 그 사실이 예측에 쓸모 있을 때는 컬럼 하나로 남긴다.
 
 ```python
-from sklearn.impute import SimpleImputer
-import numpy as np
-
-# 결측 지시 변수 추가
 df['age_is_missing'] = df['age'].isnull().astype(int)
-
-# 그 다음 대체 수행
-imputer = SimpleImputer(strategy='median')
-df['age_imputed'] = imputer.fit_transform(df[['age']])
+df[['age']] = SimpleImputer(strategy='median').fit_transform(df[['age']])
 ```
 
-Titanic 데이터에서 `age`의 결측 여부는 생존율과 상관이 있을 수 있다. 나이가 기록되지 않은 승객은 특정 클래스에 집중되어 있을 수 있기 때문이다. 이 경우 `age_is_missing` 컬럼이 모델에 추가 정보를 제공한다.
+MNAR이 의심될 때 특히 값어치가 있다. 결측 여부가 가려진 값과 엮여 있다면 지시 변수 자체가 그 값의 대리 신호다. 트리 모델은 이 컬럼을 분기 조건으로 바로 쓸 수 있어서 궁합이 좋다. 반대로 MCAR이면 지시 변수는 무작위 노이즈일 뿐이고, 결측 비율이 1%도 안 되면 분산이 거의 0이라 모델이 쳐다보지도 않는다.
 
-```python
-# sklearn의 MissingIndicator 활용
-from sklearn.impute import MissingIndicator
+## KNN Imputer
 
-indicator = MissingIndicator()
-missing_flags = indicator.fit_transform(df[['age', 'cabin', 'embarked']])
+30대 회사원의 빠진 소득을 채우는 데 전체 평균을 쓰는 건 아깝다. 조건이 비슷한 사람들의 소득이 데이터 안에 이미 있기 때문이다. `KNNImputer`는 결측이 없는 나머지 피처로 거리를 재서 가장 가까운 K개 행을 찾고, 그 행들의 값으로 빈칸을 채운다.
 
-# True/False 배열 → 어떤 컬럼에 결측이 있었는지 기록
-```
-
-### 언제 효과적인가
-
-```
-효과적인 경우:
-- MNAR이 의심될 때 (결측 자체가 정보)
-- 트리 기반 모델과 함께 사용할 때 (분기 조건으로 활용 가능)
-- 결측 비율이 10~50% 사이일 때
-
-효과가 없는 경우:
-- MCAR일 때 (결측이 무작위이므로 정보 없음)
-- 결측 비율이 너무 낮을 때 (변수의 분산이 거의 0)
-```
-
----
-
-## 6. KNN Imputer: 유사한 샘플에서 빌려오기
-
-평균 대체는 전체 데이터의 평균을 쓴다. 하지만 30대 남성의 결측된 소득을 채우는 데 전체 평균을 쓰는 것보다, **비슷한 30대 남성들의 소득 평균**을 쓰는 게 더 정확하지 않겠는가? KNN Imputer는 이 아이디어를 구현한다.
-
-### 작동 원리
-
-[KNN 알고리즘](/ml/knn/)을 기억하는가? 새 데이터 포인트의 레이블을 가장 가까운 K개 이웃의 다수결로 결정하는 알고리즘이었다. KNN Imputer는 같은 원리를 결측치 대체에 적용한다.
-
-```
-결측이 있는 행 → 다른 (결측 없는) 피처들로 거리 계산
-                → 가장 가까운 K개 이웃 찾기
-                → 이웃들의 해당 피처 값 평균으로 대체
-```
-
-### sklearn 구현
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 372" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="나이가 비어 있는 행 하나를 채우는 두 방식 비교. 전체 다섯 행의 나이 평균은 32.4이고, 요금과 등급이 가까운 이웃 세 행만 골라 평균을 내면 38이다.">
+<style>
+.md2-t { font-size: 18px; font-weight: 600; fill: var(--text, #1c1917); }
+.md2-h { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.md2-v { font-size: 15px; fill: var(--text, #1c1917); }
+.md2-near { font-size: 15px; font-weight: 600; fill: var(--primary, #0a756c); }
+.md2-miss { font-size: 15px; font-weight: 600; fill: var(--text-warn, #9d5604); }
+.md2-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.md2-on { font-size: 15px; font-weight: 600; fill: var(--on-fill, #ffffff); }
+.md2-cell { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.md2-cellnear { fill: var(--bg-muted, #eeecea); stroke: var(--primary, #0a756c); stroke-width: 1; }
+.md2-cellmiss { fill: var(--bg-warn, #fffbeb); stroke: var(--text-warn, #9d5604); stroke-width: 1; }
+.md2-tagnear { fill: var(--primary, #0a756c); }
+.md2-tagmiss { fill: var(--text-warn, #9d5604); }
+.md2-boxall { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.md2-boxknn { fill: var(--primary, #0a756c); }
+</style>
+<text class="md2-t" x="20" y="20">나이 한 칸을 채우는 두 방식</text>
+<text class="md2-h" x="32" y="46">요금</text>
+<text class="md2-h" x="158" y="46">등급</text>
+<text class="md2-h" x="266" y="46">나이</text>
+<!-- 대상 행 -->
+<rect class="md2-tagmiss" x="12" y="56" width="4" height="28" rx="2"/>
+<rect class="md2-cell" x="20" y="56" width="118" height="28" rx="4"/>
+<rect class="md2-cell" x="146" y="56" width="100" height="28" rx="4"/>
+<rect class="md2-cellmiss" x="254" y="56" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="75">71</text>
+<text class="md2-v" x="158" y="75">1</text>
+<text class="md2-miss" x="266" y="75">?</text>
+<!-- 이웃 1 -->
+<rect class="md2-tagnear" x="12" y="86" width="4" height="28" rx="2"/>
+<rect class="md2-cellnear" x="20" y="86" width="118" height="28" rx="4"/>
+<rect class="md2-cellnear" x="146" y="86" width="100" height="28" rx="4"/>
+<rect class="md2-cellnear" x="254" y="86" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="105">76</text>
+<text class="md2-v" x="158" y="105">1</text>
+<text class="md2-near" x="266" y="105">40</text>
+<!-- 이웃 2 -->
+<rect class="md2-tagnear" x="12" y="116" width="4" height="28" rx="2"/>
+<rect class="md2-cellnear" x="20" y="116" width="118" height="28" rx="4"/>
+<rect class="md2-cellnear" x="146" y="116" width="100" height="28" rx="4"/>
+<rect class="md2-cellnear" x="254" y="116" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="135">66</text>
+<text class="md2-v" x="158" y="135">1</text>
+<text class="md2-near" x="266" y="135">36</text>
+<!-- 이웃 3 -->
+<rect class="md2-tagnear" x="12" y="146" width="4" height="28" rx="2"/>
+<rect class="md2-cellnear" x="20" y="146" width="118" height="28" rx="4"/>
+<rect class="md2-cellnear" x="146" y="146" width="100" height="28" rx="4"/>
+<rect class="md2-cellnear" x="254" y="146" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="165">80</text>
+<text class="md2-v" x="158" y="165">1</text>
+<text class="md2-near" x="266" y="165">38</text>
+<!-- 먼 행 1 -->
+<rect class="md2-cell" x="20" y="176" width="118" height="28" rx="4"/>
+<rect class="md2-cell" x="146" y="176" width="100" height="28" rx="4"/>
+<rect class="md2-cell" x="254" y="176" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="195">13</text>
+<text class="md2-v" x="158" y="195">3</text>
+<text class="md2-v" x="266" y="195">22</text>
+<!-- 먼 행 2 -->
+<rect class="md2-cell" x="20" y="206" width="118" height="28" rx="4"/>
+<rect class="md2-cell" x="146" y="206" width="100" height="28" rx="4"/>
+<rect class="md2-cell" x="254" y="206" width="126" height="28" rx="4"/>
+<text class="md2-v" x="32" y="225">8</text>
+<text class="md2-v" x="158" y="225">3</text>
+<text class="md2-v" x="266" y="225">26</text>
+<!-- 결과 -->
+<rect class="md2-boxall" x="20" y="252" width="360" height="38" rx="6"/>
+<text class="md2-v" x="36" y="276">전체 5행 평균 대체 → 32.4</text>
+<rect class="md2-boxknn" x="20" y="298" width="360" height="38" rx="6"/>
+<text class="md2-on" x="36" y="322">이웃 3행 평균 대체 → 38</text>
+<text class="md2-sub" x="20" y="358">이웃 = 요금·등급이 가까운 행</text>
+</svg>
+</div>
 
 ```python
 from sklearn.impute import KNNImputer
 
-# K=5인 KNN Imputer
-knn_imputer = KNNImputer(n_neighbors=5, weights='distance')
-
-# 수치형 컬럼만 선택
-numeric_cols = df.select_dtypes(include=[np.number]).columns
-df_imputed = pd.DataFrame(
-    knn_imputer.fit_transform(df[numeric_cols]),
-    columns=numeric_cols
-)
+imputer = KNNImputer(n_neighbors=5, weights='distance')
+df_imputed = imputer.fit_transform(df[numeric_cols])
 ```
 
-`weights='distance'`를 설정하면, 가까운 이웃일수록 더 큰 가중치를 받는다. 단순 평균보다 정확하다.
+`weights='distance'`를 주면 가까운 이웃일수록 큰 가중치를 받는다. 거리는 `nan_euclidean` 방식으로 계산해서, 두 행 중 한쪽이라도 비어 있는 좌표는 건너뛰고 남은 좌표로 잰 거리를 전체 차원 수에 맞춰 보정한다. 그래서 다른 컬럼에도 결측이 있는 상태로 바로 넣을 수 있다.
 
-### 주의사항
+쓰기 전에 확인할 것이 세 가지다.
 
-```
-KNN Imputer 사용 시 체크리스트:
+- **스케일링이 먼저다.** 거리 기반이라 연봉(수천만 단위)과 나이(수십 단위)를 그대로 넣으면 연봉 차이가 거리를 통째로 지배한다. `StandardScaler`는 NaN을 무시하고 fit한 뒤 그대로 통과시키므로, 스케일링을 먼저 걸고 그다음 `KNNImputer`를 놓는 순서가 가능하다.
+- **수치형만 받는다.** 범주형은 미리 인코딩하거나 `SimpleImputer(strategy='most_frequent')`로 따로 처리한다.
+- **K는 5에서 10 사이.** 너무 작으면 이웃 한둘의 노이즈를 그대로 베끼고, 너무 크면 결국 전체 평균에 수렴한다.
 
-[1] 스케일링 필수 — KNN은 거리 기반이다. 피처 스케일이 다르면
-    거리가 왜곡된다. StandardScaler 또는 MinMaxScaler를 먼저 적용.
-    (/ml/feature-scaling/ 참고)
+계산 비용도 만만치 않다. 결측이 있는 행마다 전체 데이터와 거리를 재기 때문에 10만 행을 넘어가면 눈에 띄게 느려진다.
 
-[2] 범주형 변수 처리 — KNN Imputer는 수치형만 지원한다.
-    범주형은 먼저 인코딩하거나 (/ml/categorical-encoding/),
-    별도 SimpleImputer(mode)로 처리한다.
+## IterativeImputer와 MICE
 
-[3] 계산 비용 — 모든 결측 행에 대해 전체 데이터와 거리를 계산한다.
-    데이터가 10만 행 이상이면 느려진다.
+KNN이 이웃에서 값을 빌려온다면, `IterativeImputer`는 **모델로 값을 예측한다**. 결측이 있는 컬럼을 차례로 타겟으로 삼아, 나머지 컬럼으로 그 값을 회귀한다.
 
-[4] K 값 선택 — 너무 작으면 노이즈에 민감, 너무 크면 평균 대체와 비슷해짐.
-    보통 5~10이 적절.
-```
+| 라운드 | 하는 일 |
+|------|--------|
+| 1 | `age`를 `[sex, fare, pclass]`로 회귀해 채우고, 이어서 `fare`를 `[sex, age(방금 채운 값), pclass]`로 회귀해 채운다 |
+| 2 | 갱신된 `fare`로 `age`를 다시 예측하고, 갱신된 `age`로 `fare`를 다시 예측한다 |
+| N | 대체값의 변화가 `tol` 아래로 떨어지거나 `max_iter`에 닿을 때까지 |
 
-<div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>핵심</strong>: KNN Imputer는 "비슷한 행"의 정보를 활용하므로, 단순 평균보다 현실적인 값을 채운다. 특히 피처 간 상관관계가 있을 때 효과적이다. 단, 스케일링 없이 사용하면 의미 없는 결과가 나온다 — <a href="/ml/knn/">KNN</a>에서 배운 교훈 그대로다.
-</div>
-
----
-
-## 7. Iterative Imputer (MICE): 다변량 대체의 끝판왕
-
-KNN Imputer가 "이웃 기반"이라면, Iterative Imputer는 **"모델 기반"** 이다. 통계학에서 MICE(Multiple Imputation by Chained Equations)라고 불리는 방법의 sklearn 구현이다.
-
-### 핵심 아이디어
-
-각 결측 변수를 다른 모든 변수의 함수로 모델링한다. 그리고 이 과정을 반복(iterate)하면서 대체값을 정교하게 만들어간다.
-
-```
-Round 1:
-  age를 [sex, fare, pclass, embarked]로 예측하는 모델 학습 → age 결측 대체
-  fare를 [sex, age(대체됨), pclass, embarked]로 예측 → fare 결측 대체
-  ...
-
-Round 2:
-  age를 [sex, fare(대체됨), pclass, embarked]로 다시 예측 → age 대체값 업데이트
-  fare를 [sex, age(업데이트), pclass, embarked]로 다시 예측 → fare 대체값 업데이트
-  ...
-
-Round N: 대체값이 수렴할 때까지 반복
-```
-
-### sklearn 구현
+첫 라운드에서 `age`를 채울 때 쓴 `fare`는 아직 조잡한 초기 대체값이다. 그 `fare`가 다음 차례에 갱신되면 `age`도 다시 계산할 이유가 생긴다. 반복은 이 상호 의존을 풀기 위한 것이다. 통계학에서 연쇄 방정식(chained equations)이라 부르는 구조이고, MICE라는 이름이 여기서 나온다.
 
 ```python
-from sklearn.experimental import enable_iterative_imputer  # 필수!
+from sklearn.experimental import enable_iterative_imputer  # 이 줄이 먼저다
 from sklearn.impute import IterativeImputer
 from sklearn.linear_model import BayesianRidge
 
-# 기본 추정기는 BayesianRidge
-iterative_imputer = IterativeImputer(
-    estimator=BayesianRidge(),
-    max_iter=10,
-    random_state=42
-)
-
-df_imputed = pd.DataFrame(
-    iterative_imputer.fit_transform(df[numeric_cols]),
-    columns=numeric_cols
-)
+imputer = IterativeImputer(estimator=BayesianRidge(), max_iter=10, random_state=42)
+df_imputed = imputer.fit_transform(df[numeric_cols])
 ```
 
-`enable_iterative_imputer`를 먼저 import해야 한다. sklearn에서 아직 experimental 상태이기 때문이다.
+`enable_iterative_imputer`를 import하지 않고 `IterativeImputer`를 부르면 `ImportError`가 난다. sklearn에서 아직 experimental 단계라 명시적으로 켜야 하고, 이는 향후 버전에서 동작이 바뀔 수 있다는 뜻이기도 하다.
 
-### 추정기 선택
+기본 추정기는 `BayesianRidge`이고, 선형으로 설명되지 않는 관계라면 `RandomForestRegressor`로 바꿀 수 있다. R의 missForest가 쓰는 방식이 이것인데, 컬럼 수 × 라운드 수만큼 랜덤 포레스트를 학습하므로 비용이 급격히 커진다.
 
-기본 `BayesianRidge`를 다른 모델로 바꿀 수 있다.
+### 다중 대체는 기본값이 아니다
+
+MICE의 M은 Multiple, 다중 대체다. 그런데 위 코드가 돌려주는 건 완성된 데이터셋 **하나**다. sklearn의 `IterativeImputer`는 기본적으로 단일 대체(single imputation)로 동작한다.
+
+차이는 불확실성을 남기느냐다. 단일 대체는 빈칸마다 값 하나를 확정하고, 이후 분석은 그 값을 관측값과 똑같이 취급한다. 대체값이 추정이었다는 사실이 표준오차에 반영되지 않아 신뢰구간이 실제보다 좁아진다. 진짜 다중 대체는 `sample_posterior=True`로 두고 `random_state`를 바꿔가며 $m$번 돌려서 서로 다른 완성 데이터셋 $m$개를 만들고, 각각에 같은 분석을 돌린 뒤 결과를 합친다.
 
 ```python
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import BayesianRidge
-
-# 선형 관계 → BayesianRidge (기본, 빠름)
-imp_linear = IterativeImputer(estimator=BayesianRidge())
-
-# 비선형 관계 → RandomForest (느리지만 정확)
-imp_forest = IterativeImputer(
-    estimator=RandomForestRegressor(n_estimators=100, random_state=42),
-    max_iter=10,
-    random_state=42
-)
+imputers = [
+    IterativeImputer(sample_posterior=True, max_iter=10, random_state=seed)
+    for seed in range(5)
+]
+datasets = [imp.fit_transform(X) for imp in imputers]
 ```
 
-RandomForest를 추정기로 쓰면 missForest라고 불리는 방법이 된다. 비선형 관계를 잡아내지만, 계산 비용이 크다.
+합칠 때 쓰는 것이 Rubin's rules다. 추정치는 $m$개의 평균을 쓰고, 분산은 두 몫을 더한다.
 
-### MICE의 강점과 한계
+$$T = \bar{U} + \left(1 + \frac{1}{m}\right) B$$
 
-```
-강점:
-[1] 변수 간 관계를 보존 — 상관관계 구조가 유지됨
-[2] MAR 가정에서 이론적으로 가장 정확한 방법 중 하나
-[3] 유연함 — 추정기를 자유롭게 교체 가능
-[4] 불확실성 반영 가능 — 여러 번 대체해서 결과의 변동성을 측정
+$\bar{U}$는 각 데이터셋 안에서 나온 분산의 평균이고, $B$는 $m$개 추정치가 서로 갈라진 정도다. 두 번째 항이 바로 단일 대체가 잃어버리는 몫이다. 대체값을 바꿨을 때 결론이 흔들린다면 그 흔들림이 결과의 불확실성에 포함되어야 한다는 뜻이다.
 
-한계:
-[1] 계산 비용이 큼 — 피처 수 × 반복 횟수만큼 모델 학습
-[2] MNAR에서는 여전히 편향 발생
-[3] 수렴이 보장되지 않을 수 있음 (max_iter를 충분히 설정)
-[4] 범주형 변수 처리가 복잡 — 사전 인코딩 필요
-```
+예측 모델을 만드는 게 목적이라면 단일 대체로 충분한 경우가 많다. 계수의 신뢰구간이나 p값을 보고해야 하는 분석이라면 다중 대체가 필요하다.
 
-<div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>실전 가이드</strong>: 결측 비율이 5% 이하면 SimpleImputer로 충분하다. 5~30%이면 KNN Imputer나 IterativeImputer를 고려한다. 30% 이상이면 해당 컬럼을 제거하거나, 결측 지시 변수와 함께 단순 대체를 쓰는 게 더 현실적이다.
-</div>
+| IterativeImputer의 강점 | 한계 |
+|---|---|
+| 변수 사이의 상관 구조를 보존한다 | 컬럼 수 × 라운드 수만큼 모델을 학습해 느리다 |
+| MAR 가정에서 이론적 근거가 가장 탄탄하다 | MNAR에서는 여전히 편향이 남는다 |
 
----
+## 시계열에는 순서라는 정보가 있다
 
-## 8. 시계열 데이터의 결측치: 시간의 흐름을 활용하라
-
-시계열 데이터는 **시간적 순서**라는 추가 정보가 있다. 이걸 활용하면 더 자연스러운 대체가 가능하다.
-
-### Forward Fill / Backward Fill
+행의 순서가 의미를 갖는 데이터라면 앞뒤 값을 쓸 수 있다.
 
 ```python
-# Forward Fill: 직전 값으로 채움
-df['temperature'] = df['temperature'].ffill()
-
-# Backward Fill: 다음 값으로 채움
-df['temperature'] = df['temperature'].bfill()
-
-# 둘 다 적용: forward fill 후 남은 결측을 backward fill
-df['temperature'] = df['temperature'].ffill().bfill()
+df['temp'] = df['temp'].ffill()                          # 직전 값 유지
+df['temp'] = df['temp'].interpolate(method='linear')     # 두 관측값 사이 직선
+df['temp'] = df['temp'].interpolate(method='time')       # 시간 간격 반영
 ```
 
-```
-시간  온도
-08:00  20.0
-09:00  NaN   → ffill: 20.0 (08:00 값)
-10:00  NaN   → ffill: 20.0 (08:00 값)
-11:00  22.5
-12:00  NaN   → ffill: 22.5 (11:00 값)
-```
+08:00에 20.0, 11:00에 22.5가 관측되고 그 사이가 비어 있다면, `ffill`은 09:00과 10:00을 둘 다 20.0으로 채운다. 선형 보간은 20.83과 21.67로 채운다.
 
-Forward fill은 "마지막으로 관측된 값이 유지된다"는 가정이다. 주가, 센서 데이터, IoT 로그 같은 데이터에서 자연스럽다.
+| 방법 | 깔고 가는 가정 | 맞는 데이터 |
+|------|--------------|-----------|
+| `ffill` | 값이 바뀔 때까지 유지된다 | 주가, 재고, 상태 플래그 |
+| `bfill` | 미래 값으로 소급해도 된다 | 사후 분석용, 실시간 추론에는 누수 |
+| 선형 보간 | 두 점 사이가 직선에 가깝다 | 온도, 센서처럼 연속적으로 변하는 값 |
+| 시간 보간 | 변화가 시간 간격에 비례한다 | 측정 간격이 들쭉날쭉한 로그 |
 
-### 보간법 (Interpolation)
+`bfill`은 미래 값을 끌어다 쓰므로 실시간 예측 파이프라인에서는 그 자체가 데이터 누수다.
 
-```python
-# 선형 보간: 두 관측값 사이를 직선으로 연결
-df['temperature'] = df['temperature'].interpolate(method='linear')
+## 트리 부스팅은 NaN을 그대로 받는다
 
-# 시간 기반 보간: 시간 간격을 고려
-df['temperature'] = df['temperature'].interpolate(method='time')
-
-# 다항식 보간
-df['temperature'] = df['temperature'].interpolate(method='polynomial', order=2)
-```
-
-```
-시간  온도
-08:00  20.0
-09:00  NaN   → 선형 보간: 20.83
-10:00  NaN   → 선형 보간: 21.67
-11:00  22.5
-```
-
-선형 보간은 두 관측값 사이를 직선으로 잇는다. ffill보다 자연스럽지만, 급격한 변화가 있는 구간에서는 실제 패턴을 놓칠 수 있다.
-
-### 시계열 결측치 처리 요약
-
-```
-| 방법          | 가정                     | 적합한 상황              |
-|--------------|-------------------------|------------------------|
-| Forward Fill | 값이 변할 때까지 유지     | 주가, 재고, 상태 데이터    |
-| Backward Fill| 미래 값으로 소급          | 사후 분석 (실시간 X)      |
-| 선형 보간     | 두 점 사이 직선 변화      | 온도, 센서 (연속적 변화)   |
-| 시간 보간     | 시간 간격 비례 변화       | 불균등 시간 간격 데이터    |
-| 이동 평균     | 주변 값의 평균            | 노이즈가 많은 시계열      |
-```
-
----
-
-## 9. 트리 기반 모델과 결측치
-
-여기까지 읽으면서 "이거 너무 복잡한데?"라고 느꼈을 수 있다. 좋은 소식이 있다. **트리 기반 부스팅 모델은 결측치를 자체적으로 처리한다.**
-
-### XGBoost의 결측치 처리
-
-XGBoost는 학습 과정에서 결측값을 만나면, 해당 샘플을 왼쪽 자식 노드로 보냈을 때와 오른쪽으로 보냈을 때의 손실을 비교해서 **최적의 방향을 자동으로 결정**한다.
+XGBoost는 분기를 만들 때 결측 샘플을 왼쪽으로 보낸 경우와 오른쪽으로 보낸 경우의 손실을 둘 다 계산하고, 이득이 큰 쪽을 그 분기의 기본 방향으로 학습해 둔다. 결측 처리 규칙 자체가 학습 대상이 되는 셈이다. LightGBM도 `use_missing=True`가 기본값이라 같은 일을 한다.
 
 ```python
 import xgboost as xgb
-import numpy as np
 
-# NaN이 포함된 데이터를 그대로 학습 가능
-X_train_with_nan = X_train.copy()  # NaN 포함
 model = xgb.XGBClassifier(n_estimators=100)
-model.fit(X_train_with_nan, y_train)  # 에러 없이 작동
+model.fit(X_train, y_train)   # X_train에 NaN이 있어도 에러가 나지 않는다
 ```
 
-### LightGBM의 결측치 처리
+이런 모델에서는 미리 평균 대체를 해 봐야 얻는 게 없다. 오히려 모델이 스스로 찾을 분기 방향을 사람이 임의로 덮어쓰는 꼴이 된다. NaN을 그대로 두고 결측 지시 변수만 추가하는 것이 실전에서 가장 흔한 조합이다.
 
-LightGBM도 유사한 방식으로 결측값을 처리한다. `use_missing=True`가 기본값이다.
+sklearn 쪽에서도 `HistGradientBoostingClassifier`와 `HistGradientBoostingRegressor`는 결측을 자체 처리한다. 로지스틱 회귀, SVM, KNN 같은 나머지 추정기는 여전히 NaN을 받지 못한다.
+
+## 대체는 fold 안에서 해야 한다
+
+가장 흔한 실수는 전체 데이터로 대체한 다음 분할하는 것이다.
 
 ```python
-import lightgbm as lgb
-
-model = lgb.LGBMClassifier(n_estimators=100)
-model.fit(X_train_with_nan, y_train)  # NaN 그대로 학습
-```
-
-### 그래도 대체하는 게 나을까?
-
-```
-트리 모델의 자체 처리 vs 사전 대체:
-
-실험적으로, 트리 모델에서는:
-- 단순 평균 대체 → 자체 처리보다 성능이 같거나 나빠질 수 있음
-- KNN/MICE 대체 → 약간의 성능 향상 가능 (데이터에 따라 다름)
-- 결측 지시 변수 추가 → 대부분 도움이 됨
-
-결론: XGBoost/LightGBM을 쓸 때는 NaN을 그대로 두되,
-      결측 지시 변수를 추가하는 것이 실전에서 가장 흔한 전략이다.
-```
-
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>sklearn 모델은 다르다</strong><br><br>
-  sklearn의 대부분의 모델(로지스틱 회귀, SVM, <a href="/ml/knn/">KNN</a> 등)은 NaN을 처리하지 못한다. ValueError가 발생한다. 트리 모델의 결측치 자체 처리는 XGBoost, LightGBM, CatBoost 같은 부스팅 라이브러리의 특장점이다.
-</div>
-
----
-
-## 10. Pipeline 통합: 데이터 누수를 막아라
-
-결측치 대체에서 가장 흔한 실수가 **데이터 누수(Data Leakage)** 다. [교차 검증](/ml/cross-validation/) 글에서 배운 것과 같은 원리다.
-
-### 잘못된 방법
-
-```python
-# 전체 데이터로 대체 → 테스트 데이터 정보가 누수!
 imputer = SimpleImputer(strategy='mean')
-X_imputed = imputer.fit_transform(X)  # 테스트 데이터 포함 평균
-
+X_imputed = imputer.fit_transform(X)          # 테스트 행까지 포함한 평균
 X_train, X_test = train_test_split(X_imputed, test_size=0.2)
 ```
 
-전체 데이터의 평균을 계산하면, 테스트 데이터의 정보가 훈련 데이터에 흘러든다. 교차 검증 점수가 실제보다 높게 나온다.
-
-### 올바른 방법: Pipeline
-
-```python
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score
-
-pipe = Pipeline([
-    ('imputer', SimpleImputer(strategy='median')),
-    ('scaler', StandardScaler()),
-    ('model', LogisticRegression())
-])
-
-# 교차 검증에서 각 fold마다 imputer가 훈련 데이터만으로 fit됨
-scores = cross_val_score(pipe, X, y, cv=5, scoring='accuracy')
-print(f"CV Score: {scores.mean():.4f} (+/- {scores.std():.4f})")
-```
-
-Pipeline 안에 imputer를 넣으면, [교차 검증](/ml/cross-validation/) 시 **각 fold에서 훈련 데이터만으로 fit**하고 검증 데이터에는 transform만 적용한다. 누수가 원천 차단된다.
-
-### 수치형 + 범주형 동시 처리
-
-실전에서는 수치형과 범주형을 다르게 처리해야 한다. `ColumnTransformer`를 쓴다.
+이 평균에는 테스트 행의 값이 들어가 있다. 검증 점수가 실제 성능보다 높게 나오고, 그 차이는 배포 후에 드러난다. `Pipeline`에 넣으면 각 fold에서 훈련 데이터로만 fit하고 검증 데이터에는 transform만 적용한다.
 
 ```python
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer, KNNImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-numeric_features = ['age', 'fare']
-categorical_features = ['embarked', 'sex']
-
-# 수치형: 간단 대체 → 스케일링 → KNN Imputer
-# KNN은 거리 기반이므로 스케일링 후에 적용해야 한다.
-# SimpleImputer로 초기 대체 → 스케일링 → KNNImputer 순서가 정석이지만,
-# KNNImputer는 내부적으로 nan-euclidean distance를 사용해 결측치를 건너뛰므로
-# 스케일링 전에 바로 적용해도 동작한다. 다만 스케일 차이가 크면 거리가 왜곡될 수 있다.
-numeric_transformer = Pipeline([
+# StandardScaler가 NaN을 그대로 통과시키므로 스케일링을 먼저 걸 수 있다
+numeric = Pipeline([
+    ('scaler', StandardScaler()),
     ('imputer', KNNImputer(n_neighbors=5)),
-    ('scaler', StandardScaler())
 ])
-
-# 범주형: 최빈값 대체 → 원핫 인코딩
-categorical_transformer = Pipeline([
+categorical = Pipeline([
     ('imputer', SimpleImputer(strategy='most_frequent')),
-    ('encoder', OneHotEncoder(handle_unknown='ignore'))
+    ('encoder', OneHotEncoder(handle_unknown='ignore')),
 ])
 
-preprocessor = ColumnTransformer([
-    ('num', numeric_transformer, numeric_features),
-    ('cat', categorical_transformer, categorical_features)
+pre = ColumnTransformer([
+    ('num', numeric, ['age', 'fare']),
+    ('cat', categorical, ['embarked', 'sex']),
 ])
 
-full_pipe = Pipeline([
-    ('preprocessor', preprocessor),
-    ('model', LogisticRegression())
-])
-
-scores = cross_val_score(full_pipe, X, y, cv=5, scoring='accuracy')
+pipe = Pipeline([('pre', pre), ('model', LogisticRegression())])
+scores = cross_val_score(pipe, X, y, cv=5, scoring='accuracy')
 ```
 
-이것이 실전에서 결측치를 처리하는 **표준 패턴**이다. 전처리 전체를 Pipeline으로 묶어서 데이터 누수 없이 평가한다.
+## 무엇을 고를 것인가
 
----
+| 상황 | 선택 |
+|------|------|
+| 결측 5% 미만, MCAR | `SimpleImputer(median)` 또는 `most_frequent` |
+| 결측 5~30%, MAR, 선형·거리 기반 모델 | 스케일링 후 `KNNImputer` 또는 `IterativeImputer` |
+| 결측 30~50%, MNAR 의심 | 결측 지시 변수 + 단순 대체 |
+| 결측 50% 초과 | 컬럼 제거, 지시 변수만 남김 |
+| XGBoost·LightGBM·HistGradientBoosting | NaN 그대로 + 결측 지시 변수 |
+| 순서가 있는 데이터 | `ffill` 또는 `interpolate` |
+| 계수와 신뢰구간을 보고해야 하는 분석 | `sample_posterior=True`로 다중 대체 |
 
-## 11. 비교 실험: 전략별 성능 차이
+## 마치며
 
-이론만으로는 감이 안 온다. 같은 데이터에 다른 전략을 적용해서 성능을 비교해보자.
+결측치 처리에서 방법의 정교함은 생각보다 덜 중요하다. 결측 비율이 낮으면 median 대체와 MICE는 거의 같은 결과를 낸다. 대체법을 비교하는 데 시간을 쓰기 전에 결측이 왜 생겼는지를 먼저 묻는 편이 낫다. MCAR이면 어느 방법을 써도 큰 차이가 없고, MNAR이면 어느 방법을 써도 편향이 남는다. 방법 선택이 실제로 갈리는 구간은 MAR 하나뿐이다.
 
-```python
-from sklearn.datasets import fetch_openml
-from sklearn.model_selection import cross_val_score
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer, KNNImputer
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-import numpy as np
-import pandas as pd
+방법 선택보다 확실하게 성능을 망치는 요인은 따로 있다. 전체 데이터로 대체한 뒤 분할하는 누수다. 이건 정교함의 문제가 아니라 순서의 문제이고, 전처리를 `Pipeline`으로 묶는 것만으로 원천 차단된다.
 
-# Titanic 데이터 로드
-titanic = fetch_openml('titanic', version=1, as_frame=True)
-X = titanic.data[['age', 'fare', 'pclass', 'sibsp', 'parch']].copy()
-y = (titanic.target == '1').astype(int)
+한 가지 더. 값을 채우면 그 칸이 비어 있었다는 사실이 사라진다. 결측 지시 변수는 한 줄이면 만들 수 있고, 채운 값이 추정이었다는 흔적을 데이터에 남겨 둔다.
 
-# 전략별 Pipeline 정의
-strategies = {
-    'Mean': Pipeline([
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('model', LogisticRegression(max_iter=1000))
-    ]),
-    'Median': Pipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('model', LogisticRegression(max_iter=1000))
-    ]),
-    'KNN (k=5)': Pipeline([
-        ('imputer', KNNImputer(n_neighbors=5)),
-        ('model', LogisticRegression(max_iter=1000))
-    ]),
-    'Iterative (MICE)': Pipeline([
-        ('imputer', IterativeImputer(max_iter=10, random_state=42)),
-        ('model', LogisticRegression(max_iter=1000))
-    ]),
-}
+## 함께 보면 좋은 글
 
-# 5-fold CV로 비교
-results = {}
-for name, pipe in strategies.items():
-    scores = cross_val_score(pipe, X, y, cv=5, scoring='accuracy')
-    results[name] = f"{scores.mean():.4f} (+/- {scores.std():.4f})"
-    print(f"{name:20s}: {results[name]}")
-```
-
-```
-일반적인 결과 경향:
-
-| 전략               | CV Accuracy (예시)    |
-|-------------------|-----------------------|
-| Mean              | 0.6923 (+/- 0.0180)  |
-| Median            | 0.6930 (+/- 0.0175)  |
-| KNN (k=5)         | 0.6965 (+/- 0.0162)  |
-| Iterative (MICE)  | 0.6978 (+/- 0.0155)  |
-
-관찰:
-- 이 데이터에서 결측 비율이 크지 않아 차이가 작다
-- 결측 비율이 높을수록 정교한 방법의 이점이 커진다
-- 모델에 따라서도 결과가 달라진다 (트리 모델은 차이가 더 줄어듦)
-```
-
-<div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>실전 교훈</strong>: 결측치 처리 전략의 차이가 "모델 선택"이나 "피처 엔지니어링"만큼 극적이지는 않다. 결측 비율이 낮으면 대부분의 방법이 비슷한 결과를 낸다. 진짜 중요한 것은 <strong>(1) 데이터 누수를 막는 것</strong>과 <strong>(2) 결측 유형에 맞는 전략을 쓰는 것</strong>이다.
-</div>
-
----
-
-## 12. 결측치 처리 의사결정 가이드
-
-지금까지 배운 내용을 의사결정 트리로 정리하자.
-
-```
-결측 비율 확인
-│
-├── > 50% → 컬럼 제거 (+ 결측 지시 변수 생성)
-│
-├── 5~50%
-│   ├── 결측 유형은?
-│   │   ├── MCAR → 삭제 OK (데이터 충분하면)
-│   │   ├── MAR  → 다변량 대체 권장 (KNN, MICE)
-│   │   └── MNAR → 결측 지시 변수 + 단순 대체
-│   │
-│   └── 모델은?
-│       ├── 트리 기반 (XGB/LGBM) → NaN 유지 + 지시 변수
-│       ├── 선형 모델 → KNN/MICE 대체
-│       └── 거리 기반 (KNN, SVM) → 대체 필수 + 스케일링
-│
-├── < 5% → SimpleImputer (mean/median/mode)로 충분
-│
-└── 시계열 → ffill / interpolate
-```
-
-```
-전략별 비교 요약:
-
-| 방법             | 복잡도 | 정확도 | 속도  | 가정           |
-|-----------------|--------|--------|------|----------------|
-| 삭제             | 낮음   | 낮음   | 빠름  | MCAR           |
-| Mean/Median     | 낮음   | 보통   | 빠름  | MCAR           |
-| 결측 지시 변수    | 낮음   | 보통+  | 빠름  | 없음           |
-| KNN Imputer     | 중간   | 높음   | 중간  | MAR, 유사성     |
-| Iterative (MICE)| 높음   | 높음   | 느림  | MAR            |
-| ffill/보간       | 낮음   | 높음   | 빠름  | 시간적 연속성   |
-| 트리 모델 자체    | 없음   | 높음   | 빠름  | 없음           |
-```
-
----
-
-## Phase 7 마무리: 피처 엔지니어링의 전체 그림
-
-Phase 7 (Feature Engineering)에서 배운 것들을 정리하자.
-
-| 순서 | 주제 | 핵심 질문 | 답을 주는 도구 |
-|------|------|----------|--------------|
-| 30 | [범주형 인코딩](/ml/categorical-encoding/) | 문자열을 숫자로 어떻게 바꾸는가? | Label, One-Hot, Ordinal Encoding |
-| 31 | [피처 스케일링](/ml/feature-scaling/) | 피처 크기 차이를 어떻게 맞추는가? | StandardScaler, MinMaxScaler |
-| 32 | [피처 선택](/ml/feature-selection/) | 어떤 피처가 진짜 중요한가? | Filter, Wrapper, Embedded |
-| 33 | [타겟 인코딩](/ml/target-encoding/) | 범주를 타겟과의 관계로 바꿀 수 있는가? | Target Encoder, Smoothing |
-| **34** | **결측치 처리 (이 글)** | **빈칸을 어떻게 채우는가?** | **SimpleImputer, KNN, MICE** |
-
-이 다섯 개가 합쳐지면, 원본 데이터를 모델에 넣을 수 있는 형태로 **완전하게 변환**하는 파이프라인이 완성된다.
-
-```
-원본 데이터 → [결측 처리] → [인코딩] → [스케일링] → [피처 선택] → 학습 준비 완료
-     │           │            │           │            │
-     │        이 글        #30, #33      #31          #32
-     │
-     └── 범주형, 수치형, 결측 섞인 혼돈의 테이블
-```
-
-Phase 1~6에서 모델을 배우고, Phase 7에서 데이터를 다듬는 법을 배웠다. 여기까지가 **지도학습(Supervised Learning)** 의 세계다. 정답(레이블)이 있는 데이터로 모델을 학습하는 전 과정을 다룬 것이다.
-
-하지만 현실에서 레이블이 있는 데이터는 전체의 극히 일부다. 대부분의 데이터에는 정답이 없다. 고객 데이터는 있는데 "이 고객이 이탈할지"라는 레이블은 없다. 유전자 발현 데이터는 있는데 "이 유전자가 어떤 그룹인지"는 모른다. 이런 데이터에서 **구조를 발견**하는 것이 비지도학습(Unsupervised Learning)이다.
-
-Phase 8에서는 비지도학습을 시작한다. 첫 글은 가장 기본적인 클러스터링 알고리즘인 [K-Means](/ml/kmeans-clustering/)다. 레이블 없이 데이터를 그룹으로 나누는 법을 배운다.
-
----
-
-*Phase 7 끝. Phase 8: Unsupervised Learning 시작 →*
+- [피처 스케일링](/ml/feature-scaling/) : KNN 대체 전에 반드시 거쳐야 하는 단계
+- [범주형 인코딩](/ml/categorical-encoding/) : 문자열 컬럼을 대체 가능한 형태로 바꾸는 방법
+- [교차 검증](/ml/cross-validation/) : 대체를 fold 안에서만 해야 하는 이유

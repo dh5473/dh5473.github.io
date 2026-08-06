@@ -1,77 +1,135 @@
 ---
 date: '2026-01-16'
-title: '랜덤 포레스트(Random Forest): 특성 무작위성으로 상관관계를 깨다'
+title: '특성 무작위성으로 트리 간 상관관계를 깨는 랜덤 포레스트'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 16
-tags: ['Random Forest', '랜덤 포레스트', 'Feature Importance', 'max_features', '머신러닝 기초']
-summary: '배깅의 트리 간 상관관계 한계를 특성 무작위성(max_features)으로 해결하는 랜덤 포레스트의 원리를 수학과 코드로 이해한다.'
+tags: ['Random Forest', '랜덤 포레스트', 'Feature Importance', '특성 중요도', 'max_features', 'Permutation Importance', '머신러닝 기초']
+summary: '각 노드에서 후보 특성을 일부만 남기는 max_features가 트리 간 상관관계를 낮춰 배깅의 분산 하한을 끌어내리는 원리와, 특성 중요도를 읽을 때 상관된 특성이 만드는 함정을 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/ensemble-and-bagging/)에서 앙상블과 배깅의 원리를 배웠다. 부트스트랩 샘플링으로 여러 트리를 만들고 다수결로 합치면, 분산이 σ²/B로 줄어든다. 하지만 한 가지 한계가 남았다 — 트리 간 상관관계 ρ. 같은 데이터에서 나온 트리들은 비슷한 구조를 가지기 쉽고, 상관관계가 높으면 Var(T̄) = ρσ² + (1-ρ)σ²/B에서 ρσ² 항이 남아 분산이 더 이상 줄지 않는다.
+배깅은 부트스트랩으로 뽑은 서로 다른 훈련 데이터에 트리를 한 그루씩 학습시키고 예측을 다수결로 모은다. 트리들이 완전히 독립이라면 평균의 분산은 트리 수 $B$ 에 반비례해 줄어든다. 하지만 모든 트리가 같은 원본에서 나왔기 때문에 서로 닮고, 그 상관관계 $\rho$ 때문에 실제 분산은 $\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2$ 가 된다. 뒷항은 트리를 늘리면 사라지지만 앞항은 트리를 만 그루 심어도 그대로다.
 
-**랜덤 포레스트(Random Forest)** 는 이 문제를 해결한다. 각 노드에서 전체 특성 중 일부만 무작위로 선택해서 분기점을 찾는다 — 이 한 가지 아이디어로 트리 간 상관관계를 깨고, 배깅의 분산 한계를 돌파한다.
+랜덤 포레스트는 남는 쪽을 겨냥한다. 각 노드에서 분기 후보로 쓸 특성을 전체가 아니라 **무작위로 고른 일부**로 제한한다. 이 한 줄짜리 변경이 $\rho$ 를 끌어내린다.
 
 ---
 
-## 랜덤 포레스트(Random Forest)
+## 후보 특성을 무작위로 제한한다
 
-[이전 글](/ml/ensemble-and-bagging/)에서 배운 배깅의 분산 공식을 다시 보자.
+배깅에서 트리들이 닮아버리는 주범은 예측력이 유난히 강한 특성 하나다. 어느 부트스트랩 샘플을 쓰든 그 특성이 불순도를 가장 많이 줄이므로, 모든 트리가 그것을 루트에 놓는다. 데이터는 달랐는데 트리는 같은 자리에서 갈라지고, 결국 같은 샘플에서 나란히 틀린다.
 
-### 배깅 + 특성 무작위성(Feature Randomness)
+랜덤 포레스트는 노드마다 후보 명단을 새로 뽑는다. 명단에 그 강한 특성이 없으면, 그 노드는 어쩔 수 없이 두 번째로 좋은 특성으로 분기한다.
 
-랜덤 포레스트는 배깅에 **특성 무작위성**을 추가한다. 각 노드에서 분기점을 찾을 때, **전체 특성 중 일부(max_features개)만 무작위로 선택**하고 그 중에서 최선의 분기를 찾는다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 264" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="위쪽은 배깅에서 여덟 개 특성이 모두 후보라 항상 f3이 선택되는 모습, 아래쪽은 랜덤 포레스트에서 노드마다 세 개씩만 후보로 뽑혀 f3, f5, f7이 각각 선택되는 모습">
+<text x="200" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text, #1c1917)">분기 후보가 되는 특성</text>
+<!-- 위: 배깅 -->
+<text x="18" y="48" font-size="14" fill="var(--text-muted, #6d6762)">위: 배깅 (특성 8개가 모두 후보)</text>
+<rect x="18" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="34" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f1</text>
+<rect x="54" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="70" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f2</text>
+<rect x="90" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="106" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f3</text>
+<rect x="126" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="142" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f4</text>
+<rect x="162" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="178" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f5</text>
+<rect x="198" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="214" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f6</text>
+<rect x="234" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="250" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f7</text>
+<rect x="270" y="58" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="286" y="76" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f8</text>
+<text x="318" y="76" font-size="14" fill="var(--text, #1c1917)">선택 f3</text>
+<line x1="18" y1="100" x2="382" y2="100" stroke="var(--border, #e7e5e4)" stroke-width="1"/>
+<!-- 아래: 랜덤 포레스트 -->
+<text x="18" y="124" font-size="14" fill="var(--text-muted, #6d6762)">아래: 랜덤 포레스트 (노드마다 3개만 후보)</text>
+<!-- 노드 1 -->
+<rect x="18" y="134" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="34" y="152" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f1</text>
+<rect x="54" y="134" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="70" y="152" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f2</text>
+<rect x="90" y="134" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="106" y="152" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f3</text>
+<rect x="126" y="134" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="142" y="152" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f4</text>
+<rect x="162" y="134" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="178" y="152" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f5</text>
+<rect x="198" y="134" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="214" y="152" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f6</text>
+<rect x="234" y="134" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="250" y="152" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f7</text>
+<rect x="270" y="134" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="286" y="152" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f8</text>
+<text x="318" y="152" font-size="14" fill="var(--text, #1c1917)">선택 f3</text>
+<!-- 노드 2 -->
+<rect x="18" y="170" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="34" y="188" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f1</text>
+<rect x="54" y="170" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="70" y="188" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f2</text>
+<rect x="90" y="170" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="106" y="188" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f3</text>
+<rect x="126" y="170" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="142" y="188" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f4</text>
+<rect x="162" y="170" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="178" y="188" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f5</text>
+<rect x="198" y="170" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="214" y="188" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f6</text>
+<rect x="234" y="170" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="250" y="188" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f7</text>
+<rect x="270" y="170" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="286" y="188" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f8</text>
+<text x="318" y="188" font-size="14" fill="var(--text, #1c1917)">선택 f5</text>
+<!-- 노드 3 -->
+<rect x="18" y="206" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="34" y="224" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f1</text>
+<rect x="54" y="206" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="70" y="224" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f2</text>
+<rect x="90" y="206" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="106" y="224" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f3</text>
+<rect x="126" y="206" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="142" y="224" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f4</text>
+<rect x="162" y="206" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="178" y="224" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f5</text>
+<rect x="198" y="206" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="214" y="224" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f6</text>
+<rect x="234" y="206" width="32" height="26" rx="4" fill="var(--primary, #0a756c)"/>
+<text x="250" y="224" text-anchor="middle" font-size="14" fill="var(--on-fill, #ffffff)">f7</text>
+<rect x="270" y="206" width="32" height="26" rx="4" fill="var(--bg-subtle, #f5f4f2)" stroke="var(--border, #e7e5e4)"/>
+<text x="286" y="224" text-anchor="middle" font-size="14" fill="var(--text-muted, #6d6762)">f8</text>
+<text x="318" y="224" font-size="14" fill="var(--text, #1c1917)">선택 f7</text>
+<text x="18" y="250" font-size="14" fill="var(--text-muted, #6d6762)">색이 찬 칸 = 그 노드의 후보 특성</text>
+</svg>
+</div>
 
-```
-배깅:          각 트리 → 부트스트랩 샘플 사용
-랜덤 포레스트: 각 트리 → 부트스트랩 샘플 사용
-               각 노드 → max_features개 특성만 고려 (← 이 부분이 추가!)
-```
+f3이 가장 강한 특성이지만 후보로 뽑히는 노드에서만 쓰인다. 나머지 노드는 f5나 f7로 갈라지고, 그렇게 자란 트리들은 서로 다른 곳에서 틀린다. 이것이 $\rho$ 가 내려간다는 말의 실제 내용이다.
 
-이로 인해:
-1. 강한 특성 하나가 모든 트리를 지배하지 않는다
-2. 트리마다 서로 다른 특성 조합을 학습한다
-3. 트리 간 상관관계 ρ가 줄어든다
-4. 분산 공식 `ρσ² + (1-ρ)σ²/B`에서 ρ가 작아지므로 전체 분산이 낮아진다
+대가가 없지는 않다. 후보를 줄이면 각 노드는 전체 중 최선이 아닌 분기를 고르게 되므로 **개별 트리의 성능은 떨어진다**. 랜덤 포레스트는 개별 트리를 조금 나쁘게 만드는 대신 트리들 사이의 상관관계를 크게 낮추는 거래이고, $\rho\sigma^2$ 이 분산의 바닥을 정하는 구조에서는 이 거래가 대체로 남는 장사다.
 
-### 왜 특성 무작위성이 필요한가?
+### max_features
 
-극단적인 예시로 이해해보자. 30개의 특성 중 1개가 압도적으로 중요한 특성이라고 하자. 배깅에서는 모든 트리의 루트 노드가 그 특성을 선택한다. 트리들이 형제처럼 비슷해진다 — ρ ≈ 1.
-
-랜덤 포레스트에서 `max_features=5`로 설정하면, 어떤 트리는 루트에서 그 특성을 못 보고 다른 특성으로 분기한다. 각 트리가 데이터의 다른 측면을 배운다 — ρ가 크게 줄어든다.
-
-### max_features 파라미터
-
-sklearn의 기본값:
-- **분류(Classification)**: `max_features='sqrt'` → √p개 (p = 전체 특성 수)
-- **회귀(Regression)**: `max_features=1.0` (sklearn 1.1+) 또는 `'sqrt'`
+후보 명단의 크기를 정하는 인자가 `max_features`다. 전체 특성 수를 $p$ 라 할 때 분류는 $\sqrt{p}$, 회귀는 $p$ 전체가 sklearn 기본값이고, 회귀에서도 $p/3$ 부근이 좋은 출발점으로 자주 쓰인다.
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
 
-# p=30개 특성이면 sqrt(30) ≈ 5~6개 특성만 각 노드에서 고려
-rf = RandomForestClassifier(
-    n_estimators=100,
-    max_features='sqrt',  # 기본값: 분류에서 √p
-    random_state=42
-)
+# 특성 30개면 노드마다 int(sqrt(30)) = 5개만 후보로 본다
+rf = RandomForestClassifier(n_estimators=100, max_features='sqrt',
+                            random_state=42, n_jobs=-1)
 ```
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 <code>max_features</code>의 직관</strong><br>
-  <code>max_features</code>가 작을수록: 트리 간 상관관계 ↓, 개별 트리 성능 ↓<br>
-  <code>max_features</code>가 클수록: 트리 간 상관관계 ↑, 개별 트리 성능 ↑<br>
-  최적점은 중간 어딘가에 있다. 분류에는 √p, 회귀에는 p/3이 좋은 출발점이다.
-</div>
+방향은 한 축 위에 있다. `max_features`를 줄이면 트리 간 상관관계가 내려가는 대신 개별 트리가 약해지고, 늘리면 반대가 된다. 값이 $p$ 와 같아지면 후보 제한이 사라져 그냥 배깅이 된다. 최적점은 양 끝이 아니라 가운데 어딘가다.
 
 ---
 
-## sklearn으로 실전 구현
+## 배깅과 얼마나 다른가
 
-### BaggingClassifier vs RandomForestClassifier 비교
-
-[이전 글](/ml/ensemble-and-bagging/)에서 BaggingClassifier의 사용법을 다뤘다. 여기서는 RandomForestClassifier와의 차이를 비교한다.
+같은 데이터에서 단일 트리, 배깅, 랜덤 포레스트를 나란히 세워보면 차이가 한 줄로 드러난다.
 
 ```python
 from sklearn.datasets import load_breast_cancer
@@ -79,419 +137,147 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier
 
-cancer = load_breast_cancer()
-X, y = cancer.data, cancer.target
+X, y = load_breast_cancer(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y, test_size=0.2, random_state=42
 )
 
-# 단일 결정 트리
-dt = DecisionTreeClassifier(random_state=42)
-dt.fit(X_train, y_train)
-
-# 배깅
-bagging = BaggingClassifier(
-    estimator=DecisionTreeClassifier(),
-    n_estimators=100,
-    max_samples=1.0,    # 부트스트랩 샘플 크기 (기본: 전체)
-    max_features=1.0,   # 특성 서브샘플 없음 (배깅의 경우)
-    bootstrap=True,
-    random_state=42,
-    n_jobs=-1
-)
-bagging.fit(X_train, y_train)
-
-# 랜덤 포레스트
-rf = RandomForestClassifier(
-    n_estimators=100,
-    max_features='sqrt',  # 특성 무작위성 (핵심 차이!)
-    random_state=42,
-    n_jobs=-1
-)
-rf.fit(X_train, y_train)
-
-print(f"단일 DecisionTree: {dt.score(X_test, y_test):.4f}")
-print(f"BaggingClassifier: {bagging.score(X_test, y_test):.4f}")
-print(f"RandomForest:      {rf.score(X_test, y_test):.4f}")
+models = {
+    "단일 트리": DecisionTreeClassifier(random_state=42),
+    "배깅": BaggingClassifier(n_estimators=100, random_state=42, n_jobs=-1),
+    "랜덤 포레스트": RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1),
+}
+for name, m in models.items():
+    print(f"{name:8s} {m.fit(X_train, y_train).score(X_test, y_test):.4f}")
 ```
 
-```
-단일 DecisionTree: 0.9474
-BaggingClassifier: 0.9561
-RandomForest:      0.9649
+```text
+단일 트리    0.9474
+배깅       0.9561
+랜덤 포레스트  0.9649
 ```
 
-### n_estimators에 따른 성능 변화
+두 코드 어디에도 `max_features`가 보이지 않지만, 배깅의 기본값은 특성 전체이고 랜덤 포레스트의 기본값은 $\sqrt{p}$ 다. 실질적인 차이는 그것 하나인데 점수는 한 칸 더 올라간다. 유방암 데이터는 반지름·둘레·면적처럼 사실상 같은 것을 재는 특성이 여럿 들어 있어서, 후보를 강제로 흩어놓는 효과가 특히 잘 드러나는 편이다.
 
 ![트리 수에 따른 성능 변화](./n-estimators-performance.png)
 
-트리 수가 적을 때는 성능이 불안정하고, 100개 정도에서 수렴한다. 200개 이상은 성능 차이가 미미하지만 학습 시간만 늘어난다. 실전에서는 100~300개가 좋은 출발점이다.
-
-### 회귀 예시
-
-```python
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.datasets import fetch_california_housing
-from sklearn.metrics import root_mean_squared_error
-
-housing = fetch_california_housing()
-X_h, y_h = housing.data, housing.target
-X_tr, X_te, y_tr, y_te = train_test_split(X_h, y_h, test_size=0.2, random_state=42)
-
-rf_reg = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
-rf_reg.fit(X_tr, y_tr)
-
-y_pred = rf_reg.predict(X_te)
-rmse = root_mean_squared_error(y_te, y_pred)
-print(f"RMSE: {rmse:.4f}")
-print(f"R²:   {rf_reg.score(X_te, y_te):.4f}")
-```
-
-```
-RMSE: 0.5032
-R²:   0.8050
-```
+트리 수는 늘릴수록 좋아지다가 멈춘다. 이 데이터에서는 5그루 0.9474, 10그루 0.9561, 25그루부터 0.9649로 수렴하고 300그루까지 더 올라가지 않는다. 트리를 늘려도 과적합이 생기지는 않으므로 성능이 아니라 학습 시간과 메모리가 상한을 정한다. `oob_score=True`를 켜두면 검증 셋을 따로 떼지 않고도 이 수렴 지점을 눈으로 확인할 수 있다.
 
 ---
 
-## OOB(Out-of-Bag) 평가
+## 특성 중요도
 
-### OOB error를 교차 검증 대신 쓸 수 있는 이유
+랜덤 포레스트는 어떤 특성이 예측에 기여했는지를 학습 과정에서 부산물로 뱉어낸다. 트리를 키우는 동안 특성 $j$ 로 분기한 모든 노드에서 줄어든 불순도를, 그 노드에 도달한 샘플 비율로 가중해 합산한 값이다.
 
-각 트리는 자신의 OOB 샘플(약 36.8%)로 평가할 수 있다. 전체 데이터의 각 샘플은 평균적으로 **B × 0.368개** 트리의 OOB 샘플이 된다. 그 트리들의 예측만 모아 다수결을 내면 자연스럽게 **교차 검증과 유사한 검증**이 된다.
+$$\text{Imp}(j) = \frac{1}{B}\sum_{b=1}^{B} \sum_{t \,\in\, T_b,\; v(t)=j} \frac{n_t}{n} \, \Delta G(t)$$
 
-교차 검증(k-fold)은 데이터를 k번 다시 학습해야 하지만, OOB 평가는 배깅 학습 중에 자동으로 이루어진다 — **추가 학습 없이** 교차 검증 수준의 일반화 오류 추정이 가능하다.
-
-### oob_score=True 설정
-
-```python
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-
-cancer = load_breast_cancer()
-X, y = cancer.data, cancer.target
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-rf = RandomForestClassifier(
-    n_estimators=200,
-    oob_score=True,     # OOB 점수 계산 활성화
-    random_state=42,
-    n_jobs=-1
-)
-rf.fit(X_train, y_train)
-
-# 세 가지 평가 방법 비교
-cv_scores = cross_val_score(
-    RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1),
-    X, y, cv=5
-)
-
-print(f"OOB Score:    {rf.oob_score_:.4f}")
-print(f"5-Fold CV:    {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
-print(f"Test Score:   {rf.score(X_test, y_test):.4f}")
-```
-
-```
-OOB Score:    0.9604
-5-Fold CV:    0.9578 ± 0.0238
-Test Score:   0.9649
-```
-
-![OOB Score vs 교차 검증 vs 테스트 Score 비교](./oob-vs-cv.png)
-
-세 점수가 매우 근접하다. OOB가 교차 검증의 훌륭한 대용이 됨을 확인할 수 있다. 특히 데이터가 크거나 학습이 오래 걸릴 때 유용하다.
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ OOB 사용 팁</strong><br>
-  <code>oob_score=True</code>를 쓰려면 <code>bootstrap=True</code>(기본값)여야 한다. OOB 점수가 테스트 점수와 크게 다르면(예: OOB가 훨씬 낮으면) 데이터에 시간적 순서나 그룹 구조가 있어서 랜덤 분할이 적절하지 않은 신호일 수 있다.
-</div>
-
----
-
-## 특성 중요도(Feature Importance)
-
-랜덤 포레스트의 강점 중 하나는 **어떤 특성이 예측에 중요한지** 자동으로 알려준다는 점이다.
-
-### 계산 방법: Gini 불순도 감소량
-
-각 특성의 중요도는 **모든 트리에서 해당 특성으로 분기할 때 줄어드는 Gini 불순도의 평균**으로 계산된다.
-
-```
-특성 j의 중요도 = (1/B) Σ_{b=1}^{B} Σ_{노드 t, 분기 특성=j} Δ불순도(t)
-
-여기서 Δ불순도(t) = 부모 노드 불순도 - (왼쪽 자식 가중 불순도 + 오른쪽 자식 가중 불순도)
-```
-
-값이 클수록 그 특성이 트리를 만들 때 더 많이 기여했다는 뜻이다. 모든 특성의 중요도 합은 1이다.
-
-### 특성 중요도 시각화
+$v(t)$ 는 노드 $t$ 가 분기에 쓴 특성, $\Delta G(t)$ 는 그 분기로 줄어든 지니 불순도다. sklearn은 마지막에 전체 합이 1이 되도록 정규화한다.
 
 ```python
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-
-cancer = load_breast_cancer()
-X, y = cancer.data, cancer.target
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 rf = RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1)
 rf.fit(X_train, y_train)
 
-# 특성 중요도 추출
-importances = rf.feature_importances_
-feature_names = cancer.feature_names
-sorted_idx = np.argsort(importances)[::-1]
-
-print("상위 10개 중요 특성:")
-for i in range(10):
-    idx = sorted_idx[i]
-    print(f"  {i+1:2d}. {feature_names[idx]:<35s} {importances[idx]:.4f}")
+names = load_breast_cancer().feature_names
+for i in np.argsort(rf.feature_importances_)[::-1][:6]:
+    print(f"{names[i]:24s} {rf.feature_importances_[i]:.4f}")
 ```
 
-```
-상위 10개 중요 특성:
-   1. worst concave points                0.1521
-   2. worst perimeter                     0.1047
-   3. worst radius                        0.0937
-   4. mean concave points                 0.0835
-   5. worst area                          0.0703
-   6. mean perimeter                      0.0554
-   7. mean radius                         0.0483
-   8. worst concavity                     0.0445
-   9. mean area                           0.0397
-  10. mean concavity                      0.0336
+```text
+worst area               0.1285
+worst concave points     0.1283
+worst perimeter          0.1271
+mean concave points      0.1198
+worst radius             0.0693
+mean concavity           0.0558
 ```
 
-![랜덤 포레스트 특성 중요도](./feature-importance.png)
+### 상관된 특성이 만드는 함정
 
-### Permutation Importance와 비교
+상위 네 개가 0.12~0.13에 몰려 있다. 이것을 "네 특성이 비슷하게 중요하다"로 읽으면 곤란하다. worst radius, worst perimeter, worst area 세 개의 상관계수는 0.978에서 0.994 사이로, 원 하나의 반지름과 둘레와 넓이를 각각 적어둔 것에 가깝다. 어느 노드에서든 셋 중 아무거나 뽑히면 되므로 하나가 받았어야 할 중요도가 셋에 쪼개져 들어간다. 이 목록에서 worst radius가 5위로 내려앉은 것도 실력 차이가 아니라 나눠 가진 결과다.
 
-Gini 기반 중요도에는 한계가 있다 — **카디널리티가 높은 특성**(연속값, 고유값이 많은 범주형)이 과대평가될 수 있다. 이 문제를 해결하는 것이 **Permutation Importance**다.
+지니 기반 중요도에는 편향이 하나 더 있다. 임계값 후보가 많은 특성일수록 우연히 불순도를 줄이는 분할을 찾을 기회가 많아서, 연속형이나 고유값이 많은 범주형이 과대평가된다.
+
+### Permutation Importance
+
+이 편향을 우회하는 방법이 순열 중요도다. 학습이 끝난 모델에 검증 데이터를 넣되 특성 하나의 값만 행 사이에서 무작위로 섞어 다시 예측하고, 점수가 얼마나 떨어지는지를 잰다. 학습 과정이 아니라 예측 결과로 재기 때문에 임계값 개수 같은 학습 시점의 사정에 휘둘리지 않는다.
 
 ```python
 from sklearn.inspection import permutation_importance
 
-perm_result = permutation_importance(
-    rf, X_test, y_test, n_repeats=10, random_state=42, n_jobs=-1
-)
-
-print("Permutation Importance 상위 5개:")
-perm_sorted = np.argsort(perm_result.importances_mean)[::-1]
-for i in range(5):
-    idx = perm_sorted[i]
-    mean = perm_result.importances_mean[idx]
-    std = perm_result.importances_std[idx]
-    print(f"  {feature_names[idx]:<35s} {mean:.4f} ± {std:.4f}")
+perm = permutation_importance(rf, X_test, y_test, n_repeats=30,
+                              random_state=0, n_jobs=-1)
+for i in np.argsort(perm.importances_mean)[::-1][:4]:
+    print(f"{names[i]:24s} {perm.importances_mean[i]:.4f} ± {perm.importances_std[i]:.4f}")
 ```
 
-```
-Permutation Importance 상위 5개:
-  worst concave points                 0.0614 ± 0.0089
-  worst perimeter                      0.0526 ± 0.0072
-  mean concave points                  0.0438 ± 0.0065
-  worst radius                         0.0351 ± 0.0054
-  worst area                           0.0289 ± 0.0048
+```text
+worst texture            0.0018 ± 0.0035
+mean texture             0.0015 ± 0.0033
+worst perimeter          0.0009 ± 0.0026
+worst radius             0.0009 ± 0.0026
 ```
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>💡 Gini 중요도 vs Permutation Importance</strong><br>
-  <strong>Gini 중요도</strong>: 학습 데이터 기준. 빠르게 계산. 상관된 특성이나 고카디널리티 특성에서 편향될 수 있음<br>
-  <strong>Permutation Importance</strong>: 검증/테스트 데이터 기준. 더 신뢰할 수 있음. 특성 순서를 무작위로 섞어 성능 감소 측정<br>
-  중요한 특성 선택 작업에는 Permutation Importance를 권장한다.
-</div>
+값이 전부 0에 붙어 있다. 지니 중요도가 0.13을 준 특성조차 여기서는 0.001이다. 모델이 무너지지 않았기 때문인데, worst perimeter를 망가뜨려도 worst radius와 worst area에 같은 정보가 그대로 남아 있어서 예측이 흔들리지 않는다.
+
+두 방법이 이렇게 다른 답을 내면 어느 쪽이 맞는지를 따질 것이 아니라, **특성들이 서로 심하게 겹쳐 있다는 신호로 읽어야 한다.** 이 상태에서는 어느 방법으로 재도 개별 특성의 중요도라는 것이 성립하지 않는다. 순위를 진지하게 쓸 생각이라면 상관관계로 특성을 묶어 묶음마다 대표 하나만 남기고 다시 재는 편이 낫다.
+
+:::warning
+
+**중요도를 인과로 읽지 않는다**
+
+특성 중요도는 이 모델이 예측을 만들 때 무엇에 기댔는지를 말할 뿐, 그 특성을 바꾸면 결과가 바뀐다는 뜻이 아니다.
+
+중요도가 0인 특성도 "쓸모없는 특성"이 아니라 "다른 특성이 이미 같은 정보를 담고 있어 이 모델이 고르지 않은 특성"인 경우가 많다.
+
+:::
 
 ---
 
-## 하이퍼파라미터 가이드
+## 하이퍼파라미터
 
-랜덤 포레스트의 주요 파라미터와 각각의 영향을 정리했다.
+기본값으로 시작해서 필요한 것만 건드리면 된다. 랜덤 포레스트가 강력한 베이스라인으로 불리는 이유가 여기에 있다.
 
-```python
-from sklearn.ensemble import RandomForestClassifier
+| 파라미터 | 기본값 | 조정 방향 |
+|---|---|---|
+| `n_estimators` | 100 | 100~300. OOB 점수가 평평해지는 지점까지 |
+| `max_features` | `'sqrt'` | 분류는 그대로. 과소적합이면 늘리고 트리가 너무 닮았으면 줄인다 |
+| `max_depth` | None | 보통 건드리지 않는다. 과적합이 심하면 5~20 |
+| `min_samples_leaf` | 1 | 노이즈가 많은 데이터에서 5~20으로 올리면 안정된다 |
+| `n_jobs` | None | 코어를 다 쓰려면 -1. 트리 학습과 예측 모두 병렬화된다 |
 
-rf = RandomForestClassifier(
-    n_estimators=100,        # 트리 수
-    max_depth=None,          # 최대 깊이 (None = 완전 성장)
-    max_features='sqrt',     # 노드별 고려 특성 수
-    min_samples_leaf=1,      # 리프 노드 최소 샘플 수
-    min_samples_split=2,     # 내부 노드 최소 샘플 수
-    bootstrap=True,          # 부트스트랩 샘플링 여부
-    oob_score=False,         # OOB 점수 계산 여부
-    n_jobs=-1,               # 병렬 처리 (코어 수 -1)
-    random_state=42
-)
-```
+과적합을 잡을 때는 `max_depth`보다 `min_samples_leaf`를 먼저 올리는 편이 낫다. 깊이는 트리 전체를 같은 칼로 자르지만, 리프 최소 샘플 수는 데이터가 성긴 가지만 골라서 멈추게 하기 때문이다.
 
-| 파라미터 | 기본값 | 효과 | 조정 방향 |
-|---------|--------|------|-----------|
-| `n_estimators` | 100 | 많을수록 안정적, 학습 시간 선형 증가 | 100~500 사이에서 OOB로 확인 |
-| `max_depth` | None | 작을수록 과소적합, 클수록 과적합 | None → 5~20 범위로 줄여보기 |
-| `max_features` | 'sqrt' | 작을수록 트리 다양성↑, 개별 성능↓ | 'sqrt'(분류), 'log2', 0.5 등 시도 |
-| `min_samples_leaf` | 1 | 클수록 단순한 트리, 분산 감소 | 과적합이면 5~20으로 증가 |
-| `min_samples_split` | 2 | 클수록 덜 세분화 | 과적합이면 10~50으로 증가 |
+특성 스케일링은 필요 없다. 분기 조건이 "특성 값 $\le$ 임계값" 비교뿐이라 값의 순서만 유지되면 결과가 한 자리도 바뀌지 않는다. `StandardScaler`를 파이프라인에 끼워도 점수가 같게 나오는 것을 확인해두면 이 습관을 떼기 쉽다.
 
-### 실전 하이퍼파라미터 탐색
-
-```python
-from sklearn.model_selection import RandomizedSearchCV
-import numpy as np
-
-param_dist = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'max_features': ['sqrt', 'log2', 0.5],
-    'min_samples_leaf': [1, 2, 5, 10],
-    'min_samples_split': [2, 5, 10],
-}
-
-rf_search = RandomizedSearchCV(
-    RandomForestClassifier(random_state=42, n_jobs=-1),
-    param_distributions=param_dist,
-    n_iter=30,
-    cv=5,
-    scoring='accuracy',
-    n_jobs=-1,
-    random_state=42
-)
-rf_search.fit(X_train, y_train)
-
-print(f"최적 파라미터: {rf_search.best_params_}")
-print(f"CV 최고 점수: {rf_search.best_score_:.4f}")
-print(f"테스트 점수:  {rf_search.best_estimator_.score(X_test, y_test):.4f}")
-```
-
-```
-최적 파라미터: {'n_estimators': 300, 'min_samples_split': 2,
-                'min_samples_leaf': 1, 'max_features': 'sqrt', 'max_depth': 20}
-CV 최고 점수: 0.9648
-테스트 점수:  0.9649
-```
-
-<div style="background: #f0fff4; border-left: 4px solid #51cf66; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>✅ 빠른 시작 레시피</strong><br>
-  먼저 기본값 <code>RandomForestClassifier(n_estimators=100, n_jobs=-1)</code>로 베이스라인을 잡자. OOB 점수를 켜고 <code>n_estimators</code>를 늘려가며 수렴점을 찾는다. 그 다음 <code>max_features</code>와 <code>min_samples_leaf</code>를 조정해 분산-편향 균형을 맞춘다.
-</div>
-
----
-
-## 흔한 실수
-
-### 1. n_estimators를 너무 작게 잡는다
-
-```python
-# ❌ 트리 10개는 너무 불안정
-rf_small = RandomForestClassifier(n_estimators=10, random_state=42)
-rf_small.fit(X_train, y_train)
-print(f"n=10 정확도: {rf_small.score(X_test, y_test):.4f}")  # 0.9298 (불안정)
-
-# ✅ 최소 100개부터 시작, OOB로 수렴 확인
-rf_good = RandomForestClassifier(n_estimators=100, oob_score=True, random_state=42)
-rf_good.fit(X_train, y_train)
-print(f"n=100 정확도: {rf_good.score(X_test, y_test):.4f}")  # 0.9649 (안정적)
-print(f"OOB 점수:    {rf_good.oob_score_:.4f}")
-```
-
-```
-n=10 정확도: 0.9298 (불안정)
-n=100 정확도: 0.9649 (안정적)
-OOB 점수:    0.9560
-```
-
-### 2. 특성 스케일링을 걱정한다
-
-```python
-# ❌ 랜덤 포레스트에 StandardScaler를 쓸 필요가 없다
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-
-pipe_wrong = Pipeline([
-    ('scaler', StandardScaler()),  # 트리 기반 모델에는 불필요
-    ('rf', RandomForestClassifier(n_estimators=100, random_state=42))
-])
-pipe_wrong.fit(X_train, y_train)
-
-# ✅ 랜덤 포레스트는 분기점만 찾으므로 스케일에 불변(invariant)
-rf_no_scale = RandomForestClassifier(n_estimators=100, random_state=42)
-rf_no_scale.fit(X_train, y_train)
-
-print(f"스케일링 O: {pipe_wrong.score(X_test, y_test):.4f}")
-print(f"스케일링 X: {rf_no_scale.score(X_test, y_test):.4f}")
-# 결과가 동일하다
-```
-
-```
-스케일링 O: 0.9649
-스케일링 X: 0.9649
-```
-
-결정 트리는 분기점 위치만 중요하고, 특성 간 크기 비교를 하지 않으므로 스케일에 완전히 불변이다.
-
-### 3. Gini 중요도만 믿는다
-
-```python
-# ❌ 상관된 특성이 있을 때 Gini 중요도는 오도할 수 있다
-# 예: 두 특성이 강하게 상관되면, 중요도가 두 특성에 나뉘어 각각이 낮아 보인다
-
-from sklearn.inspection import permutation_importance
-
-# ✅ 중요한 특성 선택 시 Permutation Importance를 함께 확인한다
-perm = permutation_importance(rf, X_test, y_test, n_repeats=30, random_state=42)
-
-# 두 방법의 순위가 크게 다르면 특성 간 상관성을 의심하자
-print("Gini Top3:", [cancer.feature_names[i] for i in np.argsort(rf.feature_importances_)[-3:][::-1]])
-print("Perm Top3:", [cancer.feature_names[i] for i in np.argsort(perm.importances_mean)[-3:][::-1]])
-```
-
-```
-Gini Top3: ['worst concave points', 'worst perimeter', 'worst radius']
-Perm Top3: ['worst concave points', 'worst perimeter', 'mean concave points']
-```
-
-두 방법의 결과가 크게 다를수록 특성 간 상관성 또는 데이터 구조를 더 살펴봐야 한다.
-
-<div style="background: #fff3f0; border-left: 4px solid #ff6b6b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>⚠️ 메모리와 예측 시간</strong><br>
-  랜덤 포레스트는 모든 트리를 메모리에 유지한다. <code>n_estimators=1000</code>, 데이터 수십만 건이면 메모리 이슈가 생길 수 있다. 배포 환경에서 예측 지연이 문제면 <code>n_estimators</code>를 줄이거나, 학습 후 <code>joblib</code>으로 모델을 저장/로드해서 재사용하자. 각 트리 예측이 독립적이므로 <code>n_jobs=-1</code>로 병렬 예측도 가능하다.
-</div>
+배포에서는 메모리를 한 번 계산해보는 것이 좋다. 랜덤 포레스트는 학습된 트리를 전부 들고 있어야 예측할 수 있고, 트리 하나의 크기는 리프 개수에 비례한다. 완전히 자란 트리 1000그루면 직렬화한 모델 파일이 수백 MB에 이르기도 한다. 이럴 때 트리 수를 줄이는 것보다 `min_samples_leaf`를 올리는 쪽이 성능 손실이 적다.
 
 ---
 
 ## 마치며
 
-랜덤 포레스트의 핵심은 **배깅 + 특성 무작위성**이다.
+랜덤 포레스트가 배깅에 더한 것은 인자 하나다. 각 노드에서 후보 특성을 무작위로 솎아내는 것, 그것뿐이다. 하지만 그 한 줄이 건드리는 지점이 정확하다. 트리를 아무리 늘려도 없어지지 않던 $\rho\sigma^2$ 항을, 트리 수가 아니라 $\rho$ 자체를 낮춰서 줄인다.
 
-- **특성 무작위성**: 각 노드에서 `max_features`개 특성만 후보로 선택. 트리 간 상관관계 ρ를 줄인다.
-- **분산 공식**: Var(T̄) = ρσ² + (1-ρ)σ²/B. ρ가 줄면 전체 분산이 줄어든다.
-- **OOB**: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정.
-- **특성 중요도**: 어떤 특성이 예측에 기여하는지 자동으로 알려준다.
+거래의 구조도 분명하다. 최선이 아닌 분기를 강요당한 개별 트리는 조금 나빠지고, 대신 트리들이 서로 다른 곳에서 틀리게 된다. 앙상블에서는 후자가 더 값이 나가기 때문에 합계가 이득으로 남는다.
 
-랜덤 포레스트는 조정이 거의 필요 없는 **강력한 베이스라인 모델**이다. 기본값으로도 대부분의 데이터셋에서 좋은 성능을 낸다. 실전에서 가장 먼저 시도할 모델 중 하나다.
+특성 중요도는 이 모델에서 가장 쉽게 얻어지는 출력이면서 가장 자주 잘못 읽히는 출력이기도 하다. 지니 중요도와 순열 중요도의 순위가 어긋난다면 어느 한쪽이 틀렸다는 뜻이 아니라 특성들이 서로 겹쳐 있다는 뜻이다.
 
-다음 글에서는 앙상블의 또 다른 축인 **부스팅(Boosting)** 을 다룬다. 배깅이 트리를 **병렬**로 독립적으로 쌓는다면, 부스팅은 트리를 **순차적**으로 쌓으면서 이전 트리가 틀린 샘플에 더 집중한다 — 편향을 줄이는 방향으로. AdaBoost와 Gradient Boosting의 원리를 다음 글에서 파헤쳐보자.
+다음 글에서는 반대편 앙상블을 다룬다. 배깅과 랜덤 포레스트가 트리를 나란히 세워 분산을 줄인다면, 부스팅은 트리를 한 줄로 세워 앞 트리가 틀린 곳에 다음 트리를 붙이면서 편향을 줄인다.
 
-<div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; margin: 24px 0; border-radius: 8px;">
-  <strong>📌 핵심 요약</strong><br><br>
-  <ul style="margin: 0; padding-left: 20px;">
-    <li><strong>랜덤 포레스트</strong>: 배깅 + 노드별 특성 서브샘플링(<code>max_features</code>). 트리 간 상관관계 ρ 감소 → <code>Var(T̄) = ρσ² + (1-ρ)σ²/B</code> 전체 감소</li>
-    <li><strong><code>max_features</code></strong>: 분류는 √p, 회귀는 p/3이 좋은 출발점. 작을수록 다양성↑, 개별 성능↓</li>
-    <li><strong>OOB Score</strong>: oob_score=True로 추가 학습 없이 교차 검증 수준 성능 추정</li>
-    <li><strong>특성 중요도</strong>: Gini 감소량 기반 (빠름, 편향 가능) vs Permutation Importance (신뢰성 높음)</li>
-    <li><strong>스케일 불변</strong>: 트리 기반 모델은 특성 스케일링 불필요</li>
-    <li><strong>하이퍼파라미터</strong>: <code>n_estimators</code>=100~300, <code>max_features='sqrt'</code>, OOB로 수렴 확인</li>
-  </ul>
-</div>
+---
+
+## 함께 보면 좋은 글
+
+- [앙상블 학습과 배깅](/ml/ensemble-and-bagging/) : 부트스트랩과 OOB, 분산 감소 공식의 유도
+- [결정 트리](/ml/decision-tree/) : 포레스트를 이루는 트리 한 그루가 어떻게 자라는지
+- [부스팅](/ml/boosting/) : 트리를 순차로 쌓아 편향을 줄이는 반대편 접근
 
 ---
 
 ## 참고자료
 
-- [Leo Breiman — "Random Forests" (2001), Machine Learning 45:5–32](https://link.springer.com/article/10.1023/A:1010933404324)
-- [Leo Breiman — "Bagging Predictors" (1996), Machine Learning 24:123–140](https://link.springer.com/article/10.1007/BF00058655)
-- [Scikit-learn — RandomForestClassifier Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
-- [Scikit-learn — Ensemble Methods User Guide](https://scikit-learn.org/stable/modules/ensemble.html)
-- [StatQuest with Josh Starmer — Random Forests (YouTube)](https://www.youtube.com/watch?v=J4Wdy0Wc_xQ)
-- [Trevor Hastie et al. — "The Elements of Statistical Learning", Chapter 15](https://hastie.su.domains/ElemStatLearn/)
+- [Leo Breiman, "Random Forests" (2001), Machine Learning 45:5-32](https://link.springer.com/article/10.1023/A:1010933404324)
+- [Scikit-learn RandomForestClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+- [Scikit-learn Permutation Importance with Multicollinear or Correlated Features](https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html)
+- [Trevor Hastie et al., "The Elements of Statistical Learning", Chapter 15](https://hastie.su.domains/ElemStatLearn/)

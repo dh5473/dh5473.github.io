@@ -1,550 +1,278 @@
 ---
 date: '2026-02-01'
-title: '피처 선택(Feature Selection): 필터, 래퍼, 임베디드 방법 비교'
+title: '필터·래퍼·임베디드, 피처를 걸러내는 세 갈래'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 32
-tags: ['Feature Selection', '피처 선택', 'RFE', 'Mutual Information', 'Feature Importance', 'Lasso', '머신러닝']
-summary: '불필요한 피처를 제거해 모델 성능과 해석력을 높이는 세 가지 접근법. Filter, Wrapper, Embedded 방법의 원리와 실전 비교.'
+tags: ['Feature Selection', '피처 선택', 'RFE', 'Mutual Information', 'Feature Importance', 'Permutation Importance', 'SHAP', 'Lasso', '머신러닝']
+summary: '피처 선택은 모델을 학습하기 전에 할 수도, 학습을 반복하며 할 수도, 학습 안에서 할 수도 있다. 필터와 래퍼, 임베디드가 갈리는 지점과 각각의 대가를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/feature-scaling/)에서 피처 스케일링을 다뤘다. 수치형 피처의 범위를 맞춰 모델이 공정하게 학습하도록 만드는 작업이었다. 스케일링은 "피처를 어떻게 변환할까"의 문제였다면, 이번 글은 한 단계 더 근본적인 질문이다 — **그 피처를 아예 쓸 것인가, 말 것인가?**
+피처가 많으면 정보가 많으니 좋을 것 같다. 그런데 100개이던 피처를 200개로 늘렸더니 성능이 떨어지는 일이 실제로는 더 흔하다.
 
-피처가 많으면 무조건 좋을 것 같다. 정보가 많으니까. 하지만 현실은 그 반대인 경우가 많다. 피처를 100개에서 200개로 늘렸더니 오히려 성능이 떨어지는 경험을 해본 적이 있을 것이다. 이것이 **차원의 저주(Curse of Dimensionality)** 다.
+차원의 저주(Curse of Dimensionality)라고 부르는 현상이다. 차원이 늘어나면 공간의 부피가 지수적으로 커지는데 데이터 수는 그대로다. 같은 샘플이 훨씬 넓은 공간에 흩어지니 어느 점에서 봐도 이웃이라 부를 만큼 가까운 점이 없다. 거리 기반 모델은 여기서 판단 근거를 잃는다. 트리 모델도 안전하지 않다. 타겟과 무관한 피처가 수백 개 섞여 있으면 그중 하나가 우연히 훈련 데이터를 잘 가르는 일이 생기고, 트리는 그 분기를 만든다.
 
-차원이 높아지면 데이터 포인트 사이의 거리가 멀어지고, 모든 점이 비슷하게 "멀리" 떨어진다. [KNN](/ml/knn/)처럼 거리 기반으로 작동하는 모델은 이웃을 찾는 의미 자체가 희미해진다. 트리 기반 모델도 불필요한 피처에서 분기를 만들면서 과적합될 수 있다. 피처 수가 늘어날수록 같은 성능을 내기 위해 필요한 데이터 양은 기하급수적으로 증가한다.
+피처 선택은 이 문제를 정면으로 다룬다. 쓸모없거나 서로 겹치는 피처를 덜어내서 모델이 진짜 신호에만 반응하게 만드는 일이다. 얻는 것은 세 가지다. 자유도가 줄어 과적합이 억제되고, 학습 시간이 줄고, 남은 피처가 적으니 예측을 설명할 수 있게 된다. 피처 200개짜리 모델의 판단 근거를 사람에게 설명하는 건 사실상 불가능하지만 20개라면 가능하다.
 
-피처 선택(Feature Selection)은 이 문제를 정면으로 해결한다. **불필요하거나 중복된 피처를 제거**해서 모델이 진짜 중요한 신호에 집중하게 만드는 것이다.
+## 선택이 모델 학습과 맞물리는 지점
 
----
+피처 선택 기법을 셋으로 가르는 기준은 원리가 아니라 **모델 학습과의 시점 관계**다. 학습하기 전에 끝내는지, 학습을 되풀이하면서 고르는지, 학습 한 번 안에서 저절로 되는지가 다르다. 속도와 정확도의 차이는 전부 여기서 파생된다.
 
-## 1. 왜 피처 선택을 하는가
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 400" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="피처 선택 세 방식이 모델 학습과 맞물리는 지점 비교. 필터는 통계 점수로 먼저 컷한 뒤 모델을 학습하고, 래퍼는 후보 조합과 모델 학습과 성능 비교를 여러 번 되풀이하며, 임베디드는 모델 학습 한 번 안에 선택이 들어 있다.">
+<style>
+.fs1-t { font-size: 18px; font-weight: 600; fill: var(--text, #1c1917); }
+.fs1-sub { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.fs1-lab { font-size: 15px; fill: var(--text, #1c1917); }
+.fs1-on { font-size: 15px; font-weight: 600; fill: var(--on-fill, #ffffff); }
+.fs1-tiny { font-size: 14px; fill: var(--text-muted, #6d6762); }
+.fs1-plain { fill: var(--bg-subtle, #f5f4f2); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+.fs1-sel { fill: var(--primary, #0a756c); }
+.fs1-fit { fill: var(--accent, #9d5604); }
+.fs1-line { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; fill: none; }
+</style>
+<defs>
+<marker id="fs1Arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M 0 0 L 7 3.5 L 0 7 z" fill="var(--text-muted, #6d6762)"/></marker>
+</defs>
+<!-- ===== 필터 ===== -->
+<text class="fs1-t" x="20" y="18">필터</text>
+<text class="fs1-sub" x="20" y="38">선택 단계에 학습 0회</text>
+<rect class="fs1-plain" x="20" y="50" width="112" height="42" rx="6"/>
+<text class="fs1-lab" x="76" y="76" text-anchor="middle">전체 피처</text>
+<path class="fs1-line" d="M 132 71 L 143 71" marker-end="url(#fs1Arrow)"/>
+<rect class="fs1-sel" x="146" y="50" width="112" height="42" rx="6"/>
+<text class="fs1-on" x="202" y="76" text-anchor="middle">통계 점수 컷</text>
+<path class="fs1-line" d="M 258 71 L 269 71" marker-end="url(#fs1Arrow)"/>
+<rect class="fs1-fit" x="272" y="50" width="108" height="42" rx="6"/>
+<text class="fs1-on" x="326" y="76" text-anchor="middle">모델 학습</text>
+<!-- ===== 래퍼 ===== -->
+<text class="fs1-t" x="20" y="144">래퍼</text>
+<text class="fs1-sub" x="20" y="164">선택 단계에 학습 여러 번</text>
+<rect class="fs1-sel" x="20" y="176" width="112" height="42" rx="6"/>
+<text class="fs1-on" x="76" y="202" text-anchor="middle">후보 조합</text>
+<path class="fs1-line" d="M 132 197 L 143 197" marker-end="url(#fs1Arrow)"/>
+<rect class="fs1-fit" x="146" y="176" width="112" height="42" rx="6"/>
+<text class="fs1-on" x="202" y="202" text-anchor="middle">모델 학습</text>
+<path class="fs1-line" d="M 258 197 L 269 197" marker-end="url(#fs1Arrow)"/>
+<rect class="fs1-plain" x="272" y="176" width="108" height="42" rx="6"/>
+<text class="fs1-lab" x="326" y="202" text-anchor="middle">성능 비교</text>
+<path class="fs1-line" d="M 326 218 L 326 240 L 76 240 L 76 225" marker-end="url(#fs1Arrow)"/>
+<text class="fs1-tiny" x="201" y="258" text-anchor="middle">n회 반복</text>
+<!-- ===== 임베디드 ===== -->
+<text class="fs1-t" x="20" y="304">임베디드</text>
+<text class="fs1-sub" x="20" y="324">선택이 학습 1회 안에서</text>
+<rect class="fs1-plain" x="20" y="336" width="112" height="48" rx="6"/>
+<text class="fs1-lab" x="76" y="365" text-anchor="middle">전체 피처</text>
+<path class="fs1-line" d="M 132 360 L 143 360" marker-end="url(#fs1Arrow)"/>
+<rect class="fs1-fit" x="146" y="336" width="234" height="48" rx="6"/>
+<text class="fs1-on" x="160" y="365">모델 학습</text>
+<rect class="fs1-sel" x="238" y="344" width="132" height="32" rx="6"/>
+<text class="fs1-on" x="304" y="365" text-anchor="middle">선택 내장</text>
+</svg>
+</div>
 
-피처 선택의 이점은 세 가지로 정리된다.
+## 필터
 
-### 과적합 방지
+모델을 전혀 학습하지 않고 피처의 통계적 성질만 보고 자른다. 수천 개짜리 피처에서 명백한 쓰레기를 빠르게 걷어낼 때 쓴다.
 
-[편향-분산 트레이드오프](/ml/bias-variance/)에서 배웠듯이, 모델의 복잡도가 높으면 분산이 커진다. 피처가 많다는 건 모델에 자유도를 많이 준다는 뜻이고, 이건 곧 과적합 위험이다. 노이즈에 불과한 피처를 학습해서 훈련 데이터에만 잘 맞는 모델이 만들어진다.
-
-불필요한 피처를 제거하면 모델의 자유도가 줄어들고, 정규화와 비슷한 효과를 낸다.
-
-### 학습 속도 향상
-
-피처가 절반으로 줄면 학습 시간도 크게 줄어든다. 특히 피처가 수백~수천 개인 텍스트 데이터나 유전체 데이터에서는 학습 시간이 몇 시간에서 몇 분으로 단축될 수 있다.
-
-### 해석력 향상
-
-피처 200개짜리 모델의 예측을 설명하는 건 사실상 불가능하다. 피처를 20개로 줄이면 "이 예측은 이 피처들 때문에 이렇게 나왔다"고 설명할 수 있다. 비즈니스에서 모델의 신뢰를 얻으려면 해석력은 필수다.
-
-```
-피처 선택의 이점:
-[1] 과적합 방지 → 분산 감소, 일반화 성능 향상
-[2] 학습 속도  → 피처 수 감소 → 연산량 감소
-[3] 해석력    → 핵심 피처만 남기면 모델 설명 가능
-```
-
----
-
-## 2. Filter 방법: 모델 없이 피처를 걸러낸다
-
-Filter 방법은 **모델을 학습하지 않고** 피처의 통계적 특성만 보고 걸러낸다. 빠르고 단순하다. 전처리 단계에서 먼저 적용하기 좋다.
-
-### VarianceThreshold — 분산이 낮은 피처 제거
-
-분산이 0이면 모든 값이 같다는 뜻이고, 어떤 정보도 담고 있지 않다. 분산이 매우 낮은 피처도 모델에 기여하는 바가 거의 없다.
+분산이 0이면 모든 행의 값이 같다는 뜻이라 어떤 정보도 없다. `VarianceThreshold`가 이걸 걸러낸다.
 
 ```python
 from sklearn.feature_selection import VarianceThreshold
 
-# 분산이 0.01 미만인 피처 제거
 selector = VarianceThreshold(threshold=0.01)
 X_filtered = selector.fit_transform(X)
-
-print(f"원래 피처 수: {X.shape[1]}")
-print(f"필터 후 피처 수: {X_filtered.shape[1]}")
 ```
 
-주의할 점은 스케일에 따라 분산이 달라진다는 것이다. 연봉(단위: 만 원)과 나이(단위: 세) 피처의 분산은 스케일 차이 때문에 비교가 안 된다. VarianceThreshold는 보통 **같은 스케일의 피처끼리** 또는 **이진 피처(0/1)에** 적용한다.
+분산은 스케일에 따라 값이 달라진다. 연봉(만 원 단위)과 나이(세 단위)의 분산을 같은 임계값으로 비교하는 건 의미가 없다. 스케일이 같은 피처끼리, 또는 0과 1만 갖는 이진 피처에 쓰는 것이 안전하다.
 
-### 상관관계 분석 — 중복 피처 제거
-
-두 피처의 상관계수가 0.95 이상이면, 둘 중 하나는 중복이다. 거의 같은 정보를 담고 있으니 하나를 제거해도 정보 손실이 거의 없다.
+다음은 중복 제거다. 두 피처의 상관계수가 0.95를 넘으면 거의 같은 정보이므로 하나를 버려도 손실이 거의 없다.
 
 ```python
-import pandas as pd
-import numpy as np
-
-# 상관 행렬 계산
-corr_matrix = X.corr().abs()
-
-# 상삼각 행렬 추출 (대각선 아래는 중복이므로)
-upper = corr_matrix.where(
-    np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
-)
-
-# 상관계수 0.95 이상인 피처 찾기
-to_drop = [col for col in upper.columns if any(upper[col] > 0.95)]
+corr = X.corr().abs()
+upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+to_drop = [c for c in upper.columns if any(upper[c] > 0.95)]
 X_filtered = X.drop(columns=to_drop)
-
-print(f"제거된 피처: {to_drop}")
 ```
 
-상관관계 분석의 한계는 **선형 관계만** 잡는다는 점이다. 비선형 관계로 엮인 중복 피처는 놓친다.
-
-### 상호 정보량 (Mutual Information) — 비선형 관계까지
-
-상호 정보량(MI)은 피처와 타겟 사이의 **비선형 의존성**까지 측정한다. 피어슨 상관계수의 상위 호환이라고 볼 수 있다.
+여기서 걸리는 건 **선형** 관계뿐이다. 한 피처가 다른 피처의 제곱이라면 상관계수는 낮게 나오고 중복은 그대로 남는다. 상호 정보량(Mutual Information)은 이 한계가 없다. 두 변수의 결합분포가 각각의 주변분포 곱에서 얼마나 벗어나는지를 재기 때문에, 관계의 모양을 가리지 않는다. 값이 0이면 완전 독립이고, 클수록 타겟을 맞히는 데 도움이 되는 정보를 담고 있다.
 
 ```python
-from sklearn.feature_selection import mutual_info_classif
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
 
-# 상호 정보량 기반으로 상위 10개 피처 선택
 selector = SelectKBest(score_func=mutual_info_classif, k=10)
 X_selected = selector.fit_transform(X, y)
-
-# 각 피처의 MI 점수 확인
-mi_scores = mutual_info_classif(X, y, random_state=42)
-feature_ranking = pd.Series(mi_scores, index=X.columns).sort_values(ascending=False)
-print(feature_ranking)
 ```
 
-MI 값이 0이면 피처와 타겟이 완전히 독립이다. 값이 클수록 타겟 예측에 유용한 정보를 담고 있다. 회귀 문제에서는 `mutual_info_regression`을 쓴다.
+회귀 문제라면 `mutual_info_regression`을 쓴다.
 
-<div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>Filter 방법의 핵심 한계</strong>: 피처 간의 상호작용을 고려하지 않는다. 피처 A 혼자는 타겟과 상관이 없는데, 피처 B와 조합하면 강력한 예측력을 가질 수 있다. Filter 방법은 이런 조합 효과를 놓친다.
-</div>
+:::info
 
----
+**필터는 조합을 못 본다**
 
-## 3. Wrapper 방법: 모델로 피처 조합을 평가한다
+필터 계열은 피처를 하나씩 따로 채점한다. 그래서 A 혼자로는 타겟과 아무 상관이 없지만 B와 같이 쓰면 강력해지는 경우를 잡아내지 못한다. XOR 관계가 극단적인 예다. 두 이진 피처 각각은 타겟과 상관이 0이지만 둘을 함께 쓰면 타겟이 완벽하게 결정된다.
 
-Wrapper 방법은 **실제 모델을 학습시켜서** 피처 부분집합의 성능을 평가한다. Filter보다 정확하지만, 모델을 여러 번 학습해야 하므로 느리다.
+필터를 단독 선택기가 아니라 1차 관문으로 쓰는 이유가 이것이다.
 
-### Forward Selection (전진 선택)
+:::
 
-빈 집합에서 시작해서 피처를 **하나씩 추가**한다. 매 단계에서 가장 성능을 많이 올리는 피처를 추가한다.
+## 래퍼
 
-```
-[시작] 피처 없음
-[1단계] 피처 하나씩 넣어보고 가장 좋은 것 선택 → {A}
-[2단계] 남은 피처를 하나씩 추가해보고 가장 좋은 것 선택 → {A, D}
-[3단계] ... → {A, D, B}
-[중단] 성능이 더 이상 개선되지 않으면 중단
-```
+실제로 모델을 학습시켜서 피처 부분집합의 성능을 직접 잰다. 조합 효과를 반영하니 정확하지만, 학습 횟수가 그대로 비용이 된다.
 
-피처가 n개면 최대 n + (n-1) + (n-2) + ... = O(n^2)번 모델을 학습해야 한다.
-
-### Backward Elimination (후진 제거)
-
-전체 피처에서 시작해서 피처를 **하나씩 제거**한다. 매 단계에서 제거해도 성능이 가장 덜 떨어지는 피처를 제거한다.
-
-```
-[시작] 전체 피처 {A, B, C, D, E}
-[1단계] 하나씩 빼보고 가장 영향 없는 것 제거 → {A, B, D, E}
-[2단계] ... → {A, D, E}
-[중단] 제거하면 성능이 크게 떨어지면 중단
-```
-
-### RFE (Recursive Feature Elimination)
-
-sklearn에서 가장 많이 쓰는 Wrapper 방법이다. 모델을 학습한 뒤 **가장 덜 중요한 피처를 제거**하고, 다시 학습하고, 다시 제거하고 — 원하는 개수가 될 때까지 반복한다.
+전진 선택(forward selection)은 빈 집합에서 시작해 매 단계 성능을 가장 많이 올리는 피처를 하나씩 넣는다. 후진 제거(backward elimination)는 반대로 전체에서 시작해 빼도 가장 덜 아픈 피처를 하나씩 뺀다. sklearn에서는 `SequentialFeatureSelector`가 두 방향을 모두 지원한다.
 
 ```python
-from sklearn.feature_selection import RFE
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SequentialFeatureSelector
 
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-
-# 상위 10개 피처 선택
-rfe = RFE(estimator=model, n_features_to_select=10, step=1)
-rfe.fit(X, y)
-
-# 선택된 피처 확인
-selected = X.columns[rfe.support_]
-print(f"선택된 피처: {list(selected)}")
-print(f"피처 순위: {rfe.ranking_}")
+sfs = SequentialFeatureSelector(
+    estimator=model, n_features_to_select=10, direction='forward', cv=5
+)
+sfs.fit(X, y)
 ```
 
-`RFECV`를 쓰면 교차 검증과 결합해서 **최적의 피처 개수**까지 자동으로 찾아준다.
+`RFE`(Recursive Feature Elimination)는 후진 제거의 가벼운 판이다. 매 단계마다 교차 검증 점수를 새로 재는 대신, 학습된 모델의 `coef_`나 `feature_importances_`를 보고 가장 낮은 것을 떨어뜨린다. 그래서 훨씬 빠르지만 중요도를 노출하는 추정기에만 쓸 수 있다.
 
 ```python
 from sklearn.feature_selection import RFECV
-from sklearn.model_selection import StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
 
-rfecv = RFECV(
-    estimator=model,
-    step=1,
-    cv=StratifiedKFold(5),
-    scoring='accuracy',
-    min_features_to_select=5
-)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+rfecv = RFECV(estimator=model, step=1, cv=5, scoring='accuracy', min_features_to_select=5)
 rfecv.fit(X, y)
 
-print(f"최적 피처 수: {rfecv.n_features_}")
-print(f"선택된 피처: {list(X.columns[rfecv.support_])}")
+print(rfecv.n_features_)                 # 자동으로 찾은 최적 피처 수
+print(list(X.columns[rfecv.support_]))
 ```
 
-<div style="background: #f0f4ff; border-left: 4px solid #3182f6; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>Wrapper 방법의 비용</strong><br><br>
-  피처가 100개이고 RFE로 10개를 선택한다면, 모델을 90번 학습해야 한다. RFECV에 5-fold CV를 걸면 90 x 5 = 450번이다. 데이터가 크고 모델이 무거우면 현실적으로 불가능할 수 있다. 이럴 때 Embedded 방법이 대안이다.
-</div>
+`RFE`는 목표 개수를 사람이 정해야 하지만 `RFECV`는 교차 검증 점수가 가장 높은 지점을 찾아 개수까지 정해준다.
 
----
+:::warning
 
-## 4. Embedded 방법: 학습 과정에서 피처를 선택한다
+**래퍼의 비용은 곱셈으로 늘어난다**
 
-Embedded 방법은 **모델 학습 자체에 피처 선택이 내장**되어 있다. 별도로 반복 학습할 필요 없이, 한 번 학습하면 피처 중요도가 나온다.
+피처 100개에서 `RFE(step=1)`로 10개를 남기려면 매번 하나씩 떨어뜨리며 90번을 학습해야 한다. 여기에 5-fold `RFECV`를 걸면 fold마다 그 과정을 되풀이하므로 450번을 넘어간다.
 
-### L1 정규화 (Lasso) — 가중치를 0으로 만든다
+`step`을 비율로 줄 수 있다. `step=0.1`이면 원래 피처 수의 10%인 10개씩 한 번에 떨어뜨리므로 학습이 90번에서 9번으로 준다. 대신 한 번에 열 개를 같이 버리니 그중 하나가 남았어야 할 피처였는지는 확인할 방법이 없다.
 
-[정규화 글](/ml/regularization/)에서 L1(Lasso)과 L2(Ridge)의 차이를 배웠다. L2는 가중치를 작게 만들지만, L1은 가중치를 **정확히 0으로** 만든다. 가중치가 0이 된 피처는 모델에서 완전히 무시되는 것이므로, 이것 자체가 피처 선택이다.
+:::
+
+## 임베디드
+
+모델을 학습시키면 선택이 부산물로 따라 나온다. 학습은 한 번이고 조합 효과도 어느 정도 반영된다.
+
+L1 정규화가 대표적이다. L2는 가중치를 작게 만들 뿐이지만 L1은 **정확히 0으로** 만든다. 가중치가 0이면 그 피처는 예측에 전혀 기여하지 않으니, 학습이 끝난 시점에 이미 선택이 끝나 있다.
 
 ```python
 from sklearn.linear_model import LassoCV
-import numpy as np
 
-# 최적의 alpha를 자동 탐색
-lasso = LassoCV(cv=5, random_state=42)
-lasso.fit(X, y)
-
-# 가중치가 0이 아닌 피처만 선택
-selected_features = X.columns[lasso.coef_ != 0]
-eliminated_features = X.columns[lasso.coef_ == 0]
-
-print(f"선택된 피처 ({len(selected_features)}개): {list(selected_features)}")
-print(f"제거된 피처 ({len(eliminated_features)}개): {list(eliminated_features)}")
+lasso = LassoCV(cv=5, random_state=42).fit(X, y)
+selected = X.columns[lasso.coef_ != 0]
 ```
 
-분류 문제에서는 `LogisticRegression(penalty='l1', solver='liblinear')`을 사용한다.
+분류라면 `LogisticRegression(penalty='l1', solver='liblinear')`을 쓴다. `saga` solver도 L1을 지원하고 다중 클래스에 쓸 수 있다.
+
+트리 계열은 다른 방식으로 같은 일을 한다. 분기를 만들 때마다 그 피처가 지니 불순도를 얼마나 줄였는지 누적한 값이 `feature_importances_`다.
 
 ```python
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_selection import SelectFromModel
-
-lr_l1 = LogisticRegression(penalty='l1', C=1.0, solver='liblinear', random_state=42)
-lr_l1.fit(X, y)
-
-# L1 정규화로 선택된 피처
-selector = SelectFromModel(lr_l1, prefit=True)
-X_selected = selector.transform(X)
-
-selected_mask = selector.get_support()
-print(f"선택된 피처: {list(X.columns[selected_mask])}")
+rf = RandomForestClassifier(n_estimators=200, random_state=42).fit(X, y)
+importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False)
 ```
 
-### 트리 기반 피처 중요도
+`SelectFromModel`은 이 중요도에 임계값을 걸어 변환기로 만들어 준다. `threshold='median'`을 주면 중앙값 미만인 피처를 잘라내고, `Pipeline` 안에 그대로 끼워 넣을 수 있다.
 
-[랜덤 포레스트](/ml/random-forest/)와 [XGBoost/LightGBM](/ml/xgboost-vs-lightgbm/) 같은 트리 기반 모델은 학습 과정에서 각 피처가 분기에 얼마나 기여했는지를 추적한다. 이것이 `feature_importances_` 속성이다.
+:::warning
 
-```python
-from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt
+**불순도 기반 중요도는 고유 값이 많은 피처를 띄운다**
 
-rf = RandomForestClassifier(n_estimators=200, random_state=42)
-rf.fit(X, y)
+불순도 감소는 분기를 잘게 쪼갤수록 커진다. 그래서 값이 거의 다 다른 피처, 예컨대 주문번호 같은 ID 컬럼은 훈련 데이터를 완벽하게 가를 수 있고 중요도가 최상위로 올라온다. 실제로는 일반화에 아무 도움도 안 되는 노이즈다.
 
-# 피처 중요도 추출
-importances = pd.Series(rf.feature_importances_, index=X.columns)
-importances = importances.sort_values(ascending=False)
+훈련 데이터에서 계산된다는 것도 문제다. 과적합에 기여한 피처일수록 점수가 높게 나온다. 그래서 sklearn 문서도 최종 판단은 검증 데이터에서 잰 순열 중요도로 하기를 권한다.
 
-# 상위 15개 피처 시각화
-importances[:15].plot(kind='barh', figsize=(8, 6))
-plt.title('Random Forest Feature Importance (Top 15)')
-plt.xlabel('Importance')
-plt.tight_layout()
-plt.show()
-```
+:::
 
-트리 기반 중요도의 기본 방식은 **불순도 감소(impurity-based importance)** 다. 각 피처가 분기할 때 지니 불순도(또는 엔트로피)를 얼마나 줄이는지를 누적한 값이다.
+## 중요도를 검증 데이터에서 다시 잰다
 
-```python
-# XGBoost도 동일한 인터페이스
-from xgboost import XGBClassifier
-
-xgb = XGBClassifier(n_estimators=200, random_state=42)
-xgb.fit(X, y)
-
-# 피처 중요도 (gain 기준)
-importances_xgb = pd.Series(
-    xgb.feature_importances_, index=X.columns
-).sort_values(ascending=False)
-```
-
-<div style="background: #fff8f0; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-  <strong>주의: 불순도 기반 중요도의 편향</strong><br><br>
-  불순도 기반 중요도는 <strong>카디널리티가 높은 피처(고유 값이 많은 피처)</strong>를 과대평가하는 경향이 있다. 예를 들어 ID 컬럼처럼 모든 값이 고유한 피처는 분기를 잘게 쪼갤 수 있으므로 중요도가 높게 나온다. 하지만 실제로는 노이즈다. 이 문제를 해결하는 것이 순열 중요도(Permutation Importance)다.
-</div>
-
----
-
-## 5. 순열 중요도 (Permutation Importance)
-
-순열 중요도는 **모델에 구애받지 않는(model-agnostic)** 피처 중요도 측정법이다. 아이디어가 직관적이다.
-
-1. 모델을 학습하고 검증 세트에서 기준 성능을 측정한다.
-2. 피처 하나의 값을 **무작위로 섞는다(shuffle)**.
-3. 같은 모델로 다시 예측하고 성능을 측정한다.
-4. 성능이 크게 떨어지면 그 피처가 중요한 것이다.
-5. 모든 피처에 대해 반복한다.
+순열 중요도(Permutation Importance)는 학습이 끝난 모델을 그대로 두고, 피처 하나의 값만 무작위로 섞은 뒤 성능이 얼마나 떨어지는지를 본다. 섞었는데도 성능이 그대로면 모델이 그 피처를 보지 않았다는 뜻이다.
 
 ```python
 from sklearn.inspection import permutation_importance
-from sklearn.model_selection import train_test_split
 
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-
-model = RandomForestClassifier(n_estimators=200, random_state=42)
-model.fit(X_train, y_train)
-
-# 순열 중요도 계산 (검증 세트 기준)
-perm_imp = permutation_importance(
-    model, X_val, y_val,
-    n_repeats=10,
-    random_state=42,
-    scoring='accuracy'
-)
-
-# 결과 정리
-perm_imp_df = pd.DataFrame({
-    'feature': X.columns,
-    'importance_mean': perm_imp.importances_mean,
-    'importance_std': perm_imp.importances_std
-}).sort_values('importance_mean', ascending=False)
-
-print(perm_imp_df.head(15))
+perm = permutation_importance(model, X_val, y_val, n_repeats=10,
+                              random_state=42, scoring='accuracy')
 ```
 
-순열 중요도의 장점은 세 가지다.
+장점이 분명하다. 어떤 모델에든 적용되고, 불순도처럼 카디널리티에 끌려다니지 않으며, 검증 데이터에서 재기 때문에 훈련에서만 잘 듣던 피처를 걸러낸다.
 
-1. **모델 독립적**: 어떤 모델이든 적용 가능하다. 선형 모델, 트리, 신경망 모두 된다.
-2. **편향이 적다**: 불순도 기반과 달리, 카디널리티에 편향되지 않는다.
-3. **검증 세트 기준**: 과적합된 피처를 잡아낸다. 훈련에서만 중요하고 검증에서는 중요하지 않은 피처가 드러난다.
+한계는 상관이 높은 피처들에서 나온다. A와 B가 거의 같은 정보를 담고 있으면 A를 섞어도 모델이 B를 보고 맞히므로 성능이 안 떨어진다. B를 섞어도 마찬가지다. 둘 다 중요하지 않다는 결론이 나오지만 실제로는 둘 중 하나가 핵심이다. 이럴 때는 상관 높은 피처를 묶어서 함께 섞거나, 필터 단계에서 미리 중복을 제거해 두어야 한다.
 
-단점은 **피처 간 상관이 높으면 중요도가 분산**된다는 것이다. 피처 A와 B가 거의 같은 정보를 담고 있으면, A를 섞어도 B가 보완해주므로 둘 다 중요도가 낮게 나온다. 실제로는 둘 중 하나가 핵심 피처인데도.
-
----
-
-## 6. Filter vs Wrapper vs Embedded 비교
-
-| 기준 | Filter | Wrapper | Embedded |
-|------|--------|---------|----------|
-| **속도** | 매우 빠름 | 느림 (모델 반복 학습) | 빠름 (한 번 학습) |
-| **정확도** | 낮음 (상호작용 무시) | 높음 (실제 성능 평가) | 높음 |
-| **모델 의존성** | 없음 | 있음 (특정 모델 필요) | 있음 (L1, 트리 등) |
-| **과적합 위험** | 낮음 | 있음 (피처 조합 과적합) | 낮음 (정규화 내장) |
-| **피처 상호작용** | 고려 안 함 | 간접적으로 고려 | 부분적으로 고려 |
-| **대규모 피처** | 적합 | 비현실적 | 적합 |
-| **대표 기법** | MI, 상관분석, 분산 | RFE, Forward/Backward | Lasso, Tree Importance |
-
-실전에서는 **파이프라인으로 조합**하는 경우가 많다.
-
-```
-[1단계] Filter로 빠르게 걸러내기
-   └→ 분산 0 피처 제거, 상관 0.95 이상 중복 제거
-   └→ 1000개 → 200개
-
-[2단계] Embedded로 중요도 기반 선택
-   └→ 트리 모델의 feature_importances_ 기준
-   └→ 200개 → 50개
-
-[3단계] 필요하면 Wrapper로 미세 조정
-   └→ RFECV로 최적 피처 수 탐색
-   └→ 50개 → 25개
-```
-
----
-
-## 7. SHAP Values — 피처 중요도의 끝판왕
-
-지금까지의 방법들은 "이 피처가 얼마나 중요한가?"에 답한다. SHAP(SHapley Additive exPlanations)은 한 걸음 더 나간다 — **"이 피처가 이 개별 예측에 얼마나 기여했는가?"** 를 알려준다.
-
-SHAP은 게임 이론의 Shapley value에서 유래했다. 핵심 아이디어는 간단하다: 각 피처를 "플레이어"로 보고, 모든 가능한 피처 조합에서 해당 피처가 추가될 때의 한계 기여도를 평균낸다.
+SHAP(SHapley Additive exPlanations)은 여기서 한 걸음 더 간다. 각 피처를 협력 게임의 플레이어로 보고, 가능한 피처 조합들에서 그 피처가 추가될 때의 한계 기여도를 평균한 값이 SHAP 값이다. 평균 절댓값을 내면 전역 중요도가 되고, 개별 예측 하나를 골라 보면 그 예측이 왜 그렇게 나왔는지의 분해가 된다.
 
 ```python
 import shap
 
-model = XGBClassifier(n_estimators=200, random_state=42)
-model.fit(X_train, y_train)
-
-# SHAP 값 계산
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_val)
 
-# 전체 피처 중요도 (요약 플롯)
-shap.summary_plot(shap_values, X_val)
-```
-
-SHAP의 강점은 **글로벌 중요도와 로컬 설명**을 동시에 제공한다는 점이다.
-
-```python
-# 글로벌: 전체 데이터에서 각 피처의 평균 SHAP 값
-shap.summary_plot(shap_values, X_val, plot_type="bar")
-
-# 로컬: 개별 예측 하나에 대한 설명
-shap.force_plot(
-    explainer.expected_value,
-    shap_values[0],      # 첫 번째 샘플
-    X_val.iloc[0]
-)
-```
-
-SHAP 기반으로 피처를 선택할 수도 있다.
-
-```python
-# 평균 |SHAP| 값으로 피처 순위 매기기
 shap_importance = np.abs(shap_values).mean(axis=0)
-shap_ranking = pd.Series(shap_importance, index=X.columns).sort_values(ascending=False)
-
-# 상위 N개 피처 선택
-top_n = 20
-selected_features = shap_ranking.head(top_n).index.tolist()
+ranking = pd.Series(shap_importance, index=X.columns).sort_values(ascending=False)
 ```
 
-SHAP은 계산 비용이 크다는 단점이 있지만, 피처 선택의 근거를 가장 설득력 있게 제시할 수 있다. 특히 비즈니스 이해관계자에게 "왜 이 피처를 제거했는지"를 설명할 때 SHAP 플롯만큼 강력한 도구는 없다.
+계산 비용은 크다. 다만 "이 피처를 왜 뺐는가"를 다른 사람에게 설명해야 하는 자리에서는 대체할 도구가 마땅치 않다.
 
----
+## 세 갈래 비교
 
-## 8. 전체 파이프라인: 피처 선택부터 모델 평가까지
+| 기준 | 필터 | 래퍼 | 임베디드 |
+|------|--------|---------|----------|
+| 모델 학습 횟수 | 0회 | 조합마다 1회 | 1회 |
+| 피처 조합 | 못 봄 | 직접 평가 | 부분적으로 반영 |
+| 모델 의존성 | 없음 | 있음 | 있음 (L1, 트리) |
+| 피처 수천 개 | 적합 | 비현실적 | 적합 |
+| 대표 기법 | 분산, 상관, MI | RFE, SequentialFeatureSelector | Lasso, 트리 중요도 |
 
-실전에서 피처 선택을 어떻게 파이프라인에 통합하는지 전체 흐름을 보자.
+셋 중 하나를 고르는 문제가 아니라 순서대로 거는 문제인 경우가 많다. 필터로 분산 0과 상관 0.95 이상을 쳐내 1000개를 200개로 줄이고, 임베디드 중요도로 50개까지 좁히고, 여기까지 오면 래퍼도 감당할 만한 크기가 되니 `RFECV`로 최종 개수를 정한다. 비싼 방법을 싼 방법이 줄여 놓은 공간에만 쓰는 것이다.
+
+## 안 해도 되는 경우
+
+피처 대비 데이터가 압도적으로 많으면 차원의 저주가 문제 되지 않는다. 피처 100개에 데이터 100만 건이면 쓸모없는 피처가 몇 개 섞여 있어도 모델이 알아서 무시한다.
+
+트리 앙상블도 어느 정도 면역이 있다. 랜덤 포레스트는 분기마다 피처를 일부만 후보로 쓰고, 부스팅 계열은 정규화와 서브샘플링으로 비슷한 효과를 낸다. 다만 학습 속도와 해석력은 여전히 피처 수에 그대로 끌려다닌다.
+
+딥러닝에서는 피처 선택을 거의 하지 않는다. 표현 학습(representation learning) 자체가 원시 입력에서 유용한 조합을 찾아내는 과정이라, 사람이 미리 잘라내면 그 재료를 뺏는 셈이 된다.
+
+가장 조심할 경우는 따로 있다. 데이터 100건에 피처 20개인 상황에서 래퍼를 돌리면 "이 조합이 검증 성능이 가장 좋았다"는 결론 자체가 우연일 확률이 높다. 조합의 수가 표본 수보다 훨씬 많으니 그중 하나는 반드시 잘 맞는다. 데이터가 적을수록 선택 기준을 단순하게 두거나 L1 정규화에 맡기는 편이 낫다.
+
+## 선택도 fold 안에서
+
+전체 데이터로 피처를 고른 다음 교차 검증을 돌리면 점수가 부풀려진다. 검증 fold의 타겟을 보고 피처를 골랐으니, 그 fold는 이미 정답을 흘린 데이터다. 상호 정보량이나 상관계수처럼 타겟을 쓰는 필터도 예외가 아니다.
 
 ```python
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import (
-    VarianceThreshold, SelectKBest, mutual_info_classif, RFECV
-)
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import classification_report
 
-# --- 데이터 준비 ---
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-print(f"원본 피처 수: {X_train.shape[1]}")
-
-# --- 1단계: Filter — 분산 0인 피처 제거 ---
-var_selector = VarianceThreshold(threshold=0.0)
-X_train_v = var_selector.fit_transform(X_train)
-print(f"분산 필터 후: {X_train_v.shape[1]}")
-
-# --- 2단계: Filter — 상관관계 높은 피처 제거 ---
-X_train_df = pd.DataFrame(
-    X_train_v, columns=X_train.columns[var_selector.get_support()]
-)
-corr_matrix = X_train_df.corr().abs()
-upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-to_drop = [col for col in upper.columns if any(upper[col] > 0.95)]
-X_train_df = X_train_df.drop(columns=to_drop)
-print(f"상관관계 필터 후: {X_train_df.shape[1]}")
-
-# --- 3단계: Embedded — RFECV로 최적 피처 수 탐색 ---
-rf = RandomForestClassifier(n_estimators=100, random_state=42)
-rfecv = RFECV(
-    estimator=rf,
-    step=1,
-    cv=5,
-    scoring='accuracy',
-    min_features_to_select=5
-)
-rfecv.fit(X_train_df, y_train)
-
-selected_features = X_train_df.columns[rfecv.support_]
-print(f"RFECV 선택 피처 수: {len(selected_features)}")
-print(f"선택된 피처: {list(selected_features)}")
-
-# --- 4단계: 최종 모델 학습 및 평가 ---
-X_train_final = X_train_df[selected_features]
-
-# 테스트 세트에도 동일한 변환 적용
-X_test_v = var_selector.transform(X_test)
-X_test_df = pd.DataFrame(
-    X_test_v, columns=X_train.columns[var_selector.get_support()]
-)
-X_test_df = X_test_df.drop(columns=to_drop)
-X_test_final = X_test_df[selected_features]
-
-# 최종 모델 학습
-final_model = RandomForestClassifier(n_estimators=200, random_state=42)
-final_model.fit(X_train_final, y_train)
-
-# 평가
-y_pred = final_model.predict(X_test_final)
-print(classification_report(y_test, y_pred))
-```
-
-핵심은 **피처 선택도 훈련 데이터에서만** 수행한다는 점이다. 테스트 데이터를 보고 피처를 선택하면 데이터 누수가 발생한다. sklearn의 `Pipeline`을 쓰면 이 원칙을 자동으로 지킬 수 있다.
-
-```python
-# Pipeline으로 깔끔하게 묶기
 pipeline = Pipeline([
     ('variance', VarianceThreshold(threshold=0.0)),
     ('scaler', StandardScaler()),
     ('selector', SelectKBest(score_func=mutual_info_classif, k=20)),
-    ('classifier', RandomForestClassifier(n_estimators=200, random_state=42))
+    ('classifier', RandomForestClassifier(n_estimators=200, random_state=42)),
 ])
 
-# 교차 검증 (피처 선택이 각 fold 안에서 수행됨)
 scores = cross_val_score(pipeline, X, y, cv=5, scoring='accuracy')
-print(f"CV 정확도: {scores.mean():.4f} (+/- {scores.std():.4f})")
 ```
 
-`Pipeline` 안에 `SelectKBest`를 넣으면 교차 검증의 각 fold에서 피처 선택이 독립적으로 수행된다. 이것이 올바른 방식이다.
+`Pipeline` 안에 넣으면 fold마다 선택이 독립적으로 다시 수행된다. fold별로 뽑히는 피처가 조금씩 달라지는 게 정상이고, 그 변동 자체가 선택이 얼마나 안정적인지를 알려주는 신호다.
 
----
+## 마치며
 
-## 9. 피처 선택을 하지 않아도 되는 경우
+피처 선택 기법을 셋으로 나누는 기준은 원리가 아니라 모델 학습을 몇 번 하느냐였다. 필터는 0회라 싸고 조합을 못 보고, 래퍼는 조합마다 학습하니 정확하고 비싸며, 임베디드는 학습 한 번에 얹혀 가는 절충이다. 어느 하나가 우월한 게 아니라 피처 수와 모델 무게가 어디까지 감당되는지가 선택을 결정한다.
 
-피처 선택이 항상 필요한 건 아니다. 경우에 따라서는 하지 않는 게 나을 수도 있다.
+기법보다 지키기 어려운 건 절차 쪽이다. 전체 데이터를 보고 피처를 고르면 교차 검증 점수가 올라가는데, 그 상승분은 성능이 아니라 누수다. `Pipeline`으로 묶어 fold 안에서 선택하게 만드는 것이 기법 선택보다 결과에 더 크게 작용한다.
 
-### 데이터가 충분히 많을 때
+## 함께 보면 좋은 글
 
-피처 대비 데이터가 압도적으로 많으면 차원의 저주가 문제가 되지 않는다. 피처 100개에 데이터 100만 건이면, 불필요한 피처가 있어도 모델이 알아서 무시하는 경우가 많다.
-
-### 트리 기반 앙상블을 쓸 때
-
-[랜덤 포레스트](/ml/random-forest/)는 부트스트랩 샘플링과 피처 서브샘플링으로, [XGBoost/LightGBM](/ml/xgboost-vs-lightgbm/)은 정규화와 피처 서브샘플링으로 **자체적인 피처 선택 효과**를 낸다. 불필요한 피처가 있어도 성능이 크게 떨어지지 않는다. 다만 학습 속도와 해석력 면에서는 여전히 피처 선택이 유의미하다.
-
-### 딥러닝 모델을 쓸 때
-
-딥러닝은 자체적으로 표현을 학습(representation learning)하므로, 수동으로 피처를 제거하면 오히려 정보 손실이 될 수 있다. 이미지, 텍스트 같은 비정형 데이터에서 피처 선택은 거의 하지 않는다.
-
-### 피처 선택 자체가 과적합을 유발할 때
-
-피처가 20개이고 데이터가 100건인 상황에서 Wrapper 방법을 적용하면, 피처 조합에 대해 과적합이 발생한다. "이 20개 중 이 조합이 검증 성능이 가장 좋았다"는 결론 자체가 우연일 수 있다. 데이터가 적으면 오히려 단순한 Filter 방법만 적용하거나, 정규화된 모델(L1)에 맡기는 게 낫다.
-
-```
-피처 선택 의사결정:
-
-피처 수가 100개 이상?
-├── Yes → 피처 선택 권장 (Filter + Embedded)
-└── No
-    ├── 데이터가 충분한가?
-    │   ├── Yes → 선택 안 해도 됨 (트리 모델이면 특히)
-    │   └── No → Filter 또는 L1 정규화만 적용
-    └── 해석력이 중요한가?
-        ├── Yes → 피처 선택 권장 (SHAP 활용)
-        └── No → 모델에 맡기기
-```
-
----
-
-## 정리
-
-| 방법 | 대표 기법 | 언제 쓰나 |
-|------|----------|-----------|
-| **Filter** | 분산, 상관분석, MI | 빠르게 명백한 노이즈 제거, 첫 전처리 단계 |
-| **Wrapper** | RFE, RFECV | 피처 수가 적고 최적 조합을 찾고 싶을 때 |
-| **Embedded** | Lasso, Tree Importance | 학습과 동시에 선택, 가장 실용적 |
-| **Permutation** | permutation_importance | 모델 독립적 중요도, 검증 세트 기준 |
-| **SHAP** | shap.TreeExplainer | 최종 설명, 비즈니스 보고 |
-
-피처 선택은 단독으로 쓰는 게 아니다. 스케일링, 인코딩, 모델 선택과 함께 **전체 ML 파이프라인의 한 단계**로 들어간다. 핵심 원칙은 하나다: **피처 선택도 훈련 데이터 안에서만 수행하고, Pipeline으로 묶어서 데이터 누수를 방지한다.**
-
-다음 글에서는 범주형 피처를 더 정교하게 변환하는 [타겟 인코딩(Target Encoding)](/ml/target-encoding/)을 다룬다. 피처의 값을 타겟 변수의 통계량으로 바꾸는 방법인데, 강력하지만 데이터 누수 위험이 따르는 기법이다.
+- [규제](/ml/regularization/) : L1이 가중치를 정확히 0으로 만드는 원리
+- [랜덤 포레스트](/ml/random-forest/) : 트리 중요도가 계산되는 자리
+- [교차 검증](/ml/cross-validation/) : 선택을 fold 안에 넣어야 하는 이유
