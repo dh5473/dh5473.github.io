@@ -1,573 +1,229 @@
 ---
 date: '2026-01-22'
-title: '활성화 함수(Activation Functions): ReLU는 어떻게 딥러닝을 살렸나'
+title: '활성화 함수는 왜 ReLU로 정착했나'
 category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 22
-tags: ['Activation Function', '활성화 함수', 'ReLU', 'Sigmoid', 'Tanh', 'Softmax', '머신러닝']
-summary: 'Sigmoid, Tanh, ReLU, Leaky ReLU, GELU까지. 각 활성화 함수의 수학적 특성과 기울기 소실 문제를 이해하고 상황별 선택 기준을 정리한다.'
+tags: ['Activation Function', '활성화 함수', 'ReLU', 'Sigmoid', 'Tanh', 'GELU', 'Softmax', '기울기 소실', '머신러닝']
+summary: '시그모이드 도함수의 최댓값 0.25가 만든 기울기 소실, ReLU가 그 벽을 넘은 방식, GELU까지 이어진 은닉층 선택 기준을 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
-[이전 글](/ml/backpropagation/)에서 역전파를 배웠다. 연쇄 법칙으로 기울기를 전파할 때, 각 층의 활성화 함수의 도함수 g'(z)가 곱해진다는 걸 봤다. 이 g'(z)가 너무 작으면 기울기가 사라지고(기울기 소실), 너무 크면 폭발한다. **활성화 함수 선택이 신경망의 학습 성패를 좌우하는 이유**가 여기에 있다.
+신경망의 한 층은 두 단계로 나뉜다. 선형 변환 $z = Wx + b$ 로 입력을 섞고, 활성화 함수 $g$ 를 씌워 $a = g(z)$ 를 내보낸다. 앞쪽 절반은 어느 층이나 똑같다. 층을 깊게 쌓을 수 있느냐 없느냐는 뒤에 붙는 $g$ 하나가 결정한다.
+
+## 비선형이 없으면 깊이도 없다
+
+$g$ 가 항등 함수라면, 즉 $a = z$ 를 그대로 내보낸다면 2층짜리 신경망의 출력은 이렇게 전개된다.
+
+$$z_2 = W_2(W_1 x + b_1) + b_2 = (W_2 W_1)\,x + (W_2 b_1 + b_2)$$
+
+$W' = W_2 W_1$, $b' = W_2 b_1 + b_2$ 로 묶으면 $z_2 = W'x + b'$ 다. **두 층을 쌓았는데 결과는 한 층짜리 선형 변환과 같다.** 선형 함수를 아무리 합성해도 선형이라서, 100층을 쌓아도 표현력은 한 층과 동일하다.
+
+비선형 활성화 함수는 이 붕괴를 막는 장치다. 그렇다면 어떤 비선형 함수를 골라야 하는가. 이 질문에 대한 답이 30년에 걸쳐 바뀌었다.
 
-이 글에서는 Sigmoid부터 GELU까지, 주요 활성화 함수의 수학적 특성을 파헤치고 "언제, 어디서, 왜" 사용하는지를 정리한다.
+## 시그모이드가 세운 벽
 
----
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
 
-## 활성화 함수가 없으면 딥러닝은 의미가 없다
+출력이 $(0, 1)$ 로 떨어지고 어디서나 매끄럽게 미분된다. 도함수도 깔끔하다.
 
-[신경망 기초](/ml/neural-network-basics/)에서 뉴런 하나의 연산을 봤다.
+$$\sigma'(z) = \sigma(z)\bigl(1 - \sigma(z)\bigr)$$
 
-```
-z = w·x + b        (선형 변환)
-a = g(z)            (활성화 함수 적용)
-```
+문제는 이 도함수의 크기다. $z = 0$ 에서 최댓값을 갖는데 그 값이 $0.5 \times 0.5 = 0.25$ 다. 1보다 한참 작다.
 
-여기서 g가 활성화 함수다. 만약 g가 없다면 — 즉, a = z 그대로 출력한다면 — 어떻게 될까?
+역전파는 연쇄 법칙으로 기울기를 뒤로 보내면서 층마다 활성화 함수의 도함수를 곱한다. 곱해지는 수가 매번 0.25 이하라면 기울기는 층을 거슬러 올라갈수록 기하급수적으로 줄어든다.
 
-2층짜리 신경망을 생각해보자.
+$$0.25^5 \approx 9.8 \times 10^{-4}, \qquad 0.25^{10} \approx 9.5 \times 10^{-7}$$
 
-```
-1층: z₁ = W₁·x + b₁,   a₁ = z₁  (활성화 함수 없음)
-2층: z₂ = W₂·a₁ + b₂ = W₂·(W₁·x + b₁) + b₂
-```
+10층만 거슬러 올라가도 기울기가 백만분의 1이 된다. 앞쪽 층의 가중치는 사실상 업데이트되지 않고 학습이 그 자리에 멈춘다. 이것이 **기울기 소실(Vanishing Gradient)** 이고, 2000년대까지 깊은 신경망을 실용화하지 못한 가장 큰 원인이었다.
 
-전개하면:
+게다가 0.25는 최선의 경우다. $|z|$ 가 조금만 커져도 시그모이드는 0이나 1에 붙어버리고 도함수는 0으로 수렴한다. 이 상태를 **포화(saturation)** 라 한다.
 
-```
-z₂ = W₂·W₁·x + W₂·b₁ + b₂
-   = W'·x + b'
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 396" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="시그모이드와 tanh, ReLU의 도함수를 위아래로 쌓아 비교한 그림. 시그모이드 도함수는 최댓값이 0.25에 그치고 입력의 절댓값이 3을 넘으면 0에 붙는다. tanh 도함수는 최댓값이 1이지만 절댓값 2.5부터 0에 붙는다. ReLU 도함수는 양의 구간 전체에서 정확히 1이고 음의 구간에서만 0이다.">
+<style>
+.af1-box { fill: none; stroke: var(--border, #e7e5e4); stroke-width: 1.2; }
+.af1-dead { fill: var(--bg-danger, #fef2f2); }
+.af1-curve { fill: none; stroke: var(--primary, #0a756c); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.af1-guide { stroke: var(--text-muted, #6d6762); stroke-width: 1; stroke-dasharray: 4 3; fill: none; }
+.af1-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.af1-n { fill: var(--text, #1c1917); font-size: 15px; font-weight: 600; }
+.af1-h { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.af1-d { fill: var(--text-danger, #cb2121); font-size: 14px; }
+</style>
+<!-- 제목과 범례 -->
+<text class="af1-t" x="200" y="24" text-anchor="middle">도함수 g'(z)와 포화 구간</text>
+<rect class="af1-dead" x="140" y="36" width="20" height="12" stroke="var(--text-danger, #cb2121)" stroke-width="1"/>
+<text class="af1-d" x="167" y="46">도함수 ≈ 0</text>
+<!-- 시그모이드 -->
+<text class="af1-n" x="70" y="74">시그모이드</text>
+<text class="af1-h" x="374" y="74" text-anchor="end">최댓값 0.25</text>
+<rect class="af1-dead" x="70" y="82" width="38" height="66"/>
+<rect class="af1-dead" x="336" y="82" width="38" height="66"/>
+<rect class="af1-box" x="70" y="82" width="304" height="66"/>
+<path class="af1-guide" d="M 70 88 L 374 88"/>
+<text class="af1-h" x="64" y="92" text-anchor="end">1.0</text>
+<path class="af1-guide" d="M 70 133 L 374 133"/>
+<text class="af1-h" x="64" y="137" text-anchor="end">0.25</text>
+<polyline class="af1-curve" points="70,146.9 89,146.3 108,145.3 127,143.8 146,141.7 165,139.1 184,136.2 203,133.9 222,133 241,133.9 260,136.2 279,139.1 298,141.7 317,143.8 336,145.3 355,146.3 374,146.9"/>
+<!-- tanh -->
+<text class="af1-n" x="70" y="180">tanh</text>
+<text class="af1-h" x="374" y="180" text-anchor="end">최댓값 1.0</text>
+<rect class="af1-dead" x="70" y="188" width="57" height="66"/>
+<rect class="af1-dead" x="317" y="188" width="57" height="66"/>
+<rect class="af1-box" x="70" y="188" width="304" height="66"/>
+<path class="af1-guide" d="M 70 194 L 374 194"/>
+<text class="af1-h" x="64" y="198" text-anchor="end">1.0</text>
+<polyline class="af1-curve" points="70,253.9 89,253.8 108,253.4 127,252.4 146,249.8 165,243.2 184,228.8 203,206.8 222,194 241,206.8 260,228.8 279,243.2 298,249.8 317,252.4 336,253.4 355,253.8 374,253.9"/>
+<!-- ReLU -->
+<text class="af1-n" x="70" y="286">ReLU</text>
+<text class="af1-h" x="374" y="286" text-anchor="end">양의 구간에서 1</text>
+<rect class="af1-dead" x="70" y="294" width="152" height="66"/>
+<rect class="af1-box" x="70" y="294" width="304" height="66"/>
+<text class="af1-h" x="64" y="304" text-anchor="end">1.0</text>
+<path class="af1-guide" d="M 222 360 L 222 300"/>
+<path class="af1-curve" d="M 70 360 L 222 360"/>
+<path class="af1-curve" d="M 222 300 L 374 300"/>
+<!-- 입력 축 눈금 -->
+<text class="af1-h" x="70" y="378" text-anchor="middle">-4</text>
+<text class="af1-h" x="146" y="378" text-anchor="middle">-2</text>
+<text class="af1-h" x="222" y="378" text-anchor="middle">0</text>
+<text class="af1-h" x="298" y="378" text-anchor="middle">2</text>
+<text class="af1-h" x="374" y="378" text-anchor="middle">4</text>
+</svg>
+</div>
 
-여기서 W' = W₂·W₁,  b' = W₂·b₁ + b₂
-```
+시그모이드에는 문제가 두 개 더 있다. 출력이 항상 양수라 다음 층이 받는 입력의 부호가 한쪽으로 쏠리고, 그러면 한 뉴런에 들어오는 가중치들의 기울기가 모두 같은 부호가 되어 최적화 경로가 지그재그를 그린다. 그리고 $e^{-z}$ 계산은 비교 연산보다 비싸다. 수백만 뉴런에 매 순전파마다 적용되면 무시하기 어려운 비용이 된다.
 
-**2층을 쌓았는데 결과는 1층짜리 선형 변환과 동일하다.** 100층을 쌓아도 마찬가지다. 선형 함수의 합성은 여전히 선형이기 때문이다. 깊이(depth)를 아무리 늘려도 표현력이 전혀 증가하지 않는다.
+결론은 단순하다. 은닉층에 시그모이드를 쓸 이유가 없다. 이진 분류의 출력층에서만 쓴다.
 
-> **핵심**: 비선형 활성화 함수가 있어야 층을 깊게 쌓는 의미가 생긴다. 활성화 함수가 신경망에 **비선형성(non-linearity)** 을 부여하고, 이것이 복잡한 패턴을 학습할 수 있는 근본적인 이유다.
+## tanh는 4배 나은 출발점이었다
 
-그렇다면 어떤 비선형 함수를 써야 할까? 딥러닝 역사는 이 질문에 대한 답을 찾아가는 과정이기도 하다.
+$$\tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}} = 2\sigma(2z) - 1$$
 
----
+시그모이드를 위아래로 늘려 원점 대칭으로 만든 함수다. 출력이 $(-1, 1)$ 이라 부호 쏠림이 사라지고, 도함수도 커진다.
 
-## Sigmoid: 시작점이자 교훈
+$$\tanh'(z) = 1 - \tanh^2(z), \qquad \tanh'(0) = 1$$
 
-[로지스틱 회귀](/ml/logistic-regression/)에서 이미 만난 함수다.
+최댓값이 1이니 시그모이드의 4배다. 그만큼 기울기가 덜 줄어든다. 하지만 위 그림의 가운데 칸이 보여주듯 $|z|$ 가 2.5만 넘어도 도함수가 0.03 아래로 떨어진다. 포화의 벽 자체는 그대로 남아 있다. ReLU 이전까지 은닉층의 기본값이었지만, 깊은 망에서는 결국 같은 곳에서 막혔다.
 
-```
-σ(z) = 1 / (1 + e^(-z))
-```
+## ReLU가 벽을 통과한 방법
 
-### 특성
+$$f(z) = \max(0, z)$$
 
-- **출력 범위**: (0, 1) — 확률로 해석 가능
-- **단조 증가**: z가 커지면 출력도 커진다
-- **미분 가능**: 어디서든 매끄럽게 미분된다
+2012년 AlexNet이 ImageNet 대회를 압도하며 딥러닝 시대를 열었을 때, 그 성공의 조용한 지분을 가진 함수다. 양수면 그대로 통과시키고 음수면 0으로 자른다. 도함수는 $z > 0$ 에서 1, $z < 0$ 에서 0이다. $z = 0$ 에서는 미분이 정의되지 않지만 구현에서는 0이나 1 하나로 처리한다.
 
-### 도함수
+이 단순한 정의가 두 가지를 동시에 해결한다.
 
-Sigmoid의 도함수는 놀라울 정도로 깔끔하다.
+**기울기가 줄지 않는다.** 양의 구간에서 도함수가 정확히 1이므로 층을 몇 개 거치든 $1^n = 1$ 이다. 시그모이드가 10층에서 $10^{-6}$ 로 사라지는 자리에서 ReLU는 기울기 크기를 그대로 넘긴다.
 
-```
-σ'(z) = σ(z) · (1 - σ(z))
-```
+**계산이 거의 공짜다.** 지수도 나눗셈도 없고 비교 하나면 끝난다. GPU에서 병렬화하기에도 이보다 나은 형태가 없다. 부수 효과로 입력의 절반 가까이가 0이 되면서 층의 표현이 자연히 희소해진다.
 
-이 도함수의 최댓값은 z = 0일 때 발생한다.
+### Dying ReLU
 
-```
-σ'(0) = 0.5 × 0.5 = 0.25
-```
+대가도 있다. $z < 0$ 에서 도함수가 0이라, 어떤 뉴런의 입력이 모든 데이터에 대해 음수가 되는 상태에 빠지면 그 뉴런은 기울기를 한 방울도 받지 못한다. 가중치가 갱신되지 않으니 그 상태에서 나올 방법도 없다. 영구히 죽은 뉴런이 되는 것이다.
 
-**최대가 0.25.** 이것이 문제의 핵심이다.
+학습률이 크면 한 번의 큰 업데이트가 뉴런을 이 상태로 밀어넣기 쉽다. 학습률을 낮추거나, 아래의 Leaky ReLU 계열로 바꾸는 것이 표준 대응이다.
 
-### 기울기 소실 문제
+:::tip
 
-[역전파](/ml/backpropagation/)에서 봤듯이, 기울기는 각 층의 도함수를 연쇄적으로 곱해서 전파된다. Sigmoid의 도함수 최댓값이 0.25이니까:
+**은닉층은 ReLU에서 시작한다**
 
-```
-5층 역전파: 0.25 × 0.25 × 0.25 × 0.25 × 0.25 = 0.00098
-10층:      0.25^10 ≈ 0.0000001
-```
+기울기 보존과 계산 비용, 두 축에서 동시에 유리한 함수는 여전히 ReLU다. 다른 함수는 ReLU로 학습이 안 될 때 꺼내는 카드다.
 
-**10층만 거쳐도 기울기가 거의 0이 된다.** 앞쪽 층의 가중치가 업데이트되지 않으니 학습이 멈춘다. 이것이 **기울기 소실(Vanishing Gradient)** 문제다. 2000년대까지 딥러닝이 실용화되지 못한 가장 큰 원인이었다.
+:::
 
-![Vanishing Gradient Problem: Sigmoid vs Tanh vs ReLU](./vanishing-gradient.png)
+## 음의 구간을 되살리는 계열
 
-### Sigmoid의 추가 문제들
+죽은 뉴런을 막는 가장 직관적인 수정은 음의 구간에 아주 작은 기울기를 남기는 것이다. **Leaky ReLU**가 그렇게 한다.
 
-**1. 출력이 zero-centered가 아니다**
+$$f(z) = \begin{cases} z & (z > 0) \\ \alpha z & (z \le 0) \end{cases} \qquad \alpha = 0.01$$
 
-Sigmoid의 출력은 항상 양수(0~1)다. 다음 층의 입력이 항상 양수라는 뜻이다. 가중치 업데이트 시 기울기가 모두 같은 부호를 갖게 되어, 최적화 경로가 지그재그로 비효율적이 된다.
+음수 입력에서도 도함수가 $\alpha$ 이므로 갱신량이 0이 되지 않고, 뉴런이 음의 영역에서 되돌아 나올 길이 열린다. **PReLU**는 이 $\alpha$ 를 상수로 두지 않고 역전파로 학습시킨다. 층마다 적절한 누출량을 망이 직접 정하는 셈이다.
 
-**2. exp() 연산 비용**
+**ELU**는 꺾인 직선 대신 지수 곡선으로 음의 구간을 처리한다.
 
-지수 함수 계산은 덧셈이나 비교 연산보다 상대적으로 비싸다. 수백만 뉴런에 매 순전파마다 적용되니 무시할 수 없다.
+$$f(z) = \begin{cases} z & (z > 0) \\ \alpha(e^z - 1) & (z \le 0) \end{cases}$$
 
-> **결론**: 은닉층에 Sigmoid를 쓸 이유가 없다. **이진 분류의 출력층**에서만 사용한다.
+$z$ 가 작아질수록 $-\alpha$ 에 부드럽게 수렴하므로 출력 평균이 0에 가까워지고, 그만큼 층 사이 신호가 안정된다. 대신 $e^z$ 를 계산해야 해서 ReLU의 속도 이점을 일부 반납한다. ELU에 고정 상수 두 개($\lambda \approx 1.0507$, $\alpha \approx 1.6733$)를 곱한 **SELU**는 조건이 맞으면 층 출력이 스스로 정규화되는 성질을 갖지만, 완전 연결 망과 특정 초기화를 요구해서 CNN이나 트랜스포머에서는 쓰이지 않는다.
 
----
+## 부드럽게 여닫는 GELU와 Swish
 
-## Tanh: Sigmoid의 개선판
+ReLU는 0을 기준으로 통과와 차단을 이분법으로 가른다. **GELU(Gaussian Error Linear Unit)** 는 그 경계를 확률로 문지른다.
 
-Tanh(쌍곡탄젠트)는 Sigmoid를 zero-centered로 변환한 것이다.
+$$\mathrm{GELU}(z) = z \cdot \Phi(z)$$
 
-```
-tanh(z) = (e^z - e^(-z)) / (e^z + e^(-z))
-```
+$\Phi$ 는 표준정규분포의 누적분포함수다. 입력에 "이 값이 통과할 만큼 큰가"의 확률을 곱하는 구조라, $z$ 가 크면 거의 그대로 나가고 작으면 거의 0이 된다. 정규분포 CDF를 매번 계산하는 비용이 부담이라 실전에서는 근사식을 쓴다.
 
-사실 Sigmoid와의 관계는 간단하다.
+$$\mathrm{GELU}(z) \approx 0.5\,z\left(1 + \tanh\!\left(\sqrt{\tfrac{2}{\pi}}\,(z + 0.044715\,z^3)\right)\right)$$
 
-```
-tanh(z) = 2σ(2z) - 1
-```
+경계 부근이 매끄러워 미세한 입력 차이가 출력 차이로 남고, $z$ 가 살짝 음수인 구간에서 출력이 아주 조금 음수가 되는 비단조 구간을 갖는다. BERT, GPT, ViT를 비롯한 트랜스포머 계열에서 사실상 기본값이다.
 
-### 특성
+**Swish**는 같은 발상을 더 싸게 구현한다. 정규분포 CDF 자리에 시그모이드를 넣는다.
 
-- **출력 범위**: (-1, 1) — zero-centered
-- **대칭**: 원점 대칭 함수
+$$\mathrm{Swish}(z) = z \cdot \sigma(z)$$
 
-### 도함수
+$z$ 가 크면 $\sigma(z) \approx 1$ 이라 항등 함수처럼, 작으면 $\sigma(z) \approx 0$ 이라 차단처럼 동작한다. EfficientNet 계열의 비전 모델에서 ReLU를 대체해 성능 향상을 보였다.
 
-```
-tanh'(z) = 1 - tanh²(z)
-```
+## 한눈에 비교
 
-z = 0일 때 최댓값:
+| 함수 | 정의 | 출력 범위 | 도함수 최댓값 | 기울기 소실 | 계산 비용 |
+|---|---|---|---|---|---|
+| Sigmoid | $\sigma(z)$ | $(0, 1)$ | 0.25 | 심각 | 높음 |
+| Tanh | $2\sigma(2z) - 1$ | $(-1, 1)$ | 1 | 있음 | 높음 |
+| ReLU | $\max(0, z)$ | $[0, \infty)$ | 1 | 없음 ($z>0$) | 매우 낮음 |
+| Leaky ReLU | $\max(\alpha z, z)$ | $(-\infty, \infty)$ | 1 | 없음 | 매우 낮음 |
+| ELU | $z$ 또는 $\alpha(e^z-1)$ | $(-\alpha, \infty)$ | 1 | 없음 | 중간 |
+| GELU | $z\,\Phi(z)$ | 약 $(-0.17, \infty)$ | 약 1.13 | 없음 | 중간 |
+| Swish | $z\,\sigma(z)$ | 약 $(-0.28, \infty)$ | 약 1.10 | 없음 | 중간 |
 
-```
-tanh'(0) = 1 - 0² = 1
-```
+![시그모이드와 tanh, ReLU를 10층 역전파에 통과시켰을 때의 기울기 크기 변화](./vanishing-gradient.png)
 
-Sigmoid의 최대 도함수가 0.25였던 것에 비해 **4배나 크다.** 기울기 소실이 상대적으로 덜하다.
+## 출력층은 다른 문제다
 
-### 그래도 소실은 소실
+여기까지는 은닉층 이야기다. 출력층의 활성화 함수는 기울기 흐름이 아니라 **출력이 무엇을 의미해야 하는가**로 정해진다.
 
-|z|가 커지면 tanh(z)는 ±1에 수렴하고, 도함수는 0에 수렴한다. 결국 깊은 네트워크에서는 Sigmoid와 같은 문제에 부딪힌다. 다만 Sigmoid보다는 확실히 낫기 때문에, ReLU 등장 이전에는 은닉층의 기본 선택이었다.
+다중 클래스 분류에는 Softmax를 쓴다. $K$ 개의 점수를 모두 양수로 만든 뒤 합이 1이 되도록 나눠서 확률로 바꾼다.
 
-```
-비교 (z = 0 기준):
-Sigmoid 도함수 최대: 0.25
-Tanh 도함수 최대:    1.0   ← 4배
-```
+$$\mathrm{Softmax}(z_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$$
 
-> **Sigmoid vs Tanh**: 은닉층에서는 Tanh가 거의 항상 Sigmoid보다 낫다. zero-centered 출력 + 더 큰 도함수. 그러나 둘 다 **포화(saturation)** 문제에서 자유롭지 못하다.
+$z = [2.0,\ 1.0,\ 0.1]$ 이면 $e^{z}$ 는 각각 7.389, 2.718, 1.105이고 합이 11.212다. 나누면 $[0.659,\ 0.242,\ 0.099]$ 가 된다.
 
----
+Softmax 출력층에는 교차 엔트로피 손실이 짝을 이룬다. 두 함수를 합쳐서 미분하면 중간 항이 모두 상쇄되고 이 형태만 남기 때문이다.
 
-## ReLU: 딥러닝을 살린 함수
+$$\frac{\partial L}{\partial z_i} = \hat{y}_i - y_i$$
 
-2012년, AlexNet이 ImageNet 대회에서 압도적인 성능으로 우승하면서 딥러닝 시대가 열렸다. 그 성공의 숨은 주역 중 하나가 바로 **ReLU(Rectified Linear Unit)** 다.
+예측에서 정답을 뺀 값이 그대로 기울기가 된다. 구현이 짧아지는 것은 물론이고, 지수와 로그가 서로를 지워서 수치적으로도 안정적이다.
 
-```
-ReLU(z) = max(0, z)
-```
+Softmax를 직접 구현한다면 지수를 취하기 전에 최댓값을 빼야 한다. $z$ 가 조금만 커도 $e^{z}$ 가 부동소수점 범위를 넘어 `inf`가 되는데, 모든 원소에서 같은 상수를 빼면 분모와 분자가 함께 나뉘어 결과는 그대로이면서 지수의 크기만 눌린다. NumPy로는 `np.exp(z - np.max(z))` 한 줄이다.
 
-놀라울 정도로 단순하다. z가 양수면 그대로 통과, 음수면 0.
+## 무엇을 언제 쓰나
 
-### 도함수
+| 자리 | 선택 | 근거 |
+|---|---|---|
+| 은닉층 기본 | ReLU | 기울기 보존과 계산 비용 |
+| 죽은 뉴런이 의심될 때 | Leaky ReLU, PReLU | 음의 구간에도 기울기 $\alpha$ |
+| 트랜스포머 계열 | GELU | 경계 부근의 부드러운 게이팅 |
+| 이진 분류 출력층 | Sigmoid | 값 하나를 확률로 |
+| 다중 분류 출력층 | Softmax | $K$ 개 확률의 합이 1 |
+| 회귀 출력층 | 없음 | 실수 전 범위가 필요 |
 
-```
-ReLU'(z) = 1  (z > 0)
-ReLU'(z) = 0  (z < 0)
-(z = 0에서는 미분 불가능하지만, 실전에서는 0 또는 1로 처리)
-```
+PyTorch의 `nn.Linear`도 TensorFlow의 `Dense`도 기본값은 활성화 없음이다. 어느 쪽이든 직접 지정하지 않으면 선형 층만 쌓이고, 이 글 첫머리의 붕괴가 그대로 일어난다.
 
-### 왜 ReLU가 게임 체인저인가
+## 마치며
 
-**1. 기울기 소실이 없다 (z > 0 영역)**
+활성화 함수를 고르는 문제는 결국 "역전파에서 곱해질 수를 얼마로 둘 것인가"의 문제였다. 시그모이드는 그 수의 상한이 0.25였고, 그래서 깊이가 곧 학습 불가능을 뜻했다. tanh가 상한을 1로 올렸지만 포화 구간은 남았다. ReLU는 필요한 구간에서 그 수를 정확히 1로 고정해 문제를 없앴고, 대신 반대편 절반을 완전히 포기했다. Leaky ReLU와 GELU는 포기한 절반을 어떻게 조금씩 되찾을지에 대한 서로 다른 답이다.
 
-도함수가 1이다. 아무리 깊은 네트워크라도 양의 영역에서는 기울기가 줄지 않고 그대로 전파된다.
+실무에서 이 계보를 다 알아야 할 이유는 없다. 은닉층은 ReLU로 시작하고, 학습이 정체되면 Leaky ReLU를 시도하고, 트랜스포머를 다룬다면 GELU를 쓴다. 출력층은 문제 유형이 정한다. 이 세 줄이면 대부분의 상황에서 합리적인 선택이 된다.
 
-```
-Sigmoid 10층: 0.25^10 ≈ 0.0000001
-ReLU 10층:    1^10   = 1            ← 기울기 보존
-```
+활성화 함수를 정했다면 다음 질문은 계산된 기울기를 어떤 규칙으로 파라미터에 반영할 것인가다. 학습률 하나로 모든 파라미터를 똑같이 움직이는 방식에는 한계가 있다.
 
-**2. 계산이 극도로 빠르다**
+## 함께 보면 좋은 글
 
-exp(), 나눗셈 같은 연산이 필요 없다. 단순 비교와 선택만으로 끝난다. GPU에서 병렬 처리하기에도 최적이다.
-
-**3. 희소 활성화(Sparse Activation)**
-
-입력의 상당 부분에서 출력이 0이 되므로, 네트워크가 자연스럽게 **희소한 표현**을 학습한다. 이는 생물학적 뉴런의 동작과도 유사하고, 과적합 방지에도 도움이 된다.
-
-### Dying ReLU 문제
-
-ReLU의 유일한 약점이다. z < 0인 영역에서 도함수가 0이므로, 한 번 음의 영역에 빠진 뉴런은 기울기를 받지 못해 **영원히 죽을 수 있다.**
-
-```
-학습 과정:
-1. 큰 음의 가중치 업데이트 발생
-2. 뉴런의 출력이 항상 음수가 됨
-3. ReLU 출력: 항상 0
-4. 기울기: 항상 0
-5. 가중치 업데이트 불가 → 영구적으로 비활성화
-```
-
-학습률이 너무 크면 이 현상이 빈번해진다. 전체 뉴런의 10~20%가 죽어버리는 경우도 드물지 않다.
-
-> **ReLU가 기본인 이유**: 단순함, 빠른 계산, 기울기 보존. 이 세 가지가 깊은 네트워크 학습을 가능하게 만들었다. 은닉층의 기본 활성화 함수로 **가장 먼저 시도해야 할 선택**이다.
-
----
-
-## Leaky ReLU: 죽은 뉴런 살리기
-
-Dying ReLU를 해결하는 가장 직관적인 방법이다.
-
-```
-LeakyReLU(z) = z      (z > 0)
-LeakyReLU(z) = αz     (z ≤ 0)
-
-α = 0.01 (보통)
-```
-
-z < 0일 때 완전히 0으로 만드는 대신, **아주 작은 기울기 α를 허용**한다.
-
-### 도함수
-
-```
-LeakyReLU'(z) = 1     (z > 0)
-LeakyReLU'(z) = α     (z ≤ 0)
-```
-
-음의 영역에서도 기울기가 α(= 0.01)이므로, 뉴런이 완전히 죽지 않는다. 작은 기울기지만 가중치 업데이트가 일어나기 때문에 살아날 가능성이 있다.
-
-### Parametric ReLU (PReLU)
-
-α를 0.01로 고정하지 않고, **학습 가능한 파라미터**로 만든 것이 PReLU다.
-
-```
-PReLU(z) = z      (z > 0)
-PReLU(z) = αz     (z ≤ 0)    ← α를 역전파로 학습
-```
-
-네트워크가 스스로 최적의 기울기를 찾는다. He et al.(2015)의 논문에서 ImageNet 분류에서 인간 수준의 성능을 달성하며 주목받았다.
-
-> **실전 팁**: ReLU를 써봤는데 dying neuron 문제가 의심되면, Leaky ReLU로 바꿔보자. 코드 변경은 한 줄이면 된다.
-
----
-
-## ELU와 SELU: 부드러운 음의 영역
-
-### ELU (Exponential Linear Unit)
-
-```
-ELU(z) = z                (z > 0)
-ELU(z) = α(e^z - 1)       (z ≤ 0)
-```
-
-Leaky ReLU와 달리 음의 영역이 **지수적으로 부드럽게** -α에 수렴한다. 출력의 평균이 0에 가까워지는 효과가 있어, 배치 정규화 없이도 학습이 안정적이다.
-
-단점은 exp() 연산이 필요하다는 것. ReLU의 계산 효율성을 일부 포기하는 셈이다.
-
-### SELU (Scaled ELU)
-
-ELU에 특수한 상수(λ ≈ 1.0507, α ≈ 1.6733)를 곱한 것으로, 이론적으로 **자기 정규화(self-normalizing)** 특성을 가진다. 조건이 맞으면 배치 정규화 없이도 각 층의 출력 분포가 자동으로 정규화된다.
-
-다만 조건이 까다롭고(완전 연결 네트워크, Lecun 초기화 필수), CNN이나 Transformer에서는 쓰이지 않아 실용적 영향은 제한적이다.
-
----
-
-## GELU: 트랜스포머 시대의 활성화 함수
-
-**GELU(Gaussian Error Linear Unit)** 는 현재 가장 주목받는 활성화 함수다. BERT, GPT, Vision Transformer 등 거의 모든 트랜스포머 아키텍처에서 사용된다.
-
-```
-GELU(z) = z · Φ(z)
-
-Φ(z) = 정규분포의 누적분포함수(CDF)
-```
-
-직관적으로 해석하면: 입력값 z에 **"z가 다른 입력들보다 클 확률"** 을 곱한다. z가 충분히 크면 거의 그대로 통과하고, 충분히 작으면 거의 0이 된다. ReLU처럼 이분법적으로 자르지 않고 **확률적으로 부드럽게 게이팅**한다.
-
-### 근사식
-
-정규분포 CDF를 직접 계산하면 비용이 크므로, 실전에서는 근사식을 사용한다.
-
-```
-GELU(z) ≈ 0.5 · z · (1 + tanh(√(2/π) · (z + 0.044715 · z³)))
-```
-
-### 왜 트랜스포머에서 GELU를 쓸까?
-
-1. **부드러움**: z = 0 근처에서 연속적인 곡선이므로, 미세한 차이를 포착해야 하는 자연어 처리에 유리하다
-2. **비단조(non-monotonic)**: 아주 작은 음의 z에서 살짝 음의 출력을 가진다. 이 특성이 표현력을 높인다
-3. **확률적 해석**: 드롭아웃의 부드러운 버전으로 볼 수 있다. 값이 작을수록 "드롭"될 확률이 높다
-
-> **현재 트렌드**: 트랜스포머 기반 모델에서는 GELU가 사실상 표준이다. 새로운 모델 아키텍처 논문에서 "we use GELU activation"이라는 문장은 거의 관례처럼 등장한다.
-
----
-
-## Swish: 자기 게이팅
-
-Google Brain이 제안한 함수로, 구조가 매우 직관적이다.
-
-```
-Swish(z) = z · σ(z)
-```
-
-입력 z에 자기 자신의 sigmoid 값을 곱한다. GELU와 비슷한 형태인데, 정규분포 CDF 대신 sigmoid를 사용한 것이다.
-
-```
-z가 매우 큼: σ(z) ≈ 1   → Swish(z) ≈ z     (항등 함수)
-z가 매우 작음: σ(z) ≈ 0  → Swish(z) ≈ 0     (차단)
-z가 약간 음수: 살짝 음의 출력 가능            (비단조)
-```
-
-EfficientNet 등 일부 컴퓨터 비전 모델에서 ReLU 대신 사용되어 성능 향상을 보였다. 다만 sigmoid 연산이 포함되어 있어 ReLU보다 계산 비용이 높다.
-
----
-
-## 활성화 함수 비교 총정리
-
-![Activation Functions and Their Derivatives](./activation-functions.png)
-
-| 함수 | 수식 | 출력 범위 | 도함수 범위 | Zero-centered | 기울기 소실 | 계산 비용 |
-|------|------|-----------|-------------|---------------|-------------|-----------|
-| Sigmoid | 1/(1+e^(-z)) | (0, 1) | (0, 0.25] | X | 심각 | 높음 |
-| Tanh | (e^z-e^(-z))/(e^z+e^(-z)) | (-1, 1) | (0, 1] | O | 있음 | 높음 |
-| ReLU | max(0, z) | [0, +inf) | {0, 1} | X | 없음(z>0) | 매우 낮음 |
-| Leaky ReLU | max(αz, z) | (-inf, +inf) | {α, 1} | 거의 O | 없음 | 매우 낮음 |
-| ELU | z or α(e^z-1) | (-α, +inf) | (0, 1] | 거의 O | 없음 | 중간 |
-| GELU | z·Φ(z) | ≈(-0.17, +inf) | smooth | 거의 O | 없음 | 중간 |
-| Swish | z·σ(z) | ≈(-0.28, +inf) | smooth | 거의 O | 없음 | 중간 |
-
----
-
-## Softmax: 다중 클래스의 출력층
-
-Softmax는 은닉층이 아닌 **출력층 전용** 활성화 함수다. [결정 경계](/ml/decision-boundary/) 글에서 다중 클래스 분류를 다루며 처음 소개했다.
-
-```
-Softmax(zᵢ) = e^(zᵢ) / Σⱼ e^(zⱼ)
-```
-
-K개의 클래스에 대해 각각의 확률을 출력하되, **모든 출력의 합이 1**이 되도록 정규화한다.
-
-```
-예시: 3개 클래스, 출력층의 z = [2.0, 1.0, 0.1]
-
-e^2.0 = 7.389,  e^1.0 = 2.718,  e^0.1 = 1.105
-합계 = 11.212
-
-Softmax = [7.389/11.212, 2.718/11.212, 1.105/11.212]
-        = [0.659, 0.242, 0.099]
-
-→ 클래스 0일 확률 65.9%, 클래스 1일 확률 24.2%, 클래스 2일 확률 9.9%
-```
-
-### Cross-Entropy와의 짝
-
-Softmax 출력층에는 **교차 엔트로피(Cross-Entropy) 손실 함수**가 짝을 이룬다. 이 조합의 기울기가 매우 깔끔하게 정리되기 때문이다.
-
-```
-Loss = -Σ yᵢ · log(Softmax(zᵢ))
-
-∂Loss/∂zᵢ = Softmax(zᵢ) - yᵢ    ← 놀랍도록 간단
-```
-
-예측값에서 실제값을 뺀 것. 이 단순함 덕분에 역전파 구현이 효율적이고 안정적이다. [로지스틱 회귀](/ml/logistic-regression/)에서 본 Sigmoid + Binary Cross-Entropy 조합의 다중 클래스 확장판이라고 보면 된다.
-
-> **출력층 정리**: 이진 분류 → Sigmoid, 다중 클래스 → Softmax, 회귀 → 활성화 함수 없음(선형 출력)
-
----
-
-## 실전 선택 가이드
-
-### 은닉층
-
-```
-1순위: ReLU
-  → 대부분의 경우 충분하다. 가장 먼저 시도.
-
-2순위: Leaky ReLU / PReLU
-  → ReLU로 학습이 잘 안 될 때. Dying neuron이 의심될 때.
-
-3순위: GELU
-  → Transformer 기반 모델을 구현할 때. NLP 모델.
-
-피해야 할 것: Sigmoid, Tanh
-  → 은닉층에서는 사용하지 않는다. 기울기 소실.
-```
-
-### 출력층
-
-```
-이진 분류:   Sigmoid (출력 1개, 확률)
-다중 분류:   Softmax (출력 K개, 확률 합 = 1)
-회귀:        없음 (선형 출력, 즉 항등 함수)
-```
-
-### 프레임워크별 기본값
-
-```
-PyTorch nn.Linear:     활성화 없음 (직접 추가해야 함)
-TensorFlow Dense:      activation=None (기본)
-→ 어느 프레임워크든 명시적으로 활성화 함수를 지정해야 한다.
-```
-
----
-
-## NumPy로 직접 구현하기
-
-모든 활성화 함수를 NumPy로 구현하고 시각화해보자.
-
-```python
-import numpy as np
-import matplotlib.pyplot as plt
-
-# 활성화 함수 정의
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
-def tanh(z):
-    return np.tanh(z)
-
-def relu(z):
-    return np.maximum(0, z)
-
-def leaky_relu(z, alpha=0.01):
-    return np.where(z > 0, z, alpha * z)
-
-def elu(z, alpha=1.0):
-    return np.where(z > 0, z, alpha * (np.exp(z) - 1))
-
-def gelu(z):
-    return 0.5 * z * (1 + np.tanh(np.sqrt(2 / np.pi) * (z + 0.044715 * z**3)))
-
-def swish(z):
-    return z * sigmoid(z)
-
-def softmax(z):
-    exp_z = np.exp(z - np.max(z))  # 수치 안정성을 위해 max를 뺀다
-    return exp_z / exp_z.sum()
-```
-
-```python
-# 도함수 정의
-def sigmoid_derivative(z):
-    s = sigmoid(z)
-    return s * (1 - s)
-
-def tanh_derivative(z):
-    return 1 - np.tanh(z)**2
-
-def relu_derivative(z):
-    return np.where(z > 0, 1.0, 0.0)
-
-def leaky_relu_derivative(z, alpha=0.01):
-    return np.where(z > 0, 1.0, alpha)
-
-def gelu_derivative(z):
-    # 수치 미분으로 근사
-    h = 1e-5
-    return (gelu(z + h) - gelu(z - h)) / (2 * h)
-```
-
-```python
-# 시각화
-z = np.linspace(-5, 5, 1000)
-
-fig, axes = plt.subplots(2, 3, figsize=(15, 8))
-
-functions = [
-    ('Sigmoid', sigmoid(z), sigmoid_derivative(z)),
-    ('Tanh', tanh(z), tanh_derivative(z)),
-    ('ReLU', relu(z), relu_derivative(z)),
-    ('Leaky ReLU', leaky_relu(z), leaky_relu_derivative(z)),
-    ('ELU', elu(z), None),
-    ('GELU', gelu(z), gelu_derivative(z)),
-]
-
-for ax, (name, f_z, df_z) in zip(axes.flat, functions):
-    ax.plot(z, f_z, 'b-', linewidth=2, label=f'{name}')
-    if df_z is not None:
-        ax.plot(z, df_z, 'r--', linewidth=1.5, label='derivative')
-    ax.axhline(y=0, color='k', linewidth=0.5)
-    ax.axvline(x=0, color='k', linewidth=0.5)
-    ax.set_title(name, fontsize=14)
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    ax.set_xlim(-5, 5)
-
-plt.tight_layout()
-plt.savefig('activation_functions.png', dpi=150)
-plt.show()
-```
-
-이 코드를 실행하면 6개 활성화 함수의 형태와 도함수를 한눈에 비교할 수 있다.
-
-### 기울기 소실 실험
-
-Sigmoid와 ReLU의 기울기 소실 차이를 직접 확인해보자.
-
-```python
-# 10층 네트워크에서 기울기 크기 비교
-np.random.seed(42)
-
-def gradient_flow(activation_deriv, n_layers=10):
-    """각 층의 기울기 크기를 추적한다."""
-    gradient = 1.0
-    gradients = [gradient]
-    for _ in range(n_layers):
-        z = np.random.randn()  # 임의의 활성화 입력
-        gradient *= activation_deriv(z)
-        gradients.append(abs(gradient))
-    return gradients
-
-sigmoid_grads = gradient_flow(sigmoid_derivative, 10)
-relu_grads = gradient_flow(relu_derivative, 10)
-tanh_grads = gradient_flow(tanh_derivative, 10)
-
-print("층별 기울기 크기:")
-print(f"{'층':>3} {'Sigmoid':>12} {'Tanh':>12} {'ReLU':>12}")
-print("-" * 42)
-for i in range(11):
-    print(f"{i:>3} {sigmoid_grads[i]:>12.8f} {tanh_grads[i]:>12.8f} {relu_grads[i]:>12.8f}")
-```
-
-```
-층별 기울기 크기:
-  층      Sigmoid         Tanh         ReLU
-------------------------------------------
-  0   1.00000000   1.00000000   1.00000000
-  1   0.23500000   0.88200000   1.00000000
-  2   0.05800000   0.71400000   1.00000000
-  3   0.01200000   0.53600000   0.00000000  ← 음의 z에 걸린 경우
-  ...
- 10   0.00000008   0.00340000   0.00000000
-```
-
-Sigmoid는 10층만에 기울기가 사실상 0이 된다. Tanh도 크게 줄어든다. ReLU는 양의 영역에서는 기울기를 완벽히 보존하지만, 한 번 음의 z에 걸리면 기울기가 0이 되는 dying 현상이 관찰된다.
-
----
-
-## 정리
-
-활성화 함수의 역사는 곧 **기울기 소실 문제를 극복하는 역사**다.
-
-```
-Sigmoid (1980s)  → 기울기 소실로 깊은 네트워크 학습 불가
-    ↓
-Tanh (1990s)     → zero-centered, 하지만 여전히 포화 문제
-    ↓
-ReLU (2010s)     → 기울기 보존 + 빠른 계산 → 딥러닝 부흥
-    ↓
-Leaky ReLU       → dying ReLU 해결
-    ↓
-GELU (2016~)     → 트랜스포머 시대의 부드러운 게이팅
-```
-
-**핵심 포인트 세 가지:**
-
-1. **비선형성이 없으면 깊이는 무의미하다.** 활성화 함수가 신경망의 표현력을 만든다.
-2. **기울기 소실이 딥러닝의 최대 장벽이었다.** ReLU가 이 벽을 깨면서 깊은 네트워크 학습이 가능해졌다.
-3. **은닉층은 ReLU(또는 GELU), 출력층은 문제 유형에 따라 선택한다.** 이 원칙만 지켜도 대부분의 상황에서 합리적인 선택을 할 수 있다.
-
----
-
-## 다음 글 미리보기
-
-활성화 함수를 골랐으니, 이제 **어떻게** 학습할지를 결정해야 한다. [경사하강법](/ml/gradient-descent/)은 기울기 방향으로 한 걸음씩 내려가는 기본 방법이었다. 하지만 학습률은 얼마로 설정할까? 모든 파라미터에 같은 학습률을 써야 할까? 지역 최솟값에 빠지면?
-
-[다음 글](/ml/optimizers/)에서는 SGD, Momentum, Adam까지 — 신경망 학습을 가속하고 안정화하는 **옵티마이저(Optimizer)** 들을 비교한다.
+- [역전파](/ml/backpropagation/) : 활성화 함수의 도함수가 층마다 곱해지는 과정
+- [옵티마이저](/ml/optimizers/) : 전달된 기울기를 어떤 규칙으로 쓸지의 문제
+- [신경망 학습 안정화](/ml/neural-network-tips/) : 초기화와 정규화로 층 사이 신호 크기를 잡는 법
+- [로지스틱 회귀](/ml/logistic-regression/) : 시그모이드가 확률로 해석되는 자리
