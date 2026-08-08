@@ -7,52 +7,82 @@ summary: '출시 사흘 만에 미국 정부가 수출통제로 Claude Fable 5�
 thumbnail: './thumbnail.png'
 ---
 
-2026년 6월 9일에 공개된 Claude Fable 5는 "역대 최강"이라는 평가를 받았습니다. AI 연구자 Andrej Karpathy가 "major-version-bump-deserving step change forward"라고 표현했고, Anthropic이 출시 발표에서 인용한 사전 테스트에서는 Stripe가 자체적으로 2개월 걸릴 것으로 추산한 5,000만 라인 규모 마이그레이션을 하루 만에 끝냈다고 밝혔습니다. 그런데 그 모델이 **출시 사흘 만인 6월 12일 저녁에 접근 차단**됐습니다. 서버가 죽은 것도, 회사가 내린 것도 아닙니다. 미국 정부가 막았습니다.
+2026년 6월 9일에 공개된 Claude Fable 5는 "역대 최강"이라는 평가를 받았습니다. 그 모델이 **출시 사흘 만인 6월 12일 저녁에 접근 차단**됐습니다. 서버가 죽은 것도, 회사가 내린 것도 아닙니다. 미국 정부가 막았습니다.
 
-더 정확히 말하면, 미 상무부가 국가안보를 근거로 한 **수출통제(export control) 지침**을 보냈고, Anthropic이 이를 따르느라 Fable 5와 Mythos 5를 전 사용자 대상으로 비활성화했습니다. 칩이나 모델 가중치가 아니라, 미국 서버에서 돌아가던 라이브 상용 서비스가 통제 대상이 됐습니다. 알려진 바로는 전례가 없는 적용 방식입니다. 이번 글에서는 무슨 일이 있었는지, 그리고 이게 왜 단순한 해프닝이 아니라 AI 산업 전체에 남는 선례인지 정리합니다.
+미 상무부가 국가안보를 근거로 한 **수출통제(export control) 지침**을 보냈고, Anthropic이 이를 따르느라 Fable 5와 Mythos 5를 전 사용자 대상으로 비활성화했습니다. 칩이나 모델 가중치가 아니라, 미국 서버에서 돌아가던 라이브 상용 서비스가 통제 대상이 됐습니다. 보도된 범위에서는 전례가 없는 적용 방식입니다.
 
 ## 사흘 동안 무슨 일이 있었나
 
-출시부터 차단까지 걸린 시간은 정확히 사흘입니다. 압축하면 이렇습니다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 332" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="6월 9일 출시, 6월 10일 성능 제한 정책 철회, 6월 12일 오후 수출통제 letter 수령, 같은 날 저녁 전 세계 비활성화로 이어진 사흘간의 타임라인">
+<style>
+.bt-t { fill: var(--text, #1c1917); font-size: 17px; font-weight: 700; }
+.bt-d { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.bt-r { fill: var(--text-danger, #cb2121); font-size: 16px; font-weight: 700; }
+.bt-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.bt-line { stroke: var(--border, #e7e5e4); stroke-width: 3; fill: none; }
+.bt-dot { fill: var(--text-muted, #6d6762); }
+.bt-hot { fill: var(--text-danger, #cb2121); }
+</style>
+<text class="bt-t" x="200" y="24" text-anchor="middle">출시에서 차단까지 사흘</text>
+<path class="bt-line" d="M64 58 L64 300"/>
+<!-- 6월 9일 -->
+<circle class="bt-dot" cx="64" cy="76" r="7"/>
+<text class="bt-d" x="88" y="72">6월 9일</text>
+<text class="bt-n" x="88" y="93">Fable 5 · Mythos 5 공개</text>
+<!-- 6월 10일 -->
+<circle class="bt-dot" cx="64" cy="146" r="7"/>
+<text class="bt-d" x="88" y="142">6월 10일</text>
+<text class="bt-n" x="88" y="163">성능 제한 정책 철회</text>
+<!-- 6월 12일 오후 -->
+<circle class="bt-hot" cx="64" cy="216" r="7"/>
+<text class="bt-r" x="88" y="212">6월 12일 오후 5시 21분</text>
+<text class="bt-n" x="88" y="233">상무부 수출통제 letter 수령</text>
+<!-- 6월 12일 저녁 -->
+<circle class="bt-hot" cx="64" cy="286" r="7"/>
+<text class="bt-r" x="88" y="282">6월 12일 저녁</text>
+<text class="bt-n" x="88" y="303">두 모델 전 세계 비활성화</text>
+</svg>
+</div>
 
-![6월 9일 출시부터 6월 12일 수출통제 지침, 전 세계 차단까지 단 3일간의 Claude Fable 5 사건 타임라인](./fable5-ban-timeline.png)
+letter는 상무장관 Howard Lutnick이 Dario Amodei 앞으로 보낸 것으로, 상무부 산업안보국(BIS)을 통해 전달됐습니다. 수령부터 셧다운까지 반나절이 걸리지 않았습니다.
 
-- **6월 9일**: Anthropic이 Claude Fable 5와 Mythos 5를 공개. "역대 최강" 호평이 쏟아짐
-- **6월 9일~11일**: 시스템 카드에서 일부 작업의 성능을 사용자에게 알리지 않고 제한하는 장치가 발견되며 논란. Anthropic이 *"We made the wrong tradeoff and we apologize for not getting the balance right"* 라며 정책을 철회하고, 제한을 숨기지 않고 거부 사실을 명시적으로 알리는 방식으로 전환
-- **6월 12일 오후 5시 21분(미 동부시간)**: 상무장관 Howard Lutnick이 Dario Amodei 앞으로 보낸 수출통제 지침 letter를 Anthropic이 수령
-- **6월 12일 저녁**: Anthropic이 Fable 5와 Mythos 5를 전 세계 모든 사용자 대상으로 비활성화
-
-출시 직후의 "보이지 않는 성능 제한" 논란은 회사가 사용자 모르게 모델 성능을 조절했다는, 말하자면 기업이 일방적으로 통제권을 쥔 사안이었습니다. 회사가 하루 만에 철회하며 수습하긴 했죠. 그런데 그게 정리되자마자, 이번에는 정부가 통제권을 쥐는 훨씬 큰 일이 회사 바깥에서 터졌습니다.
+바로 앞의 이틀은 회사가 통제권을 쥔 시간이었습니다. 일부 작업의 성능을 사용자 모르게 낮추겠다는 시스템 카드 문구가 발견돼 논란이 됐고, Anthropic이 하루 만에 철회하면서 정리됐습니다. 그게 수습되자마자 이번에는 정부가 통제권을 쥐는 훨씬 큰 일이 회사 바깥에서 터졌습니다.
 
 ## 미 정부의 수출통제 지침
 
-핵심부터 보겠습니다. 상무부가 보낸 지침의 내용은 **"Fable 5와 Mythos 5를 모든 외국 국적자(foreign national)에게 제공하지 말라"** 였습니다. 여기서 외국 국적자의 범위가 넓습니다.
+상무부가 보낸 지침은 **Fable 5와 Mythos 5를 모든 외국 국적자(foreign national)에게 제공하지 말라**는 내용이었습니다. 여기서 외국 국적자의 범위가 넓습니다.
 
 :::warning
 
 **차단 범위**
 
-미국 밖의 모든 사용자뿐 아니라, **미국 내에 거주하는 외국 국적자**, 그리고 **Anthropic 자사의 외국 국적 직원**까지 포함됩니다. 즉 미국 시민이 아니면 누구도 쓸 수 없습니다.
+미국 밖의 모든 사용자뿐 아니라, 미국 내에 거주하는 외국 국적자, 그리고 Anthropic 자사의 외국 국적 직원까지 포함됩니다.
 
 :::
 
-문제는 실시간으로 사용자의 국적을 가려낼 방법이 없다는 점입니다. 수억 명이 쓰는 상용 서비스에서 누가 미국 시민이고 누가 아닌지를 즉시 검증할 수 없으니, 선택적으로 차단하는 것 자체가 불가능했습니다. 결국 Anthropic은 전체를 끄는 것 외에 선택지가 없었습니다. 공식 성명의 표현이 이 상황을 그대로 담고 있습니다.
+문제는 실시간으로 사용자의 국적을 가려낼 방법이 없다는 점입니다. 수억 명이 쓰는 상용 서비스에서 누가 외국 국적자인지를 즉시 검증할 수 없으니, 선택적으로 차단하는 것 자체가 불가능했습니다. 결국 Anthropic은 전체를 끄는 것 외에 선택지가 없었습니다. 공식 성명의 표현이 이 상황을 그대로 담고 있습니다.
 
-> "The net effect of this order is that we must abruptly disable Fable 5 and Mythos 5 for **all** our customers to ensure compliance." (Anthropic 공식 성명)
+> "The net effect of this order is that we must abruptly disable Fable 5 and Mythos 5 for all our customers." (Anthropic 공식 성명)
 
 다행히 영향 범위는 두 모델로 한정됐습니다. Opus 4.8을 비롯한 나머지 Claude 모델은 그대로 쓸 수 있습니다. 다만 API에서 `claude-fable-5`를 직접 호출하도록 짜둔 통합은 즉시 깨졌고, Fable 5를 워크플로우에 넣었던 기업 고객들도 곧바로 영향을 받았습니다. 출시 사흘 만에 워크플로우를 짜두기엔 짧은 시간이었지만, 그 사흘 안에 통합한 곳들은 갑작스럽게 대응해야 했습니다.
 
 ## 정부의 이유 vs Anthropic의 반박
 
-정부가 든 사유는 **"jailbreak"** 였습니다. 보도를 종합하면, 다른 한 업체가 Mythos를 jailbreak하는 방법을 찾았다고 주장했고, 이것이 행정부 내부에서 국가안보 우려로 번졌습니다. Fable 5와 Mythos 5는 출시 시점에 사이버보안 같은 고위험 영역의 응답을 막는 분류기를 갖추고 있었는데, 그 안전장치를 우회할 수 있다는 것이 문제로 지목된 셈입니다.
+정부가 든 사유는 **jailbreak**였습니다. 보도를 종합하면, 다른 한 업체가 Mythos를 jailbreak하는 방법을 찾았다고 주장했고, 이것이 행정부 내부에서 국가안보 우려로 번졌습니다. 두 모델은 출시 시점에 사이버보안 같은 고위험 영역의 응답을 막는 분류기를 갖추고 있었는데, 그 안전장치를 우회할 수 있다는 것이 문제로 지목된 셈입니다.
 
 Anthropic의 반박은 세 갈래입니다.
 
-| 쟁점 | 정부 측 주장 | Anthropic 반박 |
+| 쟁점 | 정부 | Anthropic |
 |---|---|---|
-| **위험의 성격** | 안전장치를 뚫는 jailbreak 존재 | 특정 코드베이스를 읽고 결함을 찾는 좁고 비보편적인 jailbreak일 뿐, 모든 안전장치를 무력화하는 게 아님 |
-| **고유성** | 국가안보 위협 | 같은 수준의 능력은 GPT-5.5 등 이미 공개된 다른 모델에서도 널리 쓸 수 있음 |
-| **근거** | 수출통제 발동 | letter에 서면 근거 없이 구두 설명만 제공됨 |
+| 위험의 성격 | 안전장치 우회 방법 존재 | 좁고 비보편적인 우회 하나 |
+| 능력의 고유성 | 국가안보 위협 | GPT-5.5 등에도 있는 수준 |
+| 제시된 근거 | 국가안보 우려 | 서면 근거 없이 구두 설명뿐 |
+
+세 번째 항목은 회사가 직접 밝힌 내용입니다. 받은 letter에는 국가안보 우려의 구체적인 내용이 담겨 있지 않았고, 좁고 비보편적인 우회 가능성에 대해서도 구두로만 설명을 들었다는 것입니다.
 
 Anthropic이 정부 지침을 법적으로 따르면서도 명확히 선을 그은 문장이 있습니다.
 
@@ -66,9 +96,9 @@ Anthropic이 정부 지침을 법적으로 따르면서도 명확히 선을 그�
 
 | 구분 | 기존 수출통제 | 이번 Fable 5 차단 |
 |---|---|---|
-| **대상** | GPU, 칩 제조 장비, 모델 가중치 | 미국 서버에서 돌아가는 라이브 상용 서비스 |
-| **형태** | 국경을 넘는 물리적/디지털 자산 | 이미 배포돼 운영 중인 API 엔드포인트 |
-| **실행 속도** | 심사와 고시 절차 | letter 한 통, 수 시간 내 셧다운 |
+| 대상 | GPU, 칩 제조 장비, 모델 가중치 | 미국 서버의 라이브 상용 서비스 |
+| 형태 | 국경을 넘는 물리적/디지털 자산 | 운영 중인 API 엔드포인트 |
+| 실행 속도 | 심사와 고시 절차 | letter 한 통, 수 시간 내 셧다운 |
 
 이번에는 국경을 넘는 게 아무것도 없습니다. 미국 데이터센터에서 돌아가는 서비스에 누가 접속하느냐를 통제했을 뿐입니다. 정책 분석가들이 주목한 지점도 여기입니다. 개별 품목이 한 당사자에서 다른 당사자로 이전되는 것을 전제로 설계된 권한을, API로 상시 접근 가능한 프런티어 모델에 적용했다는 것입니다. AI 모델을 **반도체에 준하는 전략 자산**으로 취급하기 시작했다는 신호로 읽힙니다.
 
@@ -120,23 +150,21 @@ Anthropic은 상세한 시스템 카드와 책임 있는 스케일링 정책(Res
 
 ## 커뮤니티와 전문가 반응
 
-반응은 크게 세 갈래로 갈렸습니다.
-
 가장 큰 줄기는 선례에 대한 우려입니다. AI 정책 분석가 Dean W. Ball의 코멘트가 분위기를 압축합니다.
 
 > "I can't tell if this is lawfare against Anthropic in particular or extreme national-security hawkery. Regardless, it is simply cartoonish."
 
-Anthropic을 겨냥한 법적 압박(lawfare)인지 과도한 안보 매파주의인지 모르겠지만, 어느 쪽이든 어처구니없을 만큼 우스꽝스럽다는 것입니다.
+Anthropic을 겨냥한 법적 압박(lawfare)인지 과도한 안보 매파주의인지 모르겠지만, 어느 쪽이든 어처구니없을 만큼 우스꽝스럽다는 것입니다. 그는 첨단 AI 칩의 중국 수출은 허용하면서 영국을 비롯한 모든 비미국인의 자사 최고 모델 사용은 막으려 한다는 점에서 행정부의 입장이 앞뒤가 맞지 않는다고도 지적했습니다.
 
-실효성에 의문을 던지는 쪽은 한층 냉소적입니다. "지니를 다시 병에 넣을 수는 없다"는 반응이 대표적인데, 앞서 본 Anthropic의 반박과 같은 맥락에서, 같은 수준의 능력이 GPT-5.5를 비롯한 다른 모델에 이미 존재하고, 시간이 지나면 비슷한 성능의 open-weight 모델이 나오는 것이 거의 불가피하다는 지적입니다. 그렇다면 특정 모델 하나를 막는 것이 실질적으로 무엇을 막느냐는 물음이죠. 1990년대 강한 암호화 기술을 무기로 분류해 수출을 통제했던 "Crypto Wars"의 평행 사례를 드는 분석도 있었습니다. 결국 기술 확산을 막지 못했던 그 역사 말입니다.
+다른 한 갈래는 실효성에 대한 의문입니다. 같은 수준의 능력이 GPT-5.5를 비롯한 다른 모델에 이미 존재한다면, 특정 모델 하나를 끄는 것이 실질적으로 무엇을 막느냐는 물음입니다. 이건 Anthropic 자신의 반박과 같은 논리이기도 합니다.
 
-마지막으로, 이 조치가 어디까지 번질지 경계하는 시각입니다. 수출통제가 라이브 서비스에까지 적용된다면 다음 차례는 클라우드 서비스 전반이라는 우려도 나왔습니다. 물론 무제한 LLM이 위험 정보를 제공할 수 있다는 점에서 민주적 접근과 책임 있는 배포 사이의 긴장은 실재한다는, 정부 측에 일부 공감하는 목소리도 함께 있었습니다.
+법적인 쪽에서는 무형물에 대한 통제라는 점 자체는 새롭지 않다는 정리가 나왔습니다. 1990년대 암호화 기술을 둘러싼 논쟁이 무형의 코드도 통제 대상이 될 수 있다는 결론으로 이미 정리됐기 때문입니다. 새로운 것은 통제 대상의 성격입니다. 파일을 배포하거나 데이터셋을 전송하는 행위에는 규정이 답을 갖고 있지만, 프롬프트에 실시간으로 응답하는 모델은 그 범주에 잘 들어맞지 않습니다. 무엇을 수출로 볼 것인가, 모델 가중치인가 추론 행위인가 능력 그 자체인가라는 질문이 여기서 다시 열립니다.
 
 :::info
 
 **Microsoft의 차단은 별개입니다**
 
-비슷한 시기에 Microsoft가 직원들의 Claude Fable 5 사용을 일시 금지했다는 보도가 있었는데, 이는 정부 수출통제와 전혀 다른 사안입니다. Anthropic의 **데이터 보존(data retention) 정책**에 따라 민감 정보가 노출될 수 있다는 사내 우려가 이유였습니다. 정부 차단과 혼동하지 않도록 주의가 필요합니다.
+비슷한 시기에 Microsoft가 직원들의 Claude Fable 5 사용을 일시 금지했다는 보도가 있었는데, 이는 정부 수출통제와 전혀 다른 사안입니다. 기존 Claude 모델과 달리 Fable 5는 프롬프트와 출력을 기본 30일간 보관하는 **데이터 보존(data retention) 정책**을 적용받는데, 이 때문에 고객 데이터나 사내 정보가 노출될 수 있다는 우려가 이유였습니다. 시점이 겹칠 뿐 정부 차단과는 무관합니다.
 
 :::
 
@@ -150,7 +178,7 @@ Lutnick 상무장관은 Anthropic이 모델과 관련된 보안 위험을 선제
 
 :::
 
-## 그래서 무엇이 남나
+## 마치며
 
 모델이 다시 켜졌다고 해서 이 사건이 없던 일이 되지는 않습니다.
 
@@ -160,7 +188,9 @@ Lutnick 상무장관은 Anthropic이 모델과 관련된 보안 위험을 선제
 
 ## 함께 보면 좋은 글
 
-- [Claude Fable 5: 성능은 역대 최강인데 왜 논란일까?](/issue/fable-5/) : 출시 당시의 성능과 정책 논란
+- [Claude Fable 5는 성능이 역대 최강인데 왜 논란일까?](/issue/fable-5/) : 출시 당시의 성능과 정책 논란
+- [Claude Opus 4.7의 성능은 왜 논란이 되고 있을까?](/issue/opus-4-7/) : 벤치마크와 체감이 어긋났던 직전 세대
+- [Claude Opus 5 출시, 가격 그대로 성능은 Fable 5급?](/issue/opus-5/) : Fable 5의 성능이 일반 가격대로 내려온 뒤
 
 ## 참고자료
 
@@ -170,4 +200,3 @@ Lutnick 상무장관은 Anthropic이 모델과 관련된 보안 위험을 선제
 - [CNBC: Trump admin has lifted export controls on Claude Fable 5 and Mythos 5](https://www.cnbc.com/2026/06/30/anthropic-says-trump-admin-has-lifted-export-controls-on-claude-fable-5-and-mythos-5.html)
 - [Tech Policy Press: Did the US government just set an AI export precedent?](https://www.techpolicy.press/did-the-us-government-just-set-an-ai-export-precedent-by-blocking-mythos/)
 - [Fortune: Anthropic disables Fable and Mythos AI models after U.S. government bars foreign access](https://fortune.com/2026/06/13/anthropic-disables-fable-mythos-export-controls-national-security-threat/)
-- [Hacker News: Our response to the US ban on Fable 5 and Mythos 5](https://news.ycombinator.com/item?id=48512915)

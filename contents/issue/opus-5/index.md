@@ -3,13 +3,13 @@ date: '2026-07-25'
 title: 'Claude Opus 5 출시, 가격 그대로 성능은 Fable 5급?'
 category: 'Issue'
 tags: ['Claude', 'Opus 5', 'Anthropic', 'LLM', 'AI Model']
-summary: '2026년 7월 24일 출시된 Claude Opus 5의 벤치마크, 가격, Opus 4.8과 Fable 5 비교, 안전 분류기 변화와 커뮤니티 반응을 정리합니다.'
+summary: '가격은 Opus 4.8 그대로인데 벤치마크는 Fable 5를 대부분 앞선 Claude Opus 5의 수치를 시스템 카드로 확인하고, 분류기 완화와 공개된 약점까지 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
 
 2026년 7월 24일, Anthropic이 Claude Opus 5를 공개했습니다. 6월 9일 Fable 5와 Mythos 5, 6월 30일 Sonnet 5에 이어 두 달이 채 안 되는 사이 네 번째 모델입니다.
 
-타이밍이 절묘합니다. 7월 19일자로 Fable 5의 구독 제공 방식이 정리되면서 **Pro와 Team Standard 사용자는 Fable 5를 쓰려면 크레딧을 구매**해야 하는 상태가 됐습니다(일회성 \$100 크레딧이 지급됐습니다). Max와 Team Premium은 주간 한도의 50%까지 추가 비용 없이 포함되는 쪽으로 정리됐고요. 그 닷새 뒤에 "Fable 5에 근접하는 성능을 절반 가격에"를 내세운 모델이 나왔습니다. Opus 5는 Claude Max의 새 기본 모델이자 Pro에서 쓸 수 있는 최상위 모델입니다.
+타이밍이 절묘합니다. 7월 19일자로 Fable 5 프로모션이 끝나면서 7월 20일부터 **Pro와 Team Standard 사용자는 Fable 5를 쓰려면 크레딧을 구매**해야 하는 상태가 됐습니다(전환을 돕는 일회성 크레딧이 지급됐습니다). Max와 Team Premium은 주간 한도의 50%까지 추가 비용 없이 포함되는 쪽으로 정리됐고요. 그 나흘 뒤에 "Fable 5에 근접하는 성능을 절반 가격에"를 내세운 모델이 나왔습니다. 공식 발표는 Opus 5를 Claude Max의 새 기본 모델이자 Claude Pro에서 쓸 수 있는 가장 강한 모델로 소개했습니다.
 
 ## 핵심 스펙
 
@@ -20,77 +20,129 @@ thumbnail: './thumbnail.png'
 | 최대 출력 | 128K 토큰 |
 | 가격 | 입력 \$5/MTok, 출력 \$25/MTok (**Opus 4.8과 동일**) |
 | Fast mode | 약 2.5배 속도, 입력 \$10 / 출력 \$50 (Claude API 전용) |
-| 지식 컷오프 | 2026년 5월 |
+| 학습 데이터 컷오프 | 2026년 5월 |
 | 가용성 | Claude API, Amazon Bedrock, Google Cloud, Microsoft Foundry |
 
 GitHub도 같은 날 Copilot에서 Opus 5를 지원한다고 발표했습니다.
 
 가격 동결이 이번 출시의 메인 메시지입니다. Opus 4.8과 토큰 단가가 같은데 벤치마크는 전 영역에서 올랐습니다.
 
-눈에 덜 띄지만 중요한 항목이 지식 컷오프입니다. Fable 5와 Sonnet 5가 2026년 1월인데 Opus 5는 5월로, 현재 Claude 라인업에서 가장 최신입니다. 최신 라이브러리 버전이나 API 변경을 다루는 작업이라면 이 차이가 체감될 만합니다.
+눈에 덜 띄지만 중요한 항목이 컷오프입니다. Fable 5와 Sonnet 5가 2026년 1월인데 Opus 5는 5월로, 현재 Claude 라인업에서 가장 최신입니다. 최신 라이브러리 버전이나 API 변경을 다루는 작업이라면 이 차이가 체감될 만합니다.
 
-## 벤치마크: Fable 5를 대부분 앞섭니다
+## 벤치마크
 
-:::info
+아래 수치는 Opus 5 시스템 카드의 평가 요약 표에서 옮긴 값입니다. 별도 표기가 없으면 adaptive thinking과 max effort, 기본 샘플링 설정으로 5회 시행한 평균입니다.
 
-**측정 조건**
-
-아래 수치는 별도 표기가 없으면 adaptive thinking과 max effort(추론에 쓸 토큰량을 조절하는 파라미터의 최상위 단계), 기본 샘플링 설정 기준입니다. Opus 5 시스템 카드 8장의 값을 옮겼고, 경쟁 모델 수치는 각 개발사가 공개한 시스템 카드와 리더보드 기준입니다.
-
-:::
-
-| 벤치마크 | **Opus 5** | Opus 4.8 | Fable 5 | GPT-5.6 Sol |
-|---------|:---:|:---:|:---:|:---:|
-| SWE-bench Pro | 79.2 | 69.2 | **80.0** | 64.6 |
-| SWE-bench Multilingual | **89.5** | 84.4 | 86.6 | - |
-| SWE-bench Multimodal | **59.4** | 38.4 | 54.1 | - |
-| FrontierCode 1.1 | 53.4 | 46.5 | **53.5** | 47.5 |
-| FrontierBench v0.1 | **43.3** | 18.7 | 33.7 | 37.5 |
-| OSWorld 2.0 (컴퓨터 사용) | **70.6** | 55.7 | 66.1 | 62.6 |
-| BrowseComp | **90.8** | 84.3 | 87.4 | 90.4 |
-| HLE (도구 사용) | **64.7** | 57.9 | 63.9 | - |
-| GDPval-AA v2 (Elo) | **1861** | 1593 | 1747 | 1736 |
-| AutomationBench | **26.0** | 17.0 | 17.4 | 18.1 |
-| ARC-AGI-3 | **30.2** (high) | 1.5 | - | 7.8 |
+| 벤치마크 | **Opus 5** | Opus 4.8 | Fable 5 |
+|---------|:---:|:---:|:---:|
+| SWE-bench Pro | 79.2 | 69.2 | **80** |
+| SWE-bench Multilingual | **89.5** | 84.4 | 86.6 |
+| SWE-bench Multimodal | **59.4** | 38.4 | 54.1 |
+| FrontierCode 1.1 (Main) | 53.4 | 46.5 | **53.5** |
+| FrontierBench v0.1 | **43.3** | 21.1 | 33.8 |
+| OSWorld 2.0 | **70.6** | 55.7 | 66.1 |
+| BrowseComp | **90.8** | 84.3 | 87.4 |
+| HLE (도구 사용) | **64.7** | 57.9 | 63.9 |
+| GDPval-AA v2 (Elo) | **1861** | 1593 | 1747 |
+| AutomationBench | **26.0** | 17.0 | 17.4 |
+| ARC-AGI-3 | **30.2** (high) | 1.5 | - |
 
 Fable 5의 SWE-bench Pro 값은 출처에 따라 다릅니다. Fable 5 출시 발표 표는 80.3, 위 표의 근거인 Opus 5 시스템 카드는 80으로 적고 있습니다. 어느 쪽이든 Opus 5(79.2)와의 차이는 1포인트 안쪽입니다.
 
-가장 극적인 항목은 ARC-AGI-3입니다. 이 벤치마크는 학습으로 커버되지 않는 새로운 문제 해결 능력을 측정하는데, 종전 최고 기록은 GPT-5.6 Sol의 **7.8%**였습니다. 그 자리에 30.2%가 들어왔습니다. 차순위 모델의 약 네 배이고, 같은 계열 직전 모델인 Opus 4.8은 1.5%에 그쳤습니다.
+FrontierBench 값도 하네스에 따라 갈립니다. 위 표의 값은 Harbor가 돌린 결과이고, Anthropic이 mini-SWE-agent 하네스로 직접 돌린 결과는 Opus 5 44.4%, Fable 5 33.7%, Opus 4.8 18.7%로 다릅니다. 두 하네스의 값을 섞어 한 줄에 놓지 않는 편이 안전합니다.
 
-터미널 환경에서 실제 작업을 시키는 FrontierBench에서도 18.7%에서 43.3%로 두 배 넘게 올랐습니다. Terminal-Bench 2.1의 후속 벤치마크인데, 계산생물학이나 물리 시뮬레이션, CAD, GPU 성능 최적화처럼 난도를 높인 74개 과제로 구성돼 있습니다.
+가장 극적인 항목은 ARC-AGI-3입니다. 이 벤치마크는 학습으로 커버되지 않는 새로운 문제 해결 능력을 측정하는데, 위 표에 없는 GPT-5.6 Sol이 7.8%로 종전 최고 기록이었습니다. 그 자리에 30.2%가 들어왔습니다. 차순위 모델의 약 네 배이고, 같은 계열 직전 모델인 Opus 4.8은 1.5%에 그쳤습니다.
+
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 216" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="ARC-AGI-3에서 Opus 5가 30.2, GPT-5.6 Sol이 7.8, Opus 4.8이 1.5를 기록한 막대 비교">
+<style>
+.o5a-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.o5a-n { fill: var(--text, #1c1917); font-size: 14px; }
+.o5a-v { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.o5a-a { fill: var(--primary, #0a756c); }
+.o5a-b { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text class="o5a-t" x="12" y="20">ARC-AGI-3 정답률</text>
+<!-- Opus 5 -->
+<text class="o5a-n" x="12" y="52">Claude Opus 5</text>
+<rect class="o5a-a" x="12" y="60" width="272" height="18" rx="2"/>
+<text class="o5a-v" x="292" y="74">30.2</text>
+<!-- GPT-5.6 Sol -->
+<text class="o5a-n" x="12" y="108">GPT-5.6 Sol</text>
+<rect class="o5a-b" x="12" y="116" width="70" height="18" rx="2"/>
+<text class="o5a-v" x="90" y="130">7.8</text>
+<!-- Opus 4.8 -->
+<text class="o5a-n" x="12" y="164">Claude Opus 4.8</text>
+<rect class="o5a-b" x="12" y="172" width="14" height="18" rx="2"/>
+<text class="o5a-v" x="34" y="186">1.5</text>
+<text class="o5a-v" x="12" y="206">막대 = 정답률 %, 0부터 같은 축척</text>
+</svg>
+</div>
+
+터미널 환경에서 실제 작업을 시키는 FrontierBench에서도 21.1%에서 43.3%로 두 배 넘게 올랐습니다. Terminal-Bench 2.1의 후속 벤치마크인데, 계산생물학이나 물리 시뮬레이션, CAD, 형식 증명, GPU 성능 최적화처럼 난도를 높인 74개 과제로 구성돼 있습니다.
 
 한편 Fable 5가 여전히 앞서는 항목은 SWE-bench Pro와 FrontierCode(53.5 대 53.4) 정도인데, 둘 다 소수점 차이입니다. 가격은 절반이고요.
 
-## 안전 분류기: Fable 5의 발목을 잡던 문제
+## 안전 분류기
 
 Fable 5 출시 때 가장 큰 실사용 불만은 성능이 아니라 안전 분류기 오발이었습니다. 암 연구자의 인사말이 폴백되고, 의료영상 연구가 사실상 불가능하다는 보고가 쏟아졌죠.
 
 Opus 5에서 이 부분이 얼마나 달라졌는지가 숫자로 나왔습니다. FrontierBench를 돌리는 동안 각 모델의 분류기가 얼마나 발동했는지 기록한 값입니다.
 
-| 모델 | 분류기에 걸린 API 호출 | 영향받은 시도 |
-|------|:---:|:---:|
-| **Opus 5** | **5%** | 4% |
-| Fable 5 | 42% | 26% |
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 230" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="FrontierBench 실행 중 분류기 발동 비율이 Opus 5는 API 호출 5퍼센트와 시도 4퍼센트, Fable 5는 42퍼센트와 26퍼센트인 막대 비교">
+<style>
+.o5b-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.o5b-n { fill: var(--text, #1c1917); font-size: 14px; }
+.o5b-v { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.o5b-a { fill: var(--primary, #0a756c); }
+.o5b-b { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1; }
+</style>
+<text class="o5b-t" x="12" y="20">분류기에 걸린 비율</text>
+<!-- 범례 -->
+<rect class="o5b-a" x="12" y="32" width="12" height="12" rx="2"/>
+<text class="o5b-n" x="30" y="43">Opus 5</text>
+<rect class="o5b-b" x="106" y="32" width="12" height="12" rx="2"/>
+<text class="o5b-n" x="124" y="43">Fable 5</text>
+<!-- API 호출 -->
+<text class="o5b-n" x="12" y="72">API 호출</text>
+<rect class="o5b-a" x="12" y="79" width="34" height="16" rx="2"/>
+<text class="o5b-v" x="54" y="92">5%</text>
+<rect class="o5b-b" x="12" y="101" width="286" height="16" rx="2"/>
+<text class="o5b-v" x="306" y="114">42%</text>
+<!-- 영향받은 시도 -->
+<text class="o5b-n" x="12" y="148">영향받은 시도</text>
+<rect class="o5b-a" x="12" y="155" width="27" height="16" rx="2"/>
+<text class="o5b-v" x="47" y="168">4%</text>
+<rect class="o5b-b" x="12" y="177" width="177" height="16" rx="2"/>
+<text class="o5b-v" x="197" y="190">26%</text>
+<text class="o5b-v" x="12" y="220">막대 = 비율 %, 0부터 같은 축척</text>
+</svg>
+</div>
 
 API 호출 기준으로는 여덟 배, 영향받은 시도 기준으로는 여섯 배 차이입니다. Anthropic은 안전장치의 커버리지를 Fable 5급으로 유지하면서 한 가지만 바꿨습니다. **소스코드 취약점 탐색은 모든 접근 등급에서 허용**하고, 컴파일된 바이너리의 취약점 탐색만 차단하는 방식입니다. 바이너리 쪽이 공격 목적으로 쓰이는 비중이 훨씬 높다는 판단이죠.
 
-여기에 더해 Opus 5에는 **Fable 5의 30일 데이터 보존 요구사항이 없습니다**. 보존 정책 때문에 Fable 5를 사내에서 금지했던 조직들이 그대로 쓸 수 있게 됐으니, 실무에서는 이쪽이 더 큰 변화일 수 있습니다.
+여기에 더해 Opus 5에는 **Fable 5의 30일 데이터 보존 요구사항이 없습니다**. 30일 보존 대상으로 지정된 모델은 Fable 5와 Mythos 5뿐이고 Opus 5는 목록에 없습니다. 보존 정책 때문에 Fable 5를 사내에서 금지했던 조직들이 그대로 쓸 수 있게 됐으니, 실무에서는 이쪽이 더 큰 변화일 수 있습니다.
 
-사이버 보안 능력 자체는 Opus 4.8보다 위, Mythos 5보다 아래에 놓였습니다. 취약점을 찾아내는 쪽은 Mythos 5에 근접했지만 익스플로잇을 개발하는 쪽은 크게 뒤지는데, 이건 의도된 격차입니다.
+사이버 보안 능력 자체는 Opus 4.8보다 위, Mythos 5보다 아래에 놓였습니다. 취약점을 찾아내는 쪽은 Opus 4.8보다 나아졌지만 익스플로잇을 개발하는 쪽은 Mythos 5에 크게 못 미칩니다. 시스템 카드는 사이버 과제를 겨냥해 따로 학습시키지 않았고 관측된 능력은 일반적인 성능 향상이 반영된 결과로 보인다고 밝히고 있습니다.
 
-## 커뮤니티 반응
+## 파트너와 커뮤니티의 평가
 
-호평의 초점은 대부분 가격입니다. Hacker News 시스템 카드 스레드에서는 "Fable 5에 거의 근접하는데 비용은 절반"이라는 반응이, Reddit에서는 "구독에 100% 포함되니 크레딧을 사서 Fable을 쓰던 것에 비하면 사실상 사용량이 몇 배"라는 계산이 나왔습니다.
+공식 발표에는 파트너 평가가 함께 실렸습니다. Cursor 공동창업자 Sualeh Asif는 Opus 5가 Fable 5에 가까운 지능을 Opus의 속도와 비용으로 낸다고 평했고, Devin을 만든 Cognition의 Scott Wu는 FrontierCode 1.1에서 절반 비용으로 Fable급에 근접했다고 밝혔습니다. 발표문에는 한 트레이딩 회사 엔지니어가 신규 거래소 마켓 데이터 피드를 한 세션에 구축했고 모델이 파싱 검증용 테스트 하네스까지 직접 만들었다는 사례도 들어 있습니다. 다만 이 세 건은 모두 Anthropic이 고른 사례라는 점을 감안해서 읽어야 합니다.
 
-Cursor 공동창업자 Sualeh Asif는 Opus 5가 CursorBench 기준으로 Fable 5에 조금 못 미치면서 유사한 동작을 보이며, Opus의 속도와 비용으로 그 수준을 낸다고 평했습니다. Devin을 만든 Cognition의 Scott Wu는 FrontierCode 1.1에서 절반 비용으로 Fable급에 근접했다고 밝혔습니다. 한 트레이딩 회사 엔지니어는 이전 모델들이 완주하지 못했던 신규 거래소 마켓 데이터 피드를 한 세션에 구축했는데, 모델이 파싱 검증용 테스트 하네스까지 직접 만들었다고 합니다.
+Anthropic의 자체 측정으로는 CursorBench 3.2 최대 effort에서 Fable 5의 최고 점수와 0.5% 이내 차이를 태스크당 절반 비용으로 냈습니다.
 
-반대쪽 목소리도 만만치 않습니다. 두 모델을 나란히 비교해 본 사용자들 사이에서 가장 자주 나온 지적은 모델 자체의 개선폭이 체감보다 작다는 것이었습니다. 나아진 부분의 상당수가 하네스와 시스템 프롬프트, effort 레벨 조정에서 온 것 같다는 관찰입니다. Opus 4.7 때 하네스 변경이 체감을 좌우했던 전례를 생각하면 흘려들을 이야기는 아닙니다.
+바깥의 목소리는 결이 다릅니다. Hacker News 시스템 카드 스레드에서 반복해서 나온 지적은 나아진 부분의 상당수가 모델이 아니라 하네스와 프롬프트에서 왔다는 것이었습니다. "마법은 하네스에 들어 있다. 모델만큼이나 프롬프트의 몫이다"라는 표현이 대표적입니다. Opus 4.7 때 하네스 변경이 체감을 좌우했던 전례를 생각하면 흘려들을 이야기는 아닙니다.
 
-포지셔닝 혼란도 반복해서 나옵니다. Anthropic은 Opus 5가 Fable 5보다 전반적으로 유능하지는 않다고 선을 그었는데, 정작 벤치마크는 대부분 Opus 5가 앞섭니다. 그래서 두 모델을 어떤 기준으로 나눠 써야 하는지 모르겠다는 반응이 적지 않습니다.
+토큰 소비를 지적하는 목소리도 만만치 않습니다. 시키지 않은 작업까지 하면서 토큰을 태운다는 불만이 반복해서 나왔는데, Anthropic도 Opus 5의 기본 응답과 문서 산출물이 이전 모델보다 길어졌다고 문서에 밝혀 뒀습니다. 토큰 단가가 절반이어도 소비량이 늘면 실효 비용은 달라집니다.
 
-비용 우려도 있습니다. Opus 5가 Fable 5보다 토큰을 더 빨리 소모한다는 보고가 나왔는데, Anthropic도 Opus 5의 기본 응답이 이전 Opus 모델보다 길어졌다고 밝혀 뒀습니다. 토큰 단가가 절반이어도 소비량이 늘면 실효 비용은 달라집니다.
-
-분류기 발동률이 크게 떨어지긴 했지만, 바이오 인접 도메인에서 실제로 어떤지는 며칠 더 지켜봐야 할 부분입니다.
+포지셔닝 혼란도 있습니다. Anthropic은 최고 성능이 필요한 워크로드에는 Fable 5를 쓰라고 안내하는데, 정작 시스템 카드의 벤치마크는 대부분 Opus 5가 앞섭니다. 그래서 두 모델을 어떤 기준으로 나눠 써야 하는지 모르겠다는 반응이 적지 않습니다.
 
 ## Anthropic이 직접 인정한 약점
 
@@ -100,7 +152,7 @@ Anthropic은 이번 출시에서 모델의 단점도 꽤 솔직하게 공개했�
 
 **정확도가 오른 만큼 환각도 늘었습니다**
 
-AA-Omniscience 기준으로 Opus 5의 정확도는 Opus 4.8보다 11% 높지만, **환각률도 6% 높습니다**. 학습 트랜스크립트 100만 건 이상을 재귀 요약으로 검사한 결과, 확신이 없는 답을 확신 있게 말하는 사례가 놀랄 만큼 많았다고 합니다.
+AA-Omniscience 기준으로 Opus 5의 정확도는 Opus 4.8보다 11% 높지만, **환각률도 6% 높습니다**. 학습 트랜스크립트 100만 건 이상을 재귀 요약으로 검사한 결과, 확신이 없는 답을 확신 있게 말하거나 내부적으로 정한 답과 다른 답을 내놓는 사례가 상당수 발견됐습니다.
 
 :::
 
@@ -108,11 +160,13 @@ AA-Omniscience 기준으로 Opus 5의 정확도는 Opus 4.8보다 11% 높지만,
 
 - 근거 없는 과신, 때로는 데이터를 만들어낸 뒤 **연극적으로 정정**하는 패턴
 - 과장된 표현과 앞 턴에 대한 불필요한 사과
-- 사용자를 가르치려 드는 톤 (출시 전 초기 버전에서 특히)
-- **effort를 높일수록 오히려 나빠지는 구간**. 이미 검증한 답을 반복해서 재검증하는 자기 교정 루프, 과하게 생각하다 결과가 떨어지는 사례가 함께 보고됨
-- 가끔 언어가 바뀌는 글리치
+- 사용자를 가르치려 드는 톤 (출시 전 초기 스냅샷에서 특히)
+- **effort를 높일수록 오히려 나빠지는 구간**. 이미 검증한 답을 반복해서 재검증하는 자기 교정 루프가 함께 보고됨
+- 가끔 언어가 바뀌고 출력이 깨지는 글리치
 
-정렬(alignment) 측면에서는 자동 행동 감사 기준으로 역대 최고 점수를 받았습니다. 오용에 협조하는 비율이 테스트한 모든 모델 중 가장 낮고, 무모한 도구 사용도 크게 줄었습니다. 다만 사내 배포 중에 안전 분류기나 네트워크 제한을 우회하려는 시도가 모니터링에 걸렸고(응답의 0.01% 미만), 출시 전 중간 버전 하나는 서비스에서 로그아웃되자 비밀번호를 추측하려 들었다고 합니다.
+FrontierCode에서도 같은 성향이 수치로 잡힙니다. high를 넘는 effort에서 점수가 오히려 내려가는데, 시스템 카드는 요청 범위를 벗어난 리팩터링을 더 많이 하기 때문이라고 설명합니다. 범위를 지키라는 지시를 프롬프트에 한 줄 추가하면 대부분 회복됐다고 밝혔지만, 표의 점수는 그 지시 없이 측정한 값입니다.
+
+정렬(alignment) 측면에서는 자동 행동 감사 기준으로 역대 최고 점수를 받았습니다. 오용에 협조하는 비율이 테스트한 모든 모델 중 가장 낮고, 무모한 행동도 크게 줄었습니다. 다만 명시적 제약을 무시하는 빈도는 Opus 4.8과 비슷한 수준으로 남아 있습니다. 사내 배포 중에는 안전 분류기나 네트워크 제한을 우회하려는 시도가 모니터링에 걸렸고(모니터링된 응답의 0.01% 미만), 출시 전 중간 스냅샷 하나는 서비스에서 로그아웃되자 흔한 비밀번호를 추측하려 들었습니다.
 
 역설적인 결과도 하나 있습니다. **Opus 5에 Opus 4.8 폴백을 붙인 조합이 Opus 5 단독보다 일부 정렬 지표에서 낮게 나왔습니다.** Opus 5 자체의 정렬 점수가 워낙 좋아진 탓에, 덜 정렬된 모델로 떨어뜨리는 안전장치가 오히려 평균을 끌어내린 겁니다. Anthropic은 그래도 Opus 4.8의 능력이 더 제한적이니 시스템 전체로는 폴백을 붙인 쪽이 안전하다고 봤습니다.
 
@@ -120,10 +174,10 @@ AA-Omniscience 기준으로 Opus 5의 정확도는 Opus 4.8보다 11% 높지만,
 
 | 상황 | 권장 |
 |------|------|
-| 장시간 에이전틱 코딩, 대규모 리팩토링 | **Opus 5** |
-| 컴퓨터 사용, 브라우저 자동화 | **Opus 5** (OSWorld 70.6으로 격차 큼) |
-| 문서, 슬라이드, 스프레드시트 등 지식 업무 | **Opus 5** (GDPval-AA 1861) |
-| 방어적 보안 작업, 데이터 보존 제약이 있는 조직 | **Opus 5** (소스코드 취약점 탐색 허용) |
+| 장시간 에이전틱 코딩, 대규모 리팩토링 | Opus 5 |
+| 컴퓨터 사용, 브라우저 자동화 | Opus 5 (OSWorld 2.0 70.6) |
+| 문서, 슬라이드, 스프레드시트 등 지식 업무 | Opus 5 (GDPval-AA v2 1861) |
+| 방어적 보안 작업, 데이터 보존 제약이 있는 조직 | Opus 5 (소스코드 취약점 탐색 허용) |
 | 최고 난도 자율 실행 작업 | Fable 5 (Anthropic 권장 유지) |
 | 일상 코딩, 빠른 반복 | Sonnet 5 |
 | 비용 민감한 대량 처리 | Haiku 4.5 |
@@ -132,19 +186,19 @@ AA-Omniscience 기준으로 Opus 5의 정확도는 Opus 4.8보다 11% 높지만,
 
 Fable 5 때는 성능 호평과 정책 분노가 동시에 터졌고, 사흘 뒤에는 수출통제로 모델 자체가 꺼지는 일까지 있었습니다. 그에 비하면 이번 출시는 조용한 편입니다. 가격 그대로, 구독에 포함, 분류기 완화라는 조합이 논쟁거리를 별로 남기지 않았습니다.
 
-개인적으로는 "Fable급 성능"이라는 문구보다 분류기 발동률 5%라는 숫자가 더 반갑습니다. Fable 5를 못 쓰게 만든 건 결국 성능이 아니라 오발이었으니까요. 다만 응답이 길어져 토큰 소비가 늘었다는 보고도 함께 나오고 있어서, 실효 비용은 각자 워크로드에서 직접 재 보는 편이 낫겠습니다.
+"Fable급 성능"이라는 문구보다 분류기 발동률 5%라는 숫자가 더 중요한 변화입니다. Fable 5를 못 쓰게 만든 건 결국 성능이 아니라 오발이었고, 30일 보존 요구사항이 빠진 것도 같은 방향의 변화입니다. 다만 응답이 길어져 토큰 소비가 늘었다는 지적이 함께 나오고 있어서, 실효 비용은 각자 워크로드에서 직접 재 보는 편이 낫겠습니다.
 
 ## 함께 보면 좋은 글
 
-- [Claude Fable 5: 성능은 역대 최강인데 왜 논란일까?](/issue/fable-5/) : 비교 대상이 되는 상위 티어 모델
+- [Claude Fable 5 논란 정리](/issue/fable-5/) : 비교 대상이 되는 상위 티어 모델
 - [Claude Fable 5, 출시 3일 만에 차단됐다고?](/issue/fable-5-ban/) : 수출통제로 모델이 꺼졌던 사건
 - [Claude Sonnet 5 출시, Opus급 성능?](/issue/claude-sonnet-5-release/) : 한 달 전 나온 하위 티어 모델
 
 ## 참고자료
 
-- [Anthropic 공식 발표: Introducing Claude Opus 5](https://www.anthropic.com/news/claude-opus-5)
-- [Claude Opus 5 System Card (PDF)](https://www.anthropic.com/claude-opus-5-system-card)
-- [Anthropic Docs: What's new in Claude Opus 5](https://platform.claude.com/docs/en/about-claude/models/whats-new-opus-5)
+- [Introducing Claude Opus 5 - Anthropic](https://www.anthropic.com/news/claude-opus-5)
+- [Claude Opus 5 System Card - Anthropic](https://www.anthropic.com/claude-opus-5-system-card)
+- [What's new in Claude Opus 5 - Claude Docs](https://platform.claude.com/docs/en/about-claude/models/whats-new-opus-5)
 - [Claude Fable 5 on your plan - Anthropic Support](https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan)
-- [Hacker News: Claude Opus 5 시스템 카드 스레드](https://news.ycombinator.com/item?id=49038433)
-- [VentureBeat: Anthropic launches Claude Opus 5](https://venturebeat.com/orchestration/anthropic-launches-claude-opus-5-a-cheaper-ai-model-for-coding-agents-and-enterprise-workflows)
+- [Claude Opus 5 is now available in GitHub Copilot - GitHub](https://github.blog/changelog/2026-07-24-claude-opus-5-is-now-available-in-github-copilot/)
+- [Claude Opus 5 시스템 카드 스레드 - Hacker News](https://news.ycombinator.com/item?id=49038433)

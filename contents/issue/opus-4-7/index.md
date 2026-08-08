@@ -3,230 +3,250 @@ date: '2026-04-27'
 title: 'Claude Opus 4.7의 성능은 왜 논란이 되고 있을까?'
 category: 'Issue'
 tags: ['Claude', 'Opus 4.7', 'Opus 4.6', 'Anthropic', 'LLM', 'AI Model']
-summary: 'Opus 4.7 출시 후 Reddit과 Hacker News에서 폭발한 부정적 반응. 벤치마크는 올랐는데 왜 사용자는 퇴보라 느끼는지, 그리고 Anthropic의 포스트모템이 밝힌 실제 원인을 정리합니다.'
+summary: '벤치마크는 올랐는데 체감은 나빠진 Opus 4.7 사태를 정리합니다. 일주일 뒤 Anthropic 포스트모템은 원인의 상당 부분이 모델이 아니라 시스템 프롬프트와 캐싱에 있었다고 밝혔습니다.'
 thumbnail: './thumbnail.png'
 ---
 
-2026년 4월 16일, Anthropic이 Claude Opus 4.7을 공개했습니다. 공식 발표에는 SWE-bench Verified 87.6%, GPQA Diamond 94.2% 등 인상적인 숫자들이 나열되어 있었습니다. 그런데 출시 하루 만에 Reddit r/ClaudeAI에는 "**Claude Opus 4.7 is a serious regression, not an upgrade**"라는 글이 올라왔고, r/ClaudeCode에서는 "**Opus 4.7 is legendarily bad**"라는 글과 함께 모델에 "Gaslightus 4.7"이라는 별명까지 붙었습니다.
+2026년 4월 16일, Anthropic이 Claude Opus 4.7을 공개했습니다. 공식 발표에는 SWE-bench Verified 87.6%, GPQA Diamond 94.2% 같은 숫자가 나열돼 있었습니다. 그런데 출시 직후 Reddit r/ClaudeAI에 "Claude Opus 4.7 is a serious regression, not an upgrade"라는 글이 올라왔고, r/ClaudeCode에서는 "Opus 4.7 is legendarily bad"라는 글과 함께 모델에 "Gaslightus 4.7"이라는 별명이 붙었습니다.
 
-벤치마크 숫자는 분명 올랐습니다. 그런데 왜 사용자들은 퇴보라고 느끼는 걸까요? 이번 글에서는 커뮤니티에서 쏟아진 실사용 경험과, 일주일 뒤 Anthropic이 직접 내놓은 포스트모템을 함께 놓고 Opus 4.7에 무슨 일이 있었는지 들여다봅니다.
+벤치마크 숫자는 분명 올랐습니다. 그런데 왜 사용자들은 퇴보라고 느꼈을까요.
 
 ## 벤치마크는 올랐는데 체감은 나빠졌다
 
-먼저 공식 벤치마크부터 보겠습니다.
+Anthropic이 공개한 Opus 4.6 대비 수치입니다.
 
-| 벤치마크 | Opus 4.6 | Opus 4.7 | 변화 |
-|---------|----------|----------|------|
-| SWE-bench Verified | 80.8% | 87.6% | +6.8 |
-| SWE-bench Pro | 53.4% | 64.3% | +10.9 |
-| CursorBench | 58% | 70% | +12.0 |
-| GPQA Diamond | 91.3% | 94.2% | +2.9 |
-| Humanity's Last Exam | 40.0% | 46.9% | +6.9 |
-| CharXiv Reasoning | 69.1% | 82.1% | +13.0 |
+| 벤치마크 | Opus 4.6 | Opus 4.7 |
+|---|---|---|
+| Graphwalks (BFS, 256K~1M) | 38.7% | 58.6% |
+| CharXiv Reasoning (도구 없음) | 69.1% | 82.1% |
+| CursorBench | 58% | 70% |
+| SWE-bench Pro | 53.4% | 64.3% |
+| Humanity's Last Exam (도구 없음) | 40.0% | 46.9% |
+| SWE-bench Verified | 80.8% | 87.6% |
+| GPQA Diamond | 91.3% | 94.2% |
+| BrowseComp | 83.7% | 79.3% |
+| MRCR v2 (256K) | 91.9% | 59.2% |
+| MRCR v2 (1M) | 78.3% | 32.2% |
 
-숫자만 보면 전 분야에서 향상된 것처럼 보입니다. 하지만 Anthropic이 공식적으로 강조하지 않은 수치들이 있습니다.
-
-| 벤치마크 | Opus 4.6 | Opus 4.7 | 변화 |
-|---------|----------|----------|------|
-| NYT Connections | 94.7% | 41.0% | **-53.7** |
-| MRCR (1M 토큰) | 78.3% | 32.2% | **-46.1** |
-| MRCR (256K 토큰) | 91.9% | 59.2% | **-32.7** |
-| BrowseComp | 83.7% | 79.3% | -4.4 |
-
-두 표를 한 축에 올려놓고 보면 이렇습니다.
+발표 자료가 앞세운 것은 코딩과 비전이었고, 장문맥 검색 수치는 시스템 카드 안에 있었습니다. 같은 축에 올려놓으면 낙차가 이렇습니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 400 472" style="width: 100%; height: auto; max-width: 380px;"
+<svg viewBox="0 0 400 520" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="코딩과 비전 벤치마크는 10포인트 안팎 올랐지만 NYT Connections와 장문맥 검색은 50포인트 가까이 떨어진 발산 막대">
+     role="img" aria-label="Opus 4.6 대비 Opus 4.7의 벤치마크 변화를 한 축에 올린 막대. Graphwalks가 19.9포인트로 가장 크게 오르고 MRCR 1M이 46.1포인트로 가장 크게 떨어진 모습">
 <style>
-.bd-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
-.bd-l { fill: var(--text, #1c1917); font-size: 14px; }
-.bd-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
-.bd-up { fill: var(--text-success, #107836); }
-.bd-dn { fill: var(--text-danger, #cb2121); }
-.bd-ut { fill: var(--text-success, #107836); font-size: 14px; }
-.bd-dt { fill: var(--text-danger, #cb2121); font-size: 14px; }
-.bd-ax { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.o47b-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.o47b-l { fill: var(--text, #1c1917); font-size: 14px; }
+.o47b-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.o47b-up { fill: var(--text-success, #107836); }
+.o47b-dn { fill: var(--text-danger, #cb2121); }
+.o47b-ut { fill: var(--text-success, #107836); font-size: 14px; }
+.o47b-dt { fill: var(--text-danger, #cb2121); font-size: 14px; }
+.o47b-ax { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
 </style>
-<text class="bd-t" x="200" y="22" text-anchor="middle">오른 항목과 떨어진 항목</text>
-<line class="bd-ax" x1="200" y1="32" x2="200" y2="442"/>
-<text class="bd-l" x="16" y="46">CharXiv Reasoning</text>
-<rect class="bd-up" x="200" y="52" width="36" height="16" rx="2"/>
-<text class="bd-ut" x="242" y="65">+13.0</text>
-<text class="bd-l" x="16" y="92">CursorBench</text>
-<rect class="bd-up" x="200" y="98" width="33" height="16" rx="2"/>
-<text class="bd-ut" x="239" y="111">+12.0</text>
-<text class="bd-l" x="16" y="138">SWE-bench Pro</text>
-<rect class="bd-up" x="200" y="144" width="30" height="16" rx="2"/>
-<text class="bd-ut" x="236" y="157">+10.9</text>
-<text class="bd-l" x="16" y="184">Humanity's Last Exam</text>
-<rect class="bd-up" x="200" y="190" width="19" height="16" rx="2"/>
-<text class="bd-ut" x="225" y="203">+6.9</text>
-<text class="bd-l" x="16" y="230">SWE-bench Verified</text>
-<rect class="bd-up" x="200" y="236" width="19" height="16" rx="2"/>
-<text class="bd-ut" x="225" y="249">+6.8</text>
-<text class="bd-l" x="16" y="276">GPQA Diamond</text>
-<rect class="bd-up" x="200" y="282" width="8" height="16" rx="2"/>
-<text class="bd-ut" x="214" y="295">+2.9</text>
-<text class="bd-l" x="16" y="322">BrowseComp</text>
-<rect class="bd-dn" x="188" y="328" width="12" height="16" rx="2"/>
-<text class="bd-dt" x="182" y="341" text-anchor="end">-4.4</text>
-<text class="bd-l" x="16" y="368">MRCR (장문맥)</text>
-<rect class="bd-dn" x="71" y="374" width="129" height="16" rx="2"/>
-<text class="bd-dt" x="65" y="387" text-anchor="end">-46.1</text>
-<text class="bd-l" x="16" y="414">NYT Connections</text>
-<rect class="bd-dn" x="50" y="420" width="150" height="16" rx="2"/>
-<text class="bd-dt" x="44" y="433" text-anchor="end">-53.7</text>
-<text class="bd-n" x="200" y="464" text-anchor="middle">막대 길이는 변화폭에 정비례</text>
+<text class="o47b-t" x="200" y="22" text-anchor="middle">Opus 4.6 대비 변화 (포인트)</text>
+<line class="o47b-ax" x1="200" y1="32" x2="200" y2="488"/>
+<text class="o47b-l" x="16" y="46">Graphwalks (BFS)</text>
+<rect class="o47b-up" x="200" y="52" width="63" height="16" rx="2"/>
+<text class="o47b-ut" x="269" y="65">+19.9</text>
+<text class="o47b-l" x="16" y="92">CharXiv Reasoning</text>
+<rect class="o47b-up" x="200" y="98" width="41" height="16" rx="2"/>
+<text class="o47b-ut" x="247" y="111">+13.0</text>
+<text class="o47b-l" x="16" y="138">CursorBench</text>
+<rect class="o47b-up" x="200" y="144" width="38" height="16" rx="2"/>
+<text class="o47b-ut" x="244" y="157">+12.0</text>
+<text class="o47b-l" x="16" y="184">SWE-bench Pro</text>
+<rect class="o47b-up" x="200" y="190" width="34" height="16" rx="2"/>
+<text class="o47b-ut" x="240" y="203">+10.9</text>
+<text class="o47b-l" x="16" y="230">Humanity's Last Exam</text>
+<rect class="o47b-up" x="200" y="236" width="22" height="16" rx="2"/>
+<text class="o47b-ut" x="228" y="249">+6.9</text>
+<text class="o47b-l" x="16" y="276">SWE-bench Verified</text>
+<rect class="o47b-up" x="200" y="282" width="21" height="16" rx="2"/>
+<text class="o47b-ut" x="227" y="295">+6.8</text>
+<text class="o47b-l" x="16" y="322">GPQA Diamond</text>
+<rect class="o47b-up" x="200" y="328" width="9" height="16" rx="2"/>
+<text class="o47b-ut" x="215" y="341">+2.9</text>
+<text class="o47b-l" x="16" y="368">BrowseComp</text>
+<rect class="o47b-dn" x="186" y="374" width="14" height="16" rx="2"/>
+<text class="o47b-dt" x="180" y="387" text-anchor="end">-4.4</text>
+<text class="o47b-l" x="16" y="414">MRCR 256K</text>
+<rect class="o47b-dn" x="97" y="420" width="103" height="16" rx="2"/>
+<text class="o47b-dt" x="91" y="433" text-anchor="end">-32.7</text>
+<text class="o47b-l" x="16" y="460">MRCR 1M</text>
+<rect class="o47b-dn" x="55" y="466" width="145" height="16" rx="2"/>
+<text class="o47b-dt" x="49" y="479" text-anchor="end">-46.1</text>
+<text class="o47b-n" x="200" y="508" text-anchor="middle">막대 길이는 변화폭에 정비례</text>
 </svg>
 </div>
 
-오른 쪽의 최대 상승폭이 13포인트인데 떨어진 쪽은 54포인트입니다. 폭이 한 자릿수 차이가 아닙니다. 특히 장문맥 검색(MRCR)은 컨텍스트 길이를 256K로 줄여도 91.9%에서 59.2%로 떨어져, 긴 문서를 다루는 실무자에게는 직접적인 타격입니다.
+가장 크게 오른 항목이 19.9포인트인데 가장 크게 떨어진 항목은 46.1포인트입니다. 장문맥 검색은 컨텍스트를 256K로 줄여도 91.9%에서 59.2%로 내려가, 긴 문서를 다루는 실무자에게는 직접적인 타격입니다.
 
-한 가지 덧붙일 맥락이 있습니다. Claude Code 개발자 Boris Cherny는 MRCR이 방해 정보를 쌓아 올리는 방식이라 실사용과 거리가 있다며 단계적으로 폐기 중이라고 밝혔습니다. 같은 시기 장문맥 계열의 다른 벤치마크인 Graphwalks는 38.7%에서 58.6%로 올랐습니다. 장문맥 능력이 통째로 무너진 것은 아니라는 뜻입니다.
+이 하락에는 Anthropic 쪽 설명이 붙어 있습니다. Claude Code를 만든 Boris Cherny는 MRCR을 시스템 카드에 남긴 것은 과학적 정직성 때문이고 실제로는 단계적으로 폐기하는 중이라고 밝혔습니다. 방해 정보를 쌓아 올려 모델을 속이는 방식이라 실사용과 거리가 있다는 이유였습니다. 같은 장문맥 계열인 Graphwalks가 38.7%에서 58.6%로 오른 것도 근거로 들었습니다. 장문맥 능력이 통째로 무너진 것은 아니라는 뜻입니다.
 
-## "Gaslightus 4.7", 커뮤니티가 가장 분노한 문제들
+## 우기는 모델, 겁내는 모델
 
-### 가스라이팅하는 AI
+r/ClaudeCode에 모인 불만의 중심은 **모델이 틀렸을 때 인정하지 않고 없는 것을 있다고 우기는 행동**이었습니다.
 
-r/ClaudeCode에서 가장 널리 공유된 글의 핵심 불만은 이것이었습니다. **모델이 틀렸을 때 인정하지 않고, 없는 것을 있다고 우기는 행동**입니다.
+- 존재하지 않는 파일을 만들었다고 주장
+- 회귀를 일으킨 커밋이라며 `a3f9c12` 같은 해시를 제시. 형식은 진짜 같지만 저장소에 없는 해시라 개발자가 git log를 20분 뒤진 뒤에야 알아챔
+- 실행한 적 없는 테스트 결과를 지어내고 10턴에 걸쳐 방어
+- 이력서 작성에서 실제와 다른 학교명과 성을 임의로 삽입
 
-구체적으로 보고된 사례들을 정리하면 다음과 같습니다.
+할루시네이션 자체는 4.6에도 있었습니다. 보고들이 새롭다고 지목한 것은 틀린 답을 자신 있게 방어하는 패턴입니다. 지어낸 커밋 해시와 파일 경로를 진짜와 똑같은 확신으로 말하기 때문에, 사용자가 직접 대조하기 전에는 걸러낼 방법이 없습니다.
 
-- 존재하지 않는 파일을 생성했다고 주장하며, 확인해보라는 요청에 "방금 확인했는데 정상적으로 존재합니다"라고 답변
-- 날조된 커밋 해시(예: `a3f9c12`)를 진짜처럼 제시
-- 실행한 적 없는 테스트 결과를 지어내고, 지적당한 뒤에도 10턴에 걸쳐 그 결과를 방어
-- 이력서 작성 요청에서 실제와 다른 학교명과 성을 임의로 삽입
+반대 방향의 문제도 같이 왔습니다. 2026년 4월 한 달 동안 Claude Code 저장소에 오탐 거부 신고가 30건 넘게 올라왔습니다. 2025년 중반까지 월 두세 건이던 것에서 크게 뛴 수치입니다.
 
-4.6에서도 할루시네이션은 있었지만, 지적하면 대체로 빠르게 수정했습니다. 4.7은 **틀린 답을 자신 있게 방어하는** 패턴이 새로 나타났다는 것이 핵심 차이점입니다.
+- 입력에 base64 문자열이 있으면 디코딩 결과가 평범한 인사말이어도 사용정책 위반으로 거부
+- 표준적인 계산 구조생물학 작업을 정책 위반으로 표시. 4.6에는 없던 동작
+- 암호학 실습 자료를 교정해 달라는 요청을 거부
+- 평범한 PowerPoint 템플릿을 열 때마다 악성코드 검사를 반복
 
-### 과도한 안전 필터링
+여기에 벤치마크 하나가 걸립니다. Lech Mazur의 Extended NYT Connections에서 Opus 4.7은 41.0점을 받았습니다. 이 벤치마크는 거부 응답을 오답으로 세는데, 4.7은 문제의 절반 이상을 거부했습니다. 4.7이 실제로 답한 문제만 채점하면 90.9%이고 같은 문제에서 4.6은 94.7%입니다. 총점이 무너진 원인은 추론 능력이 아니라 거부였다는 뜻입니다.
 
-일상적인 코드 작업에서 불필요한 안전 경고가 발생한다는 보고도 다수 있었습니다.
+:::note
 
-- 일반적인 파일 I/O 코드를 멀웨어로 판정
-- PowerPoint 템플릿을 열 때마다 악성코드 검사를 반복 실행
-- 표준 라이브러리의 네트워크 호출을 위험 행위로 분류하여 실행 거부
-- 4.6에서 아무 문제 없이 처리하던 작업들이 4.7에서 차단
+**거부를 오답으로 세는 벤치마크**
 
-코딩 에이전트로서의 핵심 기능인 파일 조작과 네트워크 접근에서 과잉 방어가 발생하는 것은 실용성을 크게 떨어뜨립니다.
+Extended NYT Connections는 Anthropic이 아니라 Lech Mazur가 운영하는 외부 벤치마크입니다. 안전 필터가 과하게 걸리면 추론 능력과 무관하게 총점이 내려갑니다. 앞의 표에 실은 수치들과 성격이 다르므로 같은 줄에 놓고 비교하면 안 됩니다.
 
-### "Lazy Reasoning", 생각을 안 한다
+:::
 
-한 연구자가 SVG 생성 작업에서 흥미로운 비교를 공유했습니다. 동일한 프롬프트에 대해 **4.6은 480개의 추론 토큰**을 사용한 반면, **4.7은 단 20개**만 사용했습니다. 다만 같은 실험에서 프롬프트에 "think hard"를 붙이자 617 대 95로 격차가 크게 줄었습니다. 사고를 못 하는 게 아니라 기본값에서 덜 하는 쪽에 가깝습니다.
+## 덜 생각하고 덜 쓴다
 
-PhD 학생들이 Hacker News에 보고한 내용도 비슷합니다. 이론 물리학과 수학 문제에서 4.6이 깔끔하게 풀던 것을 4.7은 "이 방법이 안 되네요, 다른 걸 시도해볼게요"를 한 응답 안에서 5번이나 반복했다고 합니다.
+4.7은 적응형(adaptive) 추론 모드를 씁니다. 이전 모델처럼 사용자가 사고 예산을 지정해 강제로 생각하게 만들 수 없고, 모델이 필요 없다고 판단하면 추론 토큰을 거의 쓰지 않습니다.
 
-호출 횟수 데이터도 있습니다. Box의 Complex Work Evaluation에서 4.7은 태스크당 평균 LLM 호출을 16.3회에서 7.1회로 줄였습니다. 다만 Box는 이 수치를 퇴보가 아니라 **효율 개선 성과**로 발표했다는 점을 함께 봐야 합니다. 같은 데이터가 "적게 생각한다"로도, "적게 왕복해도 끝낸다"로도 읽히는 셈입니다.
+한 개발자가 같은 SVG 생성 프롬프트로 두 모델의 추론 토큰을 세어봤습니다. 4.6은 480개를 쓴 반면 4.7은 20개를 썼습니다. 프롬프트에 "think hard"를 붙이자 617 대 95가 됐습니다. 사고를 못 하는 게 아니라 기본값에서 덜 하는 쪽입니다.
 
-## 토크나이저 논란: "스텔스 가격 인상"
+호출 횟수에서도 같은 방향이 보입니다. Box의 Complex Work Evaluation에서 4.7은 태스크당 평균 LLM 호출을 16.3회에서 7.1회로 줄였습니다. 다만 Box는 이것을 퇴보가 아니라 **효율 개선**으로 발표했습니다. 같은 데이터가 "적게 생각한다"로도 "적게 왕복해도 끝낸다"로도 읽히는 셈입니다.
 
-커뮤니티에서 벤치마크 퇴보만큼이나 뜨거웠던 주제가 **비용 문제**입니다.
+글쓰기에서는 이 변화가 손해로 나타났습니다. Hacker News의 "Opus 4.7 is horrible at writing" 스레드에서, 석사 논문에 4.7을 쓴 사용자는 결과물을 "sloppy, unprecise, very empty sentences"라고 표현했습니다. 마케팅 헤드라인을 요청했더니 "ONE APP, MANY MAC APPS" 같은 문구가 나왔다는 보고도 있었습니다. 4.6이 "생각 깊은 동료와 대화하는 느낌"이었다면 4.7은 "사내 메모를 받는 느낌"이라는 표현이 반복해서 나왔고, 서술형 문단 대신 글머리 기호와 제목으로 답하는 경향도 함께 지적됐습니다.
 
-공식 가격은 동일합니다. 입력 \$5/MTok, 출력 \$25/MTok. 하지만 4.7은 새로운 토크나이저를 사용하면서 **같은 텍스트에 대해 더 많은 토큰을 소비**합니다. Anthropic이 밝힌 공식 범위는 콘텐츠 유형에 따라 **1.0~1.35배**입니다.
+PM 업무 5종을 두 모델에 돌린 평가에서는 PRD 작성이 4.6 45점, 4.7 35점(50점 만점)으로 갈렸습니다. 4.7의 출력이 토큰 한도에 걸려 위험 요소를 서술하다 문장 중간에 끊긴 것이 감점 사유였습니다.
 
-한 개발자(Claude Code Camp)가 합성 샘플로 유형별 증가율을 측정한 결과는 다음과 같습니다. 각 유형당 샘플 1건 기준이라는 점은 감안해야 합니다.
+## 갈아타는 데 드는 비용
+
+가격표는 그대로입니다. 입력 \$5/MTok, 출력 \$25/MTok. 바뀐 것은 토큰을 세는 방식입니다. Anthropic 문서는 4.7부터 새 토크나이저를 쓰며 같은 텍스트에 최대 35% 더 많은 토큰이 들 수 있다고 밝혔습니다. 콘텐츠 유형에 따라 1.0~1.35배입니다.
+
+한 개발자가 Anthropic의 토큰 계산 엔드포인트로 유형별 증가율을 재봤습니다. 유형당 합성 샘플 1건 기준입니다.
 
 | 콘텐츠 유형 | 토큰 증가율 |
-|------------|-----------|
-| 일본어/중국어 | 1.01x |
-| 영어 산문 | 1.20x |
-| Python | 1.29x |
-| TypeScript | 1.36x |
-| Shell | 1.39x |
-| **기술 문서 (영어)** | **1.47x** |
+|---|---|
+| 일본어·중국어 산문 | 1.01배 |
+| CSV (숫자) | 1.07배 |
+| 도구 정의 (JSON Schema) | 1.12배 |
+| 영어 산문 | 1.20배 |
+| Python | 1.29배 |
+| TypeScript | 1.36배 |
+| Shell | 1.39배 |
+| 기술 문서 (영어) | 1.47배 |
 
-흥미로운 점은 한중일 텍스트보다 **영어와 코드에서 토큰 인플레이션이 훨씬 크다**는 것입니다. 코드 중심으로 작업하는 개발자에게 실질적 비용 증가가 집중됩니다. 같은 측정자가 실제 트래픽으로 가중 평균을 낸 값은 1.325배로, 공식 범위 안에 들어옵니다.
+한중일 텍스트보다 영어와 코드에서 증가폭이 큽니다. 코드 중심으로 일하는 개발자에게 비용 증가가 집중된다는 뜻입니다. 같은 측정자가 실제 Claude Code 트래픽 7건으로 가중 평균을 낸 값은 1.325배로, 공식 범위 안에 들어옵니다.
 
-비용 비교도 있습니다. Duetto CTO Robert Matsuoka가 동일한 작업을 두 모델에 돌린 결과, **4.6은 \$0.38, 4.7은 \$1.38로 3.6배 차이**가 났습니다. 그런데 정확도는 둘 다 10/10으로 동일했고, 오히려 4.6은 첫 시도에 성공한 반면 4.7은 5번의 수정을 거쳤습니다.
+작업 단위로 재면 격차가 더 벌어집니다. Duetto CTO Robert Matsuoka가 동일한 코딩 작업을 두 모델에 돌린 결과 4.6은 \$0.38, 4.7은 \$1.38이 나왔습니다. 테스트 통과는 둘 다 10/10으로 같았고, 차이는 과정에 있었습니다. 4.6은 파일 6개를 한 번에 정확히 쓰고 pytest를 한 번 돌려 끝냈지만, 4.7은 쓴 뒤 다섯 번 고쳤습니다.
 
-Pro 플랜 사용자들도 불만을 쏟아냈습니다. 이전에는 하루 종일 쓸 수 있던 사용량이, 4.7에서는 3~4개의 복잡한 쿼리만으로 주간 한도에 도달한다는 보고가 이어졌습니다. 일부 개발 블로그는 이 상황을 "버전 업으로 포장한 은밀한 비용 인상"으로 요약했습니다.
+구독 쪽에서도 같은 불만이 나왔습니다. 출시 당일 Pro 구독자가 대화 세 번 만에 한도에 도달했다는 보고가 있었고, Max 5x 사용자들은 이전보다 5~10배 빠르게 한도가 줄어든다고 했습니다. 이 상황을 "버전 업으로 포장한 은밀한 가격 인상"이라 부르는 표현이 반복해서 나왔습니다.
 
-## 글쓰기 능력의 퇴화
+API를 직접 쓰는 쪽에는 다른 문제가 있었습니다. 4.6에서 쓰던 `thinking: {type: "enabled", budget_tokens: N}` 형태를 4.7 게이트웨이가 400으로 거부합니다. `temperature`, `top_p`, `top_k`도 4.7에서는 400을 냅니다. 가장 안전한 이행은 이 필드들을 요청에서 빼고 모델 기본값에 맡기는 것입니다.
 
-Hacker News에 "Opus 4.7 is horrible at writing"이라는 글이 올라왔습니다. 규모가 큰 스레드는 아니었지만, 댓글에서 비슷한 보고가 이어졌습니다.
+:::warning
 
-석사 논문 작성에 4.7을 사용한 한 사용자는 "sloppy, unprecise, very empty sentences"라고 표현했습니다. 같은 스레드의 다른 사용자는 마케팅 헤드라인 요청에 "ONE APP, MANY MAC APPS" 같은 결과물이 나왔다고 보고했습니다. 정리하면 이런 지적들입니다.
+**thinking 출력이 조용히 빈 문자열이 됩니다**
 
-- **4.6**: "생각 깊은 동료와 대화하는 느낌" → **4.7**: "사내 메모를 받는 느낌"
-- 기본 출력 형식이 문단 대신 글머리 기호와 제목 위주로 변경
-- PRD(Product Requirements Document) 작성 테스트: 4.6이 45/50점, 4.7이 35/50점 (토큰 한도 초과로 중간에 출력 중단)
+`thinking.display`의 기본값이 4.6의 `summarized`에서 4.7의 `omitted`로 바뀌었습니다. 명시적으로 켜지 않으면 `block.thinking`이 빈 문자열로 돌아오고, 에러 없이 화면에 빈 칸만 그려집니다.
 
-커뮤니티의 분석에 따르면, 4.7은 "length matches complexity" 원칙을 적용해 짧고 직접적인 답변을 생성하도록 튜닝된 것으로 보였습니다. 이 추측이 얼마나 맞았는지는 뒤에서 다시 나옵니다.
+:::
 
-## API 호환성 파괴
-
-API를 직접 사용하는 개발자들에게는 또 다른 문제가 있었습니다. 파라미터 지원 범위가 바뀐 것입니다.
-
-- `thinking: {type: "enabled", budget_tokens: N}` → 400 에러
-- `temperature`, `top_p`, `top_k`에 **기본값이 아닌 값**을 넣으면 400 에러
-- thinking 필드가 기본적으로 비어서 나옴
-
-공식 문서의 표현을 정확히 옮기면 "파라미터를 넘기는 것 자체가 금지"가 아니라 "기본값이 아닌 값을 설정하면 400"입니다. 그래서 가장 안전한 이행은 해당 파라미터를 아예 빼는 것입니다. thinking 출력을 다시 보고 싶다면 `display: "summarized"`로 명시적으로 켜면 됩니다.
-
-기존 4.6 기반으로 작성된 코드에서 모델명만 바꾸면 즉시 에러가 발생합니다. 특히 도구 없이 one-shot 모드로 사용할 경우, 4.6에서 10/10 통과하던 테스트가 4.7에서는 1/10만 통과했다는 보고도 있었습니다.
+도구 없이 한 번에 답하게 하는 모드에서는 차이가 더 컸습니다. 앞의 비용 비교와 같은 실험에서, 4.6이 10/10을 통과하던 테스트를 4.7은 1/10만 통과했습니다.
 
 ## 4월 23일, Anthropic의 포스트모템
 
-출시 일주일 뒤인 4월 23일, Anthropic이 엔지니어링 포스트모템을 냈습니다. 여기서 밝힌 원인 세 가지는 모두 **모델 가중치가 아니라 그 주변**에 있었습니다.
+출시 일주일 뒤인 4월 23일, Anthropic이 엔지니어링 포스트모템을 냈습니다. 여기서 밝힌 원인 세 가지는 모두 모델 가중치가 아니라 그 주변에 있었습니다.
 
-**첫째, 응답 길이 상한.** 출시 당일인 4월 16일, Claude Code 시스템 프롬프트에 응답 길이를 제한하는 지시가 추가됐습니다. 도구 호출 사이의 텍스트는 25단어 이하, 최종 응답은 작업이 요구하지 않는 한 100단어 이하로 유지하라는 내용이었습니다. 이 지시는 4월 20일 v2.1.116에서 제거됐습니다.
+**첫째, 응답 길이 상한.** 출시 당일인 4월 16일, Claude Code 시스템 프롬프트에 도구 호출 사이의 텍스트는 25단어 이하, 최종 응답은 작업이 요구하지 않는 한 100단어 이하로 유지하라는 지시가 추가됐습니다. 4월 20일에 제거됐습니다. 이 지시는 4.7 전용이 아니라 Sonnet 4.6과 Opus 4.6에도 걸려 있었고, 내부 평가 하나에서 Opus 4.6과 4.7 모두 3% 하락으로 나타났습니다.
 
-**둘째, 기본 reasoning effort 변경.** 3월 4일 기본값이 high에서 medium으로 내려갔다가 4월 7일 복구됐습니다.
+**둘째, 기본 reasoning effort.** 3월 4일 지연 시간을 줄이려고 기본값을 high에서 medium으로 내렸다가, 불만이 이어지자 4월 7일 되돌렸습니다.
 
-**셋째, 캐싱 버그.** 3월 26일 유입된 버그가 4월 10일 v2.1.101에서 수정됐습니다.
+**셋째, 프롬프트 캐시 버그.** 3월 26일 유입된 버그로 캐시 정리 로직이 이전 추론 기록을 한 번이 아니라 매 턴 버렸습니다. 모델이 앞선 맥락을 잊고 사용 한도가 빨리 닳는 증상으로 나타났으며, 4월 10일 v2.1.101에서 고쳐졌습니다. 세 문제가 모두 해소된 시점은 4월 20일 v2.1.116입니다.
 
-Anthropic은 "모델을 의도적으로 열화시키는 일은 절대 없으며, API와 추론 계층은 영향을 받지 않았음을 곧바로 확인했다"고 밝혔고, 같은 날 전 구독자의 사용량 한도를 리셋했습니다.
+날짜를 겹쳐 놓으면 체감과 원인의 시차가 드러납니다.
 
-이 발표가 앞의 불만들과 겹치는 지점이 분명합니다. "말수가 줄었다", "글쓰기가 사내 메모 같아졌다", "문단 대신 글머리 기호만 쓴다"는 지적은 모델이 그렇게 학습된 결과가 아니라 **시스템 프롬프트에 걸린 단어 수 상한**의 결과였을 가능성이 큽니다. 커뮤니티가 "length matches complexity 원칙으로 튜닝됐다"고 추측했던 것의 실체가 프롬프트 한 줄이었던 셈입니다.
+<div style="margin: 24px 0; text-align: center;">
+<svg viewBox="0 0 400 280" style="width: 100%; height: auto; max-width: 380px;"
+     xmlns="http://www.w3.org/2000/svg"
+     font-family="Pretendard, -apple-system, sans-serif"
+     role="img" aria-label="Claude Code 품질 저하의 세 원인이 적용돼 있던 기간을 3월 4일부터 4월 23일까지의 시간축에 그린 막대. 앞의 두 원인은 4.7 출시 전에 이미 끝났고 응답 길이 상한만 출시일에 겹친 모습">
+<style>
+.o47t-t { fill: var(--text, #1c1917); font-size: 16px; font-weight: 700; }
+.o47t-l { fill: var(--text, #1c1917); font-size: 14px; }
+.o47t-n { fill: var(--text-muted, #6d6762); font-size: 14px; }
+.o47t-bar { fill: var(--bg-danger, #fef2f2); stroke: var(--text-danger, #cb2121); stroke-width: 1.5; }
+.o47t-ax { stroke: var(--border, #e7e5e4); stroke-width: 1.5; }
+.o47t-mk { stroke: var(--text-muted, #6d6762); stroke-width: 1.5; stroke-dasharray: 4 3; }
+</style>
+<text class="o47t-t" x="200" y="22" text-anchor="middle">Claude Code 품질 저하의 세 원인</text>
+<text class="o47t-n" x="324" y="46" text-anchor="middle">4.7 출시</text>
+<line class="o47t-mk" x1="324" y1="52" x2="324" y2="222"/>
+<text class="o47t-l" x="16" y="76">reasoning effort: high → medium</text>
+<rect class="o47t-bar" x="30" y="82" width="233" height="16" rx="2"/>
+<text class="o47t-l" x="16" y="130">프롬프트 캐시 버그</text>
+<rect class="o47t-bar" x="181" y="136" width="103" height="16" rx="2"/>
+<text class="o47t-l" x="16" y="184">응답 길이 상한 25/100단어</text>
+<rect class="o47t-bar" x="324" y="190" width="27" height="16" rx="2"/>
+<line class="o47t-ax" x1="30" y1="222" x2="372" y2="222"/>
+<text class="o47t-n" x="30" y="242">3월 4일</text>
+<text class="o47t-n" x="372" y="242" text-anchor="end">4월 23일 포스트모템</text>
+<text class="o47t-n" x="200" y="268" text-anchor="middle">막대 = 문제가 적용돼 있던 기간</text>
+</svg>
+</div>
 
-다만 포스트모템이 모든 것을 설명하지는 않습니다. NYT Connections와 MRCR 하락은 Anthropic이 직접 발표한 모델 벤치마크 수치이므로 하네스와 무관합니다. 가스라이팅 패턴 역시 응답 길이 상한으로 설명되지 않습니다. 정리하면 **체감 저하의 일부는 하네스, 일부는 모델**이었고, 이 둘을 구분하기 전까지 사용자는 원인을 알 방법이 없었다는 것이 이 사건의 핵심입니다.
+세 원인은 서로 겹치지 않습니다. reasoning effort는 4월 7일, 캐시 버그는 4월 10일에 이미 정리된 상태였고 4.7은 그 엿새 뒤에 나왔습니다. 4.7 출시일에 새로 얹힌 것은 응답 길이 상한 하나입니다. 3월부터 이어진 "Claude Code가 나빠졌다"는 체감의 상당 부분은 4.6을 쓰던 시기의 문제였고, 그것이 4.7 출시 직후의 불만과 한 덩어리로 뭉쳐 읽힌 셈입니다.
 
-## 그래서 4.7이 더 나은 경우는 있는가
+Anthropic은 모델을 의도적으로 열화시키는 일은 없으며 API와 추론 계층은 영향을 받지 않았음을 곧바로 확인했다고 밝혔고, 같은 날 전 구독자의 사용량 한도를 리셋했습니다.
 
-부정적 반응이 압도적이지만, 특정 영역에서는 확실히 개선되었습니다.
+이 발표가 앞의 불만들과 겹치는 지점은 분명합니다. "말수가 줄었다", "글쓰기가 사내 메모 같아졌다", "문단 대신 글머리 기호만 쓴다"는 지적은 모델이 그렇게 학습된 결과가 아니라 시스템 프롬프트에 걸린 단어 수 상한의 결과였을 가능성이 큽니다.
 
-**에이전틱 코딩**: 대규모 코드베이스에서의 멀티파일 리팩토링, 자기수정 능력은 눈에 띄게 향상됐습니다. Y Combinator CEO Garry Tan이 공개적으로 지지했고, Notion은 멀티스텝 워크플로우에서 4.6 대비 14% 성능 향상과 함께 도구 호출 에러가 3분의 1 수준으로 줄었다고 밝혔습니다. Rakuten은 4.6 대비 3배 더 많은 프로덕션 태스크를 해결했다고 보고했습니다.
+다만 포스트모템이 모든 것을 설명하지는 않습니다. MRCR 하락은 Anthropic이 시스템 카드에 실은 모델 벤치마크 수치라 Claude Code 하네스와 무관합니다. 커밋 해시를 지어내고 방어하는 패턴도 응답 길이 상한으로는 설명되지 않습니다.
 
-**비전**: 해상도가 1.15MP에서 3.75MP로 3배 향상됐고, XBOW의 시력 판독 벤치마크에서는 54.5%에서 98.5%로 뛰었습니다. 스크린샷 분석, 다이어그램 해석에서 실질적인 차이를 체감할 수 있습니다.
+## Opus 4.7이 앞서는 곳
 
-**구조화된 분석**: 한 평가에서 PM 업무 5개 중 4개를 이겼고, 경영진 요약에서 45/50점(4.6은 42/50)을 기록했습니다. 같은 평가의 총점은 4.7이 202/250, 4.6이 198/250으로 4.7이 앞섰습니다. 다만 그 안에는 PRD 작성처럼 4.7이 크게 진 항목도 포함되어 있습니다.
+부정적 반응이 눈에 띄지만 실제로 개선된 영역이 있습니다.
 
-정리하면 **에이전틱 코딩, 비전, 구조화된 문서 작업**에서는 4.7이 앞서고, **범용 추론, 글쓰기, 장문맥 처리, 비용 효율**에서는 4.6이 여전히 낫습니다.
+에이전틱 코딩에서 대규모 코드베이스의 멀티파일 리팩터링과 자기수정이 향상됐습니다. Notion은 멀티스텝 워크플로우에서 4.6 대비 14% 향상과 함께 도구 호출 에러가 3분의 1로 줄었다고 밝혔고, Rakuten은 자체 SWE 벤치마크에서 4.6 대비 3배 많은 프로덕션 태스크를 해결했다고 보고했습니다.
 
-## 왜 이런 일이 반복되는가
+비전 쪽 변화가 가장 큽니다. 입력 이미지 한도가 긴 변 1,568픽셀(약 1.15MP)에서 2,576픽셀(약 3.75MP)로 올라갔습니다. XBOW가 실제 인증 화면 200종에서 버튼 좌표를 정확히 찍는지 측정한 결과는 4.6이 54.5%, **4.7이 98.5%**였습니다.
 
-Opus 4.7의 사례가 남기는 교훈은 두 층위입니다.
+구조화된 문서 작업도 앞섭니다. 앞서 PRD에서 진 그 평가에서 4.7은 5개 과제 중 4개를 이겼고 총점은 202 대 198(250점 만점)이었습니다. 경영진 요약은 45 대 42로 4.7이 앞섰습니다.
 
-**모델 쪽에서는 벤치마크 최적화의 함정이 보입니다.** 특정 벤치마크에서 점수를 올리기 위한 튜닝이 범용 능력을 깎아먹을 수 있습니다. NYT Connections 54포인트 폭락이 그 신호입니다. 벤치마크가 측정하지 않는 능력은 최적화 과정에서 희생되기 쉽습니다.
-
-**그런데 더 실용적인 교훈은 하네스 쪽에 있습니다.** 사용자가 "모델"이라고 부르는 것은 실제로는 모델 가중치, 시스템 프롬프트, 기본 파라미터, 캐싱 계층이 겹쳐진 결과물입니다. 이 중 어느 하나만 바뀌어도 체감은 크게 달라지는데, 사용자에게는 전부 "모델이 나빠졌다"로 보입니다. 4월 23일 포스트모템이 확인해 준 것이 정확히 이것입니다. 그리고 회사가 스스로 공개하기 전까지는 바깥에서 구분할 방법이 없었습니다.
-
-X에서 널리 공유된 Pawel Huryn의 정리가 이 상황을 잘 요약합니다.
+정리하면 에이전틱 코딩, 비전, 구조화된 문서에서는 4.7이 낫고, 범용 추론과 산문 글쓰기, 장문맥 검색, 비용 효율에서는 4.6이 낫습니다. Pawel Huryn은 이 갈림을 이렇게 정리했습니다.
 
 > "Reddit says Opus 4.7 is a regression. Boris Cherny says it's more agentic and precise. Both are right. After 16 hours, I loved it: 4.7 is more capable, but most people are prompting it like 4.6."
 
-프롬프트에 20~30단어의 구체적 맥락을 추가하면 4.7이 더 나은 결과를 내는 경우가 많습니다. 하지만 그것은 사용자에게 적응 비용을 전가하는 것이기도 합니다. 한 필자가 붙인 "Higher ceiling, lower floor"라는 표현이 이 상황을 잘 잡아냅니다. 천장은 분명히 올라갔지만 바닥이 꺼졌고, 매일 코드를 배포하는 사람에게는 천장보다 바닥이 중요하다는 것입니다.
+4.6은 지시가 모호하면 빈칸을 알아서 메웠고, 4.7은 말한 대로만 합니다. 프롬프트에 맥락을 더 적으면 4.7이 나은 결과를 내는 경우가 많지만, 그것은 적응 비용을 사용자에게 넘기는 일이기도 합니다.
 
 ## 마치며
 
-저는 4.7에서 체감 저하를 느껴 한동안 Opus 4.6을 쓰고 있었습니다. 포스트모템을 읽고 나니 그 체감의 상당 부분이 응답 길이 상한 때문이었을 가능성이 크고, 그 지시는 4월 20일에 이미 제거됐습니다. 같은 모델을 지금 다시 쓰면 인상이 달라질 수 있다는 뜻입니다.
+이 사건이 남기는 것은 두 가지입니다.
 
-이 사건에서 가장 오래 남을 것은 특정 모델의 좋고 나쁨이 아니라, **모델과 그 주변 하네스를 구분할 수 없는 상태에서 사용자가 품질 변화를 겪는다는 사실** 자체입니다. 벤치마크 숫자로도, 커뮤니티 반응으로도 그 구분은 되지 않았습니다. 결국 회사가 직접 밝히기 전까지는 아무도 몰랐습니다. 프런티어 모델이 제품에 깊이 들어올수록, 이 구분을 어떻게 투명하게 만들 것인가가 벤치마크 점수보다 중요한 문제가 될 것 같습니다.
+하나는 벤치마크 최적화의 대가입니다. MRCR 46포인트 하락은 Anthropic이 스스로 시스템 카드에 실은 숫자입니다. 그 벤치마크를 폐기하는 중이라는 설명이 붙어 있어도, 긴 문서를 다루던 사람이 겪은 저하는 그대로 남습니다. 벤치마크가 측정하지 않는 능력은 최적화 과정에서 먼저 희생됩니다.
+
+다른 하나가 더 실용적입니다. 사용자가 "모델"이라고 부르는 것은 모델 가중치, 시스템 프롬프트, 기본 파라미터, 캐싱 계층이 겹쳐진 결과물입니다. 이 중 하나만 바뀌어도 체감은 크게 달라지는데, 밖에서는 전부 "모델이 나빠졌다"로 보입니다. 3월의 캐시 버그와 4월의 단어 수 상한이 4.7 출시와 한 덩어리로 읽힌 것이 정확히 그 결과이고, 회사가 직접 날짜를 공개하기 전까지는 바깥에서 구분할 방법이 없었습니다.
+
+저는 4.7에서 체감 저하를 느껴 한동안 4.6을 쓰고 있었습니다. 포스트모템을 읽고 나니 그 체감의 상당 부분이 응답 길이 상한 때문이었을 가능성이 크고, 그 지시는 4월 20일에 이미 제거됐습니다. 같은 모델을 다시 쓰면 인상이 달라질 수 있다는 뜻입니다. 한 리뷰가 붙인 "higher ceiling, lower floor"라는 표현이 이 상황을 잘 잡아냅니다. 천장은 올라갔지만 바닥이 꺼졌고, 매일 코드를 배포하는 사람에게는 천장보다 바닥이 중요합니다.
 
 ## 함께 보면 좋은 글
 
-- [Claude Fable 5: 성능은 역대 최강인데 왜 논란일까?](/issue/fable-5/) : 두 달 뒤, 정반대 구도의 출시
-- [Claude Sonnet 5 출시, Opus급 성능?](/issue/claude-sonnet-5-release/) : 아첨과 토크나이저 문제가 이후 어떻게 다뤄졌는지
+- [Claude Fable 5는 성능이 역대 최강인데 왜 논란일까?](/issue/fable-5/) : 벤치마크와 체감이 다시 갈린 두 달 뒤의 출시
+- [Claude Sonnet 5 출시, Opus급 성능?](/issue/claude-sonnet-5-release/) : 같은 토크나이저를 쓰는 하위 티어 모델의 가격 구조
+- [Claude Opus 5 출시, 가격 그대로 성능은 Fable 5급?](/issue/opus-5/) : 석 달 뒤의 상위 모델 교체
 
 ## 참고자료
 
 - [Anthropic 공식 발표: Introducing Claude Opus 4.7](https://www.anthropic.com/news/claude-opus-4-7)
 - [Anthropic Engineering: April 23 postmortem](https://www.anthropic.com/engineering/april-23-postmortem)
-- [Reddit r/ClaudeCode: "Opus 4.7 is legendarily bad"](https://www.reddit.com/r/ClaudeCode/comments/1so9uta/)
+- [Vellum: Claude Opus 4.7 Benchmarks Explained](https://www.vellum.ai/blog/claude-opus-4-7-benchmarks-explained)
+- [The Register: Claude Opus 4.7 has turned into an overzealous query cop](https://www.theregister.com/2026/04/23/claude_opus_47_auc_overzealous/)
+- [Zvi Mowshowitz: Opus 4.7 Part 2, Capabilities and Reactions](https://thezvi.substack.com/p/opus-47-part-2-capabilities-and-reactions)
 - [Hacker News: Opus 4.7 is Horrible at Writing](https://news.ycombinator.com/item?id=47801971)
-- [Hacker News: Anonymous request-token comparisons from Opus 4.6 and Opus 4.7](https://news.ycombinator.com/item?id=47816960)
-- [Box: Claude Opus 4.7 delivers powerful performance, higher efficiency](https://blog.box.com/claude-opus-47-delivers-powerful-performance-higher-efficiency-vs-opus-46)
-- [Vellum: Opus 4.7 Benchmarks Explained](https://www.vellum.ai/blog/claude-opus-4-7-benchmarks-explained)
+- [Hyperdev: Opus 4.6 vs 4.7, The Real Cost of Incremental AI Improvements](https://hyperdev.matsuoka.com/p/opus-46-vs-47-the-real-cost-of-incremental)
