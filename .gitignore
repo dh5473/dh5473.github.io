@@ -71,3 +71,4 @@ yarn-error.log
 /.claude
 /docs
 .tools/
+_workspace/
