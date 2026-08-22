@@ -92,6 +92,12 @@ const MarkdownRenderer = styled.div`
     color: ${c.primaryHov};
   }
 
+  /* 인라인 수식: KaTeX 기본값(1.21em)은 Pretendard 본문 옆에서 숫자만 크게 튀어 보여 본문 크기에 맞춘다.
+     $$ 블록 수식(.math-display)은 기본 크기를 유지한다. */
+  .math-inline .katex {
+    font-size: 1.05em;
+  }
+
   /* Code blocks */
   pre[class*='language-'] {
     margin: 20px 0;
