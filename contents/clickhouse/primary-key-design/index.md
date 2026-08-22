@@ -491,7 +491,7 @@ ENGINE = MergeTree()
 ORDER BY (user_id, status);
 ```
 
-10만 행을 넣습니다. `status`는 1~5, `user_id`는 1~50,000 범위입니다.
+10만 행을 넣습니다. `status`는 1부터 5까지, `user_id`는 1부터 50,000까지의 값을 갖습니다.
 
 ```sql
 INSERT INTO events_status_first
