@@ -425,6 +425,7 @@ Gemma 4 (2026)  262K
 
 - [LLM은 왜 다음 토큰 하나만 예측할까](/llm/what-is-llm/)
 - [Transformer는 왜 Q, K, V 셋으로 나눴을까](/llm/transformer-architecture/)
+- [LLM은 왜 가장 확률 높은 토큰을 고르지 않을까](/llm/text-generation-strategies/)
 - [Prefill과 Decode로 이해하는 LLM 추론 과정](/llm/llm-inference-process/)
 - [One-Hot과 Label, 범주형 데이터 인코딩을 고르는 기준](/ml/categorical-encoding/)
 
