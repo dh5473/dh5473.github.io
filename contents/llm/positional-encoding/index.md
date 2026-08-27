@@ -13,7 +13,7 @@ thumbnail: './thumbnail.png'
 
 "개가 사람을 물었다"와 "사람이 개를 물었다"는 같은 토큰으로 이루어져 있지만 의미가 정반대입니다. 어순이 의미를 정하는 언어에서 순서를 모르는 모델은 쓸 수가 없습니다. 그래서 Transformer는 첫날부터 위치를 따로 알려주는 장치가 필요했습니다.
 
-2017년에는 사인·코사인 함수를 썼고, 지금은 벡터를 회전시킵니다. 그 사이에 학습 가능한 위치 벡터, ALiBi, RoPE가 거쳐 갔고 RoPE조차 주파수를 손보는 엔지니어링이 이어지고 있습니다.
+2017년에는 사인·코사인 함수를 썼고, 지금은 벡터를 회전시킵니다. 그 사이에 학습 가능한 위치 벡터, ALiBi, RoPE가 거쳐 갔고 RoPE마저 주파수를 재조정하는 작업이 이어지고 있습니다.
 
 <br>
 
@@ -70,7 +70,9 @@ RNN은 토큰을 하나씩 순서대로 처리하면서 이전 상태를 다음 
 
 2017년 "Attention Is All You Need"의 저자들은 위치마다 고유한 벡터를 만들어 토큰 임베딩에 더하는 방법을 택했습니다. 추가 파라미터 없이 사인·코사인 함수만으로 위치 벡터를 생성합니다.
 
-$$PE_{(pos, 2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \quad PE_{(pos, 2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right)$$
+$$
+PE_{(pos, 2i)} = \sin\!\left(\frac{pos}{10000^{2i/d}}\right), \quad PE_{(pos, 2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d}}\right)
+$$
 
 $pos$는 토큰의 위치, $i$는 차원 인덱스, $d$는 모델 차원입니다. 분모의 $10000^{2i/d}$가 차원마다 다른 주파수를 만듭니다. $i$가 작은 차원은 주파수가 높아서 인접한 위치끼리도 뚜렷이 구분됩니다. $i$가 큰 차원은 주파수가 낮아서 수백 위치가 지나야 값이 바뀝니다.
 
@@ -131,7 +133,7 @@ BERT(2018)와 GPT-2(2019)는 다른 길을 택했습니다. 위치마다 학습 
 둘째, 더 근본적인 문제가 있습니다. 자연어에서 중요한 것은 대부분 절대 위치가 아니라 상대 거리입니다. 주어와 동사 사이의 간격, 수식어와 명사의 거리가 의미를 정합니다. 절대 위치를 넣고 모델이 상대 거리를 학습하기를 기대하는 것은 우회로입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 400 170" style="width: 100%; height: auto; max-width: 380px;"
+<svg viewBox="0 0 400 180" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="절대 위치와 상대 거리의 차이를 보여주는 다이어그램">
@@ -149,37 +151,37 @@ BERT(2018)와 GPT-2(2019)는 다른 길을 택했습니다. 위치마다 학습 
 <path d="M0,0 L6,3 L0,6 Z" fill="var(--primary, #0a756c)"/>
 </marker>
 </defs>
-<!-- 절대 위치 -->
-<text x="15" y="18" class="pe3-hd">절대</text>
-<text x="60" y="18" class="pe3-abs">pos 0</text>
-<text x="135" y="18" class="pe3-abs">pos 1</text>
-<text x="210" y="18" class="pe3-abs">pos 2</text>
-<text x="285" y="18" class="pe3-abs">pos 3</text>
-<text x="360" y="18" class="pe3-abs">pos 4</text>
+<!-- 절대 위치 라벨 -->
+<text x="15" y="16" class="pe3-hd">절대</text>
+<text x="75" y="30" class="pe3-abs">0</text>
+<text x="150" y="30" class="pe3-abs">1</text>
+<text x="225" y="30" class="pe3-abs">2</text>
+<text x="300" y="30" class="pe3-abs">3</text>
+<text x="375" y="30" class="pe3-abs">4</text>
 <!-- 토큰 -->
-<circle cx="60" cy="52" r="20" class="pe3-c"/>
-<text x="60" y="52" class="pe3-tok">A</text>
-<circle cx="135" cy="52" r="20" class="pe3-c"/>
-<text x="135" y="52" class="pe3-tok">B</text>
-<circle cx="210" cy="52" r="20" class="pe3-c"/>
-<text x="210" y="52" class="pe3-tok">C</text>
-<circle cx="285" cy="52" r="20" class="pe3-cq"/>
-<text x="285" y="52" class="pe3-tok">D</text>
-<circle cx="360" cy="52" r="20" class="pe3-c"/>
-<text x="360" y="52" class="pe3-tok">E</text>
+<circle cx="75" cy="58" r="18" class="pe3-c"/>
+<text x="75" y="58" class="pe3-tok">A</text>
+<circle cx="150" cy="58" r="18" class="pe3-c"/>
+<text x="150" y="58" class="pe3-tok">B</text>
+<circle cx="225" cy="58" r="18" class="pe3-c"/>
+<text x="225" y="58" class="pe3-tok">C</text>
+<circle cx="300" cy="58" r="18" class="pe3-cq"/>
+<text x="300" y="58" class="pe3-tok">D</text>
+<circle cx="375" cy="58" r="18" class="pe3-c"/>
+<text x="375" y="58" class="pe3-tok">E</text>
 <!-- 상대 거리 (D 기준) -->
-<text x="15" y="105" class="pe3-hd">상대</text>
-<text x="285" y="90" class="pe3-abs">D 기준</text>
-<path d="M 275,72 Q 168,115 70,72" class="pe3-arr"/>
-<text x="168" y="128" class="pe3-rel">-3</text>
-<path d="M 278,72 Q 210,105 145,72" class="pe3-arr"/>
-<text x="210" y="112" class="pe3-rel">-2</text>
-<path d="M 280,72 Q 248,95 218,72" class="pe3-arr"/>
-<text x="248" y="100" class="pe3-rel">-1</text>
-<path d="M 295,72 Q 322,95 352,72" class="pe3-arr"/>
-<text x="322" y="100" class="pe3-rel">+1</text>
-<!-- 하단 설명 -->
-<text x="200" y="158" class="pe3-abs">언어에서 중요한 것: "742번" vs "3칸 앞"</text>
+<text x="15" y="110" class="pe3-hd">상대</text>
+<text x="300" y="95" class="pe3-abs">D 기준</text>
+<path d="M 290,76 Q 188,125 85,76" class="pe3-arr"/>
+<text x="188" y="138" class="pe3-rel">-3</text>
+<path d="M 293,76 Q 225,112 158,76" class="pe3-arr"/>
+<text x="225" y="118" class="pe3-rel">-2</text>
+<path d="M 295,76 Q 263,100 233,76" class="pe3-arr"/>
+<text x="263" y="105" class="pe3-rel">-1</text>
+<path d="M 310,76 Q 338,100 367,76" class="pe3-arr"/>
+<text x="338" y="105" class="pe3-rel">+1</text>
+<!-- 하단 -->
+<text x="200" y="168" class="pe3-abs">"742번 자리" vs "3칸 앞"</text>
 </svg>
 </div>
 
@@ -193,7 +195,9 @@ Su et al.(2021)의 RoPE(Rotary Position Embedding)는 질문 자체를 바꿨습
 
 차원 쌍 $(2i, 2i+1)$ 하나를 봅시다. 위치 $m$에 있는 쿼리 벡터의 해당 차원 쌍을 각도 $m\theta_i$만큼 2D 회전시킵니다.
 
-$$\begin{pmatrix} q_m^{(2i)} \\ q_m^{(2i+1)} \end{pmatrix} = \begin{pmatrix} \cos m\theta_i & -\sin m\theta_i \\ \sin m\theta_i & \cos m\theta_i \end{pmatrix} \begin{pmatrix} q^{(2i)} \\ q^{(2i+1)} \end{pmatrix}$$
+$$
+\begin{pmatrix} q_m^{(2i)} \\ q_m^{(2i+1)} \end{pmatrix} = \begin{pmatrix} \cos m\theta_i & -\sin m\theta_i \\ \sin m\theta_i & \cos m\theta_i \end{pmatrix} \begin{pmatrix} q^{(2i)} \\ q^{(2i+1)} \end{pmatrix}
+$$
 
 $\theta_i = 10000^{-2i/d}$로, 사인·코사인 인코딩과 같은 base 10000을 씁니다. 차원 쌍마다 서로 다른 주파수로 회전한다는 구조가 동일한 것은 우연이 아닙니다.
 
@@ -232,15 +236,15 @@ $\theta_i = 10000^{-2i/d}$로, 사인·코사인 인코딩과 같은 base 10000�
 <line x1="130" y1="200" x2="172" y2="75" class="pe4-vec pe4-qm" marker-end="url(#pe4-aq)"/>
 <!-- K 벡터 (위치 n, 25도 회전) -->
 <line x1="130" y1="200" x2="248" y2="147" class="pe4-vec pe4-kn" marker-end="url(#pe4-ak)"/>
-<!-- 각도 호: mθ (x축에서 Q까지) -->
-<path d="M 175,200 A 45,45 0 0,0 162,170" class="pe4-arc" stroke="var(--primary, #0a756c)"/>
-<text x="188" y="182" class="pe4-lbl" fill="var(--primary, #0a756c)">mθ</text>
-<!-- 각도 호: nθ (x축에서 K까지) -->
-<path d="M 185,200 A 55,55 0 0,0 180,192" class="pe4-arc" stroke="var(--accent, #9d5604)"/>
-<text x="198" y="196" class="pe4-lbl" fill="var(--accent, #9d5604)">nθ</text>
-<!-- 각도 호: (m-n)θ (K에서 Q까지) -->
-<path d="M 210,160 A 90,90 0 0,0 177,120" class="pe4-arc" stroke="var(--text, #1c1917)"/>
-<text x="220" y="136" class="pe4-ang" fill="var(--text, #1c1917)">(m−n)θ</text>
+<!-- 각도 호: mθ (x축에서 Q까지, r=55) -->
+<path d="M 185,200 A 55,55 0 0,0 149,148" class="pe4-arc" stroke="var(--primary, #0a756c)"/>
+<text x="190" y="162" class="pe4-lbl" fill="var(--primary, #0a756c)">mθ</text>
+<!-- 각도 호: nθ (x축에서 K까지, r=75) -->
+<path d="M 205,200 A 75,75 0 0,0 198,168" class="pe4-arc" stroke="var(--accent, #9d5604)"/>
+<text x="218" y="188" class="pe4-lbl" fill="var(--accent, #9d5604)">nθ</text>
+<!-- 각도 호: (m-n)θ (K에서 Q까지, r=100) -->
+<path d="M 221,158 A 100,100 0 0,0 164,106" class="pe4-arc" stroke="var(--text, #1c1917)"/>
+<text x="228" y="125" class="pe4-ang" fill="var(--text, #1c1917)">(m−n)θ</text>
 <!-- 벡터 라벨 -->
 <text x="140" y="65" class="pe4-lbl" fill="var(--primary, #0a756c)" font-weight="600">Q (위치 m)</text>
 <text x="257" y="140" class="pe4-lbl" fill="var(--accent, #9d5604)" font-weight="600">K (위치 n)</text>
@@ -260,10 +264,10 @@ LLaMA(2023)가 RoPE를 채택한 뒤로 Mistral, Qwen, Gemma, DeepSeek까지 202
 
 RoPE가 표준이 됐지만 외삽 문제에서 자유롭지는 않습니다. 차원 쌍마다 주파수가 다르다는 바로 그 구조가 문제를 일으킵니다.
 
-고주파 차원($i$가 작은 쪽)은 회전이 빨라서 학습 구간 안에서 여러 바퀴를 돕니다. 학습 길이를 넘어가도 이미 본 각도가 반복될 뿐이라 큰 문제가 없습니다. 그러나 저주파 차원($i$가 큰 쪽)은 회전이 너무 느려서 학습 구간 전체를 지나도 한 바퀴를 채 돌지 못합니다. 이런 차원은 위치 정보를 실어 나르기보다 의미 정보를 담는 채널처럼 동작하게 됩니다. 학습 길이를 넘는 순간 이 저주파 차원이 학습 중 한 번도 도달하지 못한 각도에 놓이면서 어텐션 점수가 불안정해집니다.
+고주파 차원($i$가 작은 쪽)은 회전이 빨라서 학습 구간 안에서 여러 바퀴를 돕니다. 학습 길이를 넘어가도 이미 본 각도가 반복될 뿐이라 큰 문제가 없습니다. 그러나 저주파 차원($i$가 큰 쪽)은 회전이 너무 느려서 학습 구간 전체를 지나도 한 바퀴를 채 돌지 못합니다. 이런 차원은 위치 정보를 실어 나르기보다 의미 정보를 담는 채널처럼 동작하게 되죠. 학습 길이를 넘는 순간 이 저주파 차원이 학습 중 한 번도 도달하지 못한 각도에 놓이면서 어텐션 점수가 불안정해집니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 400 210" style="width: 100%; height: auto; max-width: 380px;"
+<svg viewBox="0 0 400 235" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
      role="img" aria-label="RoPE 주파수 스펙트럼과 저주파 차원의 외삽 위험">
@@ -276,38 +280,41 @@ RoPE가 표준이 됐지만 외삽 문제에서 자유롭지는 않습니다. �
 .pe5-brk { stroke: var(--text-danger, #cb2121); stroke-width: 1.5; stroke-dasharray: 5 3; }
 .pe5-fix { font-size: 15; font-weight: 600; }
 </style>
+<defs>
+<marker id="pe5-arr" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+<path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted, #6d6762)"/>
+</marker>
+</defs>
 <!-- 스펙트럼 바 -->
 <text x="200" y="18" class="pe5-lbl pe5-hd" fill="var(--text, #1c1917)">RoPE 차원별 주파수 스펙트럼</text>
 <rect x="40" y="35" width="170" height="40" class="pe5-safe"/>
 <text x="125" y="59" class="pe5-lbl" fill="var(--text-success, #107836)" font-weight="600">고주파 (빠른 회전)</text>
 <rect x="210" y="35" width="150" height="40" class="pe5-danger"/>
 <text x="285" y="59" class="pe5-lbl" fill="var(--text-danger, #cb2121)" font-weight="600">저주파 (느린 회전)</text>
-<!-- 화살표 -->
+<!-- 차원 범위 -->
 <text x="40" y="92" class="pe5-sub" text-anchor="start">i = 0</text>
 <text x="360" y="92" class="pe5-sub" text-anchor="end">i = d/2</text>
 <line x1="75" y1="87" x2="330" y2="87" stroke="var(--text-muted, #6d6762)" stroke-width="1" marker-end="url(#pe5-arr)"/>
-<defs>
-<marker id="pe5-arr" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
-<path d="M0,0 L6,3 L0,6 Z" fill="var(--text-muted, #6d6762)"/>
-</marker>
-</defs>
 <!-- 구분선: 학습 범위 -->
 <line x1="210" y1="30" x2="210" y2="98" class="pe5-brk"/>
 <text x="125" y="108" class="pe5-sub" text-anchor="middle">학습 중 여러 바퀴</text>
 <text x="285" y="108" class="pe5-sub" text-anchor="middle">학습 중 한 바퀴 미만</text>
 <!-- 확장 기법 -->
-<text x="40" y="140" class="pe5-hd" fill="var(--text, #1c1917)" text-anchor="start">확장 기법</text>
-<line x1="40" y1="152" x2="360" y2="152" stroke="var(--border, #e7e5e4)"/>
+<text x="40" y="138" class="pe5-hd" fill="var(--text, #1c1917)" text-anchor="start">확장 기법</text>
+<line x1="40" y1="148" x2="360" y2="148" stroke="var(--border, #e7e5e4)"/>
 <!-- NTK -->
-<rect x="40" y="158" width="320" height="3" rx="1" fill="var(--primary, #0a756c)" fill-opacity="0.3"/>
-<text x="46" y="175" class="pe5-fix" fill="var(--primary, #0a756c)">NTK: 전체 주파수 압축</text>
+<rect x="40" y="156" width="320" height="3" rx="1" fill="var(--primary, #0a756c)" fill-opacity="0.3"/>
+<text x="46" y="172" class="pe5-fix" fill="var(--primary, #0a756c)">NTK: 전체 주파수 압축</text>
 <!-- YaRN -->
-<rect x="190" y="183" width="170" height="3" rx="1" fill="var(--accent, #9d5604)" fill-opacity="0.4"/>
-<text x="196" y="200" class="pe5-fix" fill="var(--accent, #9d5604)">YaRN: 저주파만 보간</text>
+<rect x="190" y="181" width="170" height="3" rx="1" fill="var(--accent, #9d5604)" fill-opacity="0.4"/>
+<text x="196" y="197" class="pe5-fix" fill="var(--accent, #9d5604)">YaRN: 저주파만 보간</text>
+<!-- p-RoPE -->
+<rect x="210" y="206" width="150" height="3" rx="1" fill="var(--text-danger, #cb2121)" fill-opacity="0.3"/>
+<text x="216" y="222" class="pe5-fix" fill="var(--text-danger, #cb2121)">p-RoPE: 저주파 제거</text>
 </svg>
 </div>
 
-이 문제를 푸는 방향은 크게 셋으로 갈렸습니다.
+이 문제를 푸는 방향은 셋으로 갈렸습니다.
 
 **NTK-aware scaling**은 base 주파수 10000을 더 큰 값으로 바꿔 모든 차원의 회전 각도를 전체적으로 압축합니다. 학습 길이 밖의 각도가 학습 범위 안으로 들어오지만 고주파 차원의 분해능이 함께 떨어지는 부작용이 있습니다.
 
@@ -319,7 +326,7 @@ RoPE가 표준이 됐지만 외삽 문제에서 자유롭지는 않습니다. �
 
 ## 마치며
 
-어텐션이 순서를 모른다는 문제에서 출발해, 절대 위치를 새기는 방식(사인·코사인)에서 상대 위치를 내적에 녹이는 방식(RoPE)으로, 다시 주파수를 손보는 엔지니어링(NTK, YaRN, p-RoPE)으로 왔습니다. 위치 인코딩은 아직 풀린 문제가 아닙니다. 128K, 1M 토큰의 문맥이 가능해진 것은 이 주파수를 다루는 기법 덕이고, 더 긴 문맥은 또 다른 해법을 요구할 것입니다.
+어텐션이 순서를 모른다는 문제에서 출발해, 절대 위치를 새기는 방식(사인·코사인)에서 상대 위치를 내적에 녹이는 방식(RoPE)으로, 다시 주파수 자체를 재조정하는 단계(NTK, YaRN, p-RoPE)로 왔습니다. 위치 인코딩은 아직 풀린 문제가 아닙니다. 128K, 1M 토큰의 문맥이 가능해진 것은 이 주파수를 다루는 기법 덕이고, 더 긴 문맥은 또 다른 해법을 요구할 것입니다.
 
 Transformer 블록 안에서 남은 것은 레이어를 쌓을 때 출력이 폭발하거나 사라지지 않게 다스리는 일입니다. 정규화와 잔차 연결은 다음 글에서 다룹니다.
 
