@@ -1,23 +1,23 @@
 ---
 date: '2026-09-01'
-title: '(TBD)'
+title: 'FlashAttention은 왜 더 많이 계산하면서 더 빠를까'
 category: 'LLM'
 series: 'llm'
 seriesOrder: 7
 tags: ['LLM', 'FlashAttention', 'Online Softmax', 'GPU Memory', 'IO-Awareness']
-summary: '(TBD)'
+summary: '어텐션의 진짜 병목은 연산이 아니라 데이터 이동입니다. FlashAttention은 타일링과 online softmax로 점수 행렬을 없애고, 재계산으로 FLOPs를 더 쓰면서도 실행 시간을 줄였습니다.'
 thumbnail: './thumbnail.png'
 ---
 
-어텐션은 모든 토큰 쌍의 점수를 계산합니다. 토큰이 $n$개면 점수 행렬은 $n \times n$이고, 128K 문맥에서 이 행렬은 레이어 하나에 약 1.1TB입니다. GPU 메모리가 80GB인 시대에 이 행렬을 통째로 만드는 것은 불가능하고, 설령 가능하다 해도 진짜 병목은 크기가 아니라 이 행렬을 읽고 쓰는 속도입니다.
+어텐션은 모든 토큰 쌍의 점수를 계산합니다. 토큰이 $n$개면 점수 행렬은 $n \times n$이고 128K 문맥에서 이 행렬은 레이어 하나에 약 1.1TB입니다. GPU 메모리가 80GB인 시대에 이 행렬을 통째로 만드는 것은 불가능하고 설령 가능하다 해도 진짜 병목은 크기가 아니라 이 행렬을 읽고 쓰는 속도입니다.
 
-FlashAttention(Dao et al., 2022)은 이 점수 행렬을 아예 만들지 않고 정확한 어텐션을 계산합니다. GPU 안의 작고 빠른 메모리(SRAM)에서 타일 단위로 계산을 끝내고, 중간 결과를 느린 메모리(HBM)에 쓰지 않는 것이 핵심입니다. 이 글에서는 왜 데이터 이동이 병목인지부터 시작해, 타일링과 online softmax가 어떻게 이 문제를 푸는지, 그리고 그 대가가 무엇인지를 따라갑니다.
+FlashAttention(Dao et al., 2022)은 이 점수 행렬을 아예 만들지 않고 정확한 어텐션을 계산합니다. GPU 안의 작고 빠른 메모리(SRAM)에서 타일 단위로 계산을 끝내고, 중간 결과를 느린 메모리(HBM)에 쓰지 않는 것이 핵심입니다.
 
 <br>
 
 ## 느린 것은 연산이 아니라 이동이다
 
-GPU 안에는 두 종류의 메모리가 있습니다. 하나는 대용량이지만 느린 HBM(High Bandwidth Memory)이고, 다른 하나는 용량이 작지만 빠른 SRAM(Static RAM)입니다. 연산 유닛은 SRAM에 올라와 있는 데이터만 처리할 수 있습니다. HBM에 있는 데이터를 쓰려면 먼저 SRAM으로 옮겨야 하고, 결과를 저장하려면 다시 HBM으로 내려야 합니다.
+GPU 안에는 두 종류의 메모리가 있습니다. 하나는 대용량이지만 느린 HBM(High Bandwidth Memory)이고 다른 하나는 용량이 작지만 빠른 SRAM(Static RAM)입니다. 연산 유닛은 SRAM에 올라와 있는 데이터만 처리할 수 있습니다. HBM에 있는 데이터를 쓰려면 먼저 SRAM으로 옮겨야 하고 결과를 저장하려면 다시 HBM으로 내려야 합니다.
 
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 400 220" style="width: 100%; height: auto; max-width: 380px;"
@@ -60,9 +60,9 @@ GPU 안에는 두 종류의 메모리가 있습니다. 하나는 대용량이지
 </svg>
 </div>
 
-A100 GPU를 예로 들면 HBM은 80GB에 대역폭이 약 2TB/s이고, SRAM(온칩 공유 메모리)은 약 20MB에 대역폭이 약 19TB/s입니다. 용량 차이는 4,000배, 속도 차이는 약 10배입니다. 계산 자체는 빠르지만 데이터를 HBM에서 가져오는 데 시간이 걸립니다.
+A100 GPU를 예로 들면 HBM은 80GB에 대역폭이 약 2TB/s이고 SRAM(온칩 공유 메모리)은 약 20MB에 대역폭이 약 19TB/s입니다. 용량 차이는 4,000배, 속도 차이는 약 10배입니다. 계산 자체는 빠르지만 데이터를 HBM에서 가져오는 데 시간이 걸립니다.
 
-표준 어텐션은 이 경로를 여러 번 왕복합니다. Q와 K를 HBM에서 읽어 점수 행렬 $QK^\top$를 계산한 뒤 그 $n \times n$ 결과를 HBM에 씁니다. softmax를 적용하기 위해 그 행렬을 다시 읽고, softmax 결과를 다시 HBM에 씁니다. 마지막으로 V와 곱하기 위해 또 한 번 읽습니다. 연산 유닛은 대부분의 시간을 데이터가 올라오기를 기다리며 보냅니다.
+표준 어텐션은 이 경로를 여러 번 왕복합니다. Q와 K를 HBM에서 읽어 점수 행렬 $QK^\top$를 계산한 뒤 그 $n \times n$ 결과를 HBM에 씁니다. softmax를 적용하기 위해 그 행렬을 다시 읽고 softmax 결과를 다시 HBM에 씁니다. 마지막으로 V와 곱하기 위해 또 한 번 읽습니다. 연산 유닛은 대부분의 시간을 데이터가 올라오기를 기다리며 보냅니다.
 
 이것이 Dao et al.(2022)이 FlashAttention 논문에서 짚은 핵심입니다. 어텐션의 병목은 연산량(FLOPs)이 아니라 데이터 이동량(IO)입니다. 알고리즘을 설계할 때 연산 횟수만이 아니라 HBM을 몇 번 읽고 쓰는지까지 함께 고려해야 합니다. 이 관점을 **IO-awareness**라고 부릅니다.
 
@@ -72,7 +72,7 @@ A100 GPU를 예로 들면 HBM은 80GB에 대역폭이 약 2TB/s이고, SRAM(온�
 
 FlashAttention의 핵심 아이디어는 단순합니다. $n \times n$ 점수 행렬을 HBM에 전혀 쓰지 않는 것입니다.
 
-Q, K, V를 SRAM에 들어가는 크기의 블록으로 나눕니다. Q의 $i$번째 블록과 K, V의 $j$번째 블록을 SRAM에 올려서 그 타일에 해당하는 어텐션을 계산합니다. 중간 결과인 점수 행렬은 SRAM 안에만 존재하고, 최종 출력 O만 HBM에 기록합니다. 모든 타일을 순회하면 전체 어텐션 결과가 완성됩니다.
+Q, K, V를 SRAM에 들어가는 크기의 블록으로 나눕니다. Q의 $i$번째 블록과 K, V의 $j$번째 블록을 SRAM에 올려서 그 타일에 해당하는 어텐션을 계산합니다. 중간 결과인 점수 행렬은 SRAM 안에만 존재하고 최종 출력 O만 HBM에 기록합니다. 모든 타일을 순회하면 전체 어텐션 결과가 완성됩니다.
 
 <div style="margin: 24px 0; text-align: center;">
 <svg viewBox="0 0 400 320" style="width: 100%; height: auto; max-width: 380px;"
@@ -133,7 +133,7 @@ Q, K, V를 SRAM에 들어가는 크기의 블록으로 나눕니다. Q의 $i$번
 </svg>
 </div>
 
-여기서 문제가 하나 생깁니다. softmax는 한 행 전체에서 가장 큰 값을 알아야 계산할 수 있습니다. 전체 K를 한꺼번에 보면 최댓값을 바로 구할 수 있지만, 타일 단위로 K를 나눠서 보면 현재 타일의 값만 보이기 때문에 전체 최댓값을 알 수 없습니다.
+여기서 문제가 하나 생깁니다. softmax는 한 행 전체에서 가장 큰 값을 알아야 계산할 수 있습니다. 전체 K를 한꺼번에 보면 최댓값을 바로 구할 수 있지만 타일 단위로 K를 나눠서 보면 현재 타일의 값만 보이기 때문에 전체 최댓값을 알 수 없습니다.
 
 FlashAttention은 **online softmax**(Milakov & Gimelshein, 2018)를 활용해 이 문제를 풀었습니다. 타일을 하나씩 처리하면서 지금까지의 최댓값 $m$과 지수 합 $\ell$을 유지합니다. 새 타일에서 기존 $m$보다 큰 값이 발견되면 이전까지 쌓아온 출력을 보정계수 $e^{m_{\text{old}} - m_{\text{new}}}$로 다시 곱합니다. 근사가 아니라 수학적으로 정확한 결과입니다.
 
@@ -197,19 +197,21 @@ $m$은 지금까지 처리한 타일들에서 본 가장 큰 점수이고, $\ell
 
 ## 저장 대신 다시 계산한다
 
-타일링으로 순방향(forward) 문제는 풀렸지만, 학습에서 쓰는 역방향(backward) 전파에는 $n \times n$ 어텐션 행렬이 필요합니다. 표준 방식은 순방향에서 이 행렬을 HBM에 저장해 뒀다가 역방향에서 꺼내 씁니다.
+타일링으로 순방향(forward) 문제는 풀렸지만 학습에서 쓰는 역방향(backward) 전파에는 $n \times n$ 어텐션 행렬이 필요합니다. 표준 방식은 순방향에서 이 행렬을 HBM에 저장해 뒀다가 역방향에서 꺼내 씁니다.
 
-FlashAttention은 다르게 합니다. 점수 행렬을 저장하지 않고, 역방향에서 Q, K, V 블록을 다시 로드해서 다시 계산합니다. 순방향에서 저장해 두는 것은 softmax 통계치(running max $m$과 running sum $\ell$)뿐입니다. 이 값만 있으면 역방향에서도 타일 단위로 정확한 기울기를 구할 수 있습니다.
+FlashAttention은 다르게 합니다. 점수 행렬을 저장하지 않고 역방향에서 Q, K, V 블록을 다시 로드해서 다시 계산합니다. 순방향에서 저장해 두는 것은 softmax 통계치(running max $m$과 running sum $\ell$)뿐입니다. 이 값만 있으면 역방향에서도 타일 단위로 정확한 기울기를 구할 수 있습니다.
 
-대가가 있습니다. 재계산이니 전체 FLOPs는 늘어납니다. 그러나 $n \times n$ 행렬을 HBM에서 읽는 것보다 Q, K, V 블록을 다시 계산하는 것이 빠릅니다. IO가 줄면 벽시계 시간이 줄어드는 것이고, IO가 병목인 상황에서는 연산을 더 하는 쪽이 오히려 빠릅니다.
+대가가 있습니다. 재계산이니 전체 FLOPs는 늘어납니다. 그러나 $n \times n$ 행렬을 HBM에서 읽는 것보다 Q, K, V 블록을 다시 계산하는 것이 빠릅니다. IO가 줄면 실제 실행 시간이 줄어드는 것이고 IO가 병목인 상황에서는 연산을 더 하는 쪽이 오히려 빠릅니다.
 
-이 트레이드오프를 수식으로 표현하면 이렇습니다.
+Dao et al.(2022)은 이 트레이드오프를 HBM 접근 횟수로 정량화했습니다.
 
 $$
-\text{표준: } \Theta(Nd + N^2) \quad \text{HBM 접근} \qquad \text{Flash: } O\!\left(\frac{N^2 d^2}{M}\right) \quad \text{HBM 접근}
+\text{표준: } O(Nd + N^2) \qquad \text{Flash: } O\!\left(\frac{N^2 d^2}{M}\right)
 $$
 
-$N$은 시퀀스 길이, $d$는 head 차원, $M$은 SRAM 크기입니다. 표준 어텐션은 Q, K, V, O를 읽고 쓰는 $Nd$ 항과 점수 행렬을 읽고 쓰는 $N^2$ 항이 합쳐집니다. FlashAttention은 점수 행렬을 HBM에 쓰지 않으므로 $N^2$ 항이 사라지고, 대신 SRAM 크기 $M$이 분모에 들어옵니다. SRAM이 충분히 커서 $M \geq d^2$이면 $O(N^2 d)$가 되어 이론적 하한에 도달합니다. 실제로 A100의 SRAM(~20MB)은 일반적인 head 차원($d = 64$~$128$)에서 이 조건을 만족합니다.
+$N$은 시퀀스 길이, $d$는 head 차원, $M$은 SRAM 크기입니다. 표준 어텐션의 $N^2$은 $n \times n$ 점수 행렬을 HBM에 쓰고 다시 읽는 비용입니다. FlashAttention의 $N^2 d^2 / M$은 Q, K 블록을 타일 단위로 반복해서 읽는 비용입니다. SRAM이 커질수록 타일을 크게 잡을 수 있어 반복 횟수가 줄고, $M$이 분모에 들어갑니다.
+
+$M \geq d^2$이면 $N^2 d^2 / d^2 = N^2$이라 접근 횟수의 차수만 보면 표준과 같아집니다. 그러나 결정적인 차이는 **메모리**에 있습니다. 표준 어텐션은 $n \times n$ 행렬을 HBM에 통째로 저장해야 해서 $O(N^2)$ 메모리가 필요합니다. 128K 문맥에서 이 행렬은 1.1TB에 달합니다. FlashAttention은 이 행렬을 만들지 않으므로 $O(N)$ 메모리만 씁니다. 긴 시퀀스에서 표준 어텐션이 물리적으로 불가능한 이유가 여기에 있고, FlashAttention이 그 한계를 깬 것입니다.
 
 <br>
 
@@ -217,17 +219,21 @@ $N$은 시퀀스 길이, $d$는 head 차원, $M$은 SRAM 크기입니다. 표준
 
 FlashAttention은 2022년 첫 등장 이후 하드웨어 세대가 바뀔 때마다 함께 바뀌고 있습니다.
 
-**FlashAttention-1**(Dao et al., 2022)이 위에서 설명한 알고리즘입니다. A100 GPU에서 표준 어텐션 대비 벽시계 시간 2~4배 단축, 메모리는 시퀀스 길이에 비례하는 $O(N)$으로 줄었습니다.
+위에서 설명한 알고리즘이 **FlashAttention-1**(Dao et al., 2022)입니다. A100 GPU에서 표준 어텐션 대비 실행 시간 2~4배 단축, 메모리는 시퀀스 길이에 비례하는 $O(N)$으로 줄었습니다.
 
-**FlashAttention-2**(Dao, 2023)는 같은 하드웨어에서 알고리즘을 개선했습니다. softmax 보정 같은 비행렬곱 연산(non-matmul FLOPs)의 비중을 줄이고, 시퀀스 길이 차원으로도 병렬화를 확장했으며, warp 간 통신을 줄였습니다. A100에서 FA1 대비 약 2배 추가 향상을 달성해, 이론적 최대 처리량의 50~73%에 도달했습니다.
+같은 A100에서 알고리즘을 더 다듬은 것이 **FlashAttention-2**(Dao, 2023)입니다. softmax 보정 같은 비행렬곱 연산(non-matmul FLOPs)의 비중을 줄이고 시퀀스 길이 차원으로도 병렬화를 확장했으며 warp 간 통신을 줄여 FA1 대비 약 2배 추가 향상을 달성했습니다. 이론적 최대 처리량의 50~73%에 도달한 수치입니다.
 
-**FlashAttention-3**(Shah et al., 2024)는 H100(Hopper) GPU를 겨냥했습니다. Hopper 세대가 도입한 비동기 실행(TMA를 통한 데이터 전송과 연산의 중첩), warp 특수화(생산자 warp과 소비자 warp의 분리), FP8 저정밀 연산을 활용합니다. 하드웨어가 바뀌면 같은 아이디어라도 구현이 근본적으로 달라져야 한다는 것을 보여주는 사례입니다.
+GPU 세대가 바뀌자 커널도 다시 쓰였습니다. **FlashAttention-3**(Shah et al., 2024)는 H100(Hopper)의 비동기 실행(TMA를 통한 데이터 전송과 연산의 중첩), warp 특수화(생산자 warp과 소비자 warp의 분리), FP8 저정밀 연산을 활용합니다.
+
+가장 최근의 **FlashAttention-4**(Zadouri et al., 2026)는 Blackwell(B200)을 대상으로 합니다. NVIDIA의 CuTeDSL로 커널을 재작성하고 5세대 텐서 코어를 활용해 B200에서 1,613 TFLOPs/s(활용률 71%)를 달성했습니다. PyTorch의 FlexAttention이 FA4를 백엔드로 채택하면서 연구자가 Python으로 커스텀 어텐션 변형(sliding window, ALiBi, soft-capping 등)을 정의하면 FA4 수준의 성능으로 컴파일되는 구조가 만들어졌습니다.
+
+FA1부터 FA4까지 핵심 아이디어인 타일링과 online softmax는 변하지 않았지만 커널 구현은 세대마다 완전히 다시 쓰였습니다. 하드웨어가 바뀌면 알고리즘도 바뀌어야 한다는 것을 보여주는 계보입니다.
 
 <div style="margin: 24px 0; text-align: center;">
-<svg viewBox="0 0 400 270" style="width: 100%; height: auto; max-width: 380px;"
+<svg viewBox="0 0 400 340" style="width: 100%; height: auto; max-width: 380px;"
      xmlns="http://www.w3.org/2000/svg"
      font-family="Pretendard, -apple-system, sans-serif"
-     role="img" aria-label="FlashAttention 진화: FA1(2022, A100)에서 FA2(2023, A100)로, 다시 FA3(2024, H100)로 진화하며 각 세대의 핵심 변경사항">
+     role="img" aria-label="FlashAttention 진화: FA1(2022, A100)에서 FA2(2023), FA3(2024, H100), FA4(2026, B200)까지 각 세대의 핵심 변경사항">
 <style>
 .fa4-box { fill: var(--bg-muted, #eeecea); stroke: var(--border, #e7e5e4); stroke-width: 1.5; rx: 6; }
 .fa4-cur { fill: var(--primary, #0a756c); fill-opacity: 0.10; stroke: var(--primary, #0a756c); stroke-width: 1.5; rx: 6; }
@@ -240,25 +246,33 @@ FlashAttention은 2022년 첫 등장 이후 하드웨어 세대가 바뀔 때마
 <marker id="fa4-ar" markerWidth="7" markerHeight="5" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--text-muted, #6d6762)"/></marker>
 </defs>
 <!-- FA1 -->
-<rect x="20" y="15" width="360" height="60" class="fa4-box"/>
-<text x="35" y="37" class="fa4-t">FA1 (2022)</text>
-<text x="35" y="57" class="fa4-ts">타일링 + online softmax + 재계산</text>
-<text x="330" y="47" class="fa4-gpu">A100</text>
+<rect x="20" y="10" width="360" height="55" class="fa4-box"/>
+<text x="35" y="30" class="fa4-t">FA1 (2022)</text>
+<text x="35" y="50" class="fa4-ts">타일링 + online softmax + 재계산</text>
+<text x="330" y="40" class="fa4-gpu">A100</text>
 <!-- 화살표 -->
-<line x1="200" y1="75" x2="200" y2="95" class="fa4-arr"/>
+<line x1="200" y1="65" x2="200" y2="80" class="fa4-arr"/>
 <!-- FA2 -->
-<rect x="20" y="100" width="360" height="60" class="fa4-box"/>
-<text x="35" y="122" class="fa4-t">FA2 (2023)</text>
-<text x="35" y="142" class="fa4-ts">비행렬곱 FLOPs 감소 + 시퀀스 차원 병렬화</text>
-<text x="330" y="132" class="fa4-gpu">A100</text>
+<rect x="20" y="85" width="360" height="55" class="fa4-box"/>
+<text x="35" y="105" class="fa4-t">FA2 (2023)</text>
+<text x="35" y="125" class="fa4-ts">비행렬곱 FLOPs 감소 + 시퀀스 차원 병렬화</text>
+<text x="330" y="115" class="fa4-gpu">A100</text>
 <!-- 화살표 -->
-<line x1="200" y1="160" x2="200" y2="180" class="fa4-arr"/>
+<line x1="200" y1="140" x2="200" y2="155" class="fa4-arr"/>
 <!-- FA3 -->
-<rect x="20" y="185" width="360" height="70" class="fa4-cur"/>
-<text x="35" y="207" class="fa4-t">FA3 (2024)</text>
-<text x="35" y="227" class="fa4-ts">비동기 실행 + warp 특수화 + FP8</text>
-<text x="35" y="245" class="fa4-ts">하드웨어가 바뀌면 알고리즘도 바뀐다</text>
-<text x="330" y="217" class="fa4-gpu">H100</text>
+<rect x="20" y="160" width="360" height="55" class="fa4-box"/>
+<text x="35" y="180" class="fa4-t">FA3 (2024)</text>
+<text x="35" y="200" class="fa4-ts">비동기 실행 + warp 특수화 + FP8</text>
+<text x="330" y="190" class="fa4-gpu">H100</text>
+<!-- 화살표 -->
+<line x1="200" y1="215" x2="200" y2="230" class="fa4-arr"/>
+<!-- FA4 -->
+<rect x="20" y="235" width="360" height="55" class="fa4-cur"/>
+<text x="35" y="255" class="fa4-t">FA4 (2026)</text>
+<text x="35" y="275" class="fa4-ts">CuTeDSL + 5세대 텐서 코어, 1613 TFLOPs/s</text>
+<text x="330" y="265" class="fa4-gpu">B200</text>
+<!-- 공통 라벨 -->
+<text x="200" y="325" fill="var(--text-muted, #6d6762)" font-size="14px" text-anchor="middle" dominant-baseline="central">핵심 아이디어는 동일, 구현은 세대마다 재작성</text>
 </svg>
 </div>
 
@@ -268,7 +282,7 @@ FlashAttention과 함께 자주 언급되는 **PagedAttention**(Kwon et al., 202
 
 ## 마치며
 
-어텐션의 연산량은 $O(N^2)$이지만, 진짜 병목은 연산이 아니라 GPU 메모리 계층 사이의 데이터 이동이었습니다. FlashAttention은 타일링과 online softmax로 $n \times n$ 점수 행렬을 없앴고, 재계산으로 역방향 저장도 없앴습니다. FLOPs를 더 쓰면서 시간을 줄인, IO 관점의 설계입니다.
+어텐션의 연산량은 $O(N^2)$이지만 진짜 병목은 연산이 아니라 GPU 메모리 계층 사이의 데이터 이동이었습니다. FlashAttention은 타일링과 online softmax로 $n \times n$ 점수 행렬을 없앴고 재계산으로 역방향 저장도 없앴습니다. FLOPs를 더 쓰면서 시간을 줄인, IO 관점의 설계입니다.
 
 이 글까지 Transformer 블록의 모든 부품을 다뤘습니다. 어텐션, 정규화, 잔차 연결, FFN, 그리고 그 어텐션을 실제로 계산하는 방법까지. 다음 글에서는 이 블록을 그대로 반복 쌓는 것이 아니라, FFN을 여러 전문가로 나눠 토큰마다 일부만 활성화하는 MoE(Mixture of Experts) 아키텍처를 다룹니다.
 
@@ -289,6 +303,7 @@ FlashAttention과 함께 자주 언급되는 **PagedAttention**(Kwon et al., 202
 - [FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness (Dao et al., NeurIPS 2022)](https://arxiv.org/abs/2205.14135)
 - [FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning (Dao, ICLR 2024)](https://arxiv.org/abs/2307.08691)
 - [FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision (Shah et al., 2024)](https://arxiv.org/abs/2407.08691)
+- [FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling (Zadouri et al., 2026)](https://arxiv.org/abs/2603.05451)
 - [Online normalizer calculation for softmax (Milakov & Gimelshein, 2018)](https://arxiv.org/abs/1805.02867)
 - [Self-attention Does Not Need O(n²) Memory (Rabe & Staats, 2021)](https://arxiv.org/abs/2112.05682)
 - [Efficient Memory Management for Large Language Model Serving with PagedAttention (Kwon et al., SOSP 2023)](https://arxiv.org/abs/2309.06180)
