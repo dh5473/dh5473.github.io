@@ -1,11 +1,11 @@
 ---
 date: '2026-09-04'
-title: '(제목 미정)'
+title: 'MoE는 전문가를 어떻게 고를까'
 category: 'LLM'
 series: 'llm'
 seriesOrder: 8
 tags: ['LLM', 'MoE', 'Mixture of Experts', 'Router', 'Load Balancing']
-summary: '(요약 미정)'
+summary: 'FFN을 전문가로 나눈 뒤 라우터가 토큰마다 일부만 골라 활성화하는 MoE의 원리를 다룹니다. 게이팅 수식부터 전문가 붕괴, 보조 손실 없이 균형 잡는 법, 그리고 2026년에도 갈리는 설계 선택까지 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
 
