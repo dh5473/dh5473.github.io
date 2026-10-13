@@ -1,6 +1,6 @@
 ---
-date: '2026-09-28'
-title: '선형 어텐션, 곱의 순서를 바꾸면 생기는 일'
+date: '2026-10-14'
+title: 'Linear Attention, 곱의 순서를 바꾸면 생기는 일'
 category: 'LLM'
 series: 'llm'
 seriesOrder: 11
