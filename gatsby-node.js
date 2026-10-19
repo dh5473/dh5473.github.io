@@ -201,4 +201,89 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
 
   // Generate Post Page And Passing Slug Props For Query
   edges.forEach(generatePostPage)
+
+  // ── 시리즈 허브 ─────────────────────────────────────────────────────
+  // 홈의 ?series= 필터는 canonical이 /로 합쳐져 Google에게 시리즈 목록 페이지가
+  // 없었다. 시리즈마다 정적 URL을 하나씩 둔다
+  Object.keys(seriesMap).forEach(seriesId => {
+    createPage({
+      path: `/series/${seriesId}/`,
+      component: path.resolve(__dirname, 'src/templates/SeriesTemplate.tsx'),
+      context: { seriesId },
+    })
+  })
+}
+
+// ── 옮긴 글의 옛 주소 ────────────────────────────────────────────────
+// GitHub Pages는 서버 리다이렉트가 없어서, 폴더를 옮긴 글의 옛 주소에
+// 새 주소로 넘기는 HTML을 남긴다. Google은 지연 0초 meta refresh를
+// 영구 리다이렉트로 취급한다. 발행한 글의 폴더를 옮기면 여기에 추가한다
+const LEGACY_REDIRECTS = {
+  '/python-series/garbage-collection/': '/python/garbage-collection/',
+  '/python-series/global-interpreter-lock/': '/python/global-interpreter-lock/',
+  '/python-series/reference-counting/': '/python/reference-counting/',
+  '/python-series/synchronize-thread/': '/python/synchronize-thread/',
+  '/fastapi-series/dependency-injection/': '/fastapi/dependency-injection/',
+  '/fastapi-series/dependency-injector/': '/fastapi/dependency-injector/',
+  '/fastapi-series/how-to-structure-fastapi-projects/':
+    '/fastapi/how-to-structure-fastapi-projects/',
+  '/fastapi-series/why-fastapi/': '/fastapi/why-fastapi/',
+  '/ml-foundations/ml-overview/': '/ml/overview/',
+  '/ml-foundations/ml-workflow/': '/ml/workflow/',
+  '/test-time-scaling/': '/llm/test-time-scaling/',
+  '/gpt-5-1/': '/issue/gpt-5-1/',
+}
+
+exports.onPostBuild = async ({ graphql, reporter }) => {
+  const fs = require('fs')
+
+  const {
+    data: { site, allSitePage },
+  } = await graphql(`
+    {
+      site {
+        siteMetadata {
+          siteUrl
+        }
+      }
+      allSitePage {
+        nodes {
+          path
+        }
+      }
+    }
+  `)
+  const baseUrl = site.siteMetadata.siteUrl.replace(/\/$/, '')
+  const livePaths = new Set(allSitePage.nodes.map(n => n.path))
+
+  Object.entries(LEGACY_REDIRECTS).forEach(([from, to]) => {
+    if (!livePaths.has(to)) {
+      reporter.panicOnBuild(`[redirect] ${from} -> ${to}: 대상 페이지가 없다`)
+      return
+    }
+    if (livePaths.has(from)) {
+      reporter.panicOnBuild(`[redirect] ${from}: 실제 페이지와 겹친다`)
+      return
+    }
+
+    const html = `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>페이지를 옮겼습니다</title>
+<link rel="canonical" href="${baseUrl}${to}">
+<meta http-equiv="refresh" content="0; url=${to}">
+<script>location.replace(${JSON.stringify(to)} + location.hash)</script>
+</head>
+<body><p><a href="${to}">새 주소로 이동합니다</a></p></body>
+</html>
+`
+    const dir = path.join(__dirname, 'public', from)
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(path.join(dir, 'index.html'), html)
+  })
+
+  reporter.info(
+    `[redirect] 옛 주소 ${Object.keys(LEGACY_REDIRECTS).length}개에 리다이렉트를 남겼다`,
+  )
 }

@@ -4,7 +4,7 @@ import PostList from 'components/Main/PostList'
 import NavDropdown from 'components/Main/NavDropdown'
 import HeroCarousel from 'components/Main/HeroCarousel'
 import QuizPromo from 'components/Main/QuizPromo'
-import { graphql, navigate } from 'gatsby'
+import { graphql, Link, navigate } from 'gatsby'
 import { PostListItemType, SeriesInfo } from 'types/PostItem.types'
 import { QuizScopeSummary } from 'types/quiz.types'
 import queryString, { ParsedQuery } from 'query-string'
@@ -148,7 +148,10 @@ const SidebarLabel = styled.p`
   margin: 0 0 12px 0;
 `
 
-const SidebarSeriesItem = styled.button<{ active: boolean }>`
+// 예전에는 버튼이라 크롤러가 따라갈 수 없었다. 시리즈 허브로 가는 진짜 링크로 둔다
+const SidebarSeriesItem = styled(Link, {
+  shouldForwardProp: prop => prop !== 'active',
+})<{ active: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -161,6 +164,7 @@ const SidebarSeriesItem = styled.button<{ active: boolean }>`
   background: ${({ active }) => (active ? c.bgMuted : c.bgSubtle)};
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
   transition: all 0.2s ease;
   font-family: inherit;
 
@@ -186,6 +190,23 @@ const SidebarSeriesCount = styled.span`
   font-size: 11px;
   color: ${c.textMuted};
   font-weight: 500;
+`
+
+const AllPostsLink = styled(Link)`
+  display: block;
+  /* 페이지 버튼이 있으면 그 아래 여백(64px)과 상쇄되고, 없으면 이 값만 남는다 */
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: ${c.textMuted};
+  text-decoration: none;
+
+  &:hover {
+    color: ${c.primary};
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 `
 
 // ─── Page ────────────────────────────────────────────────────────────
@@ -284,9 +305,9 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
 
   return (
     <Template
-      title={title}
+      title={`${title} | 머신러닝·LLM·데이터베이스 기술 블로그`}
       description={description}
-      url={siteUrl}
+      url={`${siteUrl.replace(/\/$/, '')}/`}
       image={`${siteUrl.replace(/\/$/, '')}/hero-image.jpg`}
       siteUrl={siteUrl}
     >
@@ -344,6 +365,9 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
                 selectedCategory={selectedCategory}
                 posts={filteredPosts}
               />
+              <AllPostsLink to="/posts/">
+                전체 글 {edges.length}편 한눈에 보기 →
+              </AllPostsLink>
             </PostSection>
 
             {/* Right sidebar: series */}
@@ -355,7 +379,7 @@ const IndexPage: FunctionComponent<IndexPageProps> = function ({
                   <SidebarSeriesItem
                     key={series.id}
                     active={isActive}
-                    onClick={() => handleSeriesClick(series.id)}
+                    to={`/series/${series.id}/`}
                   >
                     <SidebarSeriesTitle active={isActive}>
                       {series.title}
