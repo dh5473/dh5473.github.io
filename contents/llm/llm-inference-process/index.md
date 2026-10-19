@@ -6,7 +6,7 @@ category: 'LLM'
 series: 'llm-serving'
 seriesOrder: 1
 tags: ['LLM Serving', 'vLLM', 'Prefill', 'Decode', 'LLM Inference']
-summary: 'LLM이 토큰을 하나씩 생성하는 추론 과정을 Prefill과 Decode 두 단계로 나눠 살펴봅니다. compute-bound와 memory-bound의 비대칭이 왜 모든 서빙 최적화의 출발점이 되는지 정리합니다.'
+summary: 'Prefill은 프롬프트 전체를 한 번의 forward pass로 병렬 처리해 KV Cache와 첫 토큰을 만드는 단계이고, Decode는 그 캐시를 읽으며 토큰을 하나씩 생성하는 단계입니다. compute-bound와 memory-bound로 갈리는 두 단계의 비대칭이 왜 서빙 최적화의 출발점인지 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
 

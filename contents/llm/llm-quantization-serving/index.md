@@ -6,7 +6,7 @@ category: 'LLM'
 series: 'llm-serving'
 seriesOrder: 6
 tags: ['LLM Serving', 'Quantization', 'FP8', 'AWQ', 'GPTQ']
-summary: '양자화가 서빙 성능을 올리는 경로를 메모리, 대역폭, 연산 정밀도 셋으로 나눠서 세우고, GPTQ와 AWQ, FP8이 각각 어느 경로에 효과가 있는지 원리부터 살펴봅니다. 배치 크기와 GPU 세대에 따라 무엇을 골라야 하는지, KV Cache 양자화와 QAT까지 정리합니다.'
+summary: 'AWQ와 GPTQ는 가중치만 4비트로 줄이는 W4A16, FP8은 보통 가중치와 활성값을 모두 8비트로 줄이는 W8A8 양자화입니다. 무엇을 줄이느냐에 따라 빨라지는 경로가 달라서 배치 크기와 GPU 세대에 따라 고를 기법이 갈립니다. KV Cache FP8 양자화와 QAT까지 정리합니다.'
 thumbnail: './thumbnail.png'
 ---
 

@@ -6,7 +6,7 @@ category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 18
 tags: ['XGBoost', 'LightGBM', 'CatBoost', 'GOSS', 'EFB', 'leaf-wise', 'Gradient Boosting', '부스팅']
-summary: '트리를 키우는 순서(level-wise와 leaf-wise), XGBoost의 정규화된 목적 함수와 히스토그램 분할, LightGBM의 GOSS와 EFB, 범주형 처리까지 두 구현체가 갈라지는 지점을 정리한다.'
+summary: 'XGBoost와 LightGBM은 그래디언트 부스팅의 원리는 그대로 두고 트리를 키우는 방식을 바꾼 구현체다. 기본 그래디언트 부스팅에 XGBoost가 더한 정규화 목적 함수와 2차 도함수, LightGBM의 leaf-wise 성장과 GOSS, EFB까지 셋이 갈라지는 지점을 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 

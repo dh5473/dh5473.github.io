@@ -5,7 +5,7 @@ title: 'GIL은 무엇을 지키고 무엇을 지키지 않는가'
 category: 'Python'
 series: 'python'
 seriesOrder: 3
-summary: 'GIL이 보호하는 것은 인터프리터 내부 상태이지 우리가 짠 코드의 불변식이 아닙니다. 스레드가 실제로 전환되는 지점과 free-threaded 빌드의 현재를 확인합니다.'
+summary: 'GIL(Global Interpreter Lock)은 CPython에서 여러 스레드가 동시에 바이트코드를 실행하지 못하게 막는 뮤텍스입니다. 이 락이 보호하는 인터프리터 내부 상태와 보호하지 않는 우리 코드의 경계, 스레드가 실제로 전환되는 지점, free-threaded 빌드의 현재를 확인합니다.'
 thumbnail: './python-logo.png'
 ---
 

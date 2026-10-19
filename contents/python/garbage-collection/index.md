@@ -5,7 +5,7 @@ title: '세대별 가비지 컬렉터가 순환 참조를 찾아내는 다섯 �
 category: 'Python'
 series: 'python'
 seriesOrder: 2
-summary: 'CPython이 어떤 객체를 추적 대상에 넣는지, 그리고 gc_refs를 깎아 순환에 갇힌 객체만 골라내는 다섯 단계가 어떻게 도는지 정리합니다.'
+summary: '파이썬 GC는 참조 카운팅이 회수하지 못하는 순환 참조를 치우는 수집기입니다. CPython이 어떤 객체를 추적하는지, 세대와 임계값이 언제 수집을 일으키는지, gc_refs를 깎아 순환에 갇힌 객체만 골라내는 다섯 단계를 정리합니다.'
 thumbnail: './python-logo.png'
 ---
 

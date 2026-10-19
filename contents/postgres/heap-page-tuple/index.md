@@ -6,7 +6,7 @@ category: 'Database'
 series: 'postgres'
 seriesOrder: 2
 tags: ['PostgreSQL', 'Storage', 'Heap', 'TOAST', 'HOT Update']
-summary: 'PostgreSQL이 한 row를 8KB 페이지의 어디에 두는지, ctid가 가리키는 슬롯의 정체, 튜플 헤더 23바이트의 의미, HOT update와 FILLFACTOR의 인과 관계, 그리고 큰 컬럼이 TOAST로 빠져나가는 방식까지 페이지 안쪽을 직접 들여다봅니다.'
+summary: 'ctid는 PostgreSQL의 모든 row에 숨어 있는 시스템 컬럼으로, (페이지 번호, 슬롯 번호) 형태로 row가 디스크 어디에 있는지 가리키는 좌표입니다. UPDATE에 따라 ctid가 바뀌는 이유를 따라 8KB 페이지 구조, 튜플 헤더 23바이트, HOT update와 FILLFACTOR, TOAST까지 페이지 안쪽을 들여다봅니다.'
 thumbnail: './thumbnail.png'
 ---
 

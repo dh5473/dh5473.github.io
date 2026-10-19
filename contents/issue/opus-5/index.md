@@ -32,7 +32,7 @@ GitHub도 같은 날 Copilot에서 Opus 5를 지원한다고 발표했습니다.
 
 ## 벤치마크
 
-아래 수치는 Opus 5 시스템 카드의 평가 요약 표에서 옮긴 값입니다. 별도 표기가 없으면 adaptive thinking과 max effort, 기본 샘플링 설정으로 5회 시행한 평균입니다.
+아래 수치는 [Opus 5 시스템 카드](https://www.anthropic.com/claude-opus-5-system-card)의 평가 요약 표에서 옮긴 값입니다. 별도 표기가 없으면 adaptive thinking과 max effort, 기본 샘플링 설정으로 5회 시행한 평균입니다.
 
 | 벤치마크 | **Opus 5** | Opus 4.8 | Fable 5 |
 |---------|:---:|:---:|:---:|

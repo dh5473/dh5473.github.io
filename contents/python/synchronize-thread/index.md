@@ -5,7 +5,7 @@ title: 'Lock부터 Barrier까지, GIL이 있어도 동기화가 필요한 이유
 category: 'Python'
 series: 'python'
 seriesOrder: 4
-summary: 'GIL은 바이트코드 하나까지만 원자성을 보장합니다. Lock부터 Barrier까지 여섯 가지 동기화 프리미티브가 각각 무엇을 보장하고 어디서 어긋나는지 정리합니다.'
+summary: 'GIL은 바이트코드 명령 하나까지만 원자성을 보장하므로, 값을 읽고 더해 다시 쓰는 한 줄도 스레드 사이에서 깨질 수 있습니다. Lock, RLock, Semaphore, Event, Condition, Barrier가 각각 무엇을 보장하고 어디서 어긋나는지 정리합니다.'
 thumbnail: './python-logo.png'
 ---
 

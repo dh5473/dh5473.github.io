@@ -6,7 +6,7 @@ category: 'Database'
 series: 'postgres'
 seriesOrder: 9
 tags: ['PostgreSQL', 'VACUUM', 'Bloat', 'Autovacuum', 'Dead Tuple']
-summary: 'UPDATE가 만든 dead tuple은 어디로 가는지, bloat가 쿼리 성능에 미치는 영향, VACUUM의 3단계 동작, autovacuum의 트리거 공식, 그리고 wraparound를 막는 freeze까지 PostgreSQL의 GC를 따라갑니다.'
+summary: 'dead tuple은 UPDATE나 DELETE 뒤에도 페이지에 남아 있지만 더 이상 어떤 트랜잭션도 볼 필요가 없는 옛 버전의 튜플입니다. dead tuple이 만드는 bloat가 성능에 미치는 영향, VACUUM의 3단계 동작, autovacuum의 트리거 공식, wraparound를 막는 freeze까지 따라갑니다.'
 thumbnail: './thumbnail.png'
 ---
 

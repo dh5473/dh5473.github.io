@@ -6,7 +6,7 @@ category: 'Machine Learning'
 series: 'ml'
 seriesOrder: 39
 tags: ['t-SNE', 'UMAP', '차원 축소', '시각화', 'perplexity', 'umap-learn', '매니폴드', '머신러닝']
-summary: '이웃 관계를 보존해 고차원 데이터를 2차원에 펼치는 t-SNE와 UMAP의 원리. 군집 사이 거리와 군집 크기를 해석하면 안 되는 이유, 그리고 전처리 도구인 PCA와 역할이 어떻게 갈리는지.'
+summary: 't-SNE와 UMAP은 고차원 데이터의 이웃 관계를 보존한 채 2차원에 펼치는 비선형 차원 축소 기법이다. t-SNE는 이웃일 확률을, UMAP은 이웃 그래프를 맞춘다. 속도와 전역 구조, 새 데이터 투영에서 둘이 갈리는 지점과, 그림에서 군집 간 거리를 읽으면 안 되는 이유를 정리한다.'
 thumbnail: './thumbnail.png'
 ---
 
