@@ -1,5 +1,6 @@
 ---
 date: '2025-08-02'
+dateModified: '2026-08-01'
 title: 'FastAPI에서 의존성 주입을?'
 category: 'FastAPI'
 series: 'fastapi'

@@ -1,5 +1,6 @@
 ---
 date: '2026-01-06'
+dateModified: '2026-08-06'
 title: '변수가 늘어나면 달라지는 것들, 다중 선형 회귀'
 category: 'Machine Learning'
 series: 'ml'

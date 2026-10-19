@@ -1,5 +1,6 @@
 ---
 date: '2026-04-02'
+dateModified: '2026-08-09'
 title: '유출된 Claude Code 소스로 본 프로덕션 AI 에이전트 설계'
 category: 'Issue'
 tags: ['Claude Code', 'AI Agent', 'Architecture', 'Tool System', 'Prompt Caching']

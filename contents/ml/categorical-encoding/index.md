@@ -1,5 +1,6 @@
 ---
 date: '2026-01-30'
+dateModified: '2026-08-07'
 title: 'One-Hot과 Label, 범주형 데이터 인코딩을 고르는 기준'
 category: 'Machine Learning'
 series: 'ml'

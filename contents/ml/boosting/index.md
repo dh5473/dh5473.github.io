@@ -1,5 +1,6 @@
 ---
 date: '2026-01-17'
+dateModified: '2026-08-07'
 title: '틀린 것만 다시 배우는 부스팅, AdaBoost와 Gradient Boosting'
 category: 'Machine Learning'
 series: 'ml'

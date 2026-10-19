@@ -1,5 +1,6 @@
 ---
 date: '2026-02-13'
+dateModified: '2026-08-02'
 title: '연속확률분포 총정리: 균일, 정규, 지수, 감마, 베타 분포'
 category: 'Statistics'
 series: 'stats'

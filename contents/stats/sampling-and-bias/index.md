@@ -1,5 +1,6 @@
 ---
 date: '2026-02-24'
+dateModified: '2026-08-02'
 title: '표본 추출과 편향(Sampling and Bias): 240만 명이 틀리고 5만 명이 맞은 이유'
 category: 'Statistics'
 series: 'stats'

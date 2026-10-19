@@ -1,5 +1,6 @@
 ---
 date: '2026-01-20'
+dateModified: '2026-08-07'
 title: '입력이 예측이 되기까지, 순전파의 행렬 연산'
 category: 'Machine Learning'
 series: 'ml'

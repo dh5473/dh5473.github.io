@@ -1,5 +1,6 @@
 ---
 date: '2026-04-01'
+dateModified: '2026-07-29'
 title: 'Airflow DB 정리하는 법: db clean부터 VACUUM까지'
 category: 'DevOps'
 series: 'airflow'

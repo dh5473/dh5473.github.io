@@ -1,5 +1,6 @@
 ---
 date: '2025-08-24'
+dateModified: '2026-08-09'
 title: 'pyenv, venv, pip, poetry를 uv 하나로 합치기'
 category: 'Python'
 summary: 'uv init, add, sync 세 명령으로 파이썬 버전과 가상환경, 의존성을 함께 관리하는 방법. uv run이 실행할 때마다 락파일을 맞추는 동작과 0.12에서 바뀐 기본 레이아웃을 정리했습니다.'

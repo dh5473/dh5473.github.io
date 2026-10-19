@@ -1,5 +1,6 @@
 ---
 date: '2026-02-15'
+dateModified: '2026-08-02'
 title: '정보이론으로 보는 DL 손실함수: 엔트로피, KL 발산, 교차 엔트로피'
 category: 'Statistics'
 series: 'stats'

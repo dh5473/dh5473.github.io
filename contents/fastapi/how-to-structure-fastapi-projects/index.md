@@ -1,5 +1,6 @@
 ---
 date: '2025-07-08'
+dateModified: '2026-08-01'
 title: 'FastAPI 프로젝트를 체계적으로 구조화하는 방법'
 category: 'FastAPI'
 series: 'fastapi'

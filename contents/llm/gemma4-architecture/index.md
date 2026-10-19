@@ -1,5 +1,6 @@
 ---
 date: '2026-06-26'
+dateModified: '2026-08-02'
 title: 'Gemma 4 아키텍처 총정리'
 category: 'LLM'
 tags: ['Gemma 4', 'MoE', 'Hybrid Attention', 'Multimodal', 'Open Source LLM']

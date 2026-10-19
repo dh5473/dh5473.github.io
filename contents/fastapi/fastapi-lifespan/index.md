@@ -1,5 +1,6 @@
 ---
 date: '2026-04-09'
+dateModified: '2026-08-01'
 title: 'FastAPI Lifespan으로 앱의 시작과 끝을 관리하는 법'
 category: 'FastAPI'
 series: 'fastapi'

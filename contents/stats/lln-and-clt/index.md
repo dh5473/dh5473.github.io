@@ -1,5 +1,6 @@
 ---
 date: '2026-02-14'
+dateModified: '2026-08-02'
 title: '큰 수의 법칙과 중심극한정리: 통계학이 작동하는 이유'
 category: 'Statistics'
 series: 'stats'

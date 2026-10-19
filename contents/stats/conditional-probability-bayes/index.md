@@ -1,5 +1,6 @@
 ---
 date: '2026-02-10'
+dateModified: '2026-08-02'
 title: '조건부 확률과 베이즈 정리: 사전 정보를 업데이트하는 방법'
 category: 'Statistics'
 series: 'stats'

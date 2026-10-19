@@ -1,5 +1,6 @@
 ---
 date: '2025-06-27'
+dateModified: '2026-08-01'
 title: 'FastAPI를 선택해야만 하는 이유'
 category: 'FastAPI'
 series: 'fastapi'

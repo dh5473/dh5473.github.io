@@ -1,5 +1,6 @@
 ---
 date: '2026-02-25'
+dateModified: '2026-08-02'
 title: 'A/B 테스트 설계와 분석: 가설 수립부터 의사결정까지'
 category: 'Statistics'
 series: 'stats'

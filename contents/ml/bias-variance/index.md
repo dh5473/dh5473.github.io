@@ -1,5 +1,6 @@
 ---
 date: '2026-01-13'
+dateModified: '2026-08-07'
 title: '모델 오차를 쪼개면 드러나는 편향-분산 트레이드오프'
 category: 'Machine Learning'
 series: 'ml'

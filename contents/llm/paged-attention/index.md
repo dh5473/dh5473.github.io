@@ -1,5 +1,6 @@
 ---
 date: '2026-07-09'
+dateModified: '2026-07-26'
 title: 'vLLM의 핵심 원리 PagedAttention 파헤치기'
 category: 'LLM'
 series: 'llm-serving'

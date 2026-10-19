@@ -1,5 +1,6 @@
 ---
 date: '2026-02-04'
+dateModified: '2026-08-07'
 title: '중심점을 옮겨가며 군집을 찾는 K-Means 클러스터링'
 category: 'Machine Learning'
 series: 'ml'

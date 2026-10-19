@@ -1,5 +1,6 @@
 ---
 date: '2026-06-02'
+dateModified: '2026-07-26'
 title: 'AI Agent 루프: 한 턴의 요청이 처리되는 6단계'
 category: 'AI Agent'
 series: 'agent'

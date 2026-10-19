@@ -1,5 +1,6 @@
 ---
 date: '2026-01-07'
+dateModified: '2026-08-07'
 title: '선형 회귀에 시그모이드를 얹어 만드는 로지스틱 회귀'
 category: 'Machine Learning'
 series: 'ml'

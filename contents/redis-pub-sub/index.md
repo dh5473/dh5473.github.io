@@ -1,5 +1,6 @@
 ---
 date: '2025-06-06'
+dateModified: '2026-08-09'
 title: 'Redis Pub/Sub 활용하기'
 category: 'System Design'
 summary: 'Redis Pub/Sub은 메시지를 저장하지 않는 at-most-once 전달입니다. 구독자가 없을 때 메시지가 사라지는 이유와 구독 상태의 명령 제약을 실제 출력으로 확인합니다.'

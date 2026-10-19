@@ -1,5 +1,6 @@
 ---
 date: '2026-05-14'
+dateModified: '2026-07-27'
 title: 'MergeTree 해부: Part, Granule, 희소 인덱스'
 category: 'Database'
 series: 'clickhouse'

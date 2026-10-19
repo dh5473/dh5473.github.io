@@ -1,5 +1,6 @@
 ---
 date: '2026-06-01'
+dateModified: '2026-07-26'
 title: 'AI Agent의 컨텍스트 엔지니어링: 유한한 토큰 윈도우를 다루는 네 가지 전략'
 category: 'AI Agent'
 series: 'agent'

@@ -1,5 +1,6 @@
 ---
 date: '2025-06-12'
+dateModified: '2026-08-02'
 title: 'Test Time Scaling'
 category: 'LLM'
 series: 'llm'

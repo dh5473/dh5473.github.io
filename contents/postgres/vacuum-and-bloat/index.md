@@ -1,5 +1,6 @@
 ---
 date: '2026-04-25'
+dateModified: '2026-07-28'
 title: 'VACUUM과 bloat의 정체: dead tuple은 누가 언제 치우는가'
 category: 'Database'
 series: 'postgres'

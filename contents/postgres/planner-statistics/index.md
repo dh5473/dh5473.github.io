@@ -1,5 +1,6 @@
 ---
 date: '2026-04-19'
+dateModified: '2026-07-28'
 title: '플래너 통계와 EXPLAIN 읽는 법'
 category: 'Database'
 series: 'postgres'

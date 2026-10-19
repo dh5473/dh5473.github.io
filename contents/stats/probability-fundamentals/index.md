@@ -1,5 +1,6 @@
 ---
 date: '2026-02-09'
+dateModified: '2026-08-02'
 title: '확률의 기초: 표본공간, 사건, 확률 공리부터 셈 원리까지'
 category: 'Statistics'
 series: 'stats'

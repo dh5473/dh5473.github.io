@@ -1,5 +1,6 @@
 ---
 date: '2026-06-13'
+dateModified: '2026-08-09'
 title: 'Claude Fable 5, 출시 3일 만에 차단됐다고? AI 수출통제'
 category: 'Issue'
 tags: ['Claude', 'Fable 5', 'Anthropic', 'AI Export Control', 'AI 규제']

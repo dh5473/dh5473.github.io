@@ -1,5 +1,6 @@
 ---
 date: '2026-02-20'
+dateModified: '2026-08-02'
 title: 't-검정, ANOVA, 카이제곱 검정: 상황별 검정 방법 선택 가이드'
 category: 'Statistics'
 series: 'stats'

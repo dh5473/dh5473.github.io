@@ -1,5 +1,6 @@
 ---
 date: '2026-01-23'
+dateModified: '2026-08-06'
 title: 'SGD에서 Adam까지, 옵티마이저는 무엇을 개선해왔나'
 category: 'Machine Learning'
 series: 'ml'

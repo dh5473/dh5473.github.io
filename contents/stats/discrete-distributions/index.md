@@ -1,5 +1,6 @@
 ---
 date: '2026-02-12'
+dateModified: '2026-08-02'
 title: '이산확률분포 총정리: 베르누이, 이항, 포아송, 기하, 초기하'
 category: 'Statistics'
 series: 'stats'

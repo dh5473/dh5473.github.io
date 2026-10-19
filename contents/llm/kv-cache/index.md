@@ -1,5 +1,6 @@
 ---
 date: '2026-07-07'
+dateModified: '2026-07-26'
 title: 'KV Cache가 LLM 서빙을 바꾸는 방식'
 category: 'LLM'
 series: 'llm-serving'

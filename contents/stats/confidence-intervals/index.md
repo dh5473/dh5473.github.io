@@ -1,5 +1,6 @@
 ---
 date: '2026-02-18'
+dateModified: '2026-08-02'
 title: '신뢰구간(Confidence Interval): 추정의 불확실성을 수량화하는 방법'
 category: 'Statistics'
 series: 'stats'

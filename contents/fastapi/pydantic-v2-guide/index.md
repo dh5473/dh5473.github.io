@@ -1,5 +1,6 @@
 ---
 date: '2026-04-08'
+dateModified: '2026-08-01'
 title: 'Pydantic V2, FastAPI에서 제대로 쓰는 법'
 category: 'FastAPI'
 series: 'fastapi'

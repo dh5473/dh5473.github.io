@@ -1,5 +1,6 @@
 ---
 date: '2026-04-04'
+dateModified: '2026-08-09'
 title: 'REPEATABLE READ와 autocommit 때문에 MySQL SELECT가 옛 값을 돌려주는 이유'
 category: 'Troubleshooting'
 summary: 'REPEATABLE READ 스냅샷은 트랜잭션 시작이 아니라 첫 SELECT 시점에 고정됩니다. autocommit=False와 만나면 커넥션이 옛 데이터에 갇히는 이유와 해결법을 MySQL 8.4에서 확인합니다.'

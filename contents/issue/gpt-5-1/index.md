@@ -1,5 +1,6 @@
 ---
 date: '2025-11-16'
+dateModified: '2026-08-09'
 title: 'GPT-5.1 API 변경사항, 모델 ID만 바꾸면 추론이 꺼집니다'
 category: 'Issue'
 tags: ['GPT-5.1', 'OpenAI', 'Responses API', 'Reasoning Effort', 'LLM']

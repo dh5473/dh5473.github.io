@@ -1,5 +1,6 @@
 ---
 date: '2025-07-28'
+dateModified: '2026-08-01'
 title: 'Dependency Injection 제대로 이해하기'
 category: 'FastAPI'
 series: 'fastapi'

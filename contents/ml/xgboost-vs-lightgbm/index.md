@@ -1,5 +1,6 @@
 ---
 date: '2026-01-18'
+dateModified: '2026-08-07'
 title: 'XGBoost와 LightGBM은 실제로 무엇이 다른가'
 category: 'Machine Learning'
 series: 'ml'

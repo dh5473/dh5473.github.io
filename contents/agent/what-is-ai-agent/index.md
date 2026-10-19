@@ -1,5 +1,6 @@
 ---
 date: '2026-05-27'
+dateModified: '2026-07-26'
 title: 'AI Agent의 구조: 모델, 도구, 루프가 만드는 자율적 시스템'
 category: 'AI Agent'
 series: 'agent'

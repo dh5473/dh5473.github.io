@@ -1,5 +1,6 @@
 ---
 date: '2026-04-03'
+dateModified: '2026-07-29'
 title: 'Airflow에서 15년 된 SQL Server 연결하기: pymssql 실패부터 Custom Hook까지'
 category: 'DevOps'
 series: 'airflow'

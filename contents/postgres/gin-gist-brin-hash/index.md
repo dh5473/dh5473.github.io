@@ -1,5 +1,6 @@
 ---
 date: '2026-04-18'
+dateModified: '2026-07-28'
 title: 'B-tree 너머: GIN, GiST, BRIN, Hash는 언제 쓰는가'
 category: 'Database'
 series: 'postgres'

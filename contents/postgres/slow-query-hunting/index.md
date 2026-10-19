@@ -1,5 +1,6 @@
 ---
 date: '2026-05-05'
+dateModified: '2026-07-28'
 title: '느린 쿼리를 추적하는 법: pg_stat_statements부터 wait_event까지'
 category: 'Database'
 series: 'postgres'

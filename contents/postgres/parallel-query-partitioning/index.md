@@ -1,5 +1,6 @@
 ---
 date: '2026-04-22'
+dateModified: '2026-07-28'
 title: 'PostgreSQL 병렬 쿼리와 파티셔닝'
 category: 'Database'
 series: 'postgres'

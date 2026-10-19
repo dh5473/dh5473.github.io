@@ -1,5 +1,6 @@
 ---
 date: '2026-04-16'
+dateModified: '2026-07-28'
 title: 'PostgreSQL B-tree 인덱스 뜯어보기'
 category: 'Database'
 series: 'postgres'

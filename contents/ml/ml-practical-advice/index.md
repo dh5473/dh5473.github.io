@@ -1,5 +1,6 @@
 ---
 date: '2026-01-29'
+dateModified: '2026-08-07'
 title: '학습 곡선과 오차 분석으로 다음에 무엇을 할지 정한다'
 category: 'Machine Learning'
 series: 'ml'

@@ -1,5 +1,6 @@
 ---
 date: '2026-02-17'
+dateModified: '2026-08-02'
 title: '최대우도추정(MLE)과 적률법(MoM): 추정량을 체계적으로 찾는 두 가지 방법'
 category: 'Statistics'
 series: 'stats'

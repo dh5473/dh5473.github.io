@@ -1,5 +1,6 @@
 ---
 date: '2026-02-07'
+dateModified: '2026-08-06'
 title: '밀도로 묶는 DBSCAN과 확률로 묶는 GMM'
 category: 'Machine Learning'
 series: 'ml'

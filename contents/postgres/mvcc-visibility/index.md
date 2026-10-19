@@ -1,5 +1,6 @@
 ---
 date: '2026-04-13'
+dateModified: '2026-07-28'
 title: 'PostgreSQL MVCC와 튜플 가시성'
 category: 'Database'
 series: 'postgres'

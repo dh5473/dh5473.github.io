@@ -1,5 +1,6 @@
 ---
 date: '2026-06-11'
+dateModified: '2026-08-09'
 title: 'Claude Fable 5는 성능이 역대 최강인데 왜 논란일까?'
 category: 'Issue'
 tags: ['Claude', 'Fable 5', 'Mythos 5', 'Anthropic', 'LLM', 'AI Model']

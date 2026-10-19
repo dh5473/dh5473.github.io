@@ -1,5 +1,6 @@
 ---
 date: '2026-02-06'
+dateModified: '2026-08-07'
 title: '분산이 가장 큰 방향으로 축을 다시 잡는 PCA'
 category: 'Machine Learning'
 series: 'ml'

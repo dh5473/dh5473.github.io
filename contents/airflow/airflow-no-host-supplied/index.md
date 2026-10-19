@@ -1,5 +1,6 @@
 ---
 date: '2026-03-26'
+dateModified: '2026-07-29'
 title: 'Airflow "No host supplied" 해결 과정: hostname_callable부터 메모리까지'
 category: 'DevOps'
 series: 'airflow'

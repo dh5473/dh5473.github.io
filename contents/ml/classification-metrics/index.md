@@ -1,5 +1,6 @@
 ---
 date: '2026-01-25'
+dateModified: '2026-08-07'
 title: 'Accuracy 99%가 거짓말일 때 보는 Precision과 Recall'
 category: 'Machine Learning'
 series: 'ml'

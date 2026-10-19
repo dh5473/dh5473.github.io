@@ -1,5 +1,6 @@
 ---
 date: '2026-01-14'
+dateModified: '2026-08-07'
 title: '질문을 반복해 데이터를 쪼개는 결정 트리'
 category: 'Machine Learning'
 series: 'ml'

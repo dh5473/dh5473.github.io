@@ -1,5 +1,6 @@
 ---
 date: '2026-08-17'
+dateModified: '2026-08-22'
 title: 'Transformer는 왜 Q, K, V 셋으로 나눴을까'
 category: 'LLM'
 series: 'llm'

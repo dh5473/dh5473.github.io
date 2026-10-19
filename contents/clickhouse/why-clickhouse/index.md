@@ -1,5 +1,6 @@
 ---
 date: '2026-05-11'
+dateModified: '2026-07-27'
 title: 'ClickHouse는 왜 빠른가: 컬럼 지향 OLAP 엔진의 설계 철학'
 category: 'Database'
 series: 'clickhouse'

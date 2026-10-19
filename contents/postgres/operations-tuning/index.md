@@ -1,5 +1,6 @@
 ---
 date: '2026-05-08'
+dateModified: '2026-07-28'
 title: '연결, 메모리, autovacuum: 운영 환경에서 가장 자주 튜닝하는 파라미터들'
 category: 'Database'
 series: 'postgres'

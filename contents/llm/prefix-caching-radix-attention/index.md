@@ -1,5 +1,6 @@
 ---
 date: '2026-07-14'
+dateModified: '2026-07-26'
 title: 'Prefix Caching과 RadixAttention으로 보는 vLLM과 SGLang'
 category: 'LLM'
 series: 'llm-serving'

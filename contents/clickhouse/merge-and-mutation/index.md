@@ -1,5 +1,6 @@
 ---
 date: '2026-05-19'
+dateModified: '2026-07-27'
 title: '백그라운드 머지와 뮤테이션: 불변 Part는 어떻게 관리되는가'
 category: 'Database'
 series: 'clickhouse'

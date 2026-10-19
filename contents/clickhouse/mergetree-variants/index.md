@@ -1,5 +1,6 @@
 ---
 date: '2026-05-21'
+dateModified: '2026-07-27'
 title: '중복 제거부터 상태 상쇄까지: MergeTree 엔진 4종 비교'
 category: 'Database'
 series: 'clickhouse'

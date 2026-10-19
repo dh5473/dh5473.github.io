@@ -1,5 +1,6 @@
 ---
 date: '2026-02-02'
+dateModified: '2026-08-07'
 title: 'Target Encoding을 타겟 누수 없이 쓰는 법'
 category: 'Machine Learning'
 series: 'ml'

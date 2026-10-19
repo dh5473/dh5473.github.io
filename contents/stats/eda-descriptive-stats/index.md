@@ -1,5 +1,6 @@
 ---
 date: '2026-02-23'
+dateModified: '2026-08-02'
 title: '기술통계와 EDA(Descriptive Statistics & EDA): 데이터를 모델에 넣기 전에 할 일'
 category: 'Statistics'
 series: 'stats'

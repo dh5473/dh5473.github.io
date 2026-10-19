@@ -1,5 +1,6 @@
 ---
 date: '2026-01-21'
+dateModified: '2026-08-07'
 title: '연쇄 법칙으로 기울기를 되돌리는 역전파'
 category: 'Machine Learning'
 series: 'ml'

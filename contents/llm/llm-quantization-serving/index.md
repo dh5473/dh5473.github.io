@@ -1,5 +1,6 @@
 ---
 date: '2026-07-18'
+dateModified: '2026-07-26'
 title: '서빙을 위한 양자화 가이드 FP8, AWQ, GPTQ'
 category: 'LLM'
 series: 'llm-serving'

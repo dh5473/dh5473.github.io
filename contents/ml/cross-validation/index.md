@@ -1,5 +1,6 @@
 ---
 date: '2026-01-27'
+dateModified: '2026-08-07'
 title: 'K-Fold에서 TimeSeriesSplit까지, 교차 검증 전략 고르기'
 category: 'Machine Learning'
 series: 'ml'

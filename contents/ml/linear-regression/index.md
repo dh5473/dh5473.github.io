@@ -1,5 +1,6 @@
 ---
 date: '2026-01-03'
+dateModified: '2026-08-06'
 title: '데이터에 가장 잘 맞는 직선을 찾는 선형 회귀'
 category: 'Machine Learning'
 series: 'ml'

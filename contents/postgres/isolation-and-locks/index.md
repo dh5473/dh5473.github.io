@@ -1,5 +1,6 @@
 ---
 date: '2026-04-28'
+dateModified: '2026-07-28'
 title: '트랜잭션 격리 수준과 락: 쓰기 충돌은 어떻게 해결되는가'
 category: 'Database'
 series: 'postgres'

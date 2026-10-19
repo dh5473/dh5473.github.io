@@ -1,5 +1,6 @@
 ---
 date: '2026-07-01'
+dateModified: '2026-08-09'
 title: 'Claude Sonnet 5 출시, Opus급 성능?'
 category: 'Issue'
 tags: ['Claude', 'Sonnet 5', 'Anthropic', 'LLM', 'AI Model']

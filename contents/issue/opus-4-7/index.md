@@ -1,5 +1,6 @@
 ---
 date: '2026-04-27'
+dateModified: '2026-08-09'
 title: 'Claude Opus 4.7의 성능은 왜 논란이 되고 있을까?'
 category: 'Issue'
 tags: ['Claude', 'Opus 4.7', 'Opus 4.6', 'Anthropic', 'LLM', 'AI Model']

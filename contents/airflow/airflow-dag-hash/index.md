@@ -1,5 +1,6 @@
 ---
 date: '2026-03-24'
+dateModified: '2026-07-29'
 title: 'Airflow DAG Hash가 계속 바뀌는 문제: Variable.get()의 함정'
 category: 'DevOps'
 series: 'airflow'

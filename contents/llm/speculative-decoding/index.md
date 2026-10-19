@@ -1,5 +1,6 @@
 ---
 date: '2026-07-21'
+dateModified: '2026-07-26'
 title: 'Speculative Decoding으로 LLM 추론 속도 높이기'
 category: 'LLM'
 series: 'llm-serving'

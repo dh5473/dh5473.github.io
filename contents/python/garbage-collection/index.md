@@ -1,5 +1,6 @@
 ---
 date: '2025-02-21'
+dateModified: '2026-08-09'
 title: '세대별 가비지 컬렉터가 순환 참조를 찾아내는 다섯 단계'
 category: 'Python'
 series: 'python'

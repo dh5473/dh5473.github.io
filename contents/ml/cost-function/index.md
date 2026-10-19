@@ -1,5 +1,6 @@
 ---
 date: '2026-01-04'
+dateModified: '2026-08-06'
 title: '모델이 얼마나 틀렸는지 재는 비용 함수'
 category: 'Machine Learning'
 series: 'ml'

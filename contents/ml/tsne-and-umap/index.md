@@ -1,5 +1,6 @@
 ---
 date: '2026-02-08'
+dateModified: '2026-08-07'
 title: '고차원 데이터를 2차원에 펼치는 t-SNE와 UMAP'
 category: 'Machine Learning'
 series: 'ml'

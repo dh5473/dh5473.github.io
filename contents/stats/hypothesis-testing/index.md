@@ -1,5 +1,6 @@
 ---
 date: '2026-02-19'
+dateModified: '2026-08-02'
 title: '가설검정(Hypothesis Testing): 데이터로 주장을 검증하는 체계적 프레임워크'
 category: 'Statistics'
 series: 'stats'

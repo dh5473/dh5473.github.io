@@ -1,5 +1,6 @@
 ---
 date: '2026-07-06'
+dateModified: '2026-07-26'
 title: 'Prefill과 Decode로 이해하는 LLM 추론 과정'
 category: 'LLM'
 series: 'llm-serving'

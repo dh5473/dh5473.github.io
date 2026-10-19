@@ -1,5 +1,6 @@
 ---
 date: '2026-01-15'
+dateModified: '2026-08-07'
 title: '약한 모델 여러 개를 합쳐 분산을 줄이는 배깅'
 category: 'Machine Learning'
 series: 'ml'

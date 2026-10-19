@@ -1,5 +1,6 @@
 ---
 date: '2026-01-16'
+dateModified: '2026-08-07'
 title: '특성 무작위성으로 트리 간 상관관계를 깨는 랜덤 포레스트'
 category: 'Machine Learning'
 series: 'ml'

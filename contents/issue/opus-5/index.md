@@ -1,5 +1,6 @@
 ---
 date: '2026-07-25'
+dateModified: '2026-08-09'
 title: 'Claude Opus 5 출시, 가격 그대로 성능은 Fable 5급?'
 category: 'Issue'
 tags: ['Claude', 'Opus 5', 'Anthropic', 'LLM', 'AI Model']

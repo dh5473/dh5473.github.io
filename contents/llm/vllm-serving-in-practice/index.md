@@ -1,5 +1,6 @@
 ---
 date: '2026-07-23'
+dateModified: '2026-07-26'
 title: 'vLLM 실전 서빙 가이드'
 category: 'LLM'
 series: 'llm-serving'

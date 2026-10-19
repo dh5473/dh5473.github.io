@@ -1,5 +1,6 @@
 ---
 date: '2026-04-11'
+dateModified: '2026-07-28'
 title: 'PostgreSQL 아키텍처 한눈에 보기'
 category: 'Database'
 series: 'postgres'

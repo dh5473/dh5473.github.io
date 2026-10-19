@@ -1,5 +1,6 @@
 ---
 date: '2026-01-24'
+dateModified: '2026-08-07'
 title: '신경망 학습을 안정시키는 가중치 초기화와 BatchNorm, Dropout'
 category: 'Machine Learning'
 series: 'ml'

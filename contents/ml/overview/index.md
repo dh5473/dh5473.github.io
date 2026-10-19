@@ -1,5 +1,6 @@
 ---
 date: '2026-01-01'
+dateModified: '2026-08-06'
 title: '머신러닝은 데이터에서 규칙을 찾는다, 지도·비지도·강화학습'
 category: 'Machine Learning'
 series: 'ml'

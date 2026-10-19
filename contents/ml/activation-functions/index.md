@@ -1,5 +1,6 @@
 ---
 date: '2026-01-22'
+dateModified: '2026-08-07'
 title: '활성화 함수는 왜 ReLU로 정착했나'
 category: 'Machine Learning'
 series: 'ml'

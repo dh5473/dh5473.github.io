@@ -1,5 +1,6 @@
 ---
 date: '2026-06-07'
+dateModified: '2026-07-26'
 title: 'AI Agent의 멀티에이전트 시스템: 여러 에이전트가 협력할 때 생기는 다섯 가지 문제'
 summary: '단일 에이전트를 넘어 여러 에이전트가 협력하는 시스템의 설계를 해부합니다. 조정 토폴로지, 상태 공유, 실패 전파, 토큰 경제학, 신뢰 경계라는 다섯 가지 시스템 수준 문제를 Claude Code, Codex, Anthropic Harness의 구현을 통해 비교합니다.'
 thumbnail: './thumbnail.png'

@@ -1,5 +1,6 @@
 ---
 date: '2026-02-16'
+dateModified: '2026-08-02'
 title: '점추정(Point Estimation): 데이터에서 모수를 추정하는 첫 번째 원리'
 category: 'Statistics'
 series: 'stats'

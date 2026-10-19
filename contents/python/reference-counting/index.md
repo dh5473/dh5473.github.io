@@ -1,5 +1,6 @@
 ---
 date: '2025-02-06'
+dateModified: '2026-08-09'
 title: '참조 카운팅은 어떻게 메모리를 해제하고 어디서 실패하는가'
 category: 'Python'
 series: 'python'

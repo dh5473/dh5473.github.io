@@ -1,5 +1,6 @@
 ---
 date: '2026-01-10'
+dateModified: '2026-08-06'
 title: '베이즈 정리로 분류하는 나이브 베이즈(Naive Bayes)'
 category: 'Machine Learning'
 series: 'ml'

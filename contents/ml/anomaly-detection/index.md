@@ -1,5 +1,6 @@
 ---
 date: '2026-02-05'
+dateModified: '2026-08-07'
 title: '가우시안 밀도부터 Isolation Forest까지, 이상 탐지의 원리'
 category: 'Machine Learning'
 series: 'ml'

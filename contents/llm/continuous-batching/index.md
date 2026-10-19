@@ -1,5 +1,6 @@
 ---
 date: '2026-07-11'
+dateModified: '2026-07-31'
 title: 'Continuous Batching과 Chunked Prefill 완전 이해'
 category: 'LLM'
 series: 'llm-serving'

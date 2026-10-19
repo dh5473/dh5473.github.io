@@ -1,5 +1,6 @@
 ---
 date: '2026-04-07'
+dateModified: '2026-08-01'
 title: 'FastAPI 422? 라우팅 순서부터 확인하기'
 category: 'Troubleshooting'
 tags: ['FastAPI', 'Routing', 'Path Parameter', 'Starlette', 'Python']

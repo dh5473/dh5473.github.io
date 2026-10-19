@@ -1,5 +1,6 @@
 ---
 date: '2026-01-05'
+dateModified: '2026-08-07'
 title: '비용 함수의 바닥까지 걸어 내려가는 경사하강법'
 category: 'Machine Learning'
 series: 'ml'

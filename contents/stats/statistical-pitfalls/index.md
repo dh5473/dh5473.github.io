@@ -1,5 +1,6 @@
 ---
 date: '2026-02-26'
+dateModified: '2026-08-02'
 title: '통계적 함정: 다중 검정, p-hacking, 심슨의 역설, 상관 ≠ 인과'
 category: 'Statistics'
 series: 'stats'

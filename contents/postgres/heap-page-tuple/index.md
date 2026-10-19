@@ -1,5 +1,6 @@
 ---
 date: '2026-04-12'
+dateModified: '2026-07-28'
 title: 'PostgreSQL 힙 페이지와 튜플 구조: 데이터를 디스크에 어떻게 올려두는가'
 category: 'Database'
 series: 'postgres'

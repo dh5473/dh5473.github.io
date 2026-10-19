@@ -1,5 +1,6 @@
 ---
 date: '2026-08-23'
+dateModified: '2026-08-26'
 title: 'LLM은 왜 가장 확률 높은 토큰을 고르지 않을까'
 category: 'LLM'
 series: 'llm'

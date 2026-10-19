@@ -1,5 +1,6 @@
 ---
 date: '2026-06-03'
+dateModified: '2026-07-26'
 title: 'AI Agent의 컴팩션 파이프라인: 200K 토큰 윈도우를 지키는 다섯 단계'
 category: 'AI Agent'
 series: 'agent'

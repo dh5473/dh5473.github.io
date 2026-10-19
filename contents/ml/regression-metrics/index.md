@@ -1,5 +1,6 @@
 ---
 date: '2026-01-26'
+dateModified: '2026-08-07'
 title: 'MAE, RMSE, R² 중 무엇으로 회귀 모델을 고를까'
 category: 'Machine Learning'
 series: 'ml'

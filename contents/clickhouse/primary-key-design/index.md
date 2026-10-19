@@ -1,5 +1,6 @@
 ---
 date: '2026-05-22'
+dateModified: '2026-07-27'
 title: 'ORDER BY가 곧 인덱스다: Primary Key와 정렬 키 설계 전략'
 category: 'Database'
 series: 'clickhouse'

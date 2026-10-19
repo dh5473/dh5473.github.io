@@ -1,5 +1,6 @@
 ---
 date: '2026-02-21'
+dateModified: '2026-08-02'
 title: '부트스트랩(Bootstrap): 분포를 모를 때, 데이터가 스스로 답한다'
 category: 'Statistics'
 series: 'stats'

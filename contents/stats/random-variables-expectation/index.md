@@ -1,5 +1,6 @@
 ---
 date: '2026-02-11'
+dateModified: '2026-08-02'
 title: '확률변수와 기댓값: PMF, PDF, CDF, 기댓값, 분산의 핵심 원리'
 category: 'Statistics'
 series: 'stats'

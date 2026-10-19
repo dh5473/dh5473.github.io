@@ -1,5 +1,6 @@
 ---
 date: '2025-02-27'
+dateModified: '2026-08-09'
 title: 'Lock부터 Barrier까지, GIL이 있어도 동기화가 필요한 이유'
 category: 'Python'
 series: 'python'

@@ -1,5 +1,6 @@
 ---
 date: '2025-02-17'
+dateModified: '2026-08-09'
 title: 'GIL은 무엇을 지키고 무엇을 지키지 않는가'
 category: 'Python'
 series: 'python'

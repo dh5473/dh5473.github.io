@@ -1,5 +1,6 @@
 ---
 date: '2026-01-31'
+dateModified: '2026-08-07'
 title: 'StandardScaler와 MinMaxScaler, 피처 스케일링은 무엇을 기준으로 고르나'
 category: 'Machine Learning'
 series: 'ml'

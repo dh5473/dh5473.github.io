@@ -1,5 +1,6 @@
 ---
 date: '2026-04-30'
+dateModified: '2026-07-28'
 title: 'WAL과 체크포인트: crash에서 살아남는 구조, 그리고 성능의 숨은 비용'
 category: 'Database'
 series: 'postgres'

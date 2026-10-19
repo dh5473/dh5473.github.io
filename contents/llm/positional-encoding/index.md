@@ -1,5 +1,6 @@
 ---
 date: '2026-08-27'
+dateModified: '2026-08-30'
 title: 'Positional Encoding에서 RoPE까지, 어텐션에 순서를 부여하는 법'
 category: 'LLM'
 series: 'llm'

@@ -1,5 +1,6 @@
 ---
 date: '2026-05-28'
+dateModified: '2026-07-26'
 title: 'AI Agent 워크플로우 패턴: 단순한 Chaining에서 동적 Orchestration까지'
 category: 'AI Agent'
 series: 'agent'

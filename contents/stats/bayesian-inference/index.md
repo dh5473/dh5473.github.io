@@ -1,5 +1,6 @@
 ---
 date: '2026-02-22'
+dateModified: '2026-08-02'
 title: '베이지안 추론(Bayesian Inference): 사전 지식과 데이터를 결합하는 통계적 사고'
 category: 'Statistics'
 series: 'stats'

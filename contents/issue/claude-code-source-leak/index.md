@@ -1,5 +1,6 @@
 ---
 date: '2026-04-01'
+dateModified: '2026-08-09'
 title: 'Claude Code 소스코드 51만줄 유출, 그 안에서 나온 7가지'
 category: 'Issue'
 tags: ['Claude Code', 'Anthropic', 'Source Code Leak', 'AI Agent', 'Anti-Distillation']

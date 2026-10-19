@@ -1,5 +1,6 @@
 ---
 date: '2026-06-23'
+dateModified: '2026-07-26'
 title: 'AI Agent의 MCP: 에이전트가 외부 도구를 연결하는 표준 프로토콜'
 category: 'AI Agent'
 series: 'agent'

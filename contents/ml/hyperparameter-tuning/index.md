@@ -1,5 +1,6 @@
 ---
 date: '2026-01-28'
+dateModified: '2026-08-07'
 title: '하이퍼파라미터 튜닝, Grid Search보다 Random Search가 나은 이유'
 category: 'Machine Learning'
 series: 'ml'

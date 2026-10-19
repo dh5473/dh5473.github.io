@@ -1,5 +1,6 @@
 ---
 date: '2026-01-19'
+dateModified: '2026-08-07'
 title: '퍼셉트론에서 다층 신경망까지, 신경망의 구조'
 category: 'Machine Learning'
 series: 'ml'

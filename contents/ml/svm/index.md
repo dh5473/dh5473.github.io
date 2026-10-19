@@ -1,5 +1,6 @@
 ---
 date: '2026-01-12'
+dateModified: '2026-08-07'
 title: '마진을 최대화하는 분류기 서포트 벡터 머신(SVM)'
 category: 'Machine Learning'
 series: 'ml'

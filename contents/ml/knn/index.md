@@ -1,5 +1,6 @@
 ---
 date: '2026-01-11'
+dateModified: '2026-08-06'
 title: '거리만으로 분류하는 K-최근접 이웃(KNN)'
 category: 'Machine Learning'
 series: 'ml'

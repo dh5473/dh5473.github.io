@@ -1,5 +1,6 @@
 ---
 date: '2026-03-25'
+dateModified: '2026-07-29'
 title: 'Airflow Dynamic Task Mapping: 병렬 처리와 동시 실행 제한 전략'
 category: 'DevOps'
 series: 'airflow'

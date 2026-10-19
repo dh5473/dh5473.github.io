@@ -1,5 +1,6 @@
 ---
 date: '2026-01-09'
+dateModified: '2026-08-07'
 title: '과적합을 막는 규제, Ridge와 Lasso는 무엇이 다른가'
 category: 'Machine Learning'
 series: 'ml'

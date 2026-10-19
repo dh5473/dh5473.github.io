@@ -1,5 +1,6 @@
 ---
 date: '2026-03-23'
+dateModified: '2026-08-09'
 title: 'Prisma가 만든 enum 마이그레이션이 P3006으로 막히는 이유'
 category: 'Troubleshooting'
 summary: '새 enum 값은 커밋 전까지 같은 트랜잭션에서 쓸 수 없습니다. 이 PostgreSQL 제약이 Prisma의 Shadow DB 재실행과 만나 P3006이 되는 과정을 짚습니다.'

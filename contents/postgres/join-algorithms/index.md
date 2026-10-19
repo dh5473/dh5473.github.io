@@ -1,5 +1,6 @@
 ---
 date: '2026-04-21'
+dateModified: '2026-07-28'
 title: 'PostgreSQL 조인 알고리즘: Nested Loop, Hash Join, Merge Join'
 category: 'Database'
 series: 'postgres'

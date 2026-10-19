@@ -1,5 +1,6 @@
 ---
 date: '2026-02-03'
+dateModified: '2026-08-07'
 title: '결측치를 지울 것인가 채울 것인가'
 category: 'Machine Learning'
 series: 'ml'

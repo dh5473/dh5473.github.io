@@ -1,5 +1,6 @@
 ---
 date: '2026-02-01'
+dateModified: '2026-08-06'
 title: '필터·래퍼·임베디드, 피처를 걸러내는 세 갈래'
 category: 'Machine Learning'
 series: 'ml'

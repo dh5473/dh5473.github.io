@@ -1,5 +1,6 @@
 ---
 date: '2026-01-08'
+dateModified: '2026-08-07'
 title: '모델이 데이터를 가르는 선, 결정 경계'
 category: 'Machine Learning'
 series: 'ml'

@@ -1,5 +1,6 @@
 ---
 date: '2026-05-03'
+dateModified: '2026-07-28'
 title: 'Streaming Replication과 Logical Replication: WAL을 네트워크로 보내는 두 가지 방법'
 category: 'Database'
 series: 'postgres'

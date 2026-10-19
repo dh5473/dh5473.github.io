@@ -1,5 +1,6 @@
 ---
 date: '2026-05-29'
+dateModified: '2026-07-26'
 title: 'AI Agent의 도구 설계: ACI 원칙부터 프로덕션 스키마까지'
 category: 'AI Agent'
 series: 'agent'

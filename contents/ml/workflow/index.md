@@ -1,5 +1,6 @@
 ---
 date: '2026-01-02'
+dateModified: '2026-08-06'
 title: '문제 정의부터 배포까지, 머신러닝 프로젝트의 전 과정'
 category: 'Machine Learning'
 series: 'ml'

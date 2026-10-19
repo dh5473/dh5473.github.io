@@ -1,5 +1,6 @@
 ---
 date: '2026-06-05'
+dateModified: '2026-07-26'
 title: 'AI Agent의 퍼미션 시스템: 도구 실행 전에 일어나는 일곱 단계의 판단'
 category: 'AI Agent'
 series: 'agent'
