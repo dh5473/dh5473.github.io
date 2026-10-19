@@ -3,7 +3,7 @@ import { graphql } from 'gatsby'
 import { Helmet } from 'react-helmet'
 import styled from '@emotion/styled'
 import Template from 'components/Common/Template'
-import QuizChrome from 'components/Quiz/QuizChrome'
+import PageChrome from 'components/Common/PageChrome'
 import ScenarioBlock from 'components/Quiz/ScenarioBlock'
 import ExplanationPanel from 'components/Quiz/ExplanationPanel'
 import {
@@ -256,7 +256,7 @@ const QuizListTemplate: FunctionComponent<QuizListTemplateProps> = function ({
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 
-      <QuizChrome crumb={`Quiz / ${scope.title} / 전체 문항`}>
+      <PageChrome crumb={`Quiz / ${scope.title} / 전체 문항`}>
         <Title>{scope.title} 전체 문항</Title>
         <Lead>
           {scope.description}. 문항과 선택지별 해설을 글 순서대로 나열했습니다.
@@ -292,7 +292,7 @@ const QuizListTemplate: FunctionComponent<QuizListTemplateProps> = function ({
           이 페이지는 문항 품질을 점검하는 용도로도 씁니다. 한 화면에서 전부
           훑어야 중복된 문항, 쏠린 난이도, 소거법으로 풀리는 선택지가 보입니다.
         </Foot>
-      </QuizChrome>
+      </PageChrome>
     </Template>
   )
 }

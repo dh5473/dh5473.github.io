@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react'
 import { graphql, navigate } from 'gatsby'
 import styled from '@emotion/styled'
 import Template from 'components/Common/Template'
-import QuizChrome from 'components/Quiz/QuizChrome'
+import PageChrome from 'components/Common/PageChrome'
 import { DifficultySpread, DIFFICULTY_LABEL } from 'components/Quiz/QuizMeta'
 import { QuizScopeSummary, QuizDifficulty } from 'types/quiz.types'
 import { seriesMetadata } from 'utils/seriesData'
@@ -339,7 +339,7 @@ const QuizHubTemplate: FunctionComponent<QuizHubTemplateProps> = function ({
       image={`${baseUrl}/hero-image.jpg`}
       siteUrl={siteUrl}
     >
-      <QuizChrome crumb="Quiz" wide>
+      <PageChrome crumb="Quiz" wide>
         <Intro>
           <Title>Quiz</Title>
           <Lead>
@@ -433,7 +433,7 @@ const QuizHubTemplate: FunctionComponent<QuizHubTemplateProps> = function ({
             </Panel>
           </Sidebar>
         </Row>
-      </QuizChrome>
+      </PageChrome>
     </Template>
   )
 }

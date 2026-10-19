@@ -24,15 +24,15 @@ const Main = styled.main<{ wide: boolean }>`
   }
 `
 
-type QuizChromeProps = {
+type PageChromeProps = {
   crumb?: ReactNode
   /** 허브처럼 목록을 펼치는 페이지에서 사이트 폭을 그대로 쓴다. */
   wide?: boolean
   children: ReactNode
 }
 
-/** 퀴즈 3개 페이지가 공유하는 헤더와 본문 컨테이너 */
-const QuizChrome: FunctionComponent<QuizChromeProps> = function ({
+/** 홈과 글 페이지를 뺀 단독 페이지(퀴즈, 시리즈 허브, 전체 글)가 공유하는 헤더와 본문 컨테이너 */
+const PageChrome: FunctionComponent<PageChromeProps> = function ({
   crumb,
   wide = false,
   children,
@@ -52,4 +52,4 @@ const QuizChrome: FunctionComponent<QuizChromeProps> = function ({
   )
 }
 
-export default QuizChrome
+export default PageChrome

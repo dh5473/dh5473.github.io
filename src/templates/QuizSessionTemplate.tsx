@@ -9,7 +9,7 @@ import React, {
 import { graphql, navigate } from 'gatsby'
 import styled from '@emotion/styled'
 import Template from 'components/Common/Template'
-import QuizChrome from 'components/Quiz/QuizChrome'
+import PageChrome from 'components/Common/PageChrome'
 import QuestionCard, { PreparedChoice } from 'components/Quiz/QuestionCard'
 import { DifficultySpread, DIFFICULTY_LABEL } from 'components/Quiz/QuizMeta'
 import { QuizDifficulty, QuizQuestion, QuizScopeSummary } from 'types/quiz.types'
@@ -624,7 +624,7 @@ const QuizSessionTemplate: FunctionComponent<QuizSessionTemplateProps> =
         siteUrl={siteUrl}
         noindex
       >
-        <QuizChrome crumb={`Quiz / ${scope.title}`}>
+        <PageChrome crumb={`Quiz / ${scope.title}`}>
           <div ref={topRef} />
 
           {stage === 'setup' && (
@@ -810,7 +810,7 @@ const QuizSessionTemplate: FunctionComponent<QuizSessionTemplateProps> =
               </div>
             </>
           )}
-        </QuizChrome>
+        </PageChrome>
       </Template>
     )
   }
