@@ -47,6 +47,7 @@ type PostTemplateProps = {
             series: string | null
             keywords: string[] | null
             dateModified: string | null
+            dateModifiedLabel: string | null
             thumbnail: {
               childImageSharp: {
                 gatsbyImageData: IGatsbyImageData
@@ -95,7 +96,7 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       frontmatter: {
         title, summary, date, rawDate, category, series,
         keywords: frontmatterKeywords, dateModified: frontmatterDateModified,
-        thumbnail,
+        dateModifiedLabel, thumbnail,
       },
       wordCount: { words },
     },
@@ -145,15 +146,22 @@ const PostTemplate: FunctionComponent<PostTemplateProps> = function ({
       ogImageHeight={ogImageHeight}
       authorSocial={authorSocial}
       logo={logo}
+      breadcrumbParent={
+        hasSeriesNav
+          ? { name: `${seriesMeta!.title} 시리즈`, url: `${baseUrl}/series/${seriesId}/` }
+          : undefined
+      }
     >
       <PostHead
         title={title}
         date={date}
+        dateModified={dateModifiedLabel}
         category={category}
         thumbnail={gatsbyImageData}
       />
       {hasSeriesNav && seriesPosts && (
         <PostSeriesIndex
+          seriesId={seriesId!}
           seriesTitle={seriesMeta!.title}
           seriesColor={seriesMeta?.color}
           currentOrder={seriesCurrentOrder!}
@@ -224,6 +232,7 @@ export const queryMarkdownDataBySlug = graphql`
             series
             keywords
             dateModified
+            dateModifiedLabel: dateModified(formatString: "YYYY.MM.DD.")
             thumbnail {
               childImageSharp {
                 gatsbyImageData

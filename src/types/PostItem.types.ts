@@ -52,6 +52,7 @@ export type SeriesIndexPost = {
 }
 
 export type PostSeriesIndexProps = {
+  seriesId: string
   seriesTitle: string
   seriesColor?: string
   currentOrder: number

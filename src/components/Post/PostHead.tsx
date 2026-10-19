@@ -60,6 +60,7 @@ const GradientOverlay = styled.div`
 const PostHead: FunctionComponent<PostHeadProps> = function ({
   title,
   date,
+  dateModified,
   category,
   thumbnail,
 }) {
@@ -67,7 +68,12 @@ const PostHead: FunctionComponent<PostHeadProps> = function ({
     <PostHeadWrapper hasThumbnail={!!thumbnail}>
       {thumbnail && <BackgroundImage image={thumbnail} alt={title} />}
       <GradientOverlay />
-      <PostHeadInfo title={title} date={date} category={category} />
+      <PostHeadInfo
+        title={title}
+        date={date}
+        dateModified={dateModified}
+        category={category}
+      />
     </PostHeadWrapper>
   )
 }

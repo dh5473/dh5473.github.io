@@ -39,10 +39,17 @@ const SeriesDot = styled.span<{ color?: string }>`
   flex-shrink: 0;
 `
 
-const SeriesTitle = styled.span`
+const SeriesTitle = styled(Link)`
   font-size: 13px;
   font-weight: 700;
   color: ${c.text};
+  text-decoration: none;
+
+  &:hover {
+    color: ${c.primary};
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 `
 
 const PostCount = styled.span`
@@ -152,6 +159,7 @@ const PageButton = styled.button<{ disabled: boolean }>`
 `
 
 const PostSeriesIndex: FunctionComponent<PostSeriesIndexProps> = ({
+  seriesId,
   seriesTitle,
   seriesColor,
   currentOrder,
@@ -182,7 +190,7 @@ const PostSeriesIndex: FunctionComponent<PostSeriesIndexProps> = ({
     <IndexWrapper>
       <IndexHeader>
         <SeriesDot color={seriesColor} />
-        <SeriesTitle>{seriesTitle}</SeriesTitle>
+        <SeriesTitle to={`/series/${seriesId}/`}>{seriesTitle}</SeriesTitle>
         <PostCount>{posts.length}편</PostCount>
       </IndexHeader>
       <PostList>{visiblePosts.map(renderItem)}</PostList>

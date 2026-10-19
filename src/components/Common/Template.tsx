@@ -25,6 +25,7 @@ type TemplateProps = {
   logo?: string
   /** 인터랙티브 세션처럼 색인할 내용이 없는 페이지에 쓴다 */
   noindex?: boolean
+  breadcrumbParent?: { name: string; url: string }
 }
 
 const Container = styled.main`
@@ -52,6 +53,7 @@ const Template: FunctionComponent<TemplateProps> = function ({
   authorSocial,
   logo,
   noindex = false,
+  breadcrumbParent,
 }) {
   return (
     <Container>
@@ -65,7 +67,6 @@ const Template: FunctionComponent<TemplateProps> = function ({
         <meta httpEquiv="Content-Type" content="text/html;charset=UTF-8" />
 
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="alternate icon" href="/favicon.ico" />
 
         <meta property="og:type" content={type} />
         <meta property="og:title" content={title} />
@@ -132,6 +133,7 @@ const Template: FunctionComponent<TemplateProps> = function ({
         keywords={keywords}
         authorSocial={authorSocial}
         logo={logo}
+        breadcrumbParent={breadcrumbParent}
       />
 
       <GlobalStyle />

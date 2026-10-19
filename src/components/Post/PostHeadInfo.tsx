@@ -7,6 +7,8 @@ import { bp } from 'styles/theme'
 export type PostHeadInfoProps = {
   title: string
   date: string
+  /** 구조화 데이터의 dateModified와 화면의 날짜가 어긋나지 않도록 함께 보여준다 */
+  dateModified?: string | null
   category: string
 }
 
@@ -100,6 +102,7 @@ const PostData = styled.div`
 const PostHeadInfo: FunctionComponent<PostHeadInfoProps> = function ({
   title,
   date,
+  dateModified,
   category,
 }) {
   const goBackPage = () => {
@@ -119,6 +122,9 @@ const PostHeadInfo: FunctionComponent<PostHeadInfoProps> = function ({
       <Title>{title}</Title>
       <PostData>
         <span>{date}</span>
+        {dateModified && dateModified !== date && (
+          <span>수정 {dateModified}</span>
+        )}
       </PostData>
     </PostHeadInfoWrapper>
   )

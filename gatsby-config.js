@@ -10,7 +10,7 @@
 module.exports = {
   siteMetadata: {
     title: `dontech`,
-    description: `Python, FastAPI, AI/ML 등 개발 기술을 다루는 Donhyeok의 기술 블로그`,
+    description: `머신러닝·통계, LLM 서빙과 AI 에이전트, PostgreSQL·ClickHouse, Python·FastAPI를 동작 원리부터 설명하는 기술 블로그`,
     author: `Donhyeok Kang`,
     siteUrl: `https://donmain.dev/`,
     authorSocial: {
@@ -183,6 +183,7 @@ module.exports = {
                 }
                 frontmatter {
                   date
+                  dateModified
                 }
               }
             }
@@ -192,8 +193,11 @@ module.exports = {
           allSitePage: { nodes: allPages },
           allMarkdownRemark: { nodes: allPosts },
         }) => {
+          // lastmod가 발행일에 묶여 있으면 고친 글을 Google이 다시 읽으러 오지
+          // 않는다. 내용을 고쳤으면 frontmatter의 dateModified를 갱신한다
           const postDateMap = allPosts.reduce((acc, post) => {
-            acc[post.fields.slug] = post.frontmatter.date
+            acc[post.fields.slug] =
+              post.frontmatter.dateModified || post.frontmatter.date
             return acc
           }, {})
 
@@ -224,7 +228,8 @@ module.exports = {
     {
       resolve: 'gatsby-plugin-robots-txt',
       options: {
-        host: 'https://donmain.dev',
+        // Host는 Yandex 전용 지시어라 뺀다. 생략하면 플러그인이 siteUrl로 채운다
+        host: null,
         sitemap: 'https://donmain.dev/sitemap-index.xml',
         policy: [{ userAgent: '*', allow: '/' }],
       },
